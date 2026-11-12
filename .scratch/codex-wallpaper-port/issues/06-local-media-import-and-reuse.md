@@ -6,7 +6,7 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 **复用边界：** 优先复用可脱离 DSH 的清单、元数据和媒体准备逻辑；为 Codex 新做本地供料、配置接线和故障提示。
 
@@ -18,3 +18,7 @@
 ## 人工验收
 
 - [ ] 用你选择的本机图片和视频在实际候选版本中导入、切换、断网重开，并移走测试副本验证缺失提示。
+
+## Comments
+
+- 2026-11-13：离线候选已支持图片/视频文件选择、IndexedDB 本地存储、即时播放、重开读取、缺失素材跳过和错误提示。复用清单固定为上游 `fd3e01fd11cd5ad83f46940ab4d61d971cfbcf91` 的 `steam-discovery.js`、`wallpaper-scan.js`，许可保存于 `launcher/vendor/dsh-wallpaper-engine/LICENSE`。

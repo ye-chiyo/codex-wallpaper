@@ -1,0 +1,6 @@
+@echo off
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -STA -File "%~dp0Reset-CodexWallpaper.ps1"
+set "RESET_RESULT=%ERRORLEVEL%"
+echo.
+pause
+exit /b %RESET_RESULT%

@@ -6,7 +6,7 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 **复用边界：** 评估复用上游 Web 媒体准备与消息协议；为 Codex 验证或重做独立容器、素材供料、网络权限和输入边界。
 
@@ -19,3 +19,7 @@
 ## 人工验收
 
 - [ ] 用实际离线样本和受控联网样本，分别验证未允许、允许及故障场景；在壁纸互动时操作聊天、输入框和卡片。
+
+## Comments
+
+- 2026-11-13：离线候选把 Web 入口限制在 `sandbox="allow-scripts"` 的 `srcdoc` 中，不继承 Codex origin；只装载已读取的本地 HTML，网络资源不能由本适配放行。缺少本地 HTML 时使用预览降级。联网 Web 的主动允许与完整创意工坊兼容尚未实现，不按联网 Web 通过。

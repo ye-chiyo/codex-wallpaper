@@ -64,6 +64,81 @@ export function listPages(port) {
   });
 }
 
+export async function openMainPageSession(port, expectedPage = page) {
+  if (!Number.isInteger(port) || port < 1024 || port > 65535)
+    throw new Error("Invalid port");
+  const endpoint = selectEndpoint(await listPages(port), port, expectedPage);
+  if (endpoint === null) throw new Error("Main page not uniquely available");
+
+  const socket = new WebSocket(endpoint);
+  await new Promise((resolve, reject) => {
+    const deadline = setTimeout(
+      () => reject(new Error("WebSocket timeout")),
+      timeoutMs
+    );
+    socket.addEventListener("open", () => {
+      clearTimeout(deadline);
+      resolve();
+    });
+    socket.addEventListener("error", () => {
+      clearTimeout(deadline);
+      reject(new Error("WebSocket failed"));
+    });
+  });
+
+  let nextId = 0;
+  const pending = new Map();
+  const listeners = new Map();
+  const closeListeners = [];
+
+  function finishAll(error) {
+    for (const entry of pending.values()) entry.reject(error);
+    pending.clear();
+    for (const handler of closeListeners) handler(error);
+  }
+
+  socket.addEventListener("message", ({ data }) => {
+    const message = JSON.parse(data);
+    if (message.id) {
+      const entry = pending.get(message.id);
+      if (!entry) return;
+      pending.delete(message.id);
+      if (message.error) entry.reject(new Error(message.error.message));
+      else entry.resolve(message.result);
+      return;
+    }
+    for (const handler of listeners.get(message.method) || [])
+      handler(message.params);
+  });
+  socket.addEventListener("error", () =>
+    finishAll(new Error("WebSocket failed"))
+  );
+  socket.addEventListener("close", () =>
+    finishAll(new Error("WebSocket closed"))
+  );
+
+  return {
+    send(method, params = {}) {
+      const id = ++nextId;
+      return new Promise((resolve, reject) => {
+        pending.set(id, { resolve, reject });
+        socket.send(JSON.stringify({ id, method, params }));
+      });
+    },
+    on(method, handler) {
+      const entries = listeners.get(method) || [];
+      entries.push(handler);
+      listeners.set(method, entries);
+    },
+    onClose(handler) {
+      closeListeners.push(handler);
+    },
+    close() {
+      socket.close();
+    },
+  };
+}
+
 export async function callMainPage(
   port,
   method,

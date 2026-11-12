@@ -52,7 +52,12 @@ async function startFixture() {
             <textarea id="composer">Composer text</textarea>
           </form>
         </main>
-      </div></html>`
+      </div>
+      <aside data-app-shell-page-sidebar><button id="project-action">Project</button></aside>
+      <aside data-app-shell-trailing-sidebar><pre id="terminal">terminal</pre></aside>
+      <div data-app-shell-pane-content-viewport><pre id="editor">editor</pre></div>
+      <section role="dialog" id="settings-dialog"><button id="dialog-action">Dialog</button></section>
+      </html>`
     );
   });
   server.listen(0, "127.0.0.1");
@@ -119,7 +124,62 @@ test("static background is single, removable and persists disabled", async (t) =
     });
   });
   const port = await waitForPort(profile);
-  const options = { page: fixture.url, origin: new URL(fixture.url).origin };
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          reason: null,
+        },
+        {
+          id: "fixture-scene",
+          title: "Fixture Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: "data:application/octet-stream;base64,AA==",
+          reason: "scene-native",
+        },
+        {
+          id: "fixture-web",
+          title: "Fixture Web",
+          type: "web",
+          playable: false,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: null,
+          webHtml:
+            "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
+          reason: "web-offline",
+        },
+        {
+          id: "fixture-lazy",
+          title: "Fixture Lazy",
+          type: "image",
+          playable: false,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
+        },
+      ],
+    },
+  };
   await waitForPage(port, options);
 
   assert.deepEqual(
@@ -138,18 +198,250 @@ test("static background is single, removable and persists disabled", async (t) =
     applyStaticBackground(port, { ...options, page: `${fixture.url}other` }),
     /Main page not uniquely available/
   );
-  assert.deepEqual(await applyStaticBackground(port, options), {
-    state: "enabled",
-    backgroundLayers: 1,
-    controls: 1,
-    styles: 1,
-  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      globalThis.WebWallGL = {
+        bytesSource: () => ({}),
+        createScene: () => ({
+          load: async () => {
+            globalThis.__sceneLoaded = true;
+          },
+          pause: () => {
+            globalThis.__scenePaused = true;
+          },
+          resume: () => {
+            globalThis.__sceneResumed = true;
+          },
+          setFps: (fps) => {
+            globalThis.__sceneFps = fps;
+          },
+          setVolume: (volume) => {
+            globalThis.__sceneVolume = volume;
+          },
+          destroy() {}
+        })
+      };
+    })()`,
+    options
+  );
+  const initial = await applyStaticBackground(port, options);
+  assert.equal(initial.state, "enabled");
+  assert.equal(initial.backgroundLayers, 1);
+  assert.equal(initial.styles, 1);
+  assert.equal(initial.libraryCount, 4);
+  assert.equal(initial.volume, 0);
+  assert.equal(initial.fpsCap, 30);
+  assert.equal(initial.visible, true);
+  assert.ok(initial.controls >= 2);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `document.querySelector("#${rootId} [data-codex-wallpaper-settings]").click(),
+       (() => {
+         const panel = document.querySelector("#${rootId} [data-codex-wallpaper-panel]");
+         return {
+           open: panel.classList.contains("open"),
+           cards: panel.querySelectorAll(".card").length
+         };
+       })()`,
+      options
+    ),
+    { open: true, cards: 4 }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        globalThis.__codexWallpaperHostRequest = (raw) => {
+          const request = JSON.parse(raw);
+          if (request.type !== "load-asset") return;
+          setTimeout(
+            () => globalThis.__codexWallpaperApi.receiveAsset({
+              id: request.id,
+              title: "Fixture Lazy",
+              type: "image",
+              playable: true,
+              fallback: true,
+              previewDataUrl:
+                "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+              assetDataUrl:
+                "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
+              reason: null
+            }),
+            0
+          );
+        };
+        const root = document.getElementById("${rootId}");
+        const lazyCard = [...root.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Lazy"
+        );
+        lazyCard.querySelector(".card-actions button").click();
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        return {
+          active: globalThis.__codexWallpaperApi.state().activeId,
+          rendered:
+            root.querySelector("[data-codex-wallpaper-layer] img") instanceof
+            HTMLImageElement
+        };
+      })()`,
+      options
+    ),
+    { active: "fixture-lazy", rendered: true }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const sceneCard = [...root.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Scene"
+        );
+        sceneCard.querySelector(".card-actions button").click();
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          get: () => "hidden"
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          get: () => "visible"
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        const ranges = root.querySelectorAll(".range input");
+        ranges[3].value = "15";
+        ranges[3].dispatchEvent(new Event("input", { bubbles: true }));
+        ranges[4].value = "40";
+        ranges[4].dispatchEvent(new Event("input", { bubbles: true }));
+        return {
+          loaded: globalThis.__sceneLoaded,
+          paused: globalThis.__scenePaused,
+          resumed: globalThis.__sceneResumed,
+          fps: globalThis.__sceneFps,
+          volume: globalThis.__sceneVolume
+        };
+      })()`,
+      options
+    ),
+    { loaded: true, paused: true, resumed: true, fps: 15, volume: 0.4 }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const webCard = [...root.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Web"
+        );
+        webCard.querySelector(".card-actions button").click();
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        const frame = root.querySelector("[data-codex-wallpaper-layer] iframe");
+        return {
+          sandbox: frame.getAttribute("sandbox"),
+          offlineDocument: frame.srcdoc.includes("linear-gradient"),
+          networkBlocked: frame.srcdoc.includes("default-src 'none'")
+        };
+      })()`,
+      options
+    ),
+    {
+      sandbox: "allow-scripts",
+      offlineDocument: true,
+      networkBlocked: true,
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const imageCard = [...root.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        imageCard.querySelector(".card-actions button").click();
+        imageCard.querySelectorAll(".card-actions button")[1].click();
+        imageCard.querySelectorAll(".card-actions button")[2].click();
+        const opacity = root.querySelectorAll(".range input")[2];
+        opacity.value = "66";
+        opacity.dispatchEvent(new Event("input", { bubbles: true }));
+        const input = root.querySelector(".import-row input");
+        const transfer = new DataTransfer();
+        transfer.items.add(
+          new File(
+            ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+            "Imported.svg",
+            { type: "image/svg+xml" }
+          )
+        );
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          if (globalThis.__codexWallpaperApi.state().importedCount > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        const saved = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        return {
+          imageVisible:
+            root.querySelector("[data-codex-wallpaper-layer] img") instanceof
+            HTMLImageElement,
+          favorite: saved.favorites.length,
+          playlist: saved.playlist.length,
+          opacity: saved.settings.opacity,
+          imported: globalThis.__codexWallpaperApi.state().importedCount,
+          importedActive: saved.active.kind === "imported"
+        };
+      })()`,
+      options
+    ),
+    {
+      imageVisible: true,
+      favorite: 1,
+      playlist: 1,
+      opacity: 66,
+      imported: 1,
+      importedActive: true,
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const reset = root.querySelector(".reset");
+        reset.click();
+        reset.click();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          if (globalThis.__codexWallpaperApi.state().importedCount === 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        const saved = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        return {
+          activeKind: saved.active.kind,
+          imported: globalThis.__codexWallpaperApi.state().importedCount,
+          state: globalThis.__codexWallpaperApi.state().state,
+          root: document.querySelectorAll("#${rootId}").length
+        };
+      })()`,
+      options
+    ),
+    { activeKind: "builtin", imported: 0, state: "disabled", root: 0 }
+  );
+  await evaluateInPage(
+    port,
+    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
+    options
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
       `(() => {
         const root = document.getElementById("${rootId}");
-        const background = root.querySelector("[data-codex-wallpaper-background]");
+        const background = root.querySelector("[data-codex-wallpaper-layer]");
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const tool = document.querySelector("#tool-action");
         const details = document.querySelector("#tool-details");
@@ -161,6 +453,17 @@ test("static background is single, removable and persists disabled", async (t) =
         const composerSurface = document.querySelector(
           "[data-composer-surface-variant]"
         );
+        const leftPanel = document.querySelector("[data-app-shell-page-sidebar]");
+        const rightPanel = document.querySelector(
+          "[data-app-shell-trailing-sidebar]"
+        );
+        const pane = document.querySelector(
+          "[data-app-shell-pane-content-viewport]"
+        );
+        const dialog = document.querySelector("#settings-dialog");
+        const dialogAction = document.querySelector("#dialog-action");
+        dialogAction.focus();
+        const dialogHasFocus = document.activeElement === dialogAction;
         tool.addEventListener("click", () => {
           details.hidden = !details.hidden;
         });
@@ -221,6 +524,18 @@ test("static background is single, removable and persists disabled", async (t) =
               "rgba(0, 0, 0, 0)"
           ),
           themesHaveReadabilityBases: themeBases.every(Boolean),
+          panelSurfacesHaveReadability: [
+            leftPanel,
+            rightPanel,
+            pane,
+            dialog
+          ].every(
+            (element) =>
+              getComputedStyle(element).backgroundColor !==
+                "rgba(0, 0, 0, 0)" &&
+              Number.parseInt(getComputedStyle(element).zIndex, 10) >= 1
+          ),
+          dialogHasFocus,
           backgroundIgnoresPointers:
             getComputedStyle(background).pointerEvents === "none",
           toolReceivesClick: hit === tool && toolToggleWorked,
@@ -242,6 +557,8 @@ test("static background is single, removable and persists disabled", async (t) =
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
       themesHaveReadabilityBases: true,
+      panelSurfacesHaveReadability: true,
+      dialogHasFocus: true,
       backgroundIgnoresPointers: true,
       toolReceivesClick: true,
       composerHasFocus: true,
@@ -257,7 +574,7 @@ test("static background is single, removable and persists disabled", async (t) =
   );
   await evaluateInPage(
     port,
-    `document.querySelector("#${rootId} button").click()`,
+    `document.querySelector("#${rootId} [data-codex-wallpaper-toggle]").click()`,
     options
   );
   assert.deepEqual(
@@ -268,12 +585,10 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     { root: 0, styles: 0 }
   );
-  assert.deepEqual(await applyStaticBackground(port, options), {
-    state: "disabled",
-    backgroundLayers: 0,
-    controls: 0,
-    styles: 0,
-  });
+  const disabled = await applyStaticBackground(port, options);
+  assert.equal(disabled.state, "disabled");
+  assert.equal(disabled.backgroundLayers, 0);
+  assert.equal(disabled.styles, 0);
   await evaluateInPage(
     port,
     'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
@@ -288,6 +603,45 @@ test("static background is single, removable and persists disabled", async (t) =
     'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
     options
   );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `({ root: document.querySelectorAll("#${rootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
+      options
+    ),
+    { root: 0, styles: 0 }
+  );
+  await evaluateInPage(
+    port,
+    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
+    options
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        const value = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        value.enabled = false;
+        const next = JSON.stringify(value);
+        localStorage.setItem("codex-wallpaper-p1-config", next);
+        dispatchEvent(
+          new StorageEvent("storage", {
+            key: "codex-wallpaper-p1-config",
+            newValue: next,
+            storageArea: localStorage
+          })
+        );
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return true;
+      })()`,
+      options
+    ),
+    true
+  );
+  await new Promise((resolve) => setTimeout(resolve, 30));
   assert.deepEqual(
     await evaluateInPage(
       port,

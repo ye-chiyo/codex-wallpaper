@@ -1,75 +1,23 @@
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { runtimeSource } from "./client-runtime.mjs";
 import { callMainPage } from "./read-only-probe.mjs";
+import { scanWallpaperLibrary } from "./wallpaper-library.mjs";
 
 const defaultPage = "app://-/index.html";
-const rootId = "codex-wallpaper-p1";
-const styleId = "codex-wallpaper-p1-style";
-const disabledKey = "codex-wallpaper-p1-disabled";
-
-function expression(action) {
-  return `(() => {
-    const rootId = ${JSON.stringify(rootId)};
-    const styleId = ${JSON.stringify(styleId)};
-    const disabledKey = ${JSON.stringify(disabledKey)};
-    const state = () => ({
-      state: localStorage.getItem(disabledKey) === "1" ? "disabled" : "enabled",
-      backgroundLayers: document.querySelectorAll("#" + rootId + " [data-codex-wallpaper-background]").length,
-      controls: document.querySelectorAll("#" + rootId + " button").length,
-      styles: document.querySelectorAll("#" + styleId).length
-    });
-    const registerHotkey = () => {
-      if (globalThis.__codexWallpaperHotkey) return;
-      globalThis.__codexWallpaperHotkey = (event) => {
-        if (!event.altKey || !event.shiftKey || event.code !== "KeyW") return;
-        if (localStorage.getItem(disabledKey) === "1") enable(true);
-        else disable();
-      };
-      addEventListener("keydown", globalThis.__codexWallpaperHotkey);
-    };
-    const enable = (force = false) => {
-      registerHotkey();
-      if (!force && localStorage.getItem(disabledKey) === "1") {
-        return state();
-      }
-      localStorage.setItem(disabledKey, "0");
-      if (document.getElementById(rootId)) return state();
-      const style = document.createElement("style");
-      style.id = styleId;
-      style.textContent = [
-        "#" + rootId + " { position: fixed; inset: 0; pointer-events: none; }",
-        "#" + rootId + " [data-codex-wallpaper-background] { position: fixed; inset: 0; z-index: 0; opacity: .24; mix-blend-mode: soft-light; background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }",
-        "body :where([data-app-shell-main-surface], [data-app-shell-page-surface]) { position: relative; z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 88%, transparent) !important; backdrop-filter: blur(10px) saturate(.85); }",
-        "body :is([data-app-shell-main-surface], [data-app-shell-page-surface]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], [data-composer-surface-variant], pre) { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 92%, transparent) !important; }",
-        "#" + rootId + " button { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; padding: 7px 11px; border: 1px solid rgb(255 255 255 / .32); border-radius: 999px; background: rgb(20 20 24 / .78); color: white; font: 12px/1.2 system-ui, sans-serif; cursor: pointer; pointer-events: auto; }"
-      ].join("\\n");
-      const root = document.createElement("div");
-      root.id = rootId;
-      const background = document.createElement("div");
-      background.dataset.codexWallpaperBackground = "";
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = "停用壁纸 (Alt+Shift+W)";
-      button.addEventListener("click", disable);
-      root.append(background, button);
-      document.documentElement.append(style, root);
-      return state();
-    };
-    const disable = () => {
-      registerHotkey();
-      localStorage.setItem(disabledKey, "1");
-      document.getElementById(rootId)?.remove();
-      document.getElementById(styleId)?.remove();
-      return state();
-    };
-    return ${JSON.stringify(action)} === "disable" ? disable() : enable();
-  })()`;
-}
+export const wallpaperConfigKey = "codex-wallpaper-p1-config";
+const sceneEngineUrl = new URL(
+  "../node_modules/webwallgl/webwallgl.global.min.js",
+  import.meta.url
+);
+const bridgeUrl = new URL("./wallpaper-host.mjs", import.meta.url);
 
 async function evaluate(port, page, source) {
   const result = await callMainPage(
     port,
     "Runtime.evaluate",
-    { expression: source, returnByValue: true },
+    { expression: source, returnByValue: true, awaitPromise: true },
     page
   );
   if (result === null) throw new Error("Main page not uniquely available");
@@ -83,23 +31,121 @@ async function evaluate(port, page, source) {
   return result?.result?.value;
 }
 
-export async function applyStaticBackground(port, options = {}) {
-  const resolved = {
-    page: options.page ?? defaultPage,
-    action: options.action ?? "enable",
-  };
-  const result = await evaluate(
+async function activeLibraryId(port, page) {
+  const raw = await evaluate(
     port,
-    resolved.page,
-    expression(resolved.action)
+    page,
+    `localStorage.getItem(${JSON.stringify(wallpaperConfigKey)})`
   );
+  try {
+    const value = JSON.parse(raw || "null");
+    if (
+      value?.active?.kind === "workshop" &&
+      typeof value.active.id === "string"
+    )
+      return value.active.id;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+async function payloadFor(port, page) {
+  const activeId = await activeLibraryId(port, page);
+  try {
+    const library = await scanWallpaperLibrary({
+      assetIds: activeId ? [activeId] : [],
+    });
+    const active = library.entries.find(
+      (entry) => entry.id === activeId && entry.kind !== "imported"
+    );
+    if (active?.type === "scene" && active.assetDataUrl) {
+      const available = await evaluate(
+        port,
+        page,
+        "typeof globalThis.WebWallGL === 'object'"
+      );
+      if (!available) {
+        const engine = await readFile(sceneEngineUrl, "utf8");
+        await evaluate(port, page, engine);
+      }
+    }
+    return { version: 1, library: library.entries };
+  } catch {
+    return { version: 1, library: [] };
+  }
+}
+
+export async function applyStaticBackground(port, options = {}) {
+  const page = options.page ?? defaultPage;
+  const payload = options.payload ?? (await payloadFor(port, page));
+  const result = await evaluate(port, page, runtimeSource(payload));
   if (!result || result.state === undefined)
     throw new Error("Missing wallpaper state");
+  if (options.action === "disable") {
+    return evaluate(port, page, "globalThis.__codexWallpaperApi.disable()");
+  }
   return result;
 }
 
 export async function evaluateInPage(port, source, options = {}) {
   return evaluate(port, options.page ?? defaultPage, source);
+}
+
+async function startBridge(port) {
+  const child = spawn(
+    process.execPath,
+    ["--no-use-env-proxy", fileURLToPath(bridgeUrl), String(port)],
+    {
+      detached: true,
+      stdio: ["ignore", "pipe", "ignore"],
+      windowsHide: true,
+    }
+  );
+  try {
+    const ready = await new Promise((resolve, reject) => {
+      let output = "";
+      const deadline = setTimeout(
+        () => reject(new Error("Bridge startup timeout")),
+        3500
+      );
+      function cleanup() {
+        clearTimeout(deadline);
+        child.stdout.destroy();
+        child.removeAllListeners("error");
+        child.removeAllListeners("exit");
+      }
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk) => {
+        output += chunk;
+        const line = output.split(/\r?\n/, 1)[0];
+        if (!line) return;
+        try {
+          const value = JSON.parse(line);
+          if (value.ready && value.pid) {
+            cleanup();
+            resolve(value.pid);
+          }
+        } catch {
+          cleanup();
+          reject(new Error("Invalid bridge response"));
+        }
+      });
+      child.once("exit", () => {
+        cleanup();
+        reject(new Error("Bridge exited before ready"));
+      });
+      child.once("error", (error) => {
+        cleanup();
+        reject(error);
+      });
+    });
+    child.unref();
+    return { bridgePid: ready };
+  } catch (error) {
+    child.kill();
+    return { bridgeError: String(error.message || error) };
+  }
 }
 
 if (
@@ -110,6 +156,8 @@ if (
   const action = process.argv[3] === "disable" ? "disable" : "enable";
   try {
     const result = await applyStaticBackground(port, { action });
+    if (action === "enable" && result.state === "enabled")
+      Object.assign(result, await startBridge(port));
     console.log(JSON.stringify(result));
   } catch {
     process.exitCode = 1;
