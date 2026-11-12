@@ -36,7 +36,8 @@
 - [官方插件架构](https://developers.openai.com/plugins/concepts/plugins)说明插件可包含 skills、MCP server、可选 UI 和生命周期 hooks，且不同宿主支持的能力可能不同。
 - [官方 MCP UI 文档](https://developers.openai.com/plugins/build/chatgpt-ui)说明 ChatGPT 的组件运行在 iframe 中，并建议按能力检测宿主。该页面不是任意修改 Codex 主界面的授权 API 或兼容性证明。
 - [官方 Extensions 文档](https://developers.openai.com/plugins/build/extensions)列出了 ChatGPT 侧栏应用、会话面板、设置、文件查看器等入口。本轮查阅内容尚未建立 Codex 全局壁纸/主题修改接口；不能据此宣称绝对不存在该能力。
-- 当前尚无 Codex 真实主界面的技术可行性验证、长期运行、版本更新兼容性或性能证据。
+- 需求访谈结束时尚无 Codex 真实主界面的技术可行性验证、长期运行、版本更新兼容性或性能证据。之后的 [P0a 实测](codex-p0a-validation.md) 已在独立进程确认主界面 CDP 与只读协议请求；原入口自动接入、壁纸运行及后续验收仍未通过。
+- 后续 [P0b 实测](codex-p0b-validation.md) 发现原 AUMID 向当前日常实例晚传参数不能启用 CDP；辅助程序先启动、同测试 profile EXE 入口复用和去除参数恢复有实验依据，尚不能替代日常账户与原入口冷启动。实验登录窗口干扰已记录，已停止新实例实验；未关闭当前工作 Codex，也未修改受保护安装。
 - 本机普通 PowerShell 只读观察：运行中的桌面进程来自 `C:\Program Files\WindowsApps\OpenAI.Codex_26.1103.4239.0_x64__2p2nqsd0c76g0\app\ChatGPT.exe`，AppX 包版本为 `26.1103.4239.0`，资源包含 `app.asar`。另有独立 PrimaryRuntime 包 `26.1105.1297.0`。这是安装形态/进程路径证据，不是已验证的注入入口或运行兼容性证据；未启动或附加调试器，未修改安装资源。
 - 本机 Steam 配置及 WE 安装清单显示库位于 `D:\steam`，WE 安装目录为 `D:\steam\steamapps\common\wallpaper_engine`。只读解析 `D:\steam\steamapps\workshop\content\431960` 下的 `project.json`，得到 50 个 scene、37 个 video、2 个 web、1 个类型未声明的条目。这是素材元数据盘点，未实际播放验证，也不是素材使用偏好的推断。
 - 本机显卡查询列出了 NVIDIA GeForce RTX 4060 Laptop GPU；实际性能和壁纸资源成本尚未测量。

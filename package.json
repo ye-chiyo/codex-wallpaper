@@ -8,6 +8,7 @@
     "prettier": "^3.9.10"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "node --test launcher/read-only-probe.test.mjs launcher/static-background.test.mjs"
   }
 }
