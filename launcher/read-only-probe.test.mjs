@@ -34,6 +34,22 @@ test("accepts only an unambiguous main page on the verified loopback port", () =
   }
 });
 
+test("exact page selection ignores auxiliary query-routed windows", () => {
+  const port = 25000;
+  const main = { ...target(port), url: page };
+  const avatar = {
+    ...main,
+    id: "fedcba9876543210fedcba9876543210",
+    url: `${page}?initialRoute=%2Favatar-overlay`,
+    webSocketDebuggerUrl: `ws://127.0.0.1:${port}/devtools/page/fedcba9876543210fedcba9876543210`,
+  };
+  assert.throws(() => selectEndpoint([main, avatar], port), /Ambiguous/);
+  assert.equal(
+    selectEndpoint([main, avatar], port, page, true),
+    main.webSocketDebuggerUrl
+  );
+});
+
 test("sends only Page.getFrameTree and emits no transient URL data", async (t) => {
   const requests = [];
   const server = createServer((request, response) => {

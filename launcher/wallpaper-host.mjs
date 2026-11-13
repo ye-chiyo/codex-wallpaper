@@ -47,7 +47,8 @@ async function respond(expression) {
     port,
     "Runtime.evaluate",
     { expression, returnByValue: true, awaitPromise: true },
-    page
+    page,
+    true
   );
 }
 
@@ -69,7 +70,7 @@ async function loadAsset(id) {
 let session;
 try {
   if (!(await acquireLock())) process.exit(0);
-  session = await openMainPageSession(port, page);
+  session = await openMainPageSession(port, page, true);
   session.onClose(releaseLock);
   session.on("Runtime.bindingCalled", ({ name, payload }) => {
     if (name !== bindingName || stopped) return;

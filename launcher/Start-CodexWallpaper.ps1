@@ -258,11 +258,15 @@ namespace CodexWallpaperP0b {
         $receipt.Probe = $reply | ConvertFrom-Json
         $receipt.Outcome = 'read-only-probe-passed'
         $wallpaperReply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'static-background.mjs') $port
+        try {
+            $receipt.Wallpaper = $wallpaperReply | ConvertFrom-Json
+        } catch {
+            $receipt.Wallpaper = [pscustomobject]@{ state = 'failed'; error = 'invalid-wallpaper-response' }
+        }
         if ($LASTEXITCODE -ne 0) {
             $receipt.Outcome = 'wallpaper-injection-failed'
             break
         }
-        $receipt.Wallpaper = $wallpaperReply | ConvertFrom-Json
         $exitCode = 0
         break
     }

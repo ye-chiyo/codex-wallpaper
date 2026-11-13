@@ -18,7 +18,8 @@ async function evaluate(port, page, source) {
     port,
     "Runtime.evaluate",
     { expression: source, returnByValue: true, awaitPromise: true },
-    page
+    page,
+    true
   );
   if (result === null) throw new Error("Main page not uniquely available");
   if (result?.exceptionDetails) {
@@ -159,7 +160,20 @@ if (
     if (action === "enable" && result.state === "enabled")
       Object.assign(result, await startBridge(port));
     console.log(JSON.stringify(result));
-  } catch {
+  } catch (error) {
+    const message = String(error?.message || error).replace(
+      /[A-Za-z]:\\[^\s"']+/g,
+      "<path>"
+    );
+    console.log(
+      JSON.stringify({
+        state: "failed",
+        error: {
+          name: String(error?.name || "Error"),
+          message: message.slice(0, 240),
+        },
+      })
+    );
     process.exitCode = 1;
   }
 }

@@ -10,10 +10,19 @@ function isMainPage(value, expectedPage = page) {
   return value.split(/[?#]/, 1)[0] === expectedPage;
 }
 
-export function selectEndpoint(targets, port, expectedPage = page) {
+export function selectEndpoint(
+  targets,
+  port,
+  expectedPage = page,
+  exact = false
+) {
   if (!Array.isArray(targets)) throw new Error("Invalid discovery response");
   const matches = targets.filter(
-    (target) => target?.type === "page" && isMainPage(target.url, expectedPage)
+    (target) =>
+      target?.type === "page" &&
+      (exact
+        ? target.url === expectedPage
+        : isMainPage(target.url, expectedPage))
   );
   if (matches.length === 0) return null;
   if (matches.length !== 1) throw new Error("Ambiguous main page");
@@ -64,10 +73,19 @@ export function listPages(port) {
   });
 }
 
-export async function openMainPageSession(port, expectedPage = page) {
+export async function openMainPageSession(
+  port,
+  expectedPage = page,
+  exact = false
+) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535)
     throw new Error("Invalid port");
-  const endpoint = selectEndpoint(await listPages(port), port, expectedPage);
+  const endpoint = selectEndpoint(
+    await listPages(port),
+    port,
+    expectedPage,
+    exact
+  );
   if (endpoint === null) throw new Error("Main page not uniquely available");
 
   const socket = new WebSocket(endpoint);
@@ -143,11 +161,17 @@ export async function callMainPage(
   port,
   method,
   params = {},
-  expectedPage = page
+  expectedPage = page,
+  exact = false
 ) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535)
     throw new Error("Invalid port");
-  const endpoint = selectEndpoint(await listPages(port), port, expectedPage);
+  const endpoint = selectEndpoint(
+    await listPages(port),
+    port,
+    expectedPage,
+    exact
+  );
   if (endpoint === null) return null;
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(endpoint);

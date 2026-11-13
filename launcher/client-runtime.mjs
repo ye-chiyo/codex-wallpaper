@@ -4,6 +4,7 @@ export function runtimeSource(payload) {
 
 export function createCodexWallpaperRuntime(payload) {
   const rootId = "codex-wallpaper-p1";
+  const controlsId = "codex-wallpaper-p1-controls";
   const styleId = "codex-wallpaper-p1-style";
   const configKey = "codex-wallpaper-p1-config";
   const dbName = "codex-wallpaper-media";
@@ -17,7 +18,7 @@ export function createCodexWallpaperRuntime(payload) {
     settings: {
       dim: 18,
       blur: 0,
-      opacity: 72,
+      opacity: 100,
       fps: 30,
       volume: 0,
       rotationMinutes: 0,
@@ -287,6 +288,7 @@ export function createCodexWallpaperRuntime(payload) {
       return;
     }
     const host = document.createElement("div");
+    host.className = "scene-host";
     media.replaceChildren(host);
     media.className = "media";
     const instance = engine.createScene(host, {
@@ -654,6 +656,7 @@ export function createCodexWallpaperRuntime(payload) {
       return state();
     }
     document.getElementById(rootId)?.remove();
+    document.getElementById(controlsId)?.remove();
     document.getElementById(styleId)?.remove();
     root = null;
     panel = null;
@@ -740,45 +743,51 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function mount() {
-    if (document.getElementById(rootId)) return;
+    if (document.getElementById(rootId) || document.getElementById(controlsId))
+      return;
     const style = document.createElement("style");
     style.id = styleId;
     style.textContent = `
       #${rootId}, #${rootId} * { box-sizing: border-box; }
-      #${rootId} { position: fixed; inset: 0; pointer-events: none; color: rgb(245 245 250); font: 13px/1.4 system-ui, sans-serif; }
+      #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: rgb(245 245 250); font: 13px/1.4 system-ui, sans-serif; }
+      #${controlsId} { z-index: 2147483647; }
       #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
       #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
       #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
+      #${rootId} .scene-host { position: absolute; inset: 0; }
       #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
-      #${rootId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; gap: 6px; pointer-events: auto; }
-      #${rootId} .toolbar button, #${rootId} .panel button { border: 1px solid rgb(255 255 255 / .3); border-radius: 8px; background: rgb(20 20 24 / .9); color: white; padding: 7px 10px; cursor: pointer; }
-      #${rootId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid rgb(255 255 255 / .22); border-radius: 14px; background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 94%, transparent); box-shadow: 0 18px 55px rgb(0 0 0 / .42); backdrop-filter: blur(18px); pointer-events: auto; display: none; }
-      #${rootId} .panel.open { display: block; }
-      #${rootId} .panel header { display: flex; align-items: center; justify-content: space-between; }
-      #${rootId} .panel h3 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
-      #${rootId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed rgb(255 255 255 / .3); border-radius: 8px; cursor: pointer; }
-      #${rootId} .import-row input { width: 135px; font-size: 11px; }
-      #${rootId} .runtime-status, #${rootId} .playlist-summary { margin: 9px 0; color: rgb(215 215 225); }
-      #${rootId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #${rootId} .card { min-width: 0; padding: 7px; border: 1px solid rgb(255 255 255 / .16); border-radius: 10px; background: rgb(0 0 0 / .18); }
-      #${rootId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: rgb(255 255 255 / .08); font-size: 10px; opacity: .9; }
-      #${rootId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
-      #${rootId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #${rootId} .card small { display: block; margin-top: 2px; color: rgb(200 200 210); }
-      #${rootId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-      #${rootId} .card-actions button { padding: 4px 6px; font-size: 10px; }
-      #${rootId} .settings-grid { display: grid; gap: 7px; }
-      #${rootId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
-      #${rootId} .range output { color: rgb(205 205 215); font-variant-numeric: tabular-nums; }
-      #${rootId} .reset { margin-top: 14px; width: 100%; color: rgb(255 190 190) !important; }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { position: relative; z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 88%, transparent) !important; backdrop-filter: blur(10px) saturate(.85); }
+      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; gap: 6px; pointer-events: auto; }
+      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid rgb(255 255 255 / .3); border-radius: 8px; background: rgb(20 20 24 / .9); color: white; padding: 7px 10px; cursor: pointer; }
+      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid rgb(255 255 255 / .22); border-radius: 14px; background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 94%, transparent); box-shadow: 0 18px 55px rgb(0 0 0 / .42); backdrop-filter: blur(18px); pointer-events: auto; display: none; }
+      #${controlsId} .panel.open { display: block; }
+      #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
+      #${controlsId} .panel h3 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
+      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed rgb(255 255 255 / .3); border-radius: 8px; cursor: pointer; }
+      #${controlsId} .import-row input { width: 135px; font-size: 11px; }
+      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: rgb(215 215 225); }
+      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid rgb(255 255 255 / .16); border-radius: 10px; background: rgb(0 0 0 / .18); }
+      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: rgb(255 255 255 / .08); font-size: 10px; opacity: .9; }
+      #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
+      #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #${controlsId} .card small { display: block; margin-top: 2px; color: rgb(200 200 210); }
+      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
+      #${controlsId} .settings-grid { display: grid; gap: 7px; }
+      #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
+      #${controlsId} .range output { color: rgb(205 205 215); font-variant-numeric: tabular-nums; }
+      #${controlsId} .reset { margin-top: 14px; width: 100%; color: rgb(255 190 190) !important; }
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { position: relative; z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 64%, transparent) !important; backdrop-filter: blur(14px) saturate(.9); }
+      body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
       body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], [data-composer-surface-variant], pre) { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 92%, transparent) !important; }
       body :where([role='dialog'], [data-radix-popper-content-wrapper]) { position: relative; z-index: 3; background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 96%, transparent) !important; }
     `;
     root = document.createElement("div");
     root.id = rootId;
+    const controls = document.createElement("div");
+    controls.id = controlsId;
     layer = document.createElement("div");
     layer.dataset.codexWallpaperLayer = "";
     media = document.createElement("div");
@@ -800,8 +809,9 @@ export function createCodexWallpaperRuntime(payload) {
     toggle.textContent = "停用壁纸";
     toggle.onclick = () => disable();
     toolbar.append(settings, toggle);
-    root.append(layer, buildPanel(), toolbar);
-    document.documentElement.append(style, root);
+    controls.append(buildPanel(), toolbar);
+    document.documentElement.append(style, root, controls);
+    root.append(layer);
   }
 
   async function enable() {
@@ -821,6 +831,7 @@ export function createCodexWallpaperRuntime(payload) {
     database?.close();
     database = null;
     document.getElementById(rootId)?.remove();
+    document.getElementById(controlsId)?.remove();
     document.getElementById(styleId)?.remove();
     root = null;
     panel = null;
@@ -838,7 +849,7 @@ export function createCodexWallpaperRuntime(payload) {
       backgroundLayers: document.querySelectorAll(
         `#${rootId} [data-codex-wallpaper-layer]`
       ).length,
-      controls: document.querySelectorAll(`#${rootId} button`).length,
+      controls: document.querySelectorAll(`#${controlsId} button`).length,
       styles: document.querySelectorAll(`#${styleId}`).length,
       activeKind: config.active.kind,
       activeId: config.active.id,

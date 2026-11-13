@@ -11,6 +11,7 @@ import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
 const edge =
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const rootId = "codex-wallpaper-p1";
+const controlRootId = "codex-wallpaper-p1-controls";
 
 async function startFixture() {
   const server = createServer((_request, response) => {
@@ -31,13 +32,16 @@ async function startFixture() {
           color-scheme: light;
         }
         body { margin: 0; min-height: 1200px; color: rgb(245 245 250); }
+        :root[data-theme="light"] body { color: rgb(20 20 24); }
+        [data-app-shell-page-surface] { background: var(--app-color-background-surface); }
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; }
       </style>
-      <div data-app-shell-main-surface>
-        <main>
+      <div data-app-shell-page-surface>
+        <div data-app-shell-main-surface>
+          <main>
           <article id="message" data-markdown-text-style="assistant-message">
             ${"Long assistant response ".repeat(40)}
           </article>
@@ -51,7 +55,8 @@ async function startFixture() {
           <form data-composer-surface-variant="inline">
             <textarea id="composer">Composer text</textarea>
           </form>
-        </main>
+          </main>
+        </div>
       </div>
       <aside data-app-shell-page-sidebar><button id="project-action">Project</button></aside>
       <aside data-app-shell-trailing-sidebar><pre id="terminal">terminal</pre></aside>
@@ -203,24 +208,33 @@ test("static background is single, removable and persists disabled", async (t) =
     `(() => {
       globalThis.WebWallGL = {
         bytesSource: () => ({}),
-        createScene: () => ({
-          load: async () => {
-            globalThis.__sceneLoaded = true;
-          },
-          pause: () => {
-            globalThis.__scenePaused = true;
-          },
-          resume: () => {
-            globalThis.__sceneResumed = true;
-          },
-          setFps: (fps) => {
-            globalThis.__sceneFps = fps;
-          },
-          setVolume: (volume) => {
-            globalThis.__sceneVolume = volume;
-          },
-          destroy() {}
-        })
+        createScene: (host) => {
+          const canvas = document.createElement("canvas");
+          canvas.dataset.sceneCanvas = "";
+          if (getComputedStyle(host).position === "static")
+            host.style.position = "relative";
+          canvas.style.cssText =
+            "position:absolute;inset:0;width:100%;height:100%;display:block";
+          host.append(canvas);
+          return {
+            load: async () => {
+              globalThis.__sceneLoaded = true;
+            },
+            pause: () => {
+              globalThis.__scenePaused = true;
+            },
+            resume: () => {
+              globalThis.__sceneResumed = true;
+            },
+            setFps: (fps) => {
+              globalThis.__sceneFps = fps;
+            },
+            setVolume: (volume) => {
+              globalThis.__sceneVolume = volume;
+            },
+            destroy() {}
+          };
+        }
       };
     })()`,
     options
@@ -237,9 +251,9 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `document.querySelector("#${rootId} [data-codex-wallpaper-settings]").click(),
+      `document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click(),
        (() => {
-         const panel = document.querySelector("#${rootId} [data-codex-wallpaper-panel]");
+         const panel = document.querySelector("#${controlRootId} [data-codex-wallpaper-panel]");
          return {
            open: panel.classList.contains("open"),
            cards: panel.querySelectorAll(".card").length
@@ -273,7 +287,8 @@ test("static background is single, removable and persists disabled", async (t) =
           );
         };
         const root = document.getElementById("${rootId}");
-        const lazyCard = [...root.querySelectorAll(".card")].find(
+        const controls = document.getElementById("${controlRootId}");
+        const lazyCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Lazy"
         );
         lazyCard.querySelector(".card-actions button").click();
@@ -294,7 +309,8 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         const root = document.getElementById("${rootId}");
-        const sceneCard = [...root.querySelectorAll(".card")].find(
+        const controls = document.getElementById("${controlRootId}");
+        const sceneCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Scene"
         );
         sceneCard.querySelector(".card-actions button").click();
@@ -309,29 +325,43 @@ test("static background is single, removable and persists disabled", async (t) =
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
-        const ranges = root.querySelectorAll(".range input");
+        const ranges = controls.querySelectorAll(".range input");
         ranges[3].value = "15";
         ranges[3].dispatchEvent(new Event("input", { bubbles: true }));
         ranges[4].value = "40";
         ranges[4].dispatchEvent(new Event("input", { bubbles: true }));
+        const canvas = root.querySelector("[data-scene-canvas]");
+        const layer = root.querySelector("[data-codex-wallpaper-layer]");
         return {
           loaded: globalThis.__sceneLoaded,
           paused: globalThis.__scenePaused,
           resumed: globalThis.__sceneResumed,
           fps: globalThis.__sceneFps,
-          volume: globalThis.__sceneVolume
+          volume: globalThis.__sceneVolume,
+          canvasFillsLayer:
+            canvas.getBoundingClientRect().height ===
+              layer.getBoundingClientRect().height &&
+            canvas.getBoundingClientRect().height > 0
         };
       })()`,
       options
     ),
-    { loaded: true, paused: true, resumed: true, fps: 15, volume: 0.4 }
+    {
+      loaded: true,
+      paused: true,
+      resumed: true,
+      fps: 15,
+      volume: 0.4,
+      canvasFillsLayer: true,
+    }
   );
   assert.deepEqual(
     await evaluateInPage(
       port,
       `(async () => {
         const root = document.getElementById("${rootId}");
-        const webCard = [...root.querySelectorAll(".card")].find(
+        const controls = document.getElementById("${controlRootId}");
+        const webCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Web"
         );
         webCard.querySelector(".card-actions button").click();
@@ -356,16 +386,17 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         const root = document.getElementById("${rootId}");
-        const imageCard = [...root.querySelectorAll(".card")].find(
+        const controls = document.getElementById("${controlRootId}");
+        const imageCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Image"
         );
         imageCard.querySelector(".card-actions button").click();
         imageCard.querySelectorAll(".card-actions button")[1].click();
         imageCard.querySelectorAll(".card-actions button")[2].click();
-        const opacity = root.querySelectorAll(".range input")[2];
+        const opacity = controls.querySelectorAll(".range input")[2];
         opacity.value = "66";
         opacity.dispatchEvent(new Event("input", { bubbles: true }));
-        const input = root.querySelector(".import-row input");
+        const input = controls.querySelector(".import-row input");
         const transfer = new DataTransfer();
         transfer.items.add(
           new File(
@@ -410,7 +441,8 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         const root = document.getElementById("${rootId}");
-        const reset = root.querySelector(".reset");
+        const controls = document.getElementById("${controlRootId}");
+        const reset = controls.querySelector(".reset");
         reset.click();
         reset.click();
         for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -424,7 +456,7 @@ test("static background is single, removable and persists disabled", async (t) =
           activeKind: saved.active.kind,
           imported: globalThis.__codexWallpaperApi.state().importedCount,
           state: globalThis.__codexWallpaperApi.state().state,
-          root: document.querySelectorAll("#${rootId}").length
+          root: document.querySelectorAll("#${rootId}, #${controlRootId}").length
         };
       })()`,
       options
@@ -442,6 +474,14 @@ test("static background is single, removable and persists disabled", async (t) =
       `(() => {
         const root = document.getElementById("${rootId}");
         const background = root.querySelector("[data-codex-wallpaper-layer]");
+        const media = root.querySelector(".media");
+        const controls = document.getElementById("${controlRootId}");
+        const toolbar = controls.querySelector(".toolbar");
+        const toolbarRect = toolbar.getBoundingClientRect();
+        const toolbarHit = document.elementFromPoint(
+          toolbarRect.right - 8,
+          toolbarRect.bottom - 8
+        );
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const tool = document.querySelector("#tool-action");
         const details = document.querySelector("#tool-details");
@@ -498,6 +538,11 @@ test("static background is single, removable and persists disabled", async (t) =
         streamed.textContent = "Streamed response";
         document.querySelector("#message").append(streamed);
         streamed.scrollIntoView({ block: "center" });
+        const readAlpha = (element) => {
+          const value = getComputedStyle(element).backgroundColor;
+          const match = value.match(/\\/\\s*([\\d.]+)\\s*\\)/);
+          return match ? Number(match[1]) : 1;
+        };
         const themeBases = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
           return [surface, toolSurface, diffSurface, codeSurface, composerSurface]
@@ -506,6 +551,13 @@ test("static background is single, removable and persists disabled", async (t) =
                 getComputedStyle(element).backgroundColor !==
                 "rgba(0, 0, 0, 0)"
             );
+        });
+        const wallpaperVisibility = ["dark", "light"].map((theme) => {
+          document.documentElement.dataset.theme = theme;
+          return {
+            surfaceAlpha: readAlpha(surface),
+            wallpaperOpacity: Number(getComputedStyle(media).opacity),
+          };
         });
         return {
           surfaceAboveBackground:
@@ -524,6 +576,13 @@ test("static background is single, removable and persists disabled", async (t) =
               "rgba(0, 0, 0, 0)"
           ),
           themesHaveReadabilityBases: themeBases.every(Boolean),
+          wallpaperRemainsVisible:
+            wallpaperVisibility.every(
+              ({ surfaceAlpha, wallpaperOpacity }) =>
+                surfaceAlpha >= 0.5 &&
+                surfaceAlpha <= 0.68 &&
+                wallpaperOpacity === 1
+            ),
           panelSurfacesHaveReadability: [
             leftPanel,
             rightPanel,
@@ -538,6 +597,11 @@ test("static background is single, removable and persists disabled", async (t) =
           dialogHasFocus,
           backgroundIgnoresPointers:
             getComputedStyle(background).pointerEvents === "none",
+          wallpaperIsVisible:
+            getComputedStyle(media).backgroundImage.includes("gradient") &&
+            getComputedStyle(document.querySelector("[data-app-shell-page-surface]"))
+              .backgroundColor === "rgba(0, 0, 0, 0)",
+          toolbarIsAboveHost: toolbar.contains(toolbarHit),
           toolReceivesClick: hit === tool && toolToggleWorked,
           composerHasFocus: document.activeElement === composer,
           messageIsSelectable: selection.toString().startsWith("Long assistant response"),
@@ -557,9 +621,12 @@ test("static background is single, removable and persists disabled", async (t) =
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
       themesHaveReadabilityBases: true,
+      wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
       dialogHasFocus: true,
       backgroundIgnoresPointers: true,
+      wallpaperIsVisible: true,
+      toolbarIsAboveHost: true,
       toolReceivesClick: true,
       composerHasFocus: true,
       messageIsSelectable: true,
@@ -574,13 +641,13 @@ test("static background is single, removable and persists disabled", async (t) =
   );
   await evaluateInPage(
     port,
-    `document.querySelector("#${rootId} [data-codex-wallpaper-toggle]").click()`,
+    `document.querySelector("#${controlRootId} [data-codex-wallpaper-toggle]").click()`,
     options
   );
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `({ root: document.querySelectorAll("#${rootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
+      `({ root: document.querySelectorAll("#${rootId}, #${controlRootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
       options
     ),
     { root: 0, styles: 0 }
@@ -606,7 +673,7 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `({ root: document.querySelectorAll("#${rootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
+      `({ root: document.querySelectorAll("#${rootId}, #${controlRootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
       options
     ),
     { root: 0, styles: 0 }
@@ -645,7 +712,7 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `({ root: document.querySelectorAll("#${rootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
+      `({ root: document.querySelectorAll("#${rootId}, #${controlRootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
       options
     ),
     { root: 0, styles: 0 }
