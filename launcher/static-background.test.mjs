@@ -185,13 +185,24 @@ test("static background is single, removable and persists disabled", async (t) =
           reason: "web-offline",
         },
         {
+          id: "fixture-web-fallback",
+          title: "Fixture Web Fallback",
+          type: "web",
+          playable: false,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: null,
+          webHtml: null,
+          reason: "web-preview-fallback",
+        },
+        {
           id: "fixture-lazy",
           title: "Fixture Lazy",
           type: "image",
           playable: false,
           fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          previewDataUrl: null,
           assetDataUrl: null,
           reason: "asset-not-loaded",
         },
@@ -261,7 +272,7 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.equal(initial.state, "enabled");
   assert.equal(initial.backgroundLayers, 1);
   assert.equal(initial.styles, 1);
-  assert.equal(initial.libraryCount, 5);
+  assert.equal(initial.libraryCount, 6);
   assert.equal(initial.volume, 0);
   assert.equal(initial.fpsCap, 30);
   assert.equal(initial.visible, true);
@@ -279,7 +290,59 @@ test("static background is single, removable and persists disabled", async (t) =
        })()`,
       options
     ),
-    { open: true, cards: 5 }
+    { open: true, cards: 6 }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const state = await globalThis.__codexWallpaperApi.configureHost();
+        const controls = document.getElementById("${controlRootId}");
+        const webCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Web"
+        );
+        return {
+          hostReady: state.hostReady,
+          meta: webCard.querySelector("small")?.textContent
+        };
+      })()`,
+      options
+    ),
+    { hostReady: true, meta: "web · 离线沙箱" }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        let hostRequests = 0;
+        globalThis.__codexWallpaperHostRequest = (raw) => {
+          const request = JSON.parse(raw);
+          if (request.type === "load-asset") hostRequests += 1;
+        };
+        const controls = document.getElementById("${controlRootId}");
+        const fallbackCard = [...controls.querySelectorAll(".card")].find(
+          (card) =>
+            card.querySelector("strong")?.textContent ===
+            "Fixture Web Fallback"
+        );
+        fallbackCard.querySelector(".card-actions button").click();
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return {
+          hostRequests,
+          meta: fallbackCard.querySelector("small")?.textContent,
+          preview:
+            document.querySelector("#${rootId} .media img")?.naturalWidth > 0,
+          status: controls.querySelector(".runtime-status")?.textContent
+        };
+      })()`,
+      options
+    ),
+    {
+      hostRequests: 0,
+      meta: "web · 预览降级",
+      preview: true,
+      status: "Fixture Web Fallback · web-preview-fallback",
+    }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -335,16 +398,84 @@ test("static background is single, removable and persists disabled", async (t) =
     await evaluateInPage(
       port,
       `(async () => {
+        const api = globalThis.__codexWallpaperApi;
+        api.beginAssetTransfer({
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: false,
+          previewDataUrl: null,
+          assetDataUrl: null,
+          assetUrl: null,
+          webHtml: null,
+          reason: null,
+          mime: "video/mp4",
+          size: ${Buffer.from(tinyMp4, "base64").length}
+        });
+        api.appendAssetTransferChunk("fixture-video", ${JSON.stringify(tinyMp4)});
+        await api.finishAssetTransfer("fixture-video");
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        const video = document.querySelector("#${rootId} video");
+        return {
+          playerCount: api.state().playerCount,
+          blobUrl: video?.src.startsWith("blob:") ?? false
+        };
+      })()`,
+      options
+    ),
+    { playerCount: 2, blobUrl: true }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const media = document.querySelector("#${rootId} .media");
+        let mutations = 0;
+        const observer = new MutationObserver(() => {
+          mutations += 1;
+        });
+        observer.observe(media, { childList: true });
+        globalThis.__codexWallpaperApi.receivePreview({
+          id: "fixture-video",
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          fallback: true
+        });
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        observer.disconnect();
+        return {
+          mutations,
+          playerCount: globalThis.__codexWallpaperApi.state().playerCount
+        };
+      })()`,
+      options
+    ),
+    { mutations: 0, playerCount: 2 }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
         globalThis.__codexWallpaperHostRequest = (raw) => {
           const request = JSON.parse(raw);
           if (request.type !== "load-asset") return;
           globalThis.__pendingLoadRequest = request;
         };
         const root = document.getElementById("${rootId}");
+        globalThis.__codexWallpaperApi.receivePreview({
+          id: "fixture-lazy",
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          fallback: true
+        });
+        await new Promise((resolve) => setTimeout(resolve, 20));
         const controls = document.getElementById("${controlRootId}");
         const lazyCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Lazy"
         );
+        const previewLoaded =
+          lazyCard.querySelector(".thumb img") instanceof HTMLImageElement;
         lazyCard.querySelector(".card-actions button").click();
         await new Promise((resolve) => setTimeout(resolve, 20));
         const imageCard = [...controls.querySelectorAll(".card")].find(
@@ -376,12 +507,18 @@ test("static background is single, removable and persists disabled", async (t) =
         return {
           active: globalThis.__codexWallpaperApi.state().activeId,
           mutations,
-          imageIsCurrentAsset: image?.src.includes("5d32b8") ?? false
+          imageIsCurrentAsset: image?.src.includes("5d32b8") ?? false,
+          previewLoaded
         };
       })()`,
       options
     ),
-    { active: "fixture-image", mutations: 0, imageIsCurrentAsset: true }
+    {
+      active: "fixture-image",
+      mutations: 0,
+      imageIsCurrentAsset: true,
+      previewLoaded: true,
+    }
   );
   assert.equal(
     await evaluateInPage(

@@ -46,6 +46,7 @@ export function createCodexWallpaperRuntime(payload) {
 
   let config = readConfig();
   let sourcePayload = payload || { library: [] };
+  let hostReady = false;
   let root = null;
   let panel = null;
   let layer = null;
@@ -61,7 +62,17 @@ export function createCodexWallpaperRuntime(payload) {
   let database = null;
   const runtimeAssets = new Map();
   const pendingAssetRequests = new Set();
+  const pendingPreviewRequests = new Set();
+  const failedPreviewIds = new Set();
+  const assetTransfers = new Map();
   const channel = new BroadcastChannel("codex-wallpaper-p1");
+  const previewObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      previewObserver.unobserve(entry.target);
+      requestPreview(entry.target.dataset.previewId);
+    }
+  });
   let measuredFps = 0;
   let frameCount = 0;
   let frameWindowStartedAt = performance.now();
@@ -130,6 +141,24 @@ export function createCodexWallpaperRuntime(payload) {
     ];
   }
 
+  function requestPreview(id) {
+    const entry = sourcePayload.library?.find(
+      (candidate) => candidate.id === id
+    );
+    if (
+      !id ||
+      entry?.previewDataUrl ||
+      pendingPreviewRequests.has(id) ||
+      failedPreviewIds.has(id) ||
+      typeof globalThis.__codexWallpaperHostRequest !== "function"
+    )
+      return;
+    pendingPreviewRequests.add(id);
+    globalThis.__codexWallpaperHostRequest(
+      JSON.stringify({ type: "load-preview", id })
+    );
+  }
+
   function findEntry(active) {
     const entry = libraryEntries().find(
       (entry) => entry.kind === active.kind && entry.id === active.id
@@ -158,7 +187,12 @@ export function createCodexWallpaperRuntime(payload) {
       playback.scene?.destroy();
       playback = null;
     }
-    if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+    if (currentObjectUrl) {
+      for (const [key, asset] of runtimeAssets) {
+        if (asset.assetUrl === currentObjectUrl) runtimeAssets.delete(key);
+      }
+      URL.revokeObjectURL(currentObjectUrl);
+    }
     currentObjectUrl = null;
   }
 
@@ -174,6 +208,14 @@ export function createCodexWallpaperRuntime(payload) {
       ? `blur(${config.settings.blur}px)`
       : "";
     dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
+  }
+
+  async function configureHost() {
+    hostReady = true;
+    pendingAssetRequests.clear();
+    pendingPreviewRequests.clear();
+    if (root) await applyActive();
+    return state();
   }
 
   function showGradient(message) {
@@ -200,7 +242,7 @@ export function createCodexWallpaperRuntime(payload) {
     applyVisualSettings();
   }
 
-  function showVideo(url, message) {
+  function showVideo(url, message, previewUrl) {
     revokePlayback();
     const generation = renderGeneration;
     const video = document.createElement("video");
@@ -215,7 +257,13 @@ export function createCodexWallpaperRuntime(payload) {
     const canvas = document.createElement("canvas");
     canvas.width = 1280;
     canvas.height = 720;
-    media.replaceChildren(canvas, video);
+    const preview = previewUrl ? document.createElement("img") : null;
+    if (preview) {
+      preview.className = "media-preview";
+      preview.alt = "";
+      preview.src = previewUrl;
+    }
+    media.replaceChildren(...(preview ? [preview] : []), canvas, video);
     video.className = "playback-source";
     media.className = "media";
     const context = canvas.getContext("2d", { alpha: false });
@@ -231,6 +279,7 @@ export function createCodexWallpaperRuntime(payload) {
           current.lastFrame = timestamp;
           if (video.readyState >= 2) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            preview?.remove();
             frameCount += 1;
             if (timestamp - frameWindowStartedAt >= 1000) {
               measuredFps = Math.round(
@@ -262,7 +311,8 @@ export function createCodexWallpaperRuntime(payload) {
     video.onerror = () => {
       if (generation !== renderGeneration) return;
       if (config.settings.volume) setStatus("视频加载失败，已降级");
-      showGradient("视频加载失败，已保留静态渐变");
+      if (previewUrl) showImage(previewUrl, "视频加载失败，已保留预览");
+      else showGradient("视频加载失败，已保留静态渐变");
     };
     video
       .play()
@@ -275,8 +325,7 @@ export function createCodexWallpaperRuntime(payload) {
     applyVisualSettings();
   }
 
-  function bytesFromDataUrl(url) {
-    const encoded = String(url).split(",", 2)[1] || "";
+  function bytesFromBase64(encoded) {
     const binary = atob(encoded);
     const bytes = new Uint8Array(binary.length);
     for (let index = 0; index < binary.length; index += 1)
@@ -284,22 +333,36 @@ export function createCodexWallpaperRuntime(payload) {
     return bytes;
   }
 
-  function showScene(entry) {
+  function bytesFromDataUrl(url) {
+    return bytesFromBase64(String(url).split(",", 2)[1] || "");
+  }
+
+  async function sceneBytes(assetUrl) {
+    if (assetUrl.startsWith("data:")) return bytesFromDataUrl(assetUrl);
+    const response = await fetch(assetUrl);
+    if (!response.ok) throw new Error(`Scene asset ${response.status}`);
+    return new Uint8Array(await response.arrayBuffer());
+  }
+
+  function showScene(entry, assetUrl, previewUrl) {
     revokePlayback();
     const generation = renderGeneration;
     const engine = globalThis.WebWallGL;
     if (!engine?.createScene || !engine?.bytesSource) {
-      if (entry.previewDataUrl)
-        showImage(
-          entry.previewDataUrl,
-          `${entry.title} · Scene 渲染器不可用，预览降级`
-        );
+      if (previewUrl)
+        showImage(previewUrl, `${entry.title} · Scene 渲染器不可用，预览降级`);
       else showGradient(`${entry.title} · Scene 渲染器不可用`);
       return;
     }
     const host = document.createElement("div");
     host.className = "scene-host";
-    media.replaceChildren(host);
+    const preview = previewUrl ? document.createElement("img") : null;
+    if (preview) {
+      preview.className = "media-preview";
+      preview.alt = "";
+      preview.src = previewUrl;
+    }
+    media.replaceChildren(host, ...(preview ? [preview] : []));
     media.className = "media";
     const instance = engine.createScene(host, {
       fps: Math.max(1, Math.min(30, Number(config.settings.fps) || 30)),
@@ -314,26 +377,28 @@ export function createCodexWallpaperRuntime(payload) {
       setFps: (fps) => instance.setFps?.(fps),
       setVolume: (volume) => instance.setVolume?.(volume),
     };
-    instance
-      .load(
-        engine.bytesSource(
-          bytesFromDataUrl(entry.assetDataUrl),
-          { type: "scene", file: "scene.pkg" },
-          entry.id
-        )
-      )
+    sceneBytes(assetUrl)
+      .then((bytes) => {
+        if (generation !== renderGeneration) return;
+        return instance.load(
+          engine.bytesSource(
+            bytes,
+            { type: "scene", file: "scene.pkg" },
+            entry.id
+          )
+        );
+      })
       .then(() => {
         if (generation !== renderGeneration) return;
         if (document.visibilityState === "hidden") instance.pause();
+        host.classList.add("ready");
+        preview?.remove();
         setStatus(`${entry.title} · Scene`);
       })
       .catch(() => {
         if (generation !== renderGeneration) return;
-        if (entry.previewDataUrl)
-          showImage(
-            entry.previewDataUrl,
-            `${entry.title} · Scene 失败，预览降级`
-          );
+        if (previewUrl)
+          showImage(previewUrl, `${entry.title} · Scene 失败，预览降级`);
         else showGradient(`${entry.title} · Scene 不支持`);
       });
     applyVisualSettings();
@@ -383,7 +448,17 @@ export function createCodexWallpaperRuntime(payload) {
           }
         }
       } else {
-        if (!entry.assetDataUrl && !entry.webHtml) {
+        const assetUrl = entry.assetUrl || entry.assetDataUrl;
+        const previewUrl = entry.previewDataUrl;
+        if (entry.type === "web" && !entry.webHtml) {
+          if (previewUrl)
+            showImage(previewUrl, `${entry.title} · Web 预览降级`);
+          else showGradient(`${entry.title} · Web 离线文件不可用`);
+          scheduleRotation();
+          renderPanel();
+          return;
+        }
+        if (!assetUrl && !entry.webHtml) {
           if (!pendingAssetRequests.has(entry.id)) {
             pendingAssetRequests.add(entry.id);
             if (typeof globalThis.__codexWallpaperHostRequest === "function") {
@@ -393,30 +468,30 @@ export function createCodexWallpaperRuntime(payload) {
               );
             }
           }
-          if (entry.previewDataUrl)
-            showImage(entry.previewDataUrl, `${entry.title} · 预览降级`);
+          if (previewUrl) showImage(previewUrl, `${entry.title} · 预览降级`);
           else showGradient(`${entry.title} · 重启专用入口后载入`);
           scheduleRotation();
           renderPanel();
           return;
         }
-        const url = entry.assetDataUrl || entry.previewDataUrl;
+        const url = assetUrl || previewUrl;
         if (!url && !entry.webHtml) {
           showGradient(`${entry.title} · 无可用画面`);
-        } else if (entry.type === "scene" && entry.assetDataUrl) {
-          showScene(entry);
+        } else if (entry.type === "scene" && assetUrl) {
+          showScene(entry, assetUrl, previewUrl);
         } else if (entry.type === "web" && entry.webHtml) {
           showWeb(entry);
-        } else if (entry.assetDataUrl && entry.type === "video") {
-          showVideo(url, `${entry.title} · 视频`);
+        } else if (assetUrl && entry.type === "video") {
+          showVideo(url, `${entry.title} · 视频`, previewUrl);
         } else {
           showImage(
             url,
-            entry.assetDataUrl
+            assetUrl
               ? `${entry.title} · ${entry.type}`
               : `${entry.title} · 预览降级`
           );
         }
+        if (assetUrl?.startsWith("blob:")) currentObjectUrl = assetUrl;
       }
     }
     scheduleRotation();
@@ -484,6 +559,14 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function entryState(entry) {
+    if (
+      hostReady &&
+      entry.kind === "workshop" &&
+      entry.type !== "web" &&
+      !entry.playable &&
+      !entry.webHtml
+    )
+      return `${entry.type}-on-demand`;
     if (entry.type === "scene")
       return entry.playable
         ? "scene-native"
@@ -502,13 +585,24 @@ export function createCodexWallpaperRuntime(payload) {
     item.className = "card";
     const visual = document.createElement("div");
     visual.className = "thumb";
-    if (entry.previewDataUrl || entry.assetDataUrl) {
+    const previewUrl = entry.previewDataUrl;
+    const visualUrl = previewUrl || entry.assetDataUrl;
+    if (visualUrl) {
       const image = document.createElement("img");
-      image.src = entry.previewDataUrl || entry.assetDataUrl;
+      image.src = visualUrl;
       image.alt = "";
+      image.onerror = () => {
+        failedPreviewIds.add(entry.id);
+        image.remove();
+        visual.textContent = entry.type.toUpperCase();
+        visual.dataset.previewId = entry.id;
+        previewObserver.observe(visual);
+      };
       visual.append(image);
     } else {
       visual.textContent = entry.type.toUpperCase();
+      visual.dataset.previewId = entry.id;
+      previewObserver.observe(visual);
     }
     const title = document.createElement("strong");
     title.textContent = entry.title;
@@ -517,13 +611,15 @@ export function createCodexWallpaperRuntime(payload) {
     meta.textContent =
       state === "scene-native"
         ? "scene · 原生渲染"
-        : state === "web-offline"
-          ? "web · 离线沙箱"
-          : entry.type === "scene" || entry.type === "web"
-            ? `${entry.type} · 预览降级`
-            : entry.playable
-              ? entry.type
-              : `${entry.type} · 不可播放`;
+        : state.endsWith("-on-demand")
+          ? `${entry.type} · 按需加载`
+          : state === "web-offline"
+            ? "web · 离线沙箱"
+            : entry.type === "scene" || entry.type === "web"
+              ? `${entry.type} · 预览降级`
+              : entry.playable
+                ? entry.type
+                : `${entry.type} · 不可播放`;
     const actions = document.createElement("div");
     actions.className = "card-actions";
     const use = document.createElement("button");
@@ -531,6 +627,7 @@ export function createCodexWallpaperRuntime(payload) {
     use.onclick = () => {
       config.active = { kind: entry.kind, id: entry.id };
       saveConfig();
+      requestPreview(entry.id);
       applyActive();
     };
     const favorite = document.createElement("button");
@@ -587,6 +684,7 @@ export function createCodexWallpaperRuntime(payload) {
     const playlist = panel.querySelector(".playlist-summary");
     const settings = panel.querySelector(".settings-grid");
     if (!list || !playlist || !settings) return;
+    previewObserver.disconnect();
     list.replaceChildren(...libraryEntries().map(card));
     const queued = playlistEntries();
     playlist.textContent = queued.length
@@ -662,6 +760,10 @@ export function createCodexWallpaperRuntime(payload) {
     revokePlayback();
     activeGeneration += 1;
     stopRotation();
+    pendingAssetRequests.clear();
+    pendingPreviewRequests.clear();
+    assetTransfers.clear();
+    previewObserver.disconnect();
     database?.close();
     database = null;
     channel.postMessage({ type: "prepare-reset" });
@@ -710,6 +812,84 @@ export function createCodexWallpaperRuntime(payload) {
       `#${rootId}, #${controlsId}, #${styleId}`
     ))
       node.remove();
+  }
+
+  function receivePreview(entry) {
+    pendingPreviewRequests.delete(entry.id);
+    failedPreviewIds.delete(entry.id);
+    const item = sourcePayload.library?.find(
+      (candidate) => candidate.id === entry.id
+    );
+    if (item) {
+      item.previewDataUrl = entry.previewDataUrl;
+      item.fallback = true;
+    }
+    renderPanel();
+    if (config.active.kind === "workshop" && config.active.id === entry.id) {
+      const active = findEntry(config.active);
+      if (!active?.assetUrl && !active?.assetDataUrl && !active?.webHtml)
+        return applyActive();
+    }
+    return state();
+  }
+
+  function receivePreviewError(id) {
+    pendingPreviewRequests.delete(id);
+    failedPreviewIds.add(id);
+    renderPanel();
+    return state();
+  }
+
+  function beginAssetTransfer(entry) {
+    assetTransfers.set(entry.id, {
+      entry,
+      parts: [],
+      received: 0,
+    });
+    if (
+      config.active.kind === "workshop" &&
+      config.active.id === entry.id &&
+      entry.previewDataUrl
+    )
+      showImage(entry.previewDataUrl, `${entry.title} · 正在载入`);
+    return state();
+  }
+
+  function appendAssetTransferChunk(id, encoded) {
+    const transfer = assetTransfers.get(id);
+    if (!transfer) return state();
+    const bytes = bytesFromBase64(encoded);
+    transfer.parts.push(bytes);
+    transfer.received += bytes.byteLength;
+    return state();
+  }
+
+  async function finishAssetTransfer(id) {
+    const transfer = assetTransfers.get(id);
+    if (!transfer) return state();
+    assetTransfers.delete(id);
+    pendingAssetRequests.delete(id);
+    const { mime, size, ...metadata } = transfer.entry;
+    if (transfer.received !== size)
+      throw new Error("Asset transfer size mismatch");
+    const url = URL.createObjectURL(new Blob(transfer.parts, { type: mime }));
+    if (
+      config.enabled &&
+      config.active.kind === "workshop" &&
+      config.active.id === id
+    ) {
+      runtimeAssets.set(`workshop:${id}`, {
+        ...metadata,
+        kind: "workshop",
+        playable: true,
+        assetDataUrl: null,
+        assetUrl: url,
+      });
+      return applyActive();
+    }
+    URL.revokeObjectURL(url);
+    renderPanel();
+    return state();
   }
 
   function buildPanel() {
@@ -791,7 +971,9 @@ export function createCodexWallpaperRuntime(payload) {
       #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
       #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
       #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
-      #${rootId} .scene-host { position: absolute; inset: 0; }
+      #${rootId} .scene-host { position: absolute; inset: 0; opacity: 0; transition: opacity .16s ease-out; }
+      #${rootId} .scene-host.ready { opacity: 1; }
+      #${rootId} .media-preview { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: block; }
       #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
@@ -866,6 +1048,10 @@ export function createCodexWallpaperRuntime(payload) {
     revokePlayback();
     activeGeneration += 1;
     stopRotation();
+    pendingAssetRequests.clear();
+    pendingPreviewRequests.clear();
+    assetTransfers.clear();
+    previewObserver.disconnect();
     database?.close();
     database = null;
     removeAdapterNodes();
@@ -898,6 +1084,7 @@ export function createCodexWallpaperRuntime(payload) {
       measuredFps,
       fpsCap: Number(config.settings.fps),
       volume: Number(config.settings.volume),
+      hostReady,
     };
   }
 
@@ -961,6 +1148,12 @@ export function createCodexWallpaperRuntime(payload) {
     enable,
     disable,
     state,
+    configureHost,
+    receivePreview,
+    receivePreviewError,
+    beginAssetTransfer,
+    appendAssetTransferChunk,
+    finishAssetTransfer,
     receiveAsset(entry) {
       pendingAssetRequests.delete(entry.id);
       runtimeAssets.set(`workshop:${entry.id}`, {
@@ -974,6 +1167,7 @@ export function createCodexWallpaperRuntime(payload) {
     },
     receiveAssetError(id, message) {
       pendingAssetRequests.delete(id);
+      assetTransfers.delete(id);
       renderPanel();
       if (config.active.kind === "workshop" && config.active.id === id)
         setStatus(`素材加载失败：${message}`);

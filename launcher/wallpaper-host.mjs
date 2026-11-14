@@ -2,7 +2,10 @@ import { open, readFile, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { callMainPage, openMainPageSession } from "./read-only-probe.mjs";
-import { loadWallpaperAsset } from "./wallpaper-library.mjs";
+import {
+  loadWallpaperPreview,
+  prepareWallpaperAsset,
+} from "./wallpaper-library.mjs";
 
 const port = Number(process.argv[2]);
 const bindingName = "__codexWallpaperHostRequest";
@@ -52,20 +55,92 @@ async function respond(expression) {
   );
 }
 
+async function sessionEvaluate(expression) {
+  const result = await session.send("Runtime.evaluate", {
+    expression,
+    returnByValue: true,
+    awaitPromise: true,
+  });
+  if (result?.exceptionDetails)
+    throw new Error(
+      result.exceptionDetails.exception?.description ||
+        result.exceptionDetails.text ||
+        "Runtime evaluation failed"
+    );
+  return result?.result?.value;
+}
+
+async function loadPreview(id) {
+  const entry = await loadWallpaperPreview(id);
+  if (!entry) throw new Error("Preview not found");
+  await sessionEvaluate(
+    `globalThis.__codexWallpaperApi.receivePreview(${JSON.stringify(entry)})`
+  );
+}
+
 async function loadAsset(id) {
-  const entry = await loadWallpaperAsset(id);
+  const entry = await prepareWallpaperAsset(id);
   if (!entry) throw new Error("Wallpaper not found");
-  if (entry.type === "scene" && entry.assetDataUrl) {
+  if (entry.type !== "web" && !entry.playable) {
+    if (entry.previewDataUrl)
+      await sessionEvaluate(
+        `globalThis.__codexWallpaperApi.receivePreview(${JSON.stringify({
+          id: entry.id,
+          previewDataUrl: entry.previewDataUrl,
+          fallback: true,
+        })})`
+      );
+    throw new Error("Wallpaper exceeds the 512 MiB transfer limit");
+  }
+  if (entry.type === "scene") {
     const available = await respond("typeof globalThis.WebWallGL === 'object'");
     if (available?.result?.value !== true) {
       const engine = await readFile(engineUrl, "utf8");
       await respond(engine);
     }
   }
-  await respond(
-    `globalThis.__codexWallpaperApi.receiveAsset(${JSON.stringify(entry)})`
-  );
+  const { path, mime, size, ...metadata } = entry;
+  if (entry.type === "web") {
+    await sessionEvaluate(
+      `globalThis.__codexWallpaperApi.receiveAsset(${JSON.stringify(metadata)})`
+    );
+    return;
+  }
+  const handle = await open(path, "r");
+  try {
+    await sessionEvaluate(
+      `globalThis.__codexWallpaperApi.beginAssetTransfer(${JSON.stringify({
+        ...metadata,
+        mime,
+        size,
+      })})`
+    );
+    const chunkSize = 4 * 1024 * 1024;
+    for (let offset = 0; offset < size; offset += chunkSize) {
+      const length = Math.min(chunkSize, size - offset);
+      const buffer = Buffer.allocUnsafe(length);
+      const { bytesRead } = await handle.read(buffer, 0, length, offset);
+      if (bytesRead <= 0) throw new Error("Asset transfer ended early");
+      await sessionEvaluate(
+        `globalThis.__codexWallpaperApi.appendAssetTransferChunk(${JSON.stringify(
+          String(id)
+        )}, ${JSON.stringify(buffer.subarray(0, bytesRead).toString("base64"))})`
+      );
+    }
+    await sessionEvaluate(
+      `globalThis.__codexWallpaperApi.finishAssetTransfer(${JSON.stringify(
+        String(id)
+      )})`
+    );
+  } finally {
+    await handle.close();
+  }
 }
+
+const requestHandlers = {
+  "load-preview": { run: loadPreview, error: "receivePreviewError" },
+  "load-asset": { run: loadAsset, error: "receiveAssetError" },
+};
 
 let session;
 try {
@@ -85,17 +160,21 @@ try {
       session.close();
       return;
     }
-    if (request.type !== "load-asset" || inFlight.has(request.id)) return;
-    inFlight.add(request.id);
-    loadAsset(request.id)
+    const handler = requestHandlers[request.type];
+    if (!handler) return;
+    const key = `${request.type}:${request.id}`;
+    if (inFlight.has(key)) return;
+    inFlight.add(key);
+    handler
+      .run(request.id)
       .catch((error) => {
-        respond(
-          `globalThis.__codexWallpaperApi?.receiveAssetError(${JSON.stringify(
-            request.id
+        sessionEvaluate(
+          `globalThis.__codexWallpaperApi?.${handler.error}(${JSON.stringify(
+            String(request.id)
           )}, ${JSON.stringify(String(error?.message || error))})`
-        );
+        ).catch(() => {});
       })
-      .finally(() => inFlight.delete(request.id));
+      .finally(() => inFlight.delete(key));
   });
   await session.send("Runtime.enable");
   await session.send("Runtime.addBinding", { name: bindingName });

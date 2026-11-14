@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { scanWallpaperLibrary } from "./wallpaper-library.mjs";
+import {
+  loadWallpaperPreview,
+  prepareWallpaperAsset,
+  scanWallpaperLibrary,
+} from "./wallpaper-library.mjs";
 
 test("scans local Wallpaper Engine projects without exposing paths", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "codex-wallpaper-library-"));
@@ -161,4 +165,30 @@ test("scans local Wallpaper Engine projects without exposing paths", async (t) =
   );
   assert.ok(result.entries.every((entry) => !("dirAbs" in entry)));
   assert.ok(result.entries.every((entry) => !("fileAbs" in entry)));
+  const preview = await loadWallpaperPreview("picture", {
+    installDir,
+    libraryDirs: [libraryDir],
+  });
+  assert.equal(preview.id, "picture");
+  assert.match(preview.previewDataUrl, /^data:image\/png;base64,/);
+  const prepared = await prepareWallpaperAsset("picture", {
+    installDir,
+    libraryDirs: [libraryDir],
+  });
+  assert.equal(prepared.mime, "image/png");
+  assert.equal(prepared.size, 4);
+  assert.equal(prepared.playable, true);
+  await project(workshopRoot, "huge", {
+    title: "Huge",
+    type: "video",
+    file: "huge.mp4",
+  });
+  await writeFile(join(workshopRoot, "huge", "huge.mp4"), Buffer.alloc(0));
+  await truncate(join(workshopRoot, "huge", "huge.mp4"), 512 * 1024 * 1024 + 1);
+  const huge = await prepareWallpaperAsset("huge", {
+    installDir,
+    libraryDirs: [libraryDir],
+  });
+  assert.equal(huge.playable, false);
+  assert.equal(huge.reason, "asset-too-large");
 });

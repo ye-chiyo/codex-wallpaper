@@ -1,16 +1,10 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { runtimeSource } from "./client-runtime.mjs";
 import { callMainPage } from "./read-only-probe.mjs";
 import { scanWallpaperLibrary } from "./wallpaper-library.mjs";
 
 const defaultPage = "app://-/index.html";
-export const wallpaperConfigKey = "codex-wallpaper-p1-config";
-const sceneEngineUrl = new URL(
-  "../node_modules/webwallgl/webwallgl.global.min.js",
-  import.meta.url
-);
 const bridgeUrl = new URL("./wallpaper-host.mjs", import.meta.url);
 
 async function evaluate(port, page, source) {
@@ -32,45 +26,12 @@ async function evaluate(port, page, source) {
   return result?.result?.value;
 }
 
-async function activeLibraryId(port, page) {
-  const raw = await evaluate(
-    port,
-    page,
-    `localStorage.getItem(${JSON.stringify(wallpaperConfigKey)})`
-  );
-  try {
-    const value = JSON.parse(raw || "null");
-    if (
-      value?.active?.kind === "workshop" &&
-      typeof value.active.id === "string"
-    )
-      return value.active.id;
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-async function payloadFor(port, page) {
-  const activeId = await activeLibraryId(port, page);
+async function payloadFor() {
   try {
     const library = await scanWallpaperLibrary({
-      assetIds: activeId ? [activeId] : [],
+      assetLimit: 0,
+      previewLimit: 0,
     });
-    const active = library.entries.find(
-      (entry) => entry.id === activeId && entry.kind !== "imported"
-    );
-    if (active?.type === "scene" && active.assetDataUrl) {
-      const available = await evaluate(
-        port,
-        page,
-        "typeof globalThis.WebWallGL === 'object'"
-      );
-      if (!available) {
-        const engine = await readFile(sceneEngineUrl, "utf8");
-        await evaluate(port, page, engine);
-      }
-    }
     return { version: 1, library: library.entries };
   } catch {
     return { version: 1, library: [] };
@@ -79,7 +40,7 @@ async function payloadFor(port, page) {
 
 export async function applyStaticBackground(port, options = {}) {
   const page = options.page ?? defaultPage;
-  const payload = options.payload ?? (await payloadFor(port, page));
+  const payload = options.payload ?? (await payloadFor());
   const result = await evaluate(port, page, runtimeSource(payload));
   if (!result || result.state === undefined)
     throw new Error("Missing wallpaper state");
@@ -156,9 +117,18 @@ if (
   const port = Number(process.argv[2]);
   const action = process.argv[3] === "disable" ? "disable" : "enable";
   try {
-    const result = await applyStaticBackground(port, { action });
-    if (action === "enable" && result.state === "enabled")
-      Object.assign(result, await startBridge(port));
+    let result = await applyStaticBackground(port, { action });
+    if (action === "enable" && result.state === "enabled") {
+      const bridge = await startBridge(port);
+      if (bridge.bridgePid)
+        result = await evaluate(
+          port,
+          defaultPage,
+          "globalThis.__codexWallpaperApi.configureHost()"
+        );
+      result.bridgePid = bridge.bridgePid;
+      if (bridge.bridgeError) result.bridgeError = bridge.bridgeError;
+    }
     console.log(JSON.stringify(result));
   } catch (error) {
     const message = String(error?.message || error).replace(

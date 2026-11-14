@@ -5,11 +5,16 @@ import { createSteamDiscoveryKit } from "./vendor/dsh-wallpaper-engine/steam-dis
 import { createWallpaperScanKit } from "./vendor/dsh-wallpaper-engine/wallpaper-scan.js";
 
 const WE_APPID = "431960";
-const defaultPreviewLimitBytes = 384 * 1024;
-const imageLimitBytes = 8 * 1024 * 1024;
-const videoLimitBytes = 16 * 1024 * 1024;
-const sceneLimitBytes = 64 * 1024 * 1024;
+const defaultPreviewLimitBytes = 2 * 1024 * 1024;
+const imageLimitBytes = 16 * 1024 * 1024;
+const videoLimitBytes = 256 * 1024 * 1024;
+const sceneLimitBytes = 256 * 1024 * 1024;
 const webHtmlLimitBytes = 512 * 1024;
+const transferLimitBytes = 512 * 1024 * 1024;
+const projectCacheTtlMs = 5000;
+let defaultProjectsCache = null;
+let defaultProjectsCachedAt = 0;
+let defaultProjectsPromise = null;
 
 async function pathExists(path) {
   try {
@@ -63,6 +68,88 @@ function mediaType(path) {
   return "application/octet-stream";
 }
 
+function createScanKit() {
+  return createWallpaperScanKit({
+    WE_APPID,
+    pathExistsP: pathExists,
+    isFileP: isFile,
+    isDirectoryP: isDirectory,
+    extOf,
+    schemeToCss,
+  });
+}
+
+async function scanProjects(installDir, libraryDirs) {
+  return createScanKit().enumerateWallpapersAsync(installDir, libraryDirs);
+}
+
+async function discoverProjects() {
+  const discovery = createSteamDiscoveryKit({
+    WE_APPID,
+    pathExistsP: pathExists,
+  });
+  const installDir = await discovery.locateWallpaperEngineP();
+  if (!installDir) return null;
+  return scanProjects(installDir, await discovery.owningLibrariesP());
+}
+
+async function readWebHtml(path) {
+  const candidate = await dataUrl(path, webHtmlLimitBytes);
+  return candidate
+    ? Buffer.from(candidate.url.split(",", 2)[1], "base64").toString("utf8")
+    : null;
+}
+
+function mediaReason(
+  type,
+  { playable, webHtml, fallbackReason = "asset-too-large-or-missing" }
+) {
+  if (type === "scene")
+    return playable ? "scene-native" : "scene-preview-fallback";
+  if (type === "web") return webHtml ? "web-offline" : "web-preview-fallback";
+  return playable ? null : fallbackReason;
+}
+
+async function enumerateProjects({
+  installDir = null,
+  libraryDirs = null,
+} = {}) {
+  const useDefault = !installDir && !libraryDirs;
+  if (
+    useDefault &&
+    defaultProjectsCache &&
+    Date.now() - defaultProjectsCachedAt < projectCacheTtlMs
+  )
+    return defaultProjectsCache;
+  if (useDefault && defaultProjectsPromise) return defaultProjectsPromise;
+  if (useDefault) {
+    defaultProjectsPromise = discoverProjects()
+      .then((projects) => {
+        if (projects) {
+          defaultProjectsCache = projects;
+          defaultProjectsCachedAt = Date.now();
+        }
+        return projects;
+      })
+      .finally(() => {
+        defaultProjectsPromise = null;
+      });
+    return defaultProjectsPromise;
+  }
+  let resolvedInstallDir = installDir;
+  let resolvedLibraryDirs = libraryDirs;
+  if (!resolvedInstallDir || !resolvedLibraryDirs) {
+    const discovery = createSteamDiscoveryKit({
+      WE_APPID,
+      pathExistsP: pathExists,
+    });
+    resolvedInstallDir ??= await discovery.locateWallpaperEngineP();
+    resolvedLibraryDirs ??= await discovery.owningLibrariesP();
+  }
+  if (!resolvedInstallDir) return null;
+  return scanProjects(resolvedInstallDir, resolvedLibraryDirs);
+}
+
 async function dataUrl(path, limit) {
   if (!path) return null;
   try {
@@ -90,18 +177,10 @@ function publicEntry(entry) {
     previewDataUrl: entry.previewDataUrl || null,
     assetDataUrl: entry.assetDataUrl || null,
     webHtml: entry.webHtml || null,
-    reason:
-      entry.type === "scene"
-        ? entry.assetDataUrl
-          ? "scene-native"
-          : "scene-preview-fallback"
-        : entry.type === "web"
-          ? entry.webHtml
-            ? "web-offline"
-            : "web-preview-fallback"
-          : entry.playable
-            ? null
-            : "asset-too-large-or-missing",
+    reason: mediaReason(entry.type, {
+      playable: Boolean(entry.assetDataUrl),
+      webHtml: entry.webHtml,
+    }),
   };
 }
 
@@ -110,45 +189,23 @@ export async function scanWallpaperLibrary({
   libraryDirs = null,
   previewLimit = 200,
   previewLimitBytes = defaultPreviewLimitBytes,
-  assetIds = [],
   assetLimit = 4,
   assetBudget = 16 * 1024 * 1024,
 } = {}) {
-  let resolvedInstallDir = installDir;
-  let resolvedLibraryDirs = libraryDirs;
-  if (!resolvedInstallDir || !resolvedLibraryDirs) {
-    const discovery = createSteamDiscoveryKit({
-      WE_APPID,
-      pathExistsP: pathExists,
-    });
-    resolvedInstallDir ??= await discovery.locateWallpaperEngineP();
-    resolvedLibraryDirs ??= await discovery.owningLibrariesP();
-  }
-
-  if (!resolvedInstallDir) {
+  const projects = await enumerateProjects({ installDir, libraryDirs });
+  if (!projects) {
     return { entries: [], installAvailable: false };
   }
-
-  const scan = createWallpaperScanKit({
-    WE_APPID,
-    pathExistsP: pathExists,
-    isFileP: isFile,
-    isDirectoryP: isDirectory,
-    extOf,
-    schemeToCss,
-  });
-  const projects = await scan.enumerateWallpapersAsync(
-    resolvedInstallDir,
-    resolvedLibraryDirs
-  );
 
   const entries = [];
   let assetsLeft = Math.max(0, assetLimit);
   let assetBytesLeft = Math.max(0, assetBudget);
-  const requestedAssets = new Set(assetIds);
   for (const project of projects) {
     if (!(await isFile(project.fileAbs))) continue;
-    const preview = await dataUrl(project.previewAbs, previewLimitBytes);
+    const preview =
+      previewLimit > 0
+        ? await dataUrl(project.previewAbs, previewLimitBytes)
+        : null;
     const perEntryLimit =
       project.type === "image"
         ? imageLimitBytes
@@ -158,10 +215,7 @@ export async function scanWallpaperLibrary({
             ? sceneLimitBytes
             : 0;
     let asset = null;
-    if (
-      perEntryLimit > 0 &&
-      (requestedAssets.has(String(project.id)) || assetsLeft > 0)
-    ) {
+    if (perEntryLimit > 0 && assetsLeft > 0) {
       const candidate = await dataUrl(
         project.fileAbs,
         Math.min(perEntryLimit, assetBytesLeft)
@@ -174,15 +228,7 @@ export async function scanWallpaperLibrary({
     }
     let webHtml = null;
     if (project.type === "web") {
-      try {
-        const candidate = await dataUrl(project.fileAbs, webHtmlLimitBytes);
-        if (candidate) {
-          const encoded = candidate.url.split(",", 2)[1];
-          webHtml = Buffer.from(encoded, "base64").toString("utf8");
-        }
-      } catch {
-        webHtml = null;
-      }
+      webHtml = await readWebHtml(project.fileAbs);
     }
     entries.push(
       publicEntry({
@@ -213,14 +259,60 @@ export async function scanWallpaperLibrary({
   };
 }
 
-export async function loadWallpaperAsset(id) {
-  const result = await scanWallpaperLibrary({
-    assetIds: [String(id)],
-    assetLimit: 0,
-    assetBudget: 64 * 1024 * 1024,
-    previewLimit: 0,
-  });
-  return result.entries.find((entry) => entry.id === String(id)) || null;
+export async function loadWallpaperPreview(
+  id,
+  { installDir = null, libraryDirs = null } = {}
+) {
+  const projects = await enumerateProjects({ installDir, libraryDirs });
+  const project = projects?.find((entry) => String(entry.id) === String(id));
+  const preview = await dataUrl(project?.previewAbs, defaultPreviewLimitBytes);
+  return preview
+    ? {
+        id: String(id),
+        previewDataUrl: preview.url,
+        fallback: true,
+      }
+    : null;
+}
+
+export async function prepareWallpaperAsset(
+  id,
+  { installDir = null, libraryDirs = null } = {}
+) {
+  const projects = await enumerateProjects({ installDir, libraryDirs });
+  const project = projects?.find((entry) => String(entry.id) === String(id));
+  if (!project?.fileAbs) return null;
+  try {
+    const info = await stat(project.fileAbs);
+    if (!info.isFile()) return null;
+    const preview = await dataUrl(project.previewAbs, defaultPreviewLimitBytes);
+    const webHtml =
+      project.type === "web" ? await readWebHtml(project.fileAbs) : null;
+    const playable = project.type !== "web" && info.size <= transferLimitBytes;
+    return {
+      id: String(project.id),
+      title: String(project.title || project.id),
+      type: project.type,
+      contentrating: project.contentrating || null,
+      schemeColor: project.schemeColor || null,
+      playable,
+      fallback: Boolean(preview),
+      previewDataUrl: preview?.url || null,
+      assetDataUrl: null,
+      assetUrl: null,
+      webHtml,
+      reason: mediaReason(project.type, {
+        playable,
+        webHtml,
+        fallbackReason: "asset-too-large",
+      }),
+      path: project.fileAbs,
+      mime: mediaType(project.fileAbs),
+      size: info.size,
+    };
+  } catch {
+    return null;
+  }
 }
 
 if (
