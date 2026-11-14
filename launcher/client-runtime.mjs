@@ -55,6 +55,8 @@ export function createCodexWallpaperRuntime(payload) {
   let playback = null;
   let currentObjectUrl = null;
   let rotationTimer = null;
+  let renderGeneration = 0;
+  let activeGeneration = 0;
   let imported = [];
   let database = null;
   const runtimeAssets = new Map();
@@ -144,6 +146,7 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function revokePlayback() {
+    renderGeneration += 1;
     measuredFps = 0;
     frameCount = 0;
     frameWindowStartedAt = performance.now();
@@ -183,10 +186,14 @@ export function createCodexWallpaperRuntime(payload) {
 
   function showImage(url, message) {
     revokePlayback();
+    const generation = renderGeneration;
     const image = document.createElement("img");
     image.alt = "";
     image.src = url;
-    image.onerror = () => showGradient("素材加载失败，已保留静态渐变");
+    image.onerror = () => {
+      if (generation === renderGeneration)
+        showGradient("素材加载失败，已保留静态渐变");
+    };
     media.replaceChildren(image);
     media.className = "media";
     if (message) setStatus(message);
@@ -195,6 +202,7 @@ export function createCodexWallpaperRuntime(payload) {
 
   function showVideo(url, message) {
     revokePlayback();
+    const generation = renderGeneration;
     const video = document.createElement("video");
     video.src = url;
     video.loop = true;
@@ -241,6 +249,7 @@ export function createCodexWallpaperRuntime(payload) {
     };
     playback = current;
     video.onloadedmetadata = () => {
+      if (generation !== renderGeneration) return;
       const scale = Math.min(
         1,
         1920 / video.videoWidth,
@@ -251,17 +260,17 @@ export function createCodexWallpaperRuntime(payload) {
       current.start();
     };
     video.onerror = () => {
+      if (generation !== renderGeneration) return;
       if (config.settings.volume) setStatus("视频加载失败，已降级");
       showGradient("视频加载失败，已保留静态渐变");
     };
     video
       .play()
       .then(() => {
+        if (generation !== renderGeneration) return;
         if (document.visibilityState === "hidden") video.pause();
       })
-      .catch(() => {
-        showGradient("视频无法播放，已保留静态渐变");
-      });
+      .catch(() => {});
     if (message) setStatus(message);
     applyVisualSettings();
   }
@@ -277,6 +286,7 @@ export function createCodexWallpaperRuntime(payload) {
 
   function showScene(entry) {
     revokePlayback();
+    const generation = renderGeneration;
     const engine = globalThis.WebWallGL;
     if (!engine?.createScene || !engine?.bytesSource) {
       if (entry.previewDataUrl)
@@ -313,10 +323,12 @@ export function createCodexWallpaperRuntime(payload) {
         )
       )
       .then(() => {
+        if (generation !== renderGeneration) return;
         if (document.visibilityState === "hidden") instance.pause();
         setStatus(`${entry.title} · Scene`);
       })
       .catch(() => {
+        if (generation !== renderGeneration) return;
         if (entry.previewDataUrl)
           showImage(
             entry.previewDataUrl,
@@ -341,6 +353,7 @@ export function createCodexWallpaperRuntime(payload) {
 
   async function applyActive() {
     if (!root) return;
+    const generation = ++activeGeneration;
     stopRotation();
     const active = config.active || defaults.active;
     if (active.kind === "builtin") {
@@ -351,9 +364,11 @@ export function createCodexWallpaperRuntime(payload) {
         showGradient("已跳过缺失的壁纸");
       } else if (entry.kind === "imported") {
         const db = await openDatabase();
+        if (generation !== activeGeneration) return state();
         const item = await requestResult(
           db.transaction(dbStore, "readonly").objectStore(dbStore).get(entry.id)
         );
+        if (generation !== activeGeneration) return state();
         if (!item?.blob) {
           showGradient("已跳过缺失的素材");
         } else {
@@ -468,6 +483,20 @@ export function createCodexWallpaperRuntime(payload) {
     scheduleRotation();
   }
 
+  function entryState(entry) {
+    if (entry.type === "scene")
+      return entry.playable
+        ? "scene-native"
+        : entry.reason || "scene-preview-fallback";
+    if (entry.type === "web")
+      return entry.webHtml
+        ? "web-offline"
+        : entry.reason || "web-preview-fallback";
+    return entry.playable
+      ? entry.type
+      : entry.reason || "asset-too-large-or-missing";
+  }
+
   function card(entry) {
     const item = document.createElement("article");
     item.className = "card";
@@ -484,10 +513,11 @@ export function createCodexWallpaperRuntime(payload) {
     const title = document.createElement("strong");
     title.textContent = entry.title;
     const meta = document.createElement("small");
+    const state = entryState(entry);
     meta.textContent =
-      entry.reason === "scene-native"
+      state === "scene-native"
         ? "scene · 原生渲染"
-        : entry.reason === "web-offline"
+        : state === "web-offline"
           ? "web · 离线沙箱"
           : entry.type === "scene" || entry.type === "web"
             ? `${entry.type} · 预览降级`
@@ -575,7 +605,7 @@ export function createCodexWallpaperRuntime(payload) {
       config.active.kind === "builtin"
         ? "内置渐变"
         : active
-          ? `${active.title} · ${active.reason || active.type}`
+          ? `${active.title} · ${entryState(active)}`
           : "已跳过缺失的壁纸"
     );
   }
@@ -630,6 +660,7 @@ export function createCodexWallpaperRuntime(payload) {
 
   async function resetAll() {
     revokePlayback();
+    activeGeneration += 1;
     stopRotation();
     database?.close();
     database = null;
@@ -655,9 +686,7 @@ export function createCodexWallpaperRuntime(payload) {
       await applyActive();
       return state();
     }
-    document.getElementById(rootId)?.remove();
-    document.getElementById(controlsId)?.remove();
-    document.getElementById(styleId)?.remove();
+    removeAdapterNodes();
     root = null;
     panel = null;
     layer = null;
@@ -674,6 +703,13 @@ export function createCodexWallpaperRuntime(payload) {
     saveConfig();
     installHotkey();
     return state();
+  }
+
+  function removeAdapterNodes() {
+    for (const node of document.querySelectorAll(
+      `#${rootId}, #${controlsId}, #${styleId}`
+    ))
+      node.remove();
   }
 
   function buildPanel() {
@@ -743,8 +779,9 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function mount() {
-    if (document.getElementById(rootId) || document.getElementById(controlsId))
-      return;
+    if (root?.isConnected) return;
+    root = null;
+    removeAdapterNodes();
     const style = document.createElement("style");
     style.id = styleId;
     style.textContent = `
@@ -827,12 +864,11 @@ export function createCodexWallpaperRuntime(payload) {
     config.enabled = false;
     saveConfig();
     revokePlayback();
+    activeGeneration += 1;
     stopRotation();
     database?.close();
     database = null;
-    document.getElementById(rootId)?.remove();
-    document.getElementById(controlsId)?.remove();
-    document.getElementById(styleId)?.remove();
+    removeAdapterNodes();
     root = null;
     panel = null;
     layer = null;
@@ -931,12 +967,16 @@ export function createCodexWallpaperRuntime(payload) {
         ...entry,
         kind: "workshop",
       });
-      return applyActive();
+      if (config.active.kind === "workshop" && config.active.id === entry.id)
+        return applyActive();
+      renderPanel();
+      return state();
     },
     receiveAssetError(id, message) {
       pendingAssetRequests.delete(id);
-      setStatus(`素材加载失败：${message}`);
       renderPanel();
+      if (config.active.kind === "workshop" && config.active.id === id)
+        setStatus(`素材加载失败：${message}`);
       return state();
     },
   };
