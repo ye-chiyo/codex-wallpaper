@@ -28,6 +28,7 @@
 - TDD 红灯先分别观察到：缺少 Startup 入口函数、专用 root 未要求成功记录、launcher 不回写临时 receipt、外部同名快捷方式会被错误删除、包查询异常没有 receipt。逐项补最小实现后转绿。
 - 自动化只使用进程 fixture、临时 Startup/回执目录、mock `Get-AppxPackage`/`Get-CimInstance`/`Get-NetTCPConnection` 和 activation 边界 stub。没有读取真实 Startup 内容，没有写真实 Startup，没有查询真实 Codex 进程、连接 CDP、启动/关闭/重启 Codex，也没有修改包、日常 profile、原入口或 source worktree。
 - 自动化覆盖 11 个 launcher 预检场景、3 个 root 状态场景和 1 个 Startup 入口场景；离线完整 Node 测试另有 10/10 通过。`launcher/README.md` 给出可直接复制的启用、状态、撤销命令，并记录真实注销/重启门槛。兼容 CRLF 的全仓检查命令 `corepack pnpm exec prettier --check --end-of-line auto .` 与 `git diff --check` 通过。
+- 最终同步已把集成分支 `93fa9b6` 合入本实施分支的 `7c66b82`；文件无重叠。合并后重新运行完整 Node 测试 10/10、上述三组 PowerShell 测试、全仓兼容 CRLF 的 Prettier 检查和 `git diff --check`，全部通过。
 
 ## Human gates
 
