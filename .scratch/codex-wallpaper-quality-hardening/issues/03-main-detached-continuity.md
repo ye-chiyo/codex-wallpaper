@@ -38,3 +38,4 @@
 - 2026-11-15：验证通过 `corepack pnpm test` 10/10、startup-roots 2/2、profile-preflight 7/7。当前分支没有修改 02 的 PowerShell/startup 文件，也没有应用 04 candidate。
 - 2026-11-15：05 统一链路只使用已核验的 `data-app-shell-trailing-sidebar` / `data-thread-find-target='review'` fixture 结构，未新增 detached 注入或 target allowlist。真实 detached 页面身份仍无 live 证据，本门禁保持未通过；脱敏历史帧仅保留“曾发生黑底”的外观佐证。
 - 2026-11-16：从 D:/AI/codex-wallpaper-hardening 手动启动 20b9660 后，实际点击聊天卡上的「变更」。当前主聊天 CDP 目标保持可见，未新增 detached 目标；已存在的 detached 目标在点击前后均存在。窗口中出现可关闭的「变更」标签，当前脱敏截图显示右侧内容区仍有深色实底。窗口布局随后变化，未捕获十轮有效切换或时序证据；不勾选连续性及无闪动验收。
+- 2026-11-16 真实闪动复现：壁纸启用时，点击同页「变更」后曾反复交替显示亮色原始壁纸与压暗的聊天表面。主目标始终可见且 Scene Canvas 没有替换；渲染轨迹中聊天区的边界与「变更」标签反复变化。关闭壁纸、撤掉整个宿主定位覆盖、只保留标题栏原生定位分别作为对照；单独关闭模糊或移除 z-index 不解决。宿主的 [data-app-shell-titlebar] 原为 fixed，壁纸公共样式把它改成了 relative。只排除标题栏的定位覆盖时布局稳定，保留其余壁纸样式。夹具在宿主 CSS layer 下仅 titlebarRemainsFixed 转红，修复后转绿。

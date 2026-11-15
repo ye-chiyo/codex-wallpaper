@@ -157,6 +157,7 @@ async function startFixture() {
         :root[data-theme="light"] body { color: rgb(20 20 24); }
         [data-app-shell-page-surface] { background: var(--app-color-background-surface); }
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
+        @layer host { [data-app-shell-titlebar] { position: fixed; top: 0; height: 36px; } }
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
@@ -190,6 +191,7 @@ async function startFixture() {
             </div>
             </div>
             </main>
+            <header data-app-shell-titlebar>Chat toolbar</header>
           </div>
         </div>
         <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary"><span>Changes</span><button id="close-changes" type="button">Close</button></header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
@@ -1255,7 +1257,9 @@ test("static background is single, removable and persists disabled", async (t) =
         const review = sidebar.querySelector(
           "[data-thread-find-target='review']"
         );
+        const titlebar = document.querySelector("[data-app-shell-titlebar]");
         const opened = {
+          titlebarRemainsFixed: getComputedStyle(titlebar).position === "fixed",
           panel: !sidebar.hidden,
           panelAlpha: getComputedStyle(sidebar).backgroundColor,
           reviewAlpha: getComputedStyle(review).backgroundColor,
@@ -1272,6 +1276,7 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
+      titlebarRemainsFixed: true,
       panel: true,
       panelAlpha: "rgba(0, 0, 0, 0)",
       reviewAlpha: "rgba(0, 0, 0, 0)",
