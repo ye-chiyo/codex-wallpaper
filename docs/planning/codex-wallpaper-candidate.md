@@ -1,11 +1,12 @@
 # Codex 壁纸统一验收候选
 
-日期：2026-11-13（Asia/Shanghai）。状态：源码候选和离线检查完成，真实 Codex 验收未开始。
+日期：2026-11-15（Asia/Shanghai）。状态：当前安装版本的启动器兼容更新和离线检查进行中，真实 Codex 验收未开始。
 
 ## 入口与版本
 
 - 日常入口：专用启动器 `Codex-Wallpaper.cmd`。
-- Codex MSIX：`26.1106.6628.0`。
+- Codex MSIX：`26.1111.2228.0`。
+- 原 EXE SHA-256：`CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6`。
 - 原入口自动接入：仍未找到可行路径；原入口保持未修改。
 - 上游复用：`dsh-wallpaper-engine@fd3e01fd11cd5ad83f46940ab4d61d971cfbcf91` 的 Steam/WE 发现与目录扫描；`webwallgl@3.0.0` 的 Scene 渲染。
 
@@ -25,7 +26,7 @@
 ## 离线证据
 
 - Node：只读 CDP、渐进运行层、导入/恢复、收藏/轮播、Scene 暂停恢复、Web 沙箱、停用与清理、WE 分类和路径隔离。
-- PowerShell：版本/包/日常目录检查，短暂多进程误判恢复，持续多实例阻止。
+- PowerShell：当前包/登记/EXE 摘要/日常目录预检，以及未知版本、摘要漂移、登记缺失、日常目录缺失和多主进程的 fail-closed 回归。
 - 本机只读扫描：106 个 WE 条目，其中 18 个在默认 384 KiB 预览预算内；初始运行层载荷约 26.9 MiB。扫描未启动或连接 Codex。
 
 ## 统一人工验收门槛

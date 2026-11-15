@@ -9,7 +9,7 @@
 
 运行期间可能有一个隐藏的本机 `wallpaper-host` Node 辅助进程，用于按需读取当前选中的 Wallpaper Engine 素材；它不监听网络端口，并随 Codex 页面退出而结束。
 
-只接受本机已核对的 MSIX `26.1106.6628.0` 及对应原 EXE。更新后先用原入口；版本不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
+只接受本机已核对的 MSIX `26.1111.2228.0`、原 EXE SHA-256 `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6` 及 `OpenAI.Codex_2p2nqsd0c76g0!App`。更新后先用原入口；版本、摘要或登记不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
 
 ## 手动验收
 

@@ -7,54 +7,21 @@ import { readMainFrame, selectEndpoint } from "./read-only-probe.mjs";
 
 const id = "0123456789ABCDEF0123456789ABCDEF";
 const page = "app://-/index.html";
-const target = (port) => ({
+const target = (port, url = page) => ({
   id,
   type: "page",
-  url: `${page}?transient=not-in-report`,
+  url,
   webSocketDebuggerUrl: `ws://127.0.0.1:${port}/devtools/page/${id}`,
 });
 
-test("accepts only an unambiguous main page on the verified loopback port", () => {
-  const port = 25000;
-  const main = target(port);
-  assert.equal(selectEndpoint([main], port), main.webSocketDebuggerUrl);
-  assert.equal(
-    selectEndpoint([{ ...main, url: "https://example.test/" }], port),
-    null
-  );
-  assert.throws(() => selectEndpoint([main, main], port), /Ambiguous/);
-  for (const url of [
-    main.webSocketDebuggerUrl.replace("127.0.0.1", "localhost"),
-    main.webSocketDebuggerUrl.replace(":25000", ":25001"),
-    main.webSocketDebuggerUrl.replace("/page/", "/browser/"),
-  ]) {
-    assert.throws(() =>
-      selectEndpoint([{ ...main, webSocketDebuggerUrl: url }], port)
-    );
-  }
-});
-
-test("exact page selection ignores auxiliary query-routed windows", () => {
-  const port = 25000;
-  const main = { ...target(port), url: page };
-  const avatar = {
-    ...main,
-    id: "fedcba9876543210fedcba9876543210",
-    url: `${page}?initialRoute=%2Favatar-overlay`,
-    webSocketDebuggerUrl: `ws://127.0.0.1:${port}/devtools/page/fedcba9876543210fedcba9876543210`,
-  };
-  assert.throws(() => selectEndpoint([main, avatar], port), /Ambiguous/);
-  assert.equal(
-    selectEndpoint([main, avatar], port, page, true),
-    main.webSocketDebuggerUrl
-  );
-});
-
-test("sends only Page.getFrameTree and emits no transient URL data", async (t) => {
+async function startCdpFixture(
+  t,
+  { targetUrl = page, frameUrl = page, origin = "app://-" } = {}
+) {
   const requests = [];
   const server = createServer((request, response) => {
     requests.push([request.method, request.url]);
-    response.end(JSON.stringify([target(server.address().port)]));
+    response.end(JSON.stringify([target(server.address().port, targetUrl)]));
   });
   const sockets = new Set();
   t.after(() => {
@@ -91,7 +58,7 @@ test("sends only Page.getFrameTree and emits no transient URL data", async (t) =
           id: 1,
           result: {
             frameTree: {
-              frame: { url: `${page}?test`, securityOrigin: "app://-" },
+              frame: { url: frameUrl, securityOrigin: origin },
             },
           },
         })
@@ -105,14 +72,76 @@ test("sends only Page.getFrameTree and emits no transient URL data", async (t) =
   });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
-  assert.deepEqual(await readMainFrame(server.address().port), {
+  return { port: server.address().port, requests };
+}
+
+test("accepts only an unambiguous main page on the verified loopback port", () => {
+  const port = 25000;
+  const main = target(port, `${page}?transient=not-in-report`);
+  assert.equal(selectEndpoint([main], port), main.webSocketDebuggerUrl);
+  assert.equal(
+    selectEndpoint([{ ...main, url: "https://example.test/" }], port),
+    null
+  );
+  assert.throws(() => selectEndpoint([main, main], port), /Ambiguous/);
+  for (const url of [
+    main.webSocketDebuggerUrl.replace("127.0.0.1", "localhost"),
+    main.webSocketDebuggerUrl.replace(":25000", ":25001"),
+    main.webSocketDebuggerUrl.replace("/page/", "/browser/"),
+  ]) {
+    assert.throws(() =>
+      selectEndpoint([{ ...main, webSocketDebuggerUrl: url }], port)
+    );
+  }
+});
+
+test("exact page selection ignores auxiliary query-routed windows", () => {
+  const port = 25000;
+  const main = target(port);
+  const avatar = {
+    ...target(port, `${page}?initialRoute=%2Favatar-overlay`),
+    id: "fedcba9876543210fedcba9876543210",
+    webSocketDebuggerUrl: `ws://127.0.0.1:${port}/devtools/page/fedcba9876543210fedcba9876543210`,
+  };
+  assert.throws(() => selectEndpoint([main, avatar], port), /Ambiguous/);
+  assert.equal(
+    selectEndpoint([main, avatar], port, page, true),
+    main.webSocketDebuggerUrl
+  );
+});
+
+test("sends only Page.getFrameTree and emits no transient URL data", async (t) => {
+  const fixture = await startCdpFixture(t);
+  assert.deepEqual(await readMainFrame(fixture.port), {
     method: "Page.getFrameTree",
     page,
     origin: "app://-",
   });
-  assert.deepEqual(requests, [
+  assert.deepEqual(fixture.requests, [
     ["GET", "/json/list"],
     ["GET", `/devtools/page/${id}`],
     { id: 1, method: "Page.getFrameTree", params: {} },
   ]);
+});
+
+test("preflight rejects a query-routed target before protocol access", async (t) => {
+  const fixture = await startCdpFixture(t, {
+    targetUrl: `${page}?initialRoute=%2Favatar-overlay`,
+  });
+  assert.equal(await readMainFrame(fixture.port), null);
+  assert.deepEqual(fixture.requests, [["GET", "/json/list"]]);
+});
+
+test("preflight rejects a query-routed frame", async (t) => {
+  const fixture = await startCdpFixture(t, {
+    frameUrl: `${page}?initialRoute=%2Favatar-overlay`,
+  });
+  await assert.rejects(readMainFrame(fixture.port), /Unverified main frame/);
+});
+
+test("preflight rejects a frame outside the Codex app origin", async (t) => {
+  const fixture = await startCdpFixture(t, {
+    origin: "https://example.test",
+  });
+  await assert.rejects(readMainFrame(fixture.port), /Unverified main frame/);
 });

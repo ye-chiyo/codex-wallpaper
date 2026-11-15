@@ -211,10 +211,10 @@ export async function callMainPage(
 }
 
 export async function readMainFrame(port) {
-  const result = await callMainPage(port, "Page.getFrameTree");
+  const result = await callMainPage(port, "Page.getFrameTree", {}, page, true);
   if (result === null) return null;
   const frame = result?.frameTree?.frame;
-  if (!isMainPage(frame?.url) || frame.securityOrigin !== "app://-")
+  if (frame?.url !== page || frame.securityOrigin !== "app://-")
     throw new Error("Unverified main frame");
   return { method: "Page.getFrameTree", page, origin: "app://-" };
 }

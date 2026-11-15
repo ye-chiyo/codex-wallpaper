@@ -1,9 +1,9 @@
 param([switch]$Launch)
 
 $ErrorActionPreference = 'Stop'
-$packageName = 'OpenAI.Codex_26.1106.6628.0_x64__2p2nqsd0c76g0'
+$packageName = 'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0'
 $appId = 'OpenAI.Codex_2p2nqsd0c76g0!App'
-$expectedExeHash = 'd2c25e7739221d80f0bd0a64f2f2cb0671630073bc9e9a6ab47868103635a83c'
+$expectedExeHash = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
 $nativeProfile = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
 
 function Get-CodexProcesses {
@@ -117,7 +117,12 @@ $exitCode = 1
 try {
     try { $locked = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $locked = $true }
     if (-not $locked) { Write-Host 'Another probe is in progress. No activation attempted.'; exit 2 }
-    if (@(Get-CodexRoots @(Get-CodexProcesses)).Count -ne 0) {
+    $existingRoots = @(Get-CodexRoots @(Get-CodexProcesses))
+    if ($existingRoots.Count -gt 1) {
+        Write-Host 'Multiple Codex main processes were observed. No activation attempted.'
+        exit 2
+    }
+    if ($existingRoots.Count -eq 1) {
         Write-Host 'Codex is already running. Nothing was started or changed. Try only after manually quitting it.'
         exit 2
     }
