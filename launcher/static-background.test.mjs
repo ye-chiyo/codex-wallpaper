@@ -39,7 +39,8 @@ async function startFixture() {
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
-        [data-composer-surface-variant] { display: block; padding: 24px; }
+        [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
+        .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); }
       </style>
       <div data-app-shell-workspace-row>
         <div data-app-shell-page-surface>
@@ -52,9 +53,14 @@ async function startFixture() {
               <button id="tool-action" type="button">Toggle tool</button>
               <div id="tool-details">Tool details</div>
             </section>
-            <form data-composer-surface-variant="inline">
-              <textarea id="composer">Composer text</textarea>
-            </form>
+            <div data-thread-scroll-footer>
+              <div class="thread-footer-backdrop bg-surface"></div>
+              <div data-thread-composer-backdrop>
+                <form class="bg-surface" data-composer-surface-variant="inline">
+                  <textarea id="composer">Composer text</textarea>
+                </form>
+              </div>
+            </div>
             </main>
           </div>
         </div>
@@ -786,6 +792,9 @@ test("static background is single, removable and persists disabled", async (t) =
         const composerSurface = document.querySelector(
           "[data-composer-surface-variant]"
         );
+        const footerBackdrop = document.querySelector(
+          "[data-thread-scroll-footer] > .thread-footer-backdrop"
+        );
         const leftPanel = document.querySelector("[data-app-shell-page-sidebar]");
         const rightPanel = document.querySelector(
           "[data-app-shell-trailing-sidebar]"
@@ -854,6 +863,11 @@ test("static background is single, removable and persists disabled", async (t) =
                 "rgba(0, 0, 0, 0)"
             );
         });
+        const themeFooterBackdrops = ["dark", "light"].map((theme) => {
+          document.documentElement.dataset.theme = theme;
+          return getComputedStyle(footerBackdrop).backgroundColor ===
+            "rgba(0, 0, 0, 0)";
+        });
         const wallpaperVisibility = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
           return {
@@ -877,6 +891,7 @@ test("static background is single, removable and persists disabled", async (t) =
               getComputedStyle(element).backgroundColor !==
               "rgba(0, 0, 0, 0)"
           ),
+          footerBackdropTransparent: themeFooterBackdrops.every(Boolean),
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
@@ -933,6 +948,7 @@ test("static background is single, removable and persists disabled", async (t) =
       surfaceAboveBackground: true,
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
+      footerBackdropTransparent: true,
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
