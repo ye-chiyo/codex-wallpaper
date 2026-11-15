@@ -1003,6 +1003,8 @@ export function createCodexWallpaperRuntime(payload) {
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
       body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], [data-composer-surface-variant], pre) { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 92%, transparent) !important; }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
+      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
+      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
       body [data-app-shell-trailing-sidebar] [data-thread-find-target='review'] { background-color: transparent !important; }
       body :where([role='dialog'], [data-radix-popper-content-wrapper]) { position: relative; z-index: 3; background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 96%, transparent) !important; }
     `;

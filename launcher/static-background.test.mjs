@@ -160,6 +160,8 @@ async function startFixture() {
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
+        .thread-scroll-footer-shell::before { content: ""; background-image: linear-gradient(transparent, var(--app-color-background-surface)); }
+        .thread-scroll-footer-shell::after { content: ""; background-color: var(--app-color-background-surface); }
         .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); }
       </style>
       <div data-app-shell-workspace-row>
@@ -174,6 +176,8 @@ async function startFixture() {
               <button id="tool-action" type="button">Toggle tool</button>
               <div id="tool-details">Tool details</div>
             </section>
+            <div data-app-action-timeline-scroll>
+            <div class="thread-scroll-footer-shell">
             <div data-thread-scroll-footer>
               <div class="thread-footer-backdrop bg-surface"></div>
               <div data-pip-obstacle="thread-footer-leading" class="bg-surface thread-footer-leading">Leading footer content</div>
@@ -182,6 +186,8 @@ async function startFixture() {
                   <textarea id="composer">Composer text</textarea>
                 </form>
               </div>
+            </div>
+            </div>
             </div>
             </main>
           </div>
@@ -988,6 +994,7 @@ test("static background is single, removable and persists disabled", async (t) =
         const footerBackdrop = document.querySelector(
           "[data-thread-scroll-footer] > .thread-footer-backdrop"
         );
+        const footerShell = document.querySelector(".thread-scroll-footer-shell");
         const footerLeading = document.querySelector(
           "[data-pip-obstacle='thread-footer-leading']"
         );
@@ -1062,7 +1069,9 @@ test("static background is single, removable and persists disabled", async (t) =
         const themeFooterBackdrops = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
           return getComputedStyle(footerBackdrop).backgroundColor ===
-            "rgba(0, 0, 0, 0)";
+            "rgba(0, 0, 0, 0)" &&
+            getComputedStyle(footerShell, "::before").backgroundImage === "none" &&
+            getComputedStyle(footerShell, "::after").backgroundColor === "rgba(0, 0, 0, 0)";
         });
         const wallpaperVisibility = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
@@ -1087,7 +1096,7 @@ test("static background is single, removable and persists disabled", async (t) =
               getComputedStyle(element).backgroundColor !==
               "rgba(0, 0, 0, 0)"
           ),
-          footerBackdropTransparent: themeFooterBackdrops.every(Boolean),
+          composerOuterPaintTransparent: themeFooterBackdrops.every(Boolean),
           footerLeadingHasReadabilityBase:
             getComputedStyle(footerLeading).backgroundColor !==
             "rgba(0, 0, 0, 0)",
@@ -1150,7 +1159,7 @@ test("static background is single, removable and persists disabled", async (t) =
       surfaceAboveBackground: true,
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
-      footerBackdropTransparent: true,
+      composerOuterPaintTransparent: true,
       footerLeadingHasReadabilityBase: true,
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,

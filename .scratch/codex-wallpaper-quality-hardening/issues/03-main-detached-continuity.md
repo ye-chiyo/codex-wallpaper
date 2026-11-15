@@ -37,3 +37,4 @@
 - 2026-11-15：TDD 红灯在 headless Edge fixture 中同时复现 opaque trailing sidebar 与 review 表面缺少可读底；调整 `:has([data-thread-find-target='review'])` 外壳透明规则、review 滚动根透明规则并保留局部 `pre` / class surface 后转绿。Fixture 关闭变更侧栏后再执行剩余启停与完整流程。
 - 2026-11-15：验证通过 `corepack pnpm test` 10/10、startup-roots 2/2、profile-preflight 7/7。当前分支没有修改 02 的 PowerShell/startup 文件，也没有应用 04 candidate。
 - 2026-11-15：05 统一链路只使用已核验的 `data-app-shell-trailing-sidebar` / `data-thread-find-target='review'` fixture 结构，未新增 detached 注入或 target allowlist。真实 detached 页面身份仍无 live 证据，本门禁保持未通过；脱敏历史帧仅保留“曾发生黑底”的外观佐证。
+- 2026-11-16：从 D:/AI/codex-wallpaper-hardening 手动启动 20b9660 后，实际点击聊天卡上的「变更」。当前主聊天 CDP 目标保持可见，未新增 detached 目标；已存在的 detached 目标在点击前后均存在。窗口中出现可关闭的「变更」标签，当前脱敏截图显示右侧内容区仍有深色实底。窗口布局随后变化，未捕获十轮有效切换或时序证据；不勾选连续性及无闪动验收。
