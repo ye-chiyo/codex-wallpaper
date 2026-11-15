@@ -999,8 +999,13 @@ export function createCodexWallpaperRuntime(payload) {
       #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
       #${controlsId} .range output { color: rgb(205 205 215); font-variant-numeric: tabular-nums; }
       #${controlsId} .reset { margin-top: 14px; width: 100%; color: rgb(255 190 190) !important; }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 64%, transparent) !important; backdrop-filter: blur(14px) saturate(.9);
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 64%, transparent) !important;
         &:not([data-app-shell-titlebar]) { position: relative; }
+        &:not([data-app-shell-main-surface]) { backdrop-filter: blur(14px) saturate(.9); }
+      }
+      body :where([data-app-navigation-rail], [data-slate-sidebar-content], [data-app-shell-frame] > :has(> [role='menubar'])) {
+        background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 94%, transparent) !important;
+        --color-text-tertiary: var(--color-text-secondary);
       }
       body [data-app-shell-trailing-sidebar]:has([data-thread-find-target='review']) { background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }

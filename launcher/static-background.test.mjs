@@ -146,11 +146,15 @@ async function startFixture() {
         :root {
           --app-color-background-surface: rgb(24 24 28);
           --app-color-background-surface-under: rgb(12 12 16);
+          --color-text-secondary: rgb(255 255 255 / .65);
+          --color-text-tertiary: rgb(255 255 255 / .5);
           color-scheme: dark;
         }
         :root[data-theme="light"] {
           --app-color-background-surface: rgb(247 247 249);
           --app-color-background-surface-under: rgb(232 232 237);
+          --color-text-secondary: rgb(0 0 0 / .65);
+          --color-text-tertiary: rgb(0 0 0 / .5);
           color-scheme: light;
         }
         body { margin: 0; min-height: 1200px; color: rgb(245 245 250); }
@@ -158,6 +162,7 @@ async function startFixture() {
         [data-app-shell-page-surface] { background: var(--app-color-background-surface); }
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
         @layer host { [data-app-shell-titlebar] { position: fixed; top: 0; height: 36px; } }
+        .muted-chrome { color: var(--color-text-tertiary); }
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
@@ -166,7 +171,8 @@ async function startFixture() {
         .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); }
       </style>
       <div data-app-shell-workspace-row>
-        <div data-app-shell-page-surface>
+        <div data-app-shell-page-surface data-app-shell-frame>
+          <div id="app-menu"><div role="menubar"><button class="muted-chrome">View</button></div></div>
           <div data-app-shell-main-surface>
             <main>
             <article id="message" data-markdown-text-style="assistant-message">
@@ -196,7 +202,10 @@ async function startFixture() {
         </div>
         <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary"><span>Changes</span><button id="close-changes" type="button">Close</button></header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
       </div>
-      <aside data-app-shell-page-sidebar><button id="project-action">Project</button></aside>
+      <aside data-app-shell-page-sidebar>
+        <nav data-app-navigation-rail><button data-sidebar-destination class="muted-chrome">Home</button></nav>
+        <div data-slate-sidebar-content><button id="project-action" class="muted-chrome">Project</button></div>
+      </aside>
       <div data-app-shell-pane-content-viewport><pre id="editor">editor</pre></div>
       <section role="dialog" id="settings-dialog"><button id="dialog-action">Dialog</button></section>
       </html>
@@ -1050,8 +1059,8 @@ test("static background is single, removable and persists disabled", async (t) =
         streamed.textContent = "Streamed response";
         document.querySelector("#message").append(streamed);
         streamed.scrollIntoView({ block: "center" });
-        const readAlpha = (element) => {
-          const value = getComputedStyle(element).backgroundColor;
+        const readAlpha = (element, property = "backgroundColor") => {
+          const value = getComputedStyle(element)[property];
           const match =
             value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
             value.match(/,\\s*([\\d.]+)\\s*\\)$/);
@@ -1086,7 +1095,21 @@ test("static background is single, removable and persists disabled", async (t) =
             wallpaperOpacity: Number(getComputedStyle(media).opacity),
           };
         });
+        const navigationReadable = ["dark", "light"].every((theme) => {
+          document.documentElement.dataset.theme = theme;
+          const chrome = [
+            document.querySelector("[data-app-navigation-rail]"),
+            document.querySelector("[data-slate-sidebar-content]"),
+            document.getElementById("app-menu")
+          ];
+          return chrome.every((element) => {
+            const control = element.querySelector("button");
+            return readAlpha(element) >= 0.9 && readAlpha(control, "color") >= 0.64;
+          });
+        });
         return {
+          navigationReadable,
+          mainWallpaperHasNoExtraBlur: getComputedStyle(surface).backdropFilter === "none",
           surfaceAboveBackground:
             Number.parseInt(getComputedStyle(surface).zIndex, 10) >
             Number.parseInt(getComputedStyle(background).zIndex, 10),
@@ -1162,6 +1185,8 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
+      navigationReadable: true,
+      mainWallpaperHasNoExtraBlur: true,
       surfaceAboveBackground: true,
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
