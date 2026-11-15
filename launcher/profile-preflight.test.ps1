@@ -151,6 +151,9 @@ foreach ($case in $cases) {
     if ($receipt.Outcome -ne $case.ExpectedReceipt) {
         throw "Failed: $($case.Name) receipt outcome was $($receipt.Outcome)."
     }
+    if ($receipt.Mode -ne 'unattended-startup') {
+        throw "Failed: $($case.Name) lost unattended mode in the receipt."
+    }
     Write-Host "Passed: $($case.Name)"
 }
 Remove-Item -LiteralPath $receiptBase -Recurse -Force

@@ -25,3 +25,4 @@
 
 - 2026-11-15：原始 `D:/AI/壁纸` 的三文件未提交候选保持不动；已用 `D:/AI/codex-wallpaper-composer-candidate.patch` 核对内容。补丁因 03 已修改相邻 CSS/fixture 上下文而无法直接应用，按候选行为手工移植 footer 修复，并让 fixture 镜像“marker 包裹输入区”的当前源码结构。
 - 2026-11-15：TDD 红灯先只暴露 `footerBackdropTransparent: false`，输入框本体读底与全部交互仍为绿；加入 footer 透明规则并排除输入区表面后，同一 headless Edge 回归转绿。没有用完整 CSS 字符串或私有实现状态作断言。
+- 2026-11-15 Standards 复核：安装包 `344734.3322725bda.js` 证明输入区 wrapper 不是字面 `.bg-surface` 背景层，且 footer 还有 `[data-pip-obstacle='thread-footer-leading']` 前导内容分支。规则保留用户已证明的 footer 透明修复，并显式排除该分支及其后代；fixture 新增同分支读底断言。没有猜测新的 backdrop 节点身份，也没有改动 Codex 自带 footer 淡出伪元素。真实 Codex 的最终视觉范围和伪元素表现仍保留在人工门禁中。

@@ -25,10 +25,6 @@
 - 最近一次成功注入会在启动器互斥锁仍持有时写入 `%LOCALAPPDATA%\CodexWallpaper\P0b\dedicated-session.json`，记录 `MainPid`、创建时间、端口和通过时间。重复入口只有在该记录与主进程身份、EXE、日常 profile、调试端口标志和环回 listener 归属全部一致时才成功复用；它不建立 CDP 连接、不发送探针、不重复注入。仅有调试参数的未知实例仍记录为冲突。
 - 无人值守模式的本地回执现在在包查询前初始化；包查询失败、版本不支持、EXE/登记漂移、日常 profile 缺失、多主进程、普通实例、未记录调试实例、启动竞争和既有 activation/probe 失败路径都会保留 `Outcome`。包查询和版本拒绝不再在没有回执时直接退出。
 - 既有成功语义保持为 `read-only-probe-passed`，壁纸响应仍记录在 `Wallpaper` 字段；新增的可复用身份是独立 marker，没有改变成功回执名称。
-- TDD 红灯先分别观察到：缺少 Startup 入口函数、专用 root 未要求成功记录、launcher 不回写临时 receipt、外部同名快捷方式会被错误删除、包查询异常没有 receipt。逐项补最小实现后转绿。
-- 自动化只使用进程 fixture、临时 Startup/回执目录、mock `Get-AppxPackage`/`Get-CimInstance`/`Get-NetTCPConnection` 和 activation 边界 stub。没有读取真实 Startup 内容，没有写真实 Startup，没有查询真实 Codex 进程、连接 CDP、启动/关闭/重启 Codex，也没有修改包、日常 profile、原入口或 source worktree。
-- 自动化覆盖 11 个 launcher 预检场景、3 个 root 状态场景和 1 个 Startup 入口场景；离线完整 Node 测试另有 10/10 通过。`launcher/README.md` 给出可直接复制的启用、状态、撤销命令，并记录真实注销/重启门槛。兼容 CRLF 的全仓检查命令 `corepack pnpm exec prettier --check --end-of-line auto .` 与 `git diff --check` 通过。
-- 最终同步已把集成分支 `93fa9b6` 合入本实施分支的 `7c66b82`；文件无重叠。合并后重新运行完整 Node 测试 10/10、上述三组 PowerShell 测试、全仓兼容 CRLF 的 Prettier 检查和 `git diff --check`，全部通过。
 
 ## Human gates
 
@@ -41,3 +37,11 @@
 
 - 隐藏快捷方式和 PowerShell `-WindowStyle Hidden` 已在 mock/temp 层验证参数，但“登录时绝不出现瞬时控制台”仍须真实登录观察。
 - 真实登录、壁纸恢复、账号/聊天、快捷键、单实例和撤销行为没有在本次实施中执行；因此状态为 `ready-for-human`，不能把自动测试通过记成冷启动验收通过。
+
+## Comments
+
+- 2026-11-15：TDD 红灯先分别观察到：缺少 Startup 入口函数、专用 root 未要求成功记录、launcher 不回写临时 receipt、外部同名快捷方式会被错误删除、包查询异常没有 receipt。逐项补最小实现后转绿。
+- 2026-11-15：自动化只使用进程 fixture、临时 Startup/回执目录、mock `Get-AppxPackage`/`Get-CimInstance`/`Get-NetTCPConnection` 和 activation 边界 stub。没有读取真实 Startup 内容，没有写真实 Startup，没有查询真实 Codex 进程、连接 CDP、启动/关闭/重启 Codex，也没有修改包、日常 profile、原入口或 source worktree。
+- 2026-11-15：自动化覆盖 11 个 launcher 预检场景、3 个 root 状态场景和 Startup 入口场景；离线完整 Node 测试另有 10/10 通过。`launcher/README.md` 给出可直接复制的启用、状态、撤销命令，并记录真实注销/重启门槛。兼容 CRLF 的全仓检查命令 `corepack pnpm exec prettier --check --end-of-line auto .` 与 `git diff --check` 通过。
+- 2026-11-15：最终同步已把集成分支 `93fa9b6` 合入本实施分支的 `7c66b82`；文件无重叠。合并后重新运行完整 Node 测试 10/10、上述三组 PowerShell 测试、全仓兼容 CRLF 的 Prettier 检查和 `git diff --check`，全部通过。
+- 2026-11-15 复核修复：Startup 测试改为在临时 launcher 副本中替换唯一的 OS Startup 文件夹查找后调用公开 `-EnableStartup`、`-StartupStatus`、`-DisableStartup`，并验证互斥；真实 Startup 与注册表未触碰。同名外部快捷方式现在由同一 ownership 判定阻止启用，失败后字节和 `stale` 状态保持不变。无人值守 activation 回执保留 `Mode`；只有 Node 退出码为 0 且壁纸状态为 `enabled`/`disabled` 才写专用 session marker。

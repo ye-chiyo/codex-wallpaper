@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { once } from "node:events";
@@ -14,6 +15,125 @@ const rootId = "codex-wallpaper-p1";
 const controlRootId = "codex-wallpaper-p1-controls";
 const tinyMp4 =
   "AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAN0bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAp90cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAPoAAAQAAABAAAAAAIXbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAKABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABwm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAYJzdGJsAAAAvnN0c2QAAAAAAAAAAQAAAK5hdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFExhdmM2My4xLjEwMiBsaWJ4MjY0AAAAAAAAAAAAAAAAGP//AAAANGF2Y0MBZAAK/+EAF2dkAAqs2V7ARAAAAwAEAAADACg8SJZYAQAGaOvjyyLA/fj4AAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAABegAAAAAAAAABhzdHRzAAAAAAAAAAEAAAAFAAAIAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAOGN0dHMAAAAAAAAABQAAAAEAABAAAAAAAQAAKAAAAAABAAAQAAAAAAEAAAAAAAAAAQAACAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAUAAAABAAAAKHN0c3oAAAAAAAAAAAAAAAUAAALEAAAADAAAAAwAAAAMAAAADAAAABRzdGNvAAAAAAAAAAEAAAOkAAAAYXVkdGEAAABZbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAsaWxzdAAAACSpdG9vAAAAHGRhdGEAAAABAAAAAExhdmY2My4xLjEwMgAAAAhmcmVlAAAC/G1kYXQAAAKtBgX//6ncRem95tlIt5Ys2CDZI+7veDI2NCAtIGNvcmUgMTY1IHIzMjIzIDA0ODBjYjAgLSBILjI2NC9NUEVHLTQgQVZDIGNvZGVjIC0gQ29weWxlZnQgMjAwMy0yMDI1IC0gaHR0cDovL3d3dy52aWRlb2xhbi5vcmcveDI2NC5odG1sIC0gb3B0aW9uczogY2FiYWM9MSByZWY9MyBkZWJsb2NrPTE6MDowIGFuYWx5c2U9MHgzOjB4MTEzIG1lPWhleCBzdWJtZT03IHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0xIDh4OGRjdD0xIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MiBrZXlpbnQ9MjUwIGtleWludF9taW49NSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAAA9liIQAEv/+963fgU3DKz0AAAAIQZokbEP//uAAAAAIQZ5CeIIfq4EAAAAIAZ5hdEP/s4AAAAAIAZ5jakP/s4E=";
+
+function encodeWebSocketText(value) {
+  const body = Buffer.from(value);
+  if (body.length < 126)
+    return Buffer.concat([Buffer.from([0x81, body.length]), body]);
+  const header = Buffer.alloc(4);
+  header[0] = 0x81;
+  header[1] = 126;
+  header.writeUInt16BE(body.length, 2);
+  return Buffer.concat([header, body]);
+}
+
+function takeWebSocketText(buffer) {
+  if (buffer.length < 2) return null;
+  const opcode = buffer[0] & 15;
+  let length = buffer[1] & 127;
+  let offset = 2;
+  if (length === 126) {
+    if (buffer.length < 4) return null;
+    length = buffer.readUInt16BE(2);
+    offset = 4;
+  } else if (length === 127) {
+    if (buffer.length < 10) return null;
+    length = Number(buffer.readBigUInt64BE(2));
+    offset = 10;
+  }
+  const masked = (buffer[1] & 128) !== 0;
+  const maskOffset = offset;
+  if (masked) offset += 4;
+  const total = offset + length;
+  if (buffer.length < total) return null;
+  const mask = masked ? buffer.subarray(maskOffset, maskOffset + 4) : null;
+  const payload = Buffer.from(buffer.subarray(offset, total));
+  if (mask)
+    payload.forEach((byte, index) => (payload[index] = byte ^ mask[index % 4]));
+  return { opcode, text: payload.toString(), rest: buffer.subarray(total) };
+}
+
+async function startExactCdpFixture(t) {
+  const id = "0123456789abcdef0123456789abcdef";
+  const requests = [];
+  const sockets = new Set();
+  let hostSocket = null;
+  const server = createServer((request, response) => {
+    assert.equal(request.url, "/json/list");
+    response.end(
+      JSON.stringify([
+        {
+          id,
+          type: "page",
+          url: "app://-/index.html",
+          webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${id}`,
+        },
+      ])
+    );
+  });
+  server.on("connection", (socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+  });
+  server.on("upgrade", (request, socket) => {
+    const accept = createHash("sha1")
+      .update(
+        request.headers["sec-websocket-key"] +
+          "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+      )
+      .digest("base64");
+    socket.write(
+      `HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`
+    );
+    let incoming = Buffer.alloc(0);
+    socket.on("data", (chunk) => {
+      incoming = Buffer.concat([incoming, chunk]);
+      let frame = takeWebSocketText(incoming);
+      while (frame && frame.opcode === 1) {
+        incoming = frame.rest;
+        const command = JSON.parse(frame.text);
+        requests.push(command);
+        let result = {};
+        if (command.method === "Runtime.evaluate") {
+          const value =
+            command.params.expression ===
+            "globalThis.__codexWallpaperApi.configureHost()"
+              ? { state: "enabled", hostReady: true }
+              : { state: "disabled", backgroundLayers: 0 };
+          result = { result: { value } };
+        }
+        if (command.method === "Runtime.addBinding") hostSocket = socket;
+        socket.write(
+          encodeWebSocketText(JSON.stringify({ id: command.id, result }))
+        );
+        frame = takeWebSocketText(incoming);
+      }
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(() => {
+    for (const socket of sockets) socket.destroy();
+    return new Promise((resolve) => server.close(resolve));
+  });
+  return {
+    port: server.address().port,
+    requests,
+    stopHost() {
+      hostSocket?.write(
+        encodeWebSocketText(
+          JSON.stringify({
+            method: "Runtime.bindingCalled",
+            params: {
+              name: "__codexWallpaperHostRequest",
+              payload: JSON.stringify({ type: "stop" }),
+            },
+          })
+        )
+      );
+    },
+  };
+}
 
 async function startFixture() {
   const server = createServer((_request, response) => {
@@ -56,6 +176,7 @@ async function startFixture() {
             </section>
             <div data-thread-scroll-footer>
               <div class="thread-footer-backdrop bg-surface"></div>
+              <div data-pip-obstacle="thread-footer-leading" class="bg-surface thread-footer-leading">Leading footer content</div>
               <div data-thread-composer-backdrop>
                 <form class="bg-surface" data-composer-surface-variant="inline">
                   <textarea id="composer">Composer text</textarea>
@@ -144,6 +265,57 @@ async function startBrowserFixture(t) {
   return { fixture, port: await waitForPort(profile) };
 }
 
+test("persisted-disabled CLI starts the real host before a later enable", async (t) => {
+  const fixture = await startExactCdpFixture(t);
+  const child = spawn(
+    process.execPath,
+    [
+      "--no-use-env-proxy",
+      "launcher/static-background.mjs",
+      String(fixture.port),
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] }
+  );
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => (stderr += chunk));
+  const result = await new Promise((resolve, reject) => {
+    const deadline = setTimeout(
+      () => reject(new Error(`CLI timed out: ${stderr || stdout}`)),
+      10_000
+    );
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+      try {
+        const value = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+        clearTimeout(deadline);
+        resolve(value);
+      } catch {}
+    });
+    child.once("error", reject);
+  });
+  assert.equal(result.state, "enabled");
+  assert.equal(result.hostReady, true);
+  assert.equal(Number.isInteger(result.bridgePid), true);
+  assert.ok(
+    fixture.requests.some((request) => request.method === "Runtime.enable")
+  );
+  assert.ok(
+    fixture.requests.some((request) => request.method === "Runtime.addBinding")
+  );
+  assert.ok(
+    fixture.requests.some(
+      (request) =>
+        request.params?.expression ===
+        "globalThis.__codexWallpaperApi.configureHost()"
+    )
+  );
+  fixture.stopHost();
+  child.kill();
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -210,6 +382,17 @@ test("static background is single, removable and persists disabled", async (t) =
           assetDataUrl: null,
           webHtml: null,
           reason: "web-preview-fallback",
+        },
+        {
+          id: "fixture-on-demand",
+          title: "Fixture On Demand",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
         },
         {
           id: "fixture-lazy",
@@ -287,7 +470,7 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.equal(initial.state, "enabled");
   assert.equal(initial.backgroundLayers, 1);
   assert.equal(initial.styles, 1);
-  assert.equal(initial.libraryCount, 6);
+  assert.equal(initial.libraryCount, 7);
   assert.equal(initial.volume, 0);
   assert.equal(initial.fpsCap, 30);
   assert.equal(initial.visible, true);
@@ -305,7 +488,7 @@ test("static background is single, removable and persists disabled", async (t) =
        })()`,
       options
     ),
-    { open: true, cards: 6 }
+    { open: true, cards: 7 }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -805,6 +988,9 @@ test("static background is single, removable and persists disabled", async (t) =
         const footerBackdrop = document.querySelector(
           "[data-thread-scroll-footer] > .thread-footer-backdrop"
         );
+        const footerLeading = document.querySelector(
+          "[data-pip-obstacle='thread-footer-leading']"
+        );
         const leftPanel = document.querySelector("[data-app-shell-page-sidebar]");
         const rightPanel = document.querySelector(
           "[data-app-shell-trailing-sidebar]"
@@ -902,6 +1088,9 @@ test("static background is single, removable and persists disabled", async (t) =
               "rgba(0, 0, 0, 0)"
           ),
           footerBackdropTransparent: themeFooterBackdrops.every(Boolean),
+          footerLeadingHasReadabilityBase:
+            getComputedStyle(footerLeading).backgroundColor !==
+            "rgba(0, 0, 0, 0)",
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
@@ -962,6 +1151,7 @@ test("static background is single, removable and persists disabled", async (t) =
       surfaceHasReadabilityBase: true,
       contentHasReadabilityBases: true,
       footerBackdropTransparent: true,
+      footerLeadingHasReadabilityBase: true,
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
@@ -1118,7 +1308,7 @@ test("static background is single, removable and persists disabled", async (t) =
         styles: 0,
         activeKind: "workshop",
         activeId: "fixture-image",
-        libraryCount: 6,
+        libraryCount: 7,
         importedCount: 0,
         playerCount: 0,
         visible: true,
@@ -1188,11 +1378,11 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 22,
+        controls: 25,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-image",
-        libraryCount: 6,
+        libraryCount: 7,
         importedCount: 0,
         playerCount: 0,
         visible: true,
@@ -1219,6 +1409,13 @@ test("static background is single, removable and persists disabled", async (t) =
           localStorage.getItem("codex-wallpaper-p1-config")
         );
         value.enabled = false;
+        value.active = { kind: "workshop", id: "fixture-on-demand" };
+        globalThis.__testHostRequests = [];
+        globalThis.__codexWallpaperHostRequest = (raw) => {
+          const request = JSON.parse(raw);
+          if (request.type === "load-asset")
+            globalThis.__testHostRequests.push(request);
+        };
         const next = JSON.stringify(value);
         localStorage.setItem("codex-wallpaper-p1-config", next);
         dispatchEvent(
@@ -1243,5 +1440,72 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     { root: 0, styles: 0 }
+  );
+  await evaluateInPage(
+    port,
+    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
+    options
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (globalThis.__testHostRequests.length > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const root = document.getElementById("${rootId}");
+        const previewShown = root.querySelector(".media img")?.src.includes(
+          "fb923c"
+        );
+        const request = globalThis.__testHostRequests[0];
+        globalThis.__codexWallpaperApi.receiveAsset({
+          id: "fixture-on-demand",
+          title: "Fixture On Demand",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: null,
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%2322c55e'/%3E%3C/svg%3E",
+          assetUrl: null,
+          webHtml: null,
+          reason: null
+        });
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          const image = root.querySelector(".media img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return {
+          request,
+          previewShown,
+          assetShown: root.querySelector(".media img")?.src.includes("22c55e"),
+          state: globalThis.__codexWallpaperApi.state()
+        };
+      })()`,
+      options
+    ),
+    {
+      request: { type: "load-asset", id: "fixture-on-demand" },
+      previewShown: true,
+      assetShown: true,
+      state: {
+        state: "enabled",
+        backgroundLayers: 1,
+        controls: 25,
+        styles: 1,
+        activeKind: "workshop",
+        activeId: "fixture-on-demand",
+        libraryCount: 7,
+        importedCount: 0,
+        playerCount: 0,
+        visible: true,
+        measuredFps: 0,
+        fpsCap: 15,
+        volume: 0,
+        hostReady: true,
+      },
+    }
   );
 });

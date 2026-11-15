@@ -28,9 +28,17 @@ function Get-WallpaperStartupArguments($LauncherPath) {
     return '-NoProfile -NonInteractive -STA -WindowStyle Hidden -File "{0}" -Launch -Unattended' -f $LauncherPath
 }
 
+function Test-WallpaperStartupOwned($Shortcut) {
+    return $Shortcut.Description -eq (Get-WallpaperStartupDescription)
+}
+
 function Set-WallpaperStartup($StartupFolder, $LauncherPath, $PowerShellPath) {
     [void][IO.Directory]::CreateDirectory($StartupFolder)
     $entryPath = Get-WallpaperStartupEntryPath $StartupFolder
+    $status = Get-WallpaperStartupStatus $StartupFolder $LauncherPath $PowerShellPath
+    if ($status.Status -ne 'disabled' -and -not $status.Owned) {
+        throw 'A different Startup entry already uses the dedicated name.'
+    }
     $shell = New-Object -ComObject WScript.Shell
     try {
         $shortcut = $shell.CreateShortcut($entryPath)
@@ -48,7 +56,7 @@ function Set-WallpaperStartup($StartupFolder, $LauncherPath, $PowerShellPath) {
 
 function Remove-WallpaperStartup($StartupFolder, $LauncherPath, $PowerShellPath) {
     $status = Get-WallpaperStartupStatus $StartupFolder $LauncherPath $PowerShellPath
-    if ($status.Status -ne 'disabled' -and $status.Description -eq (Get-WallpaperStartupDescription)) {
+    if ($status.Owned) {
         Remove-Item -LiteralPath $status.EntryPath -Force
     }
 }
@@ -62,9 +70,11 @@ function Get-WallpaperStartupStatus($StartupFolder, $LauncherPath, $PowerShellPa
     try {
         $shortcut = $shell.CreateShortcut($entryPath)
         $expectedArguments = Get-WallpaperStartupArguments $LauncherPath
-        $enabled = $shortcut.TargetPath -ieq $PowerShellPath -and $shortcut.Arguments -eq $expectedArguments
+        $owned = Test-WallpaperStartupOwned $shortcut
+        $enabled = $owned -and $shortcut.TargetPath -ieq $PowerShellPath -and $shortcut.Arguments -eq $expectedArguments
         return [pscustomobject]@{
             Status = if ($enabled) { 'enabled' } else { 'stale' }
+            Owned = $owned
             EntryPath = $entryPath
             TargetPath = $shortcut.TargetPath
             Arguments = $shortcut.Arguments
@@ -373,10 +383,12 @@ namespace CodexWallpaperP0b {
         Write-Host 'Codex appeared during preparation. No activation attempted.'
         exit 2
     }
+    $receiptMode = if ($receipt) { $receipt.Mode } else { $null }
     $receipt = [ordered]@{
         Started = [DateTimeOffset]::Now.ToString('o'); Package = $packageName; Port = $port
         Outcome = 'activation-attempted'; LoginAndChat = 'user-verification-required'
     }
+    if ($receiptMode) { $receipt.Mode = $receiptMode }
     $beforeLaunch = Get-Date
     $receipt.ActivationPid = [CodexWallpaperP0b.Native]::Activate($appId,
         "--remote-debugging-address=127.0.0.1 --remote-debugging-port=$port")
@@ -434,17 +446,17 @@ namespace CodexWallpaperP0b {
         $receipt.Probe = $reply | ConvertFrom-Json
         $receipt.Outcome = 'read-only-probe-passed'
         $wallpaperReply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'static-background.mjs') $port
+        $wallpaperExit = $LASTEXITCODE
         try {
             $receipt.Wallpaper = $wallpaperReply | ConvertFrom-Json
         } catch {
             $receipt.Wallpaper = [pscustomobject]@{ state = 'failed'; error = 'invalid-wallpaper-response' }
         }
-        if ($LASTEXITCODE -ne 0) {
+        if ($wallpaperExit -ne 0 -or $receipt.Wallpaper.state -notin @('enabled', 'disabled')) {
             $receipt.Outcome = 'wallpaper-injection-failed'
             break
         }
         $dedicatedSession = [ordered]@{
-            Version = 1
             MainPid = $root.ProcessId
             MainCreated = $root.CreationDate.ToString('o')
             Port = $port

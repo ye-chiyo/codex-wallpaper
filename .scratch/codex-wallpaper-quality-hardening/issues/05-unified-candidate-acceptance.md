@@ -14,7 +14,7 @@
 - [ ] 代码审查确认没有无限重试、平行守护进程、只为形式化增加的转发层或近期需求无法证明价值的抽象。
 - [x] 测试审查保留计算样式、命中测试、公开运行时状态和宿主协议断言；不按完整生产 CSS 文本、私有变量或内部调用次数判定用户结果。fixture 注入点和 Scene/媒体替身用于制造异步、可见性与失败状态，不作为真实宿主通过凭据。
 - [x] 检查变更集中没有受保护安装文件、P0 实验目录、聊天正文、账号凭据或不相关内容；P0 实验目录继续保持未跟踪且不提交。
-- [x] 完成完整 Node 测试、PowerShell 启动器检查、Prettier 和 `git diff --check`：Node 10/10、profile-preflight 11/11、startup-roots 3/3、startup-entry 通过、格式与 diff 检查通过。
+- [x] 完成完整 Node 测试、PowerShell 启动器检查、Prettier 和 `git diff --check`：Node 11/11、profile-preflight 11/11、startup-roots 3/3、startup-entry 通过、格式与 diff 检查通过。
 - [ ] 双轴代码审查由主集成流程执行；本工作树不预先宣称审查通过。
 - [x] 最终记录继续明确：原入口自动接入未完成，联网 Web 隔离未证明，8 小时基础验收和 7 天日常观察尚未完成。
 
@@ -37,3 +37,9 @@ The browser fixture and the real after-login media-host bind are separate eviden
 - Candidate available locally: source, runtime and tests exist in this isolated worktree; no candidate was activated against the user's running Codex.
 - Unresolved 03 gate: packaged source and historic frames support the review-sidebar fixture, but no fresh live evidence identifies the Changes page as the broad browser `detached-window` target. Do not allowlist it or record that gate as passed.
 - Real user gates: existing chat/account, four material types, themes and interactions, 10 Changes switches, disable/hotkey recovery, persisted-disabled on-demand recovery, logout/reboot, receipt identity, original-entry bounds, 8 hours and 7 days remain unverified.
+
+## Comments
+
+- 2026-11-15 Standards disposition: Startup switches now run as public launcher processes against a temporary copy whose sole substitution is the pre-existing OS Startup-folder lookup; the real folder and registry are untouched. Set/status/remove share the same description-based ownership result, and failed enable preserves foreign shortcut bytes. The inline marker guard now requires an immediately captured zero Node exit code plus `Wallpaper.state` of `enabled` or `disabled`, and the unattended receipt retains `Mode`; the unused marker `Version` is removed. The public launcher/protocol fixtures cover the boundary without a test-only wrapper; writing the full success marker after a real wallpaper injection remains a live gate.
+- 2026-11-15 Standards disposition: the persisted-disabled static-background CLI path now runs against an exact-target mocked protocol while starting the real `wallpaper-host` dispatch, and the browser fixture re-enables a selected on-demand workshop asset, observes its load request, shows preview, and applies the delivered image. The footer rule preserves the proven transparency correction and excludes the installed-source `[data-pip-obstacle='thread-footer-leading']` branch with adjacent readability coverage. Issue 01 and 02 dated progress now sits under each ticket’s trailing `## Comments`; issue and README cleanup are included in this correction.
+- 2026-11-15 Spec disposition: the two P1 live gates remain pending exactly as reported: detached Changes page identity is not allowed by static or historic evidence, and real restart/login, account/chat, visual, hotkey, and receipt acceptance has not run. The P2 same-name shortcut ownership issue is corrected and covered through public Startup behavior. Persisted-disabled on-demand re-enable is covered in the existing browser fixture, while the real host bind and real workshop-material request remain part of the pending live gate. No real Codex launch/attach/restart, live Startup registration, or P0 path access was performed.
