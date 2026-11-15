@@ -41,27 +41,26 @@ async function startFixture() {
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; }
       </style>
-      <div data-app-shell-page-surface>
-        <div data-app-shell-main-surface>
-          <main>
-          <article id="message" data-markdown-text-style="assistant-message">
-            ${"Long assistant response ".repeat(40)}
-          </article>
-          <section data-testid="webmcp-tool-scroll" class="bg-surface">
-            <button id="tool-action" type="button">Toggle tool</button>
-            <div id="tool-details">Tool details</div>
-          </section>
-          <section data-testid="diff-preview-scroll">
-            <pre><code id="code">const visible = true;</code></pre>
-          </section>
-          <form data-composer-surface-variant="inline">
-            <textarea id="composer">Composer text</textarea>
-          </form>
-          </main>
+      <div data-app-shell-workspace-row>
+        <div data-app-shell-page-surface>
+          <div data-app-shell-main-surface>
+            <main>
+            <article id="message" data-markdown-text-style="assistant-message">
+              ${"Long assistant response ".repeat(40)}
+            </article>
+            <section data-testid="webmcp-tool-scroll" class="bg-surface">
+              <button id="tool-action" type="button">Toggle tool</button>
+              <div id="tool-details">Tool details</div>
+            </section>
+            <form data-composer-surface-variant="inline">
+              <textarea id="composer">Composer text</textarea>
+            </form>
+            </main>
+          </div>
         </div>
+        <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary">Changes</header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
       </div>
       <aside data-app-shell-page-sidebar><button id="project-action">Project</button></aside>
-      <aside data-app-shell-trailing-sidebar><pre id="terminal">terminal</pre></aside>
       <div data-app-shell-pane-content-viewport><pre id="editor">editor</pre></div>
       <section role="dialog" id="settings-dialog"><button id="dialog-action">Dialog</button></section>
       </html>`
@@ -780,8 +779,9 @@ test("static background is single, removable and persists disabled", async (t) =
         const details = document.querySelector("#tool-details");
         const toolSurface = tool.closest("[data-testid='webmcp-tool-scroll']");
         const diffSurface = document.querySelector(
-          "[data-testid='diff-preview-scroll']"
+          "[data-thread-find-target='review']"
         );
+        const changesCodeSurface = diffSurface.querySelector("pre");
         const codeSurface = document.querySelector("pre");
         const composerSurface = document.querySelector(
           "[data-composer-surface-variant]"
@@ -790,6 +790,7 @@ test("static background is single, removable and persists disabled", async (t) =
         const rightPanel = document.querySelector(
           "[data-app-shell-trailing-sidebar]"
         );
+        rightPanel.hidden = false;
         const pane = document.querySelector(
           "[data-app-shell-pane-content-viewport]"
         );
@@ -833,12 +834,20 @@ test("static background is single, removable and persists disabled", async (t) =
         streamed.scrollIntoView({ block: "center" });
         const readAlpha = (element) => {
           const value = getComputedStyle(element).backgroundColor;
-          const match = value.match(/\\/\\s*([\\d.]+)\\s*\\)/);
+          const match =
+            value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
+            value.match(/,\\s*([\\d.]+)\\s*\\)$/);
           return match ? Number(match[1]) : 1;
         };
         const themeBases = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
-          return [surface, toolSurface, diffSurface, codeSurface, composerSurface]
+          return [
+            surface,
+            toolSurface,
+            changesCodeSurface,
+            codeSurface,
+            composerSurface,
+          ]
             .every(
               (element) =>
                 getComputedStyle(element).backgroundColor !==
@@ -860,7 +869,7 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
           contentHasReadabilityBases: [
             toolSurface,
-            diffSurface,
+            changesCodeSurface,
             codeSurface,
             composerSurface
           ].every(
@@ -876,17 +885,28 @@ test("static background is single, removable and persists disabled", async (t) =
                 surfaceAlpha <= 0.68 &&
                 wallpaperOpacity === 1
             ),
-          panelSurfacesHaveReadability: [
-            leftPanel,
-            rightPanel,
-            pane,
-            dialog
-          ].every(
+          panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
             (element) =>
               getComputedStyle(element).backgroundColor !==
                 "rgba(0, 0, 0, 0)" &&
               Number.parseInt(getComputedStyle(element).zIndex, 10) >= 1
           ),
+          changesPanelKeepsWallpaper: readAlpha(rightPanel) === 0,
+          changesScrollKeepsWallpaper: readAlpha(diffSurface) === 0,
+          changesContentHasReadabilityBase:
+            readAlpha(changesCodeSurface) > 0,
+          changesBackgroundLayers: document.querySelectorAll(
+            "#${rootId} [data-codex-wallpaper-layer]"
+          ).length,
+          changesRuntimeState: globalThis.__codexWallpaperApi.state().state,
+          nonReviewPanelKeepsReadability: (() => {
+            diffSurface.remove();
+            return readAlpha(rightPanel) > 0;
+          })(),
+          changesPanelClosed: (() => {
+            rightPanel.hidden = true;
+            return rightPanel.hidden;
+          })(),
           dialogHasFocus,
           backgroundIgnoresPointers:
             getComputedStyle(background).pointerEvents === "none",
@@ -916,6 +936,13 @@ test("static background is single, removable and persists disabled", async (t) =
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
+      changesPanelKeepsWallpaper: true,
+      changesScrollKeepsWallpaper: true,
+      changesContentHasReadabilityBase: true,
+      changesBackgroundLayers: 1,
+      changesRuntimeState: "enabled",
+      nonReviewPanelKeepsReadability: true,
+      changesPanelClosed: true,
       dialogHasFocus: true,
       backgroundIgnoresPointers: true,
       wallpaperIsVisible: true,
