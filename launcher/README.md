@@ -6,10 +6,28 @@
 - Wallpaper Engine 本机壁纸扫描；可见卡片懒加载作者预览，图片/视频/Scene 由隐藏宿主按需分块读取，Scene 使用 WebWallGL 或作者预览降级，Web 使用离线沙箱或预览降级。
 - 可视化壁纸库、收藏、播放列表、定时轮播、暗化/模糊/透明度、声音与一键停用。
 - 同源全局配置跨窗口同步；每个窗口独立判断可见性。
+- 显式启用、查询和撤销一个隐藏运行的 Windows 登录入口。
 
 运行期间可能有一个隐藏的本机 `wallpaper-host` Node 辅助进程，用于按需读取当前选中的 Wallpaper Engine 素材；它不监听网络端口，并随 Codex 页面退出而结束。
 
 只接受本机已核对的 MSIX `26.1111.2228.0`、原 EXE SHA-256 `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6` 及 `OpenAI.Codex_2p2nqsd0c76g0!App`。更新后先用原入口；版本、摘要或登记不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
+
+## Windows 登录启动
+
+以下命令只操作当前用户 Startup 文件夹中的 `Codex Wallpaper.lnk`，不会注册服务、计划任务或系统级启动项。入口以隐藏窗口运行现有专用启动器；在有记录证明同一专用实例仍运行时只复用，不重新连接或注入。
+
+```powershell
+# 启用或幂等更新这一个登录入口
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -EnableStartup
+
+# 查看入口是否指向当前 worktree 的启动器
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -StartupStatus
+
+# 撤销登录启动
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -DisableStartup
+```
+
+无人值守启动的回执保存在 `%LOCALAPPDATA%\CodexWallpaper\P0b`。只有最近一次成功注入写下的 `dedicated-session.json` 与运行中主进程的 PID、创建时间、端口和环回监听归属全部一致时，重复入口才会直接成功返回；其他已运行实例都按冲突记录。
 
 ## 手动验收
 
@@ -29,11 +47,13 @@
 powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 ```
 
+10. 启用登录入口后，在用户方便且工作已保存时自行注销或重启一次。确认没有任何常驻控制台窗口，只有专用 Codex 实例和壁纸，重复登录触发的入口不会增加第二个主进程或重复注入；这是尚未由自动测试代替的人工门槛。
+
 ## 清除与撤销
 
 壁纸设置面板底部的“停用并清除本项目数据”需要点击两次确认。它会删除页内全局配置和导入素材，并恢复内置渐变。
 
-完全清理启动器回执和自有本地文件时，可双击 `Reset-CodexWallpaper.cmd`。它只处理 `%LOCALAPPDATA%\CodexWallpaper`，不删除 Codex 包、原入口、日常 profile、账号或聊天。
+需要同时撤销登录启动时，先运行上面的 `-DisableStartup`，再双击 `Reset-CodexWallpaper.cmd` 清理回执和自有本地文件。重置脚本只处理 `%LOCALAPPDATA%\CodexWallpaper`，不删除 Codex 包、原入口、日常 profile、账号或聊天。
 
 界面停用不会关闭专用启动参数开启的调试监听；正常退出该 Codex 实例后，监听才会关闭。
 
