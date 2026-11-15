@@ -14,7 +14,7 @@
 - [ ] detached 页面身份门禁被阻断：`async/739154.e5ff8d46b9.js` 的 `detached-window.html` 只注册 `browser -> mountDetachedBrowserPage`，打包的 browser detach/prewarm 窗口也使用该入口；`.vite/build/early-bootstrap-331-29198f5b57adf59a.js` 的 `show-diff` 则把 `toggle-diff-panel` 发回 source WebContents。仅凭页面路径不能把它认定为 Changes，因此本单没有向 detached 目标注入。
 - [ ] 若未来真实宿主证明确有 Changes 使用 detached 页面，需从真实 DOM、精确 target URL 和来源关系取得新证据，并在独立任务中重新评估；不能把当前 browser detach 泛化为 Changes。
 - [ ] 现有素材连续性与播放器代次测试继续作为回归覆盖；本单没有修改图片、视频、Scene、Web 或异步回调路径。
-- [ ] 真实 Codex 连续至少 10 次切换聊天与变更页，交付前完成截图或录屏视觉检查，记录黑闪、默认渐变、重复播放器和控制按钮状态。
+- [x] 真实 Codex 录制并复看至少 10 轮聊天与变更标签切换。首次从无右栏状态鼠标点击打开，其余轮次复用同页实际控件；未发现此前的反复闪动、默认渐变闪入、播放器换代或壁纸按钮消失。保持右栏背景和实际差异内容的读底为单独门禁。
 
 ## Evidence
 
@@ -29,7 +29,7 @@
 
 - [ ] 用户明确允许操作真实候选后，在现有聊天连续至少 10 次切换“变更”和聊天，亲自检查无黑闪、默认渐变闪入、旧新画面交替、重复播放器或控制按钮消失；确认主聊天与变更侧栏显示同一当前选择。
 - [ ] 在同一人工检查中确认变更滚动区域透出同一壁纸，diff/code 内容仍有足够局部读底；再切到 terminal/files 等非 review trailing pane，确认普通面板底与交互未回退。
-- [ ] 人工确认实际点击“变更”没有进入未核验的 detached browser 页面。若宿主行为与静态源码不符，停止并把真实 target URL、DOM 标记和操作步骤作为新证据交回，不在现有实例中试探注入。
+- [x] 人工确认实际点击“变更”没有进入未核验的 detached browser 页面。若宿主行为与静态源码不符，停止并把真实 target URL、DOM 标记和操作步骤作为新证据交回，不在现有实例中试探注入。
 - [ ] 真实 Codex 中的输入、点击、滚动、文本选择和控制按钮仍可用；自动 fixture 只证明页面计算样式与单根层，不替代真实宿主结果。
 
 ## Comments
@@ -39,3 +39,4 @@
 - 2026-11-15：05 统一链路只使用已核验的 `data-app-shell-trailing-sidebar` / `data-thread-find-target='review'` fixture 结构，未新增 detached 注入或 target allowlist。真实 detached 页面身份仍无 live 证据，本门禁保持未通过；脱敏历史帧仅保留“曾发生黑底”的外观佐证。
 - 2026-11-16：从 D:/AI/codex-wallpaper-hardening 手动启动 20b9660 后，实际点击聊天卡上的「变更」。当前主聊天 CDP 目标保持可见，未新增 detached 目标；已存在的 detached 目标在点击前后均存在。窗口中出现可关闭的「变更」标签，当前脱敏截图显示右侧内容区仍有深色实底。窗口布局随后变化，未捕获十轮有效切换或时序证据；不勾选连续性及无闪动验收。
 - 2026-11-16 真实闪动复现：壁纸启用时，点击同页「变更」后曾反复交替显示亮色原始壁纸与压暗的聊天表面。主目标始终可见且 Scene Canvas 没有替换；渲染轨迹中聊天区的边界与「变更」标签反复变化。关闭壁纸、撤掉整个宿主定位覆盖、只保留标题栏原生定位分别作为对照；单独关闭模糊或移除 z-index 不解决。宿主的 [data-app-shell-titlebar] 原为 fixed，壁纸公共样式把它改成了 relative。只排除标题栏的定位覆盖时布局稳定，保留其余壁纸样式。夹具在宿主 CSS layer 下仅 titlebarRemainsFixed 转红，修复后转绿。
+- 2026-11-16 00:35 正式冷启动：新进程与新回执匹配，页面实际 CSS 与 d8ca847 对应内容字节相等；标题栏为 fixed。首次鼠标点击打开变更，后续用同页控件切换，共 11 轮有效录制（1,359 源帧）；复看未见原闪动。目标集合及同一 Scene Canvas 稳定，第一轮之后右栏容器保留。没有对运行时注入修复样式。本会话变更页无可读取的 diff 样本，右侧深色实底是否需要调整仍为独立事项。

@@ -178,6 +178,32 @@ test("scans local Wallpaper Engine projects without exposing paths", async (t) =
   assert.equal(prepared.mime, "image/png");
   assert.equal(prepared.size, 4);
   assert.equal(prepared.playable, true);
+  await project(
+    workshopRoot,
+    "script-web",
+    {
+      title: "Script Web",
+      type: "web",
+      file: "index.html",
+      preview: "preview.png",
+    },
+    {
+      "index.html": '<canvas></canvas><script src="bundle.js"></script>',
+      "preview.png": Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+    }
+  );
+  const webOptions = { installDir, libraryDirs: [libraryDir] };
+  const scriptWeb = (await scanWallpaperLibrary(webOptions)).entries.find(
+    (entry) => entry.id === "script-web"
+  );
+  for (const entry of [
+    scriptWeb,
+    await prepareWallpaperAsset("script-web", webOptions),
+  ]) {
+    assert.equal(entry.reason, "web-preview-fallback");
+    assert.equal(entry.webHtml, null);
+    assert.match(entry.previewDataUrl, /^data:image\/png;base64,/);
+  }
   await project(workshopRoot, "huge", {
     title: "Huge",
     type: "video",

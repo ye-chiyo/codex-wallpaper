@@ -975,6 +975,7 @@ export function createCodexWallpaperRuntime(payload) {
       #${rootId} .scene-host.ready { opacity: 1; }
       #${rootId} .media-preview { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: block; }
       #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
+      #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
       #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; gap: 6px; pointer-events: auto; }

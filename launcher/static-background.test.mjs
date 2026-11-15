@@ -836,6 +836,9 @@ test("static background is single, removable and persists disabled", async (t) =
         await new Promise((resolve) => setTimeout(resolve, 40));
         const frame = root.querySelector("[data-codex-wallpaper-layer] iframe");
         return {
+          fillsWallpaperLayer:
+            frame.getBoundingClientRect().width === frame.parentElement.clientWidth &&
+            frame.getBoundingClientRect().height === frame.parentElement.clientHeight,
           sandbox: frame.getAttribute("sandbox"),
           offlineDocument: frame.srcdoc.includes("linear-gradient"),
           networkBlocked: frame.srcdoc.includes("default-src 'none'")
@@ -844,6 +847,7 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
+      fillsWallpaperLayer: true,
       sandbox: "allow-scripts",
       offlineDocument: true,
       networkBlocked: true,

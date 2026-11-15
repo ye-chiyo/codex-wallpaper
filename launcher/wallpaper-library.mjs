@@ -95,9 +95,12 @@ async function discoverProjects() {
 
 async function readWebHtml(path) {
   const candidate = await dataUrl(path, webHtmlLimitBytes);
-  return candidate
-    ? Buffer.from(candidate.url.split(",", 2)[1], "base64").toString("utf8")
-    : null;
+  if (!candidate) return null;
+  const html = Buffer.from(candidate.url.split(",", 2)[1], "base64").toString(
+    "utf8"
+  );
+  // The offline lane cannot execute scripts; offer the author's preview.
+  return /<script(?=[\s/>])/i.test(html) ? null : html;
 }
 
 function mediaReason(
