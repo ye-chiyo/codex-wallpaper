@@ -49,6 +49,7 @@ async function startFixture() {
             <article id="message" data-markdown-text-style="assistant-message">
               ${"Long assistant response ".repeat(40)}
             </article>
+            <button id="open-changes" type="button">Open Changes</button>
             <section data-testid="webmcp-tool-scroll" class="bg-surface">
               <button id="tool-action" type="button">Toggle tool</button>
               <div id="tool-details">Tool details</div>
@@ -64,12 +65,17 @@ async function startFixture() {
             </main>
           </div>
         </div>
-        <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary">Changes</header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
+        <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary"><span>Changes</span><button id="close-changes" type="button">Close</button></header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
       </div>
       <aside data-app-shell-page-sidebar><button id="project-action">Project</button></aside>
       <div data-app-shell-pane-content-viewport><pre id="editor">editor</pre></div>
       <section role="dialog" id="settings-dialog"><button id="dialog-action">Dialog</button></section>
-      </html>`
+      </html>
+      <script>
+        const sidebar = document.querySelector('[data-app-shell-trailing-sidebar]');
+        document.querySelector('#open-changes').addEventListener('click', () => { sidebar.hidden = false; });
+        document.querySelector('#close-changes').addEventListener('click', () => { sidebar.hidden = true; });
+      </script>`
     );
   });
   server.listen(0, "127.0.0.1");
@@ -102,7 +108,7 @@ async function waitForPage(port, options) {
   throw new Error("Edge did not load the fixture page");
 }
 
-test("static background is single, removable and persists disabled", async (t) => {
+async function startBrowserFixture(t) {
   const fixture = await startFixture();
   const profile = await mkdtemp(join(tmpdir(), "codex-wallpaper-edge-"));
   const browser = spawn(
@@ -135,7 +141,11 @@ test("static background is single, removable and persists disabled", async (t) =
       retryDelay: 100,
     });
   });
-  const port = await waitForPort(profile);
+  return { fixture, port: await waitForPort(profile) };
+}
+
+test("static background is single, removable and persists disabled", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
   const options = {
     page: fixture.url,
     origin: new URL(fixture.url).origin,
@@ -915,8 +925,11 @@ test("static background is single, removable and persists disabled", async (t) =
           ).length,
           changesRuntimeState: globalThis.__codexWallpaperApi.state().state,
           nonReviewPanelKeepsReadability: (() => {
-            diffSurface.remove();
-            return readAlpha(rightPanel) > 0;
+            const target = diffSurface.dataset.threadFindTarget;
+            delete diffSurface.dataset.threadFindTarget;
+            const readable = readAlpha(rightPanel) > 0;
+            diffSurface.dataset.threadFindTarget = target;
+            return readable;
           })(),
           changesPanelClosed: (() => {
             rightPanel.hidden = true;
@@ -975,54 +988,227 @@ test("static background is single, removable and persists disabled", async (t) =
     (await applyStaticBackground(port, options)).backgroundLayers,
     1
   );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const controls = document.getElementById("${controlRootId}");
+        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        const card = [...controls.querySelectorAll(".card")].find(
+          (item) => item.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        card.querySelector(".card-actions button").click();
+        const ranges = controls.querySelectorAll(".range input");
+        for (const [input, value] of [
+          [ranges[0], "42"],
+          [ranges[1], "6"],
+          [ranges[2], "73"],
+          [ranges[3], "15"]
+        ]) {
+          input.value = value;
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          const image = document.querySelector("#${rootId} .media img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const root = document.getElementById("${rootId}");
+        const media = root.querySelector(".media");
+        const saved = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        return {
+          selected: saved.active,
+          settings: saved.settings,
+          imageIsFixture: media.querySelector("img")?.src.includes("5d32b8"),
+          playerCount: globalThis.__codexWallpaperApi.state().playerCount,
+          opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
+          filter: media.style.filter
+        };
+      })()`,
+      options
+    ),
+    {
+      selected: { kind: "workshop", id: "fixture-image" },
+      settings: {
+        dim: 42,
+        blur: 6,
+        opacity: 73,
+        fps: 15,
+        volume: 0,
+        rotationMinutes: 0,
+      },
+      imageIsFixture: true,
+      playerCount: 0,
+      opacity: "0.73",
+      filter: "blur(6px)",
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        document.getElementById("open-changes").click();
+        const sidebar = document.querySelector(
+          "[data-app-shell-trailing-sidebar]"
+        );
+        const review = sidebar.querySelector(
+          "[data-thread-find-target='review']"
+        );
+        const opened = {
+          panel: !sidebar.hidden,
+          panelAlpha: getComputedStyle(sidebar).backgroundColor,
+          reviewAlpha: getComputedStyle(review).backgroundColor,
+          code: review.querySelector("code")?.textContent,
+          wallpaperLayers: document.querySelectorAll(
+            "#${rootId} [data-codex-wallpaper-layer]"
+          ).length,
+          imageIsFixture: document.querySelector("#${rootId} .media img")
+            ?.src.includes("5d32b8")
+        };
+        document.getElementById("close-changes").click();
+        return { ...opened, closed: sidebar.hidden };
+      })()`,
+      options
+    ),
+    {
+      panel: true,
+      panelAlpha: "rgba(0, 0, 0, 0)",
+      reviewAlpha: "rgba(0, 0, 0, 0)",
+      code: "const visible = true;",
+      wallpaperLayers: 1,
+      imageIsFixture: true,
+      closed: true,
+    }
+  );
   await evaluateInPage(
     port,
     `document.body.append(document.getElementById("${controlRootId}").cloneNode(true))`,
     options
   );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        [...document.querySelectorAll("#${controlRootId}")]
+          .find((element) => element.parentElement === document.documentElement)
+          .querySelector(".toolbar [data-codex-wallpaper-toggle]")
+          .click();
+        const saved = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        return {
+          state: globalThis.__codexWallpaperApi.state(),
+          savedEnabled: saved.enabled,
+          savedActive: saved.active,
+          savedSettings: saved.settings,
+          roots: document.querySelectorAll(
+            "#${rootId}, #${controlRootId}, #${rootId}-style"
+          ).length
+        };
+      })()`,
+      options
+    ),
+    {
+      state: {
+        state: "disabled",
+        backgroundLayers: 0,
+        controls: 0,
+        styles: 0,
+        activeKind: "workshop",
+        activeId: "fixture-image",
+        libraryCount: 6,
+        importedCount: 0,
+        playerCount: 0,
+        visible: true,
+        measuredFps: 0,
+        fpsCap: 15,
+        volume: 0,
+        hostReady: true,
+      },
+      savedEnabled: false,
+      savedActive: { kind: "workshop", id: "fixture-image" },
+      savedSettings: {
+        dim: 42,
+        blur: 6,
+        opacity: 73,
+        fps: 15,
+        volume: 0,
+        rotationMinutes: 0,
+      },
+      roots: 0,
+    }
+  );
   await evaluateInPage(
     port,
-    "globalThis.__codexWallpaperApi.disable()",
+    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
     options
   );
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `({ root: document.querySelectorAll("#${rootId}, #${controlRootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
+      `(async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = document.querySelector("#${rootId} .media img");
+          if (
+            globalThis.__codexWallpaperApi.state().state === "enabled" &&
+            image?.complete &&
+            image.naturalWidth > 0
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const media = root.querySelector(".media");
+        const saved = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        return {
+          state: globalThis.__codexWallpaperApi.state(),
+          roots: {
+            wallpaper: document.querySelectorAll("#${rootId}").length,
+            controls: document.querySelectorAll("#${controlRootId}").length,
+            styles: document.querySelectorAll("#${rootId}-style").length
+          },
+          imageIsFixture: media.querySelector("img")?.src.includes("5d32b8"),
+          opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
+          filter: media.style.filter,
+          settingsInputs: [...controls.querySelectorAll(".range input")]
+            .slice(0, 5)
+            .map((input) => Number(input.value)),
+          savedActive: saved.active,
+          savedEnabled: saved.enabled
+        };
+      })()`,
       options
     ),
-    { root: 0, styles: 0 }
-  );
-  const disabled = await applyStaticBackground(port, options);
-  assert.equal(disabled.state, "disabled");
-  assert.equal(disabled.backgroundLayers, 0);
-  assert.equal(disabled.styles, 0);
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
-  assert.equal(
-    (await applyStaticBackground(port, options)).backgroundLayers,
-    1
-  );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
-  assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `({ root: document.querySelectorAll("#${rootId}, #${controlRootId}").length, styles: document.querySelectorAll("#${rootId}-style").length })`,
-      options
-    ),
-    { root: 0, styles: 0 }
-  );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
+    {
+      state: {
+        state: "enabled",
+        backgroundLayers: 1,
+        controls: 22,
+        styles: 1,
+        activeKind: "workshop",
+        activeId: "fixture-image",
+        libraryCount: 6,
+        importedCount: 0,
+        playerCount: 0,
+        visible: true,
+        measuredFps: 0,
+        fpsCap: 15,
+        volume: 0,
+        hostReady: true,
+      },
+      roots: { wallpaper: 1, controls: 1, styles: 1 },
+      imageIsFixture: true,
+      opacity: "0.73",
+      filter: "blur(6px)",
+      settingsInputs: [42, 6, 73, 15, 0],
+      savedActive: { kind: "workshop", id: "fixture-image" },
+      savedEnabled: true,
+    }
   );
   assert.deepEqual(
     await evaluateInPage(

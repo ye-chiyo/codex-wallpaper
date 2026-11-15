@@ -118,7 +118,7 @@ if (
   const action = process.argv[3] === "disable" ? "disable" : "enable";
   try {
     let result = await applyStaticBackground(port, { action });
-    if (action === "enable" && result.state === "enabled") {
+    if (action === "enable") {
       const bridge = await startBridge(port);
       if (bridge.bridgePid)
         result = await evaluate(

@@ -12,6 +12,40 @@
 
 只接受本机已核对的 MSIX `26.1111.2228.0`、原 EXE SHA-256 `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6` 及 `OpenAI.Codex_2p2nqsd0c76g0!App`。更新后先用原入口；版本、摘要或登记不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
 
+## 05 交付与人工验收 handoff
+
+当前 worktree 是本地候选和自动测试证据，未部署为运行中版本；本轮没有连接、附加、启动、关闭或重启真实 Codex，也没有注册真实 Startup。脱敏历史录屏只证明曾观察到变更侧栏黑底；headless fixture 证明当前视觉/交互规则；二者都不替代真实 Codex、登录后宿主绑定或重启结果。03 的真实 detached 页面身份门禁仍未解决，因此没有按 URL 放行任何 browser/detached target。
+
+在工作树根目录执行：
+
+```powershell
+Set-Location 'D:\AI\codex-wallpaper-hardening-05'
+
+# 打开当前 worktree 的专用候选入口
+.\launcher\Codex-Wallpaper.cmd
+
+# 只读检查现有实例；无专用成功回执时不会连接或注入
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
+
+# 仅在人工同意注册当前用户 Startup 后使用
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -EnableStartup
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -StartupStatus
+powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -DisableStartup
+```
+
+运行回执位置为 `%LOCALAPPDATA%\CodexWallpaper\P0b`；成功注入标记是其中的 `dedicated-session.json`。只报告 `Outcome`、`Wallpaper.state` 和脱敏状态，不复制个人路径、PID、账号、聊天正文或其他回执内容。
+
+人工门槛按以下顺序完成：
+
+1. 用户保存工作并完全退出 Codex。可先从原入口只读确认原账号和已有聊天正常，再退出；原入口保持未修改，自动接入仍未完成。
+2. 运行 `Codex-Wallpaper.cmd`，从专用实例打开同一聊天并确认当前壁纸。
+3. 选择本地图片、视频、代表性 Scene 和离线 Web；调整暗化、模糊、透明度、帧率、音量，并在聊天与变更侧栏间连续切换至少 10 次后返回。
+4. 点击“停用壁纸”，再按 `Alt+Shift+W` 恢复；确认当前素材和设置恢复、背景根层与控制层各一份、图片无活动播放器。对持久化为停用且上次选择按需素材的情况再退出/重开一次，确认快捷键恢复后会向真实媒体宿主请求素材，而不是永久停留在渐变。
+5. 如验证登录入口，使用上面的 `-EnableStartup` 后由用户自行注销或重启；确认只复用/生成一个专用主进程且回执一致，完成后立即执行 `-DisableStartup`。
+6. 正常退出专用实例，再从原入口启动并执行只读检查；预期普通实例没有项目调试标志或环回监听。
+
+自动 fixture 只覆盖视觉、交互、状态持久化和资源计数，不证明登录后真实 host bind、真实 detached 页面归属、10 次真实切换、注销/重启或原入口自动生效。
+
 ## Windows 登录启动
 
 以下命令只操作当前用户 Startup 文件夹中的 `Codex Wallpaper.lnk`，不会注册服务、计划任务或系统级启动项。入口以隐藏窗口运行现有专用启动器；在有记录证明同一专用实例仍运行时只复用，不重新连接或注入。

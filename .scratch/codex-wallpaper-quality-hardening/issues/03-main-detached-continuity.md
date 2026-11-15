@@ -36,3 +36,4 @@
 
 - 2026-11-15：TDD 红灯在 headless Edge fixture 中同时复现 opaque trailing sidebar 与 review 表面缺少可读底；调整 `:has([data-thread-find-target='review'])` 外壳透明规则、review 滚动根透明规则并保留局部 `pre` / class surface 后转绿。Fixture 关闭变更侧栏后再执行剩余启停与完整流程。
 - 2026-11-15：验证通过 `corepack pnpm test` 10/10、startup-roots 2/2、profile-preflight 7/7。当前分支没有修改 02 的 PowerShell/startup 文件，也没有应用 04 candidate。
+- 2026-11-15：05 统一链路只使用已核验的 `data-app-shell-trailing-sidebar` / `data-thread-find-target='review'` fixture 结构，未新增 detached 注入或 target allowlist。真实 detached 页面身份仍无 live 证据，本门禁保持未通过；脱敏历史帧仅保留“曾发生黑底”的外观佐证。
