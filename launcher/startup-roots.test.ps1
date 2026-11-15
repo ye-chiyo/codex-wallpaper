@@ -5,7 +5,7 @@ $tokens = $null
 $errorsFound = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($launcher, [ref]$tokens, [ref]$errorsFound)
 if ($errorsFound) { throw ($errorsFound | Out-String) }
-foreach ($name in @('Get-CodexRoots', 'Get-StartupRootState')) {
+foreach ($name in @('Get-CodexRoots', 'Get-StartupRootState', 'Test-DailyProfile', 'Test-LoopbackOwner', 'Get-DedicatedRootState')) {
     $definition = $ast.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq $name }, $true)
     if (-not $definition) { throw "Missing launcher function: $name" }
     . ([scriptblock]::Create($definition.Extent.Text))
@@ -41,3 +41,21 @@ Assert-Outcome (Get-StartupRootState @($main, $other) $state 0).Outcome 'ambiguo
 Assert-Outcome (Get-StartupRootState @($main, $other) $state 2900).Outcome 'ambiguous'
 Assert-Outcome (Get-StartupRootState @($main, $other) $state 3000).Outcome 'multiple-main-processes'
 Write-Host 'Passed: sustained ambiguity still blocks the probe.'
+
+$profile = 'C:\fixture\daily-profile'
+$nativeProfile = $profile
+$crashpad = New-ProcessFixture 26325 26324 "ChatGPT.exe --type=crashpad-handler --user-data-dir=$profile"
+$listenerOwner = 26324
+function Get-NetTCPConnection { [pscustomobject]@{ LocalAddress = '127.0.0.1'; OwningProcess = $listenerOwner } }
+$marker = [pscustomobject]@{ MainPid = 26324; MainCreated = $created.ToString('o'); Port = $port }
+$dedicated = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker
+Assert-Outcome $dedicated.State 'dedicated'
+Assert-Outcome $dedicated.Port $port
+Assert-Outcome $dedicated.Root.ProcessId 26324
+
+$listenerOwner = 40000
+$ordinary = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker
+Assert-Outcome $ordinary.State 'unknown'
+$unrecorded = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $null
+Assert-Outcome $unrecorded.State 'unknown'
+Write-Host 'Passed: reuse requires a matching successful-session marker and loopback ownership.'
