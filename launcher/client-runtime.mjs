@@ -985,7 +985,20 @@ export function createCodexWallpaperRuntime(payload) {
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
-      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; }
+      /* Keep the corner when the toolbar fits beside the composer. */
+      body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
+      #${controlsId} .toolbar {
+        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
+        position-anchor: --codex-wallpaper-composer;
+        left: calc(anchor(right) + 8px);
+        width: max-content; justify-self: end;
+        position-try-fallbacks: --codex-wallpaper-above-composer;
+        anchor-name: --codex-wallpaper-toolbar;
+      }
+      @position-try --codex-wallpaper-above-composer {
+        left: auto;
+        bottom: max(14px, calc(anchor(top, 6px) + 8px));
+      }
       #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
       #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
       #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
@@ -993,7 +1006,14 @@ export function createCodexWallpaperRuntime(payload) {
       #${controlsId} .toolbar button[aria-pressed='true'], #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
       #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
       #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
-      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none; }
+      #${controlsId} .panel {
+        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        position-anchor: --codex-wallpaper-toolbar;
+        position-area: top span-left;
+        inset: 14px 0 3px 14px;
+        place-self: end;
+        max-height: min(74vh, 720px, calc(100% - 17px));
+      }
       #${controlsId} .panel.open { display: block; }
       #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
       #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
@@ -1098,7 +1118,7 @@ export function createCodexWallpaperRuntime(payload) {
     toggle.textContent = "停用壁纸";
     toggle.onclick = () => disable();
     toolbar.append(settings, toggle);
-    controls.append(buildPanel(), toolbar);
+    controls.append(toolbar, buildPanel());
     document.documentElement.append(style, root, controls);
     root.append(layer);
   }

@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
 import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
-import { callMainPage } from "./read-only-probe.mjs";
+import { callMainPage, openMainPageSession } from "./read-only-probe.mjs";
 
 const edge =
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -1640,6 +1640,67 @@ test("static background is single, removable and persists disabled", async (t) =
       userMarkdownKeepsNativeState: true,
     }
   );
+  const metrics = await openMainPageSession(port, options.page, true);
+  t.after(() => metrics.close());
+  await metrics.send("Emulation.setDeviceMetricsOverride", {
+    width: 1290,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      const composer = document.querySelector("[data-composer-surface-variant]");
+      composer.style.cssText = "position:fixed;right:108px;bottom:20px;width:736px;height:98px;box-sizing:border-box";
+      const action = document.createElement("button");
+      action.id = "fixture-composer-action";
+      action.type = "button";
+      action.textContent = "Mic";
+      action.style.cssText = "position:absolute;right:8px;bottom:8px;width:28px;height:28px";
+      action.onclick = () => action.toggleAttribute("data-clicked");
+      composer.append(action);
+    })()`,
+    options
+  );
+  assert.equal(
+    await clickAtElementCenter(port, options, "#fixture-composer-action"),
+    true,
+    "the wallpaper toolbar must leave the narrow composer action clickable"
+  );
+  assert.equal(
+    await evaluateInPage(
+      port,
+      'document.querySelector("#fixture-composer-action").hasAttribute("data-clicked")',
+      options
+    ),
+    true
+  );
+  const settingsButton = `#${controlRootId} [data-codex-wallpaper-settings]`;
+  assert.equal(await clickAtElementCenter(port, options, settingsButton), true);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        const panel = document.querySelector("#${controlRootId} .panel.open");
+        const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
+        const p = panel.getBoundingClientRect();
+        return { visible: p.top >= 0 && p.right <= innerWidth, clear: p.bottom < c.top };
+      })()`,
+      options
+    ),
+    { visible: true, clear: true }
+  );
+  await clickAtElementCenter(port, options, settingsButton);
+  await evaluateInPage(
+    port,
+    `(() => {
+      document.querySelector("#fixture-composer-action").remove();
+      document.querySelector("[data-composer-surface-variant]").removeAttribute("style");
+    })()`,
+    options
+  );
+  await metrics.send("Emulation.clearDeviceMetricsOverride");
   assert.equal(
     (await applyStaticBackground(port, options)).backgroundLayers,
     1
