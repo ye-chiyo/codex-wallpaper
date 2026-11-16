@@ -1003,8 +1003,8 @@ export function createCodexWallpaperRuntime(payload) {
       #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
       #${controlsId} .reset { margin-top: 14px; width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
       :root {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 90%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 68%, transparent);
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 72%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 18%, transparent);
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
         --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 94%, transparent);
         --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
@@ -1014,32 +1014,30 @@ export function createCodexWallpaperRuntime(payload) {
         --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
       }
       html[data-theme='light'] {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 94%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 78%, transparent);
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 80%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 12%, transparent);
       }
       body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
         &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
-        &:not([data-app-shell-main-surface], [data-app-shell-titlebar]) { backdrop-filter: blur(14px) saturate(.9); }
+        &:not([data-app-shell-main-surface], [data-app-shell-titlebar], [data-app-shell-page-sidebar]) { backdrop-filter: blur(14px) saturate(.9); }
       }
       body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
       body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
       body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
-        background-color: var(--codex-wallpaper-frame) !important;
-        backdrop-filter: blur(14px) saturate(.9);
+        background-color: transparent !important;
         box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      body [data-app-shell-titlebar] { box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-titlebar] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); --color-text-tertiary: var(--color-text-secondary); }
       body [data-app-shell-frame] > :has(> [role='menubar']) {
-        background-color: var(--codex-wallpaper-frame) !important;
-        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line), 0 8px 0 var(--codex-wallpaper-frame);
-        backdrop-filter: blur(14px) saturate(.9);
+        background-color: transparent !important;
+        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      body [data-app-shell-workspace-row] { box-shadow: 0 4px 0 var(--codex-wallpaper-frame); }
       body [data-app-shell-trailing-sidebar]:has([data-thread-find-target='review']) { background-color: transparent !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
+      body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
       body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre) { background-color: var(--codex-wallpaper-raised) !important; }
       body [data-summary-panel-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
       body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }

@@ -229,27 +229,68 @@ async function startFixture() {
   );
 }
 
-async function startTitlebarFixture() {
+async function startChromeFixture() {
   return startHtmlFixture(
     `<!doctype html>
       <html data-theme="dark">
-      <title>Codex titlebar fixture</title>
+      <title>Codex window chrome fixture</title>
       <style>
         :root {
           --app-color-background-surface: rgb(24 24 28);
           --app-color-background-surface-under: rgb(12 12 16);
+          --app-color-text-foreground: rgb(245 245 250);
+          --color-text-secondary: rgb(255 255 255 / .65);
+          --color-text-tertiary: rgb(255 255 255 / .5);
           color-scheme: dark;
         }
-        body { margin: 0; min-height: 100vh; }
+        :root[data-theme="light"] {
+          --app-color-background-surface: rgb(247 247 249);
+          --app-color-background-surface-under: rgb(232 232 237);
+          --app-color-text-foreground: rgb(20 20 24);
+          --color-text-secondary: rgb(0 0 0 / .65);
+          --color-text-tertiary: rgb(0 0 0 / .5);
+          color-scheme: light;
+        }
+        body { margin: 0; height: 100vh; background: rgb(70 30 90); color: var(--app-color-text-foreground); }
+        [data-app-shell-workspace-row] {
+          height: 100vh;
+        }
+        [data-app-shell-frame] {
+          position: relative;
+          display: grid;
+          grid-template-columns: 52px 188px minmax(0, 1fr);
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          padding-top: 36px;
+          box-sizing: border-box;
+          background: var(--app-color-background-surface);
+        }
+        #app-menu { position: absolute; inset: 0 0 auto; z-index: 30; height: 36px; }
+        [data-app-navigation-rail], [data-slate-sidebar-content] {
+          padding: 12px 8px;
+        }
+        [data-app-navigation-rail] { grid-column: 1; grid-row: 1; }
+        [data-slate-sidebar-content] { grid-column: 2; grid-row: 1; }
+        [data-app-shell-main-surface] {
+          grid-column: 3;
+          grid-row: 1;
+          min-width: 0;
+          background: var(--app-color-background-surface);
+        }
+        .content { padding: 72px 24px 24px; }
+        .muted-chrome { color: var(--color-text-tertiary); }
         @layer host {
           [data-app-shell-titlebar] {
             position: fixed;
-            inset: 0 0 auto;
+            top: 36px;
+            right: 0;
+            left: 240px;
             z-index: 30;
             display: flex;
             align-items: center;
             gap: 8px;
-            height: 44px;
+            height: 52px;
             padding: 0 12px;
             pointer-events: none;
             -webkit-app-region: drag;
@@ -260,90 +301,47 @@ async function startTitlebarFixture() {
             -webkit-app-region: no-drag;
           }
         }
-        [data-app-shell-main-surface] {
-          position: relative;
-          min-height: 100vh;
-          background: rgb(24 24 28);
-        }
-        .WorkspaceContent {
-          position: relative;
-          isolation: isolate;
-          min-height: 100vh;
-          padding: 72px 24px 24px;
-        }
-        [data-summary-panel-variant] {
-          position: absolute;
-          top: 72px;
-          right: 24px;
-        }
-        [data-composer-surface-variant] {
-          position: fixed;
-          bottom: 24px;
-          left: 24px;
-          width: 320px;
-          padding: 12px;
-          background: rgb(20 20 24);
-        }
-        [role="menu"], [role="tabpanel"] { display: block; }
+        [role="menu"] { position: absolute; top: 36px; left: 12px; padding: 6px; }
         [hidden] { display: none !important; }
       </style>
-      <header data-app-shell-titlebar>
-        <button id="project-menu">Project</button>
-        <button id="chat-title">Current chat</button>
-        <button id="changes-tab" role="tab" aria-selected="false">Changes</button>
-        <button id="file-tab" role="tab" aria-selected="false">File</button>
-        <button id="share-action">Share</button>
-        <button id="minimize-action">Minimize</button>
-        <button id="maximize-action">Maximize</button>
-        <button id="close-action">Close</button>
-      </header>
       <div data-app-shell-workspace-row>
-        <main data-app-shell-main-surface>
-          <div class="WorkspaceContent">
-            <section id="chat-panel" role="tabpanel">Chat content</section>
-            <section id="changes-panel" role="tabpanel" hidden>Changes content</section>
-            <section id="file-panel" role="tabpanel" hidden>File content</section>
-            <div id="project-options" role="menu" hidden>Project options</div>
-            <div id="title-options" role="menu" hidden>Chat options</div>
-            <div data-composer-surface-variant>
-              <textarea id="composer" aria-label="Message"></textarea>
-            </div>
-            <div data-summary-panel-variant>
-              <button id="summary-action">Summary action</button>
-            </div>
+        <div data-app-shell-frame data-app-shell-page-surface data-app-shell-page-sidebar>
+          <div id="app-menu">
+            <div role="menubar"><button id="view-menu" class="muted-chrome">View</button></div>
+            <div id="view-options" role="menu" hidden>View options</div>
           </div>
-        </main>
+          <nav data-app-navigation-rail><button id="home-action" class="muted-chrome">Home</button></nav>
+          <div data-slate-sidebar-content><button id="project-action" class="muted-chrome">Project</button></div>
+          <main data-app-shell-main-surface>
+            <div class="content">Chat canvas</div>
+          </main>
+          <header data-app-shell-titlebar>
+            <button id="project-menu">Project</button>
+            <button id="chat-title">Current chat</button>
+            <button id="share-action">Share</button>
+            <button id="minimize-action">Minimize</button>
+            <button id="maximize-action">Maximize</button>
+            <button id="close-action">Close</button>
+          </header>
+        </div>
       </div>
       <script>
+        document.querySelector("#view-menu").addEventListener("click", () => {
+          document.querySelector("#view-options").hidden = false;
+        });
         document.querySelector("#project-menu").addEventListener("click", () => {
-          document.querySelector("#project-options").hidden = false;
+          document.querySelector("#project-menu").dataset.clicked = "true";
         });
         document.querySelector("#chat-title").addEventListener("click", () => {
-          document.querySelector("#title-options").hidden = false;
+          document.querySelector("#chat-title").dataset.clicked = "true";
         });
-        document.querySelector("#changes-tab").addEventListener("click", () => {
-          const tab = document.querySelector("#changes-tab");
-          const open = tab.getAttribute("aria-selected") !== "true";
-          tab.setAttribute("aria-selected", String(open));
-          document.querySelector("#chat-panel").hidden = open;
-          document.querySelector("#changes-panel").hidden = !open;
-        });
-        document.querySelector("#file-tab").addEventListener("click", () => {
-          document.querySelector("#changes-panel").hidden = true;
-          document.querySelector("#file-panel").hidden = false;
-          document.querySelector("#changes-tab").setAttribute("aria-selected", "false");
-          document.querySelector("#file-tab").setAttribute("aria-selected", "true");
-        });
-        document.querySelector("#share-action").addEventListener("click", (event) => {
-          event.currentTarget.dataset.clicked = "true";
-        });
-        for (const id of ["minimize-action", "maximize-action", "close-action"]) {
+        for (const id of ["home-action", "project-action", "share-action", "minimize-action", "maximize-action", "close-action"]) {
           document.querySelector("#" + id).addEventListener("click", (event) => {
             event.currentTarget.dataset.clicked = "true";
           });
         }
-        document.querySelector("#summary-action").addEventListener("click", (event) => {
-          event.currentTarget.dataset.clicked = "true";
+        document.querySelector("#chat-title").addEventListener("click", () => {
+          for (const target of document.querySelectorAll("[role=menu]")) target.hidden = true;
         });
       </script>
       </html>`
@@ -433,8 +431,8 @@ async function clickAtElementCenter(port, options, selector) {
   return target.receivesClick;
 }
 
-test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (t) => {
-  const fixture = await startTitlebarFixture();
+test("window chrome keeps wallpaper sharp and native titlebar interactive", async (t) => {
+  const fixture = await startChromeFixture();
   const { port } = await startBrowserFixture(t, fixture);
   const options = {
     page: fixture.url,
@@ -444,14 +442,29 @@ test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (
 
   await waitForPage(port, options);
   await applyStaticBackground(port, options);
+  const viewReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#view-menu"
+  );
+  const viewMenuOpened = await evaluateInPage(
+    port,
+    `document.querySelector("#view-options").hidden === false`,
+    options
+  );
+  await evaluateInPage(
+    port,
+    `document.querySelector("#view-options").hidden = true`,
+    options
+  );
   const projectReceivesClick = await clickAtElementCenter(
     port,
     options,
     "#project-menu"
   );
-  const projectMenuOpened = await evaluateInPage(
+  const projectClicked = await evaluateInPage(
     port,
-    `document.querySelector("#project-options").hidden === false`,
+    `document.querySelector("#project-menu").dataset.clicked === "true"`,
     options
   );
   const titleReceivesClick = await clickAtElementCenter(
@@ -459,32 +472,9 @@ test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (
     options,
     "#chat-title"
   );
-  const titleMenuOpened = await evaluateInPage(
+  const titleClicked = await evaluateInPage(
     port,
-    `document.querySelector("#title-options").hidden === false`,
-    options
-  );
-  const changesTabReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#changes-tab"
-  );
-  const changesOpened = await evaluateInPage(
-    port,
-    `document.querySelector("#changes-tab").getAttribute("aria-selected") === "true" &&
-      document.querySelector("#changes-panel").hidden === false`,
-    options
-  );
-  const fileTabReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#file-tab"
-  );
-  const fileTabSwitched = await evaluateInPage(
-    port,
-    `document.querySelector("#file-tab").getAttribute("aria-selected") === "true" &&
-      document.querySelector("#file-panel").hidden === false &&
-      document.querySelector("#changes-panel").hidden === true`,
+    `document.querySelector("#chat-title").dataset.clicked === "true"`,
     options
   );
   const shareReceivesClick = await clickAtElementCenter(
@@ -497,25 +487,15 @@ test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (
     `document.querySelector("#share-action").dataset.clicked === "true"`,
     options
   );
-  const summaryReceivesClick = await clickAtElementCenter(
+  const homeReceivesClick = await clickAtElementCenter(
     port,
     options,
-    "#summary-action"
+    "#home-action"
   );
-  const summaryClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#summary-action").dataset.clicked === "true"`,
-    options
-  );
-  const composerReceivesClick = await clickAtElementCenter(
+  const projectActionReceivesClick = await clickAtElementCenter(
     port,
     options,
-    "#composer"
-  );
-  const composerFocused = await evaluateInPage(
-    port,
-    `document.activeElement?.id === "composer"`,
-    options
+    "#project-action"
   );
   const windowReceivesClick = {};
   for (const action of ["minimize", "maximize", "close"])
@@ -531,93 +511,134 @@ test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (
     )`,
     options
   );
-  const wallpaperSettingsReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#codex-wallpaper-p1-controls .toolbar button[data-codex-wallpaper-settings]"
-  );
-  const wallpaperPanelOpened = await evaluateInPage(
-    port,
-    `document.querySelector("#codex-wallpaper-p1-controls .panel").classList.contains("open")`,
-    options
-  );
-  const wallpaperPanelCloseReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#codex-wallpaper-p1-controls .panel header button"
-  );
-  const wallpaperPanelClosed = await evaluateInPage(
-    port,
-    `!document.querySelector("#codex-wallpaper-p1-controls .panel").classList.contains("open")`,
-    options
-  );
   assert.deepEqual(
     {
+      viewReceivesClick,
+      viewMenuOpened,
       projectReceivesClick,
-      projectMenuOpened,
+      projectClicked,
       titleReceivesClick,
-      titleMenuOpened,
-      changesTabReceivesClick,
-      changesOpened,
-      fileTabReceivesClick,
-      fileTabSwitched,
+      titleClicked,
       shareReceivesClick,
       shareClicked,
-      summaryReceivesClick,
-      summaryClicked,
-      composerReceivesClick,
-      composerFocused,
+      homeReceivesClick,
+      projectActionReceivesClick,
       windowReceivesClick,
       windowActionsResponded,
-      wallpaperSettingsReceivesClick,
-      wallpaperPanelOpened,
-      wallpaperPanelCloseReceivesClick,
-      wallpaperPanelClosed,
       ...(await evaluateInPage(
         port,
         `(() => {
+        const readAlpha = (value) => {
+          const match =
+            value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
+            value.match(/,\\s*([\\d.]+)\\s*\\)$/);
+          return match ? Number(match[1]) : 0;
+        };
+        const root = document.documentElement;
+        const menu = document.querySelector("#app-menu");
         const titlebar = document.querySelector("[data-app-shell-titlebar]");
+        const nav = document.querySelector("[data-app-navigation-rail]");
+        const slate = document.querySelector("[data-slate-sidebar-content]");
+        const frame = document.querySelector("[data-app-shell-frame]");
+        const main = document.querySelector("[data-app-shell-main-surface]");
+        const chrome = [menu, nav, slate];
+        const themeSamples = ["dark", "light"].map((theme) => {
+          root.dataset.theme = theme;
+          return {
+            theme,
+            chromeAlpha: chrome.map((element) =>
+              readAlpha(getComputedStyle(element).backgroundColor)
+            ),
+            titlebarAlpha: readAlpha(getComputedStyle(titlebar).backgroundColor),
+            frameAlpha: readAlpha(getComputedStyle(frame).backgroundColor),
+            canvasAlpha: readAlpha(getComputedStyle(main).backgroundColor),
+          };
+        });
+        const titlebarRect = titlebar.getBoundingClientRect();
+        const mainRect = main.getBoundingClientRect();
         return {
+          frameCarriesSharedAnchors:
+            frame.hasAttribute("data-app-shell-frame") &&
+            frame.hasAttribute("data-app-shell-page-surface") &&
+            frame.hasAttribute("data-app-shell-page-sidebar"),
+          themeSamples,
+          shellChildrenStayTransparent: [menu, titlebar, nav, slate].every(
+            (element) =>
+              readAlpha(getComputedStyle(element).backgroundColor) === 0
+          ),
+          perimeterLinesVisible: [menu, titlebar, nav, slate].every(
+            (element) => getComputedStyle(element).boxShadow !== "none"
+          ),
+          wallpaperRemainsSharp: [menu, titlebar, nav, slate].every(
+            (element) => getComputedStyle(element).backdropFilter === "none"
+          ),
+          titlebarOverlapsChatCanvas:
+            Math.abs(titlebarRect.top - mainRect.top) < 1 &&
+            Math.abs(titlebarRect.left - mainRect.left) < 1,
           titlebarKeepsNativeLayer:
+            getComputedStyle(titlebar).position === "fixed" &&
             Number.parseInt(getComputedStyle(titlebar).zIndex, 10) >= 30,
           titlebarRemainsDraggable:
             getComputedStyle(titlebar).getPropertyValue("-webkit-app-region") ===
               "drag" &&
             getComputedStyle(document.querySelector("#chat-title")).getPropertyValue(
               "-webkit-app-region"
-            ) === "no-drag"
+            ) === "no-drag",
+          wallpaperIgnoresPointers:
+            getComputedStyle(
+              document.querySelector("#codex-wallpaper-p1 [data-codex-wallpaper-layer]")
+            ).pointerEvents === "none",
+          titlebarEmptyAreaReachesChat:
+            !titlebar.contains(
+              document.elementFromPoint(titlebarRect.right - 20, titlebarRect.top + 26)
+            )
         };
       })()`,
         options
       )),
     },
     {
+      viewReceivesClick: true,
+      viewMenuOpened: true,
       projectReceivesClick: true,
-      projectMenuOpened: true,
+      projectClicked: true,
       titleReceivesClick: true,
-      titleMenuOpened: true,
-      changesTabReceivesClick: true,
-      changesOpened: true,
-      fileTabReceivesClick: true,
-      fileTabSwitched: true,
+      titleClicked: true,
       shareReceivesClick: true,
       shareClicked: true,
-      summaryReceivesClick: true,
-      summaryClicked: true,
-      composerReceivesClick: true,
-      composerFocused: true,
+      homeReceivesClick: true,
+      projectActionReceivesClick: true,
       windowReceivesClick: {
         minimize: true,
         maximize: true,
         close: true,
       },
       windowActionsResponded: true,
-      wallpaperSettingsReceivesClick: true,
-      wallpaperPanelOpened: true,
-      wallpaperPanelCloseReceivesClick: true,
-      wallpaperPanelClosed: true,
+      frameCarriesSharedAnchors: true,
+      themeSamples: [
+        {
+          theme: "dark",
+          chromeAlpha: [0, 0, 0],
+          titlebarAlpha: 0,
+          frameAlpha: 0.72,
+          canvasAlpha: 0.18,
+        },
+        {
+          theme: "light",
+          chromeAlpha: [0, 0, 0],
+          titlebarAlpha: 0,
+          frameAlpha: 0.8,
+          canvasAlpha: 0.12,
+        },
+      ],
+      shellChildrenStayTransparent: true,
+      perimeterLinesVisible: true,
+      wallpaperRemainsSharp: true,
+      titlebarOverlapsChatCanvas: true,
       titlebarKeepsNativeLayer: true,
       titlebarRemainsDraggable: true,
+      wallpaperIgnoresPointers: true,
+      titlebarEmptyAreaReachesChat: true,
     }
   );
 });
@@ -1335,6 +1356,7 @@ test("static background is single, removable and persists disabled", async (t) =
           toolbarRect.bottom - 8
         );
         const surface = document.querySelector("[data-app-shell-main-surface]");
+        const frame = document.querySelector("[data-app-shell-frame]");
         const tool = document.querySelector("#tool-action");
         const details = document.querySelector("#tool-details");
         const toolSurface = tool.closest("[data-testid='webmcp-tool-scroll']");
@@ -1430,26 +1452,15 @@ test("static background is single, removable and persists disabled", async (t) =
         });
         const wallpaperVisibility = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
+          const surfaceAlpha = readAlpha(surface);
+          const frameAlpha = readAlpha(frame);
           return {
             theme,
-            surfaceAlpha: readAlpha(surface),
+            compositeAlpha: 1 - (1 - frameAlpha) * (1 - surfaceAlpha),
             wallpaperOpacity: Number(getComputedStyle(media).opacity),
           };
         });
-        const navigationReadable = ["dark", "light"].every((theme) => {
-          document.documentElement.dataset.theme = theme;
-          const chrome = [
-            document.querySelector("[data-app-navigation-rail]"),
-            document.querySelector("[data-slate-sidebar-content]"),
-            document.getElementById("app-menu")
-          ];
-          return chrome.every((element) => {
-            const control = element.querySelector("button");
-            return readAlpha(element) >= 0.9 && readAlpha(control, "color") >= 0.64;
-          });
-        });
         return {
-          navigationReadable,
           mainWallpaperHasNoExtraBlur: getComputedStyle(surface).backdropFilter === "none",
           surfaceAboveBackground:
             Number.parseInt(getComputedStyle(surface).zIndex, 10) >
@@ -1473,9 +1484,9 @@ test("static background is single, removable and persists disabled", async (t) =
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
-              ({ theme, surfaceAlpha, wallpaperOpacity }) =>
-                surfaceAlpha >= 0.5 &&
-                surfaceAlpha <= (theme === "light" ? 0.8 : 0.68) &&
+              ({ theme, compositeAlpha, wallpaperOpacity }) =>
+                compositeAlpha >= (theme === "light" ? 0.79 : 0.74) &&
+                compositeAlpha <= 0.84 &&
                 wallpaperOpacity === 1
             ),
           panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
@@ -1506,10 +1517,9 @@ test("static background is single, removable and persists disabled", async (t) =
           dialogHasFocus,
           backgroundIgnoresPointers:
             getComputedStyle(background).pointerEvents === "none",
-          wallpaperIsVisible:
+          wallpaperMediaVisible:
             getComputedStyle(media).backgroundImage.includes("gradient") &&
-            getComputedStyle(document.querySelector("[data-app-shell-page-surface]"))
-              .backgroundColor === "rgba(0, 0, 0, 0)",
+            getComputedStyle(media).opacity === "1",
           toolbarIsAboveHost: toolbar.contains(toolbarHit),
           toolReceivesClick: hit === tool && toolToggleWorked,
           composerHasFocus: document.activeElement === composer,
@@ -1526,7 +1536,6 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
-      navigationReadable: true,
       mainWallpaperHasNoExtraBlur: true,
       surfaceAboveBackground: true,
       surfaceHasReadabilityBase: true,
@@ -1545,7 +1554,7 @@ test("static background is single, removable and persists disabled", async (t) =
       changesPanelClosed: true,
       dialogHasFocus: true,
       backgroundIgnoresPointers: true,
-      wallpaperIsVisible: true,
+      wallpaperMediaVisible: true,
       toolbarIsAboveHost: true,
       toolReceivesClick: true,
       composerHasFocus: true,
