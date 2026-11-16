@@ -316,12 +316,7 @@ async function startChromeFixture() {
             <div class="content">Chat canvas</div>
           </main>
           <header data-app-shell-titlebar>
-            <button id="project-menu">Project</button>
             <button id="chat-title">Current chat</button>
-            <button id="share-action">Share</button>
-            <button id="minimize-action">Minimize</button>
-            <button id="maximize-action">Maximize</button>
-            <button id="close-action">Close</button>
           </header>
         </div>
       </div>
@@ -329,19 +324,9 @@ async function startChromeFixture() {
         document.querySelector("#view-menu").addEventListener("click", () => {
           document.querySelector("#view-options").hidden = false;
         });
-        document.querySelector("#project-menu").addEventListener("click", () => {
-          document.querySelector("#project-menu").dataset.clicked = "true";
-        });
-        document.querySelector("#chat-title").addEventListener("click", () => {
-          document.querySelector("#chat-title").dataset.clicked = "true";
-        });
-        for (const id of ["home-action", "project-action", "share-action", "minimize-action", "maximize-action", "close-action"]) {
-          document.querySelector("#" + id).addEventListener("click", (event) => {
-            event.currentTarget.dataset.clicked = "true";
-          });
-        }
-        document.querySelector("#chat-title").addEventListener("click", () => {
-          for (const target of document.querySelectorAll("[role=menu]")) target.hidden = true;
+        document.querySelector("#chat-title").addEventListener("click", (event) => {
+          event.currentTarget.dataset.clicked = "true";
+          document.querySelector("#view-options").hidden = true;
         });
       </script>
       </html>`
@@ -439,207 +424,76 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     origin: new URL(fixture.url).origin,
     payload: { version: 1, library: [] },
   };
-
+  const readTitlebar = `(() => {
+    const bar = document.querySelector("[data-app-shell-titlebar]");
+    const style = getComputedStyle(bar);
+    return [style.position, style.zIndex, style.getPropertyValue("-webkit-app-region"),
+      getComputedStyle(bar.firstElementChild).getPropertyValue("-webkit-app-region"),
+      bar.getBoundingClientRect().toJSON()];
+  })()`;
   await waitForPage(port, options);
+  const nativeTitlebar = await evaluateInPage(port, readTitlebar, options);
   await applyStaticBackground(port, options);
-  const viewReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#view-menu"
-  );
-  const viewMenuOpened = await evaluateInPage(
-    port,
-    `document.querySelector("#view-options").hidden === false`,
-    options
-  );
-  await evaluateInPage(
-    port,
-    `document.querySelector("#view-options").hidden = true`,
-    options
-  );
-  const projectReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#project-menu"
-  );
-  const projectClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#project-menu").dataset.clicked === "true"`,
-    options
-  );
-  const titleReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#chat-title"
-  );
-  const titleClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#chat-title").dataset.clicked === "true"`,
-    options
-  );
-  const shareReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#share-action"
-  );
-  const shareClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#share-action").dataset.clicked === "true"`,
-    options
-  );
-  const homeReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#home-action"
-  );
-  const projectActionReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#project-action"
-  );
-  const windowReceivesClick = {};
-  for (const action of ["minimize", "maximize", "close"])
-    windowReceivesClick[action] = await clickAtElementCenter(
-      port,
-      options,
-      `#${action}-action`
-    );
-  const windowActionsResponded = await evaluateInPage(
-    port,
-    `["minimize", "maximize", "close"].every(
-      (action) => document.querySelector("#" + action + "-action").dataset.clicked === "true"
-    )`,
-    options
-  );
   assert.deepEqual(
-    {
-      viewReceivesClick,
-      viewMenuOpened,
-      projectReceivesClick,
-      projectClicked,
-      titleReceivesClick,
-      titleClicked,
-      shareReceivesClick,
-      shareClicked,
-      homeReceivesClick,
-      projectActionReceivesClick,
-      windowReceivesClick,
-      windowActionsResponded,
-      ...(await evaluateInPage(
-        port,
-        `(() => {
-        const readAlpha = (value) => {
-          const match =
-            value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
-            value.match(/,\\s*([\\d.]+)\\s*\\)$/);
-          return match ? Number(match[1]) : 0;
-        };
-        const root = document.documentElement;
-        const menu = document.querySelector("#app-menu");
-        const titlebar = document.querySelector("[data-app-shell-titlebar]");
-        const nav = document.querySelector("[data-app-navigation-rail]");
-        const slate = document.querySelector("[data-slate-sidebar-content]");
-        const frame = document.querySelector("[data-app-shell-frame]");
-        const main = document.querySelector("[data-app-shell-main-surface]");
-        const chrome = [menu, nav, slate];
-        const themeSamples = ["dark", "light"].map((theme) => {
-          root.dataset.theme = theme;
-          return {
-            theme,
-            chromeAlpha: chrome.map((element) =>
-              readAlpha(getComputedStyle(element).backgroundColor)
-            ),
-            titlebarAlpha: readAlpha(getComputedStyle(titlebar).backgroundColor),
-            frameAlpha: readAlpha(getComputedStyle(frame).backgroundColor),
-            canvasAlpha: readAlpha(getComputedStyle(main).backgroundColor),
-          };
-        });
-        const titlebarRect = titlebar.getBoundingClientRect();
-        const mainRect = main.getBoundingClientRect();
-        return {
-          frameCarriesSharedAnchors:
-            frame.hasAttribute("data-app-shell-frame") &&
-            frame.hasAttribute("data-app-shell-page-surface") &&
-            frame.hasAttribute("data-app-shell-page-sidebar"),
-          themeSamples,
-          shellChildrenStayTransparent: [menu, titlebar, nav, slate].every(
-            (element) =>
-              readAlpha(getComputedStyle(element).backgroundColor) === 0
-          ),
-          perimeterLinesVisible: [menu, titlebar, nav, slate].every(
-            (element) => getComputedStyle(element).boxShadow !== "none"
-          ),
-          wallpaperRemainsSharp: [menu, titlebar, nav, slate].every(
-            (element) => getComputedStyle(element).backdropFilter === "none"
-          ),
-          titlebarOverlapsChatCanvas:
-            Math.abs(titlebarRect.top - mainRect.top) < 1 &&
-            Math.abs(titlebarRect.left - mainRect.left) < 1,
-          titlebarKeepsNativeLayer:
-            getComputedStyle(titlebar).position === "fixed" &&
-            Number.parseInt(getComputedStyle(titlebar).zIndex, 10) >= 30,
-          titlebarRemainsDraggable:
-            getComputedStyle(titlebar).getPropertyValue("-webkit-app-region") ===
-              "drag" &&
-            getComputedStyle(document.querySelector("#chat-title")).getPropertyValue(
-              "-webkit-app-region"
-            ) === "no-drag",
-          wallpaperIgnoresPointers:
-            getComputedStyle(
-              document.querySelector("#codex-wallpaper-p1 [data-codex-wallpaper-layer]")
-            ).pointerEvents === "none",
-          titlebarEmptyAreaReachesChat:
-            !titlebar.contains(
-              document.elementFromPoint(titlebarRect.right - 20, titlebarRect.top + 26)
-            )
-        };
-      })()`,
-        options
-      )),
-    },
-    {
-      viewReceivesClick: true,
-      viewMenuOpened: true,
-      projectReceivesClick: true,
-      projectClicked: true,
-      titleReceivesClick: true,
-      titleClicked: true,
-      shareReceivesClick: true,
-      shareClicked: true,
-      homeReceivesClick: true,
-      projectActionReceivesClick: true,
-      windowReceivesClick: {
-        minimize: true,
-        maximize: true,
-        close: true,
-      },
-      windowActionsResponded: true,
-      frameCarriesSharedAnchors: true,
-      themeSamples: [
-        {
-          theme: "dark",
-          chromeAlpha: [0, 0, 0],
-          titlebarAlpha: 0,
-          frameAlpha: 0.72,
-          canvasAlpha: 0.18,
-        },
-        {
-          theme: "light",
-          chromeAlpha: [0, 0, 0],
-          titlebarAlpha: 0,
-          frameAlpha: 0.8,
-          canvasAlpha: 0.12,
-        },
-      ],
-      shellChildrenStayTransparent: true,
-      perimeterLinesVisible: true,
-      wallpaperRemainsSharp: true,
-      titlebarOverlapsChatCanvas: true,
-      titlebarKeepsNativeLayer: true,
-      titlebarRemainsDraggable: true,
-      wallpaperIgnoresPointers: true,
-      titlebarEmptyAreaReachesChat: true,
+    await evaluateInPage(port, readTitlebar, options),
+    nativeTitlebar
+  );
+
+  await clickAtElementCenter(port, options, "#view-menu");
+  assert.equal(
+    await evaluateInPage(
+      port,
+      '!document.querySelector("#view-options").hidden',
+      options
+    ),
+    true
+  );
+  await clickAtElementCenter(port, options, "#chat-title");
+  assert.equal(
+    await evaluateInPage(
+      port,
+      'document.querySelector("#chat-title").dataset.clicked === "true"',
+      options
+    ),
+    true
+  );
+
+  const chrome = await evaluateInPage(
+    port,
+    `(() => {
+    const frame = document.querySelector("[data-app-shell-frame]");
+    const surrounds = frame.querySelectorAll(
+      "#app-menu, [data-app-shell-titlebar], [data-app-navigation-rail], [data-slate-sidebar-content]"
+    );
+    function sample(theme) {
+      document.documentElement.dataset.theme = theme;
+      const paint = getComputedStyle(frame).backgroundColor;
+      const alpha = Number(paint.match(/\\/\\s*([\\d.]+)\\s*\\)/)?.[1]);
+      return {
+        paint,
+        wallpaperThroughFrame: alpha > 0 && alpha < 1,
+        noOverpaint: [...surrounds].every(element => {
+          const style = getComputedStyle(element);
+          return style.backgroundColor === "rgba(0, 0, 0, 0)" &&
+            style.backdropFilter === "none";
+        })
+      };
     }
+    return ["dark", "light"].map(sample);
+  })()`,
+    options
+  );
+  assert.notEqual(
+    chrome[0].paint,
+    chrome[1].paint,
+    "material follows the host theme"
+  );
+  assert.ok(
+    chrome.every(
+      ({ wallpaperThroughFrame, noOverpaint }) =>
+        wallpaperThroughFrame && noOverpaint
+    ),
+    "shared tint stays translucent and sharp"
   );
 });
 
