@@ -583,6 +583,9 @@ export function createCodexWallpaperRuntime(payload) {
   function card(entry) {
     const item = document.createElement("article");
     item.className = "card";
+    const selected =
+      config.active.kind === entry.kind && config.active.id === entry.id;
+    item.dataset.selected = String(selected);
     const visual = document.createElement("div");
     visual.className = "thumb";
     const previewUrl = entry.previewDataUrl;
@@ -624,18 +627,22 @@ export function createCodexWallpaperRuntime(payload) {
     actions.className = "card-actions";
     const use = document.createElement("button");
     use.textContent = "使用";
+    use.setAttribute("aria-pressed", String(selected));
     use.onclick = () => {
       config.active = { kind: entry.kind, id: entry.id };
       saveConfig();
       requestPreview(entry.id);
       applyActive();
+      renderPanel();
     };
     const favorite = document.createElement("button");
     favorite.textContent = isFavorite(entry) ? "★" : "☆";
     favorite.title = "收藏";
+    favorite.setAttribute("aria-pressed", String(isFavorite(entry)));
     favorite.onclick = () => toggleKey("favorites", entry);
     const queue = document.createElement("button");
     queue.textContent = inPlaylist(entry) ? "移除轮播" : "加入轮播";
+    queue.setAttribute("aria-pressed", String(inPlaylist(entry)));
     queue.onclick = () => toggleKey("playlist", entry);
     actions.append(use, favorite, queue);
     item.append(visual, title, meta, actions);
@@ -978,12 +985,15 @@ export function createCodexWallpaperRuntime(payload) {
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
-      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); backdrop-filter: blur(16px) saturate(.92); pointer-events: auto; }
-      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; }
+      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; }
+      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
       #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
       #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button:active, #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button[aria-pressed='true'], #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
       #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
-      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); backdrop-filter: blur(18px) saturate(.92); pointer-events: auto; display: none; }
+      #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
+      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none; }
       #${controlsId} .panel.open { display: block; }
       #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
       #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
@@ -992,6 +1002,7 @@ export function createCodexWallpaperRuntime(payload) {
       #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
       #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
       #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
       #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
       #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1040,10 +1051,13 @@ export function createCodexWallpaperRuntime(payload) {
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
       body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
-      body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre) { background-color: var(--codex-wallpaper-raised) !important; }
-      body [data-summary-panel-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
+      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent), pre) { background-color: var(--codex-wallpaper-raised) !important; }
+      body :is([data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre) { background-color: var(--codex-wallpaper-raised) !important; }
+      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent)) { border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
+      body [data-pip-obstacle='thread-footer-leading'] { background-color: var(--codex-wallpaper-raised) !important; }
       body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
-      body [data-user-message-bubble] { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, var(--app-color-accent-blue, rgb(2 133 255))) !important; border-radius: 16px !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong); }
+      body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
+      body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
@@ -1053,7 +1067,11 @@ export function createCodexWallpaperRuntime(payload) {
         --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
       }
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='dialog'], [data-radix-popper-content-wrapper]) { position: relative; z-index: 3; background-color: var(--codex-wallpaper-panel) !important; }
+      body :where([role='dialog'], [role='menu'], [data-radix-popper-content-wrapper]) { background-color: var(--codex-wallpaper-panel) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled) { opacity: .48; cursor: not-allowed; }
     `;
     root = document.createElement("div");
     root.id = rootId;

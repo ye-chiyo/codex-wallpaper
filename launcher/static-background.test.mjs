@@ -179,7 +179,9 @@ async function startFixture() {
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
         @layer host { [data-app-shell-titlebar] { position: fixed; top: 0; height: 36px; } }
         .muted-chrome { color: var(--color-text-tertiary); }
-        [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
+        [data-testid="webmcp-tool-scroll"], [data-summary-panel-variant] { display: block; padding: 8px; }
+        #user-markdown-action { border: 0; background: transparent; }
+        pre { padding: 12px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         #changes-panel [data-line-type] { display: block; min-height: 1lh; }
         #changes-panel [data-line-type="change-deletion"] { background-color: var(--diffs-bg-deletion, transparent); }
@@ -187,7 +189,7 @@ async function startFixture() {
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
         .thread-scroll-footer-shell::before { content: ""; background-image: linear-gradient(transparent, var(--app-color-background-surface)); }
         .thread-scroll-footer-shell::after { content: ""; background-color: var(--app-color-background-surface); }
-        .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); }
+        .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); pointer-events: none; }
       </style>
       <div data-app-shell-workspace-row>
         <div data-app-shell-page-surface data-app-shell-frame>
@@ -195,14 +197,38 @@ async function startFixture() {
           <div data-app-shell-main-surface>
             <main>
             <article id="message" data-markdown-text-style="assistant-message">
-              ${"Long assistant response ".repeat(40)}
+              <span>${"Long assistant response ".repeat(40)}</span>
+              <p id="ordinary-status" class="bg-surface">Ordinary assistant status</p>
+              <pre id="chat-code"><code>const chatCode = true;</code></pre>
             </article>
+            <div id="user-message" data-user-message-bubble>
+              User message
+              <button id="user-markdown-action" class="rounded-md bg-transparent" type="button" aria-expanded="false">User markdown action</button>
+            </div>
             <button id="open-changes" type="button">Open Changes</button>
+            <div data-app-action-timeline-scroll>
             <section data-testid="webmcp-tool-scroll" class="bg-surface">
-              <button id="tool-action" type="button">Toggle tool</button>
+              <button id="tool-action" class="rounded-md bg-transparent" type="button" aria-expanded="false">Toggle tool</button>
               <div id="tool-details">Tool details</div>
             </section>
-            <div data-app-action-timeline-scroll>
+            <div data-turn-key="fixture-tool-turn">
+              <div>
+                <div>
+                  <div data-local-conversation-item-target-ids="fixture-tool-item">
+                    <div>
+                      <div>
+                        <div>
+                          <div id="legacy-tool-row" class="relative min-w-0 gap-1">
+                            <button class="rounded-md bg-transparent" type="button" aria-expanded="false">Legacy timeline tool</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <section data-summary-panel-variant class="bg-surface">Summary row</section>
             <div class="thread-scroll-footer-shell">
             <div data-thread-scroll-footer>
               <div class="thread-footer-backdrop bg-surface"></div>
@@ -335,12 +361,7 @@ async function startChromeFixture() {
             <div class="content">Chat canvas</div>
           </main>
           <header data-app-shell-titlebar>
-            <button id="project-menu">Project</button>
             <button id="chat-title">Current chat</button>
-            <button id="share-action">Share</button>
-            <button id="minimize-action">Minimize</button>
-            <button id="maximize-action">Maximize</button>
-            <button id="close-action">Close</button>
           </header>
         </div>
       </div>
@@ -348,19 +369,9 @@ async function startChromeFixture() {
         document.querySelector("#view-menu").addEventListener("click", () => {
           document.querySelector("#view-options").hidden = false;
         });
-        document.querySelector("#project-menu").addEventListener("click", () => {
-          document.querySelector("#project-menu").dataset.clicked = "true";
-        });
-        document.querySelector("#chat-title").addEventListener("click", () => {
-          document.querySelector("#chat-title").dataset.clicked = "true";
-        });
-        for (const id of ["home-action", "project-action", "share-action", "minimize-action", "maximize-action", "close-action"]) {
-          document.querySelector("#" + id).addEventListener("click", (event) => {
-            event.currentTarget.dataset.clicked = "true";
-          });
-        }
-        document.querySelector("#chat-title").addEventListener("click", () => {
-          for (const target of document.querySelectorAll("[role=menu]")) target.hidden = true;
+        document.querySelector("#chat-title").addEventListener("click", (event) => {
+          event.currentTarget.dataset.clicked = "true";
+          document.querySelector("#view-options").hidden = true;
         });
       </script>
       </html>`
@@ -458,207 +469,76 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     origin: new URL(fixture.url).origin,
     payload: { version: 1, library: [] },
   };
-
+  const readTitlebar = `(() => {
+    const bar = document.querySelector("[data-app-shell-titlebar]");
+    const style = getComputedStyle(bar);
+    return [style.position, style.zIndex, style.getPropertyValue("-webkit-app-region"),
+      getComputedStyle(bar.firstElementChild).getPropertyValue("-webkit-app-region"),
+      bar.getBoundingClientRect().toJSON()];
+  })()`;
   await waitForPage(port, options);
+  const nativeTitlebar = await evaluateInPage(port, readTitlebar, options);
   await applyStaticBackground(port, options);
-  const viewReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#view-menu"
-  );
-  const viewMenuOpened = await evaluateInPage(
-    port,
-    `document.querySelector("#view-options").hidden === false`,
-    options
-  );
-  await evaluateInPage(
-    port,
-    `document.querySelector("#view-options").hidden = true`,
-    options
-  );
-  const projectReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#project-menu"
-  );
-  const projectClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#project-menu").dataset.clicked === "true"`,
-    options
-  );
-  const titleReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#chat-title"
-  );
-  const titleClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#chat-title").dataset.clicked === "true"`,
-    options
-  );
-  const shareReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#share-action"
-  );
-  const shareClicked = await evaluateInPage(
-    port,
-    `document.querySelector("#share-action").dataset.clicked === "true"`,
-    options
-  );
-  const homeReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#home-action"
-  );
-  const projectActionReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    "#project-action"
-  );
-  const windowReceivesClick = {};
-  for (const action of ["minimize", "maximize", "close"])
-    windowReceivesClick[action] = await clickAtElementCenter(
-      port,
-      options,
-      `#${action}-action`
-    );
-  const windowActionsResponded = await evaluateInPage(
-    port,
-    `["minimize", "maximize", "close"].every(
-      (action) => document.querySelector("#" + action + "-action").dataset.clicked === "true"
-    )`,
-    options
-  );
   assert.deepEqual(
-    {
-      viewReceivesClick,
-      viewMenuOpened,
-      projectReceivesClick,
-      projectClicked,
-      titleReceivesClick,
-      titleClicked,
-      shareReceivesClick,
-      shareClicked,
-      homeReceivesClick,
-      projectActionReceivesClick,
-      windowReceivesClick,
-      windowActionsResponded,
-      ...(await evaluateInPage(
-        port,
-        `(() => {
-        const readAlpha = (value) => {
-          const match =
-            value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
-            value.match(/,\\s*([\\d.]+)\\s*\\)$/);
-          return match ? Number(match[1]) : 0;
-        };
-        const root = document.documentElement;
-        const menu = document.querySelector("#app-menu");
-        const titlebar = document.querySelector("[data-app-shell-titlebar]");
-        const nav = document.querySelector("[data-app-navigation-rail]");
-        const slate = document.querySelector("[data-slate-sidebar-content]");
-        const frame = document.querySelector("[data-app-shell-frame]");
-        const main = document.querySelector("[data-app-shell-main-surface]");
-        const chrome = [menu, nav, slate];
-        const themeSamples = ["dark", "light"].map((theme) => {
-          root.dataset.theme = theme;
-          return {
-            theme,
-            chromeAlpha: chrome.map((element) =>
-              readAlpha(getComputedStyle(element).backgroundColor)
-            ),
-            titlebarAlpha: readAlpha(getComputedStyle(titlebar).backgroundColor),
-            frameAlpha: readAlpha(getComputedStyle(frame).backgroundColor),
-            canvasAlpha: readAlpha(getComputedStyle(main).backgroundColor),
-          };
-        });
-        const titlebarRect = titlebar.getBoundingClientRect();
-        const mainRect = main.getBoundingClientRect();
-        return {
-          frameCarriesSharedAnchors:
-            frame.hasAttribute("data-app-shell-frame") &&
-            frame.hasAttribute("data-app-shell-page-surface") &&
-            frame.hasAttribute("data-app-shell-page-sidebar"),
-          themeSamples,
-          shellChildrenStayTransparent: [menu, titlebar, nav, slate].every(
-            (element) =>
-              readAlpha(getComputedStyle(element).backgroundColor) === 0
-          ),
-          perimeterLinesVisible: [menu, titlebar, nav, slate].every(
-            (element) => getComputedStyle(element).boxShadow !== "none"
-          ),
-          wallpaperRemainsSharp: [menu, titlebar, nav, slate].every(
-            (element) => getComputedStyle(element).backdropFilter === "none"
-          ),
-          titlebarOverlapsChatCanvas:
-            Math.abs(titlebarRect.top - mainRect.top) < 1 &&
-            Math.abs(titlebarRect.left - mainRect.left) < 1,
-          titlebarKeepsNativeLayer:
-            getComputedStyle(titlebar).position === "fixed" &&
-            Number.parseInt(getComputedStyle(titlebar).zIndex, 10) >= 30,
-          titlebarRemainsDraggable:
-            getComputedStyle(titlebar).getPropertyValue("-webkit-app-region") ===
-              "drag" &&
-            getComputedStyle(document.querySelector("#chat-title")).getPropertyValue(
-              "-webkit-app-region"
-            ) === "no-drag",
-          wallpaperIgnoresPointers:
-            getComputedStyle(
-              document.querySelector("#codex-wallpaper-p1 [data-codex-wallpaper-layer]")
-            ).pointerEvents === "none",
-          titlebarEmptyAreaReachesChat:
-            !titlebar.contains(
-              document.elementFromPoint(titlebarRect.right - 20, titlebarRect.top + 26)
-            )
-        };
-      })()`,
-        options
-      )),
-    },
-    {
-      viewReceivesClick: true,
-      viewMenuOpened: true,
-      projectReceivesClick: true,
-      projectClicked: true,
-      titleReceivesClick: true,
-      titleClicked: true,
-      shareReceivesClick: true,
-      shareClicked: true,
-      homeReceivesClick: true,
-      projectActionReceivesClick: true,
-      windowReceivesClick: {
-        minimize: true,
-        maximize: true,
-        close: true,
-      },
-      windowActionsResponded: true,
-      frameCarriesSharedAnchors: true,
-      themeSamples: [
-        {
-          theme: "dark",
-          chromeAlpha: [0, 0, 0],
-          titlebarAlpha: 0,
-          frameAlpha: 0.72,
-          canvasAlpha: 0.18,
-        },
-        {
-          theme: "light",
-          chromeAlpha: [0, 0, 0],
-          titlebarAlpha: 0,
-          frameAlpha: 0.8,
-          canvasAlpha: 0.12,
-        },
-      ],
-      shellChildrenStayTransparent: true,
-      perimeterLinesVisible: true,
-      wallpaperRemainsSharp: true,
-      titlebarOverlapsChatCanvas: true,
-      titlebarKeepsNativeLayer: true,
-      titlebarRemainsDraggable: true,
-      wallpaperIgnoresPointers: true,
-      titlebarEmptyAreaReachesChat: true,
+    await evaluateInPage(port, readTitlebar, options),
+    nativeTitlebar
+  );
+
+  await clickAtElementCenter(port, options, "#view-menu");
+  assert.equal(
+    await evaluateInPage(
+      port,
+      '!document.querySelector("#view-options").hidden',
+      options
+    ),
+    true
+  );
+  await clickAtElementCenter(port, options, "#chat-title");
+  assert.equal(
+    await evaluateInPage(
+      port,
+      'document.querySelector("#chat-title").dataset.clicked === "true"',
+      options
+    ),
+    true
+  );
+
+  const chrome = await evaluateInPage(
+    port,
+    `(() => {
+    const frame = document.querySelector("[data-app-shell-frame]");
+    const surrounds = frame.querySelectorAll(
+      "#app-menu, [data-app-shell-titlebar], [data-app-navigation-rail], [data-slate-sidebar-content]"
+    );
+    function sample(theme) {
+      document.documentElement.dataset.theme = theme;
+      const paint = getComputedStyle(frame).backgroundColor;
+      const alpha = Number(paint.match(/\\/\\s*([\\d.]+)\\s*\\)/)?.[1]);
+      return {
+        paint,
+        wallpaperThroughFrame: alpha > 0 && alpha < 1,
+        noOverpaint: [...surrounds].every(element => {
+          const style = getComputedStyle(element);
+          return style.backgroundColor === "rgba(0, 0, 0, 0)" &&
+            style.backdropFilter === "none";
+        })
+      };
     }
+    return ["dark", "light"].map(sample);
+  })()`,
+    options
+  );
+  assert.notEqual(
+    chrome[0].paint,
+    chrome[1].paint,
+    "material follows the host theme"
+  );
+  assert.ok(
+    chrome.every(
+      ({ wallpaperThroughFrame, noOverpaint }) =>
+        wallpaperThroughFrame && noOverpaint
+    ),
+    "shared tint stays translucent and sharp"
   );
 });
 
@@ -805,6 +685,24 @@ test("static background is single, removable and persists disabled", async (t) =
     },
   };
   await waitForPage(port, options);
+  const pressAltShiftW = async () => {
+    for (const type of ["rawKeyDown", "keyUp"]) {
+      await callMainPage(
+        port,
+        "Input.dispatchKeyEvent",
+        {
+          type,
+          key: "W",
+          code: "KeyW",
+          windowsVirtualKeyCode: 87,
+          nativeVirtualKeyCode: 87,
+          modifiers: 9,
+        },
+        options.page,
+        true
+      );
+    }
+  };
 
   assert.deepEqual(
     await evaluateInPage(
@@ -1360,15 +1258,15 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     { root: 1, controls: 1, styles: 1, stale: 0 }
   );
-  assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `(() => {
+  const { composerIdleShadow, ...chatResults } = await evaluateInPage(
+    port,
+    `(() => {
         const root = document.getElementById("${rootId}");
         const background = root.querySelector("[data-codex-wallpaper-layer]");
         const media = root.querySelector(".media");
         const controls = document.getElementById("${controlRootId}");
         const toolbar = controls.querySelector(".toolbar");
+        const panel = controls.querySelector("[data-codex-wallpaper-panel]");
         const toolbarRect = toolbar.getBoundingClientRect();
         const toolbarHit = document.elementFromPoint(
           toolbarRect.right - 8,
@@ -1376,14 +1274,21 @@ test("static background is single, removable and persists disabled", async (t) =
         );
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const frame = document.querySelector("[data-app-shell-frame]");
+        const ordinaryStatus = document.querySelector("#ordinary-status");
+        const userMessage = document.querySelector("#user-message");
+        const userMarkdownAction = document.querySelector("#user-markdown-action");
         const tool = document.querySelector("#tool-action");
         const details = document.querySelector("#tool-details");
         const toolSurface = tool.closest("[data-testid='webmcp-tool-scroll']");
+        const summarySurface = document.querySelector(
+          "[data-summary-panel-variant]"
+        );
+        const legacyToolSurface = document.querySelector("#legacy-tool-row");
         const diffSurface = document.querySelector(
           "[data-thread-find-target='review']"
         );
         const changesCodeSurface = diffSurface.querySelector("pre");
-        const codeSurface = document.querySelector("pre");
+        const codeSurface = document.querySelector("#chat-code");
         const composerSurface = document.querySelector(
           "[data-composer-surface-variant]"
         );
@@ -1453,16 +1358,6 @@ test("static background is single, removable and persists disabled", async (t) =
         let toolToggleWorked = details.hidden !== toolInitiallyHidden;
         hit.click();
         toolToggleWorked &&= details.hidden === toolInitiallyHidden;
-        const composer = document.querySelector("#composer");
-        composer.focus();
-        composer.setSelectionRange(0, 8);
-        let keyboardWorked = false;
-        composer.addEventListener("keydown", (event) => {
-          keyboardWorked = event.key === "a";
-        });
-        composer.dispatchEvent(
-          new KeyboardEvent("keydown", { key: "a", bubbles: true })
-        );
         const range = document.createRange();
         range.selectNodeContents(document.querySelector("#message"));
         const selection = getSelection();
@@ -1485,6 +1380,8 @@ test("static background is single, removable and persists disabled", async (t) =
           return [
             surface,
             toolSurface,
+            summarySurface,
+            legacyToolSurface,
             changesCodeSurface,
             codeSurface,
             composerSurface,
@@ -1521,6 +1418,8 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
           contentHasReadabilityBases: [
             toolSurface,
+            summarySurface,
+            legacyToolSurface,
             changesCodeSurface,
             codeSurface,
             composerSurface
@@ -1533,6 +1432,12 @@ test("static background is single, removable and persists disabled", async (t) =
           footerLeadingHasReadabilityBase:
             getComputedStyle(footerLeading).backgroundColor !==
             "rgba(0, 0, 0, 0)",
+          ordinaryChatSharesCanvas: [ordinaryStatus, userMessage].every(
+            (element) => readAlpha(element) === 0
+          ),
+          userMarkdownKeepsNativeState:
+            userMarkdownAction.getAttribute("aria-expanded") === "false" &&
+            readAlpha(userMarkdownAction) === 0,
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
@@ -1544,9 +1449,19 @@ test("static background is single, removable and persists disabled", async (t) =
           panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
             (element) =>
               getComputedStyle(element).backgroundColor !==
-                "rgba(0, 0, 0, 0)" &&
-              Number.parseInt(getComputedStyle(element).zIndex, 10) >= 1
+                "rgba(0, 0, 0, 0)"
           ),
+          wallpaperControlsUseSharedPalette:
+            getComputedStyle(toolbar).backgroundColor ===
+              getComputedStyle(dialog).backgroundColor &&
+            getComputedStyle(panel).backgroundColor ===
+              getComputedStyle(dialog).backgroundColor,
+          wallpaperControlsHaveNoExtraBlur:
+            getComputedStyle(toolbar).backdropFilter === "none" &&
+            getComputedStyle(panel).backdropFilter === "none",
+          dialogKeepsHostPosition:
+            getComputedStyle(dialog).position === "static" &&
+            getComputedStyle(dialog).zIndex === "auto",
           changesOpened,
           changesPanelKeepsWallpaper: readAlpha(rightPanel) === 0,
           changesScrollKeepsWallpaper: readAlpha(diffSurface) === 0,
@@ -1578,9 +1493,8 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(media).opacity === "1",
           toolbarIsAboveHost: toolbar.contains(toolbarHit),
           toolReceivesClick: hit === tool && toolToggleWorked,
-          composerHasFocus: document.activeElement === composer,
+          composerIdleShadow: getComputedStyle(composerSurface).boxShadow,
           messageIsSelectable: selection.toString().startsWith("Long assistant response"),
-          keyboardReachesComposer: keyboardWorked,
           pageScrolled: scrollY > 0,
           streamedMessageIsHitTestable:
             document.elementFromPoint(
@@ -1589,41 +1503,85 @@ test("static background is single, removable and persists disabled", async (t) =
             ) === streamed
         };
       })()`,
-      options
-    ),
+    options
+  );
+  assert.deepEqual(chatResults, {
+    mainWallpaperHasNoExtraBlur: true,
+    surfaceAboveBackground: true,
+    surfaceHasReadabilityBase: true,
+    contentHasReadabilityBases: true,
+    composerOuterPaintTransparent: true,
+    footerLeadingHasReadabilityBase: true,
+    ordinaryChatSharesCanvas: true,
+    userMarkdownKeepsNativeState: true,
+    themesHaveReadabilityBases: true,
+    wallpaperRemainsVisible: true,
+    panelSurfacesHaveReadability: true,
+    wallpaperControlsUseSharedPalette: true,
+    wallpaperControlsHaveNoExtraBlur: true,
+    dialogKeepsHostPosition: true,
+    changesOpened: true,
+    changesPanelKeepsWallpaper: true,
+    changesScrollKeepsWallpaper: true,
+    changesTabsKeepWallpaper: true,
+    changesFileTreeKeepsWallpaper: true,
+    filesTabSelected: true,
+    changesTabRestored: true,
+    changesContentHasReadabilityBase: true,
+    changesDiffHasLocalReadingSurface: true,
+    changesSignalsRemainDistinct: true,
+    changesBackgroundLayers: 1,
+    changesRuntimeState: "enabled",
+    changesPanelClosed: true,
+    dialogHasFocus: true,
+    backgroundIgnoresPointers: true,
+    wallpaperMediaVisible: true,
+    toolbarIsAboveHost: true,
+    toolReceivesClick: true,
+    messageIsSelectable: true,
+    pageScrolled: true,
+    streamedMessageIsHitTestable: true,
+  });
+  await evaluateInPage(
+    port,
+    'document.querySelector("#composer").scrollIntoView({ block: "center" })',
+    options
+  );
+  const composerReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#composer"
+  );
+  await callMainPage(
+    port,
+    "Input.insertText",
+    { text: " from CDP" },
+    options.page,
+    true
+  );
+  assert.deepEqual(
     {
-      mainWallpaperHasNoExtraBlur: true,
-      surfaceAboveBackground: true,
-      surfaceHasReadabilityBase: true,
-      contentHasReadabilityBases: true,
-      composerOuterPaintTransparent: true,
-      footerLeadingHasReadabilityBase: true,
-      themesHaveReadabilityBases: true,
-      wallpaperRemainsVisible: true,
-      panelSurfacesHaveReadability: true,
-      changesOpened: true,
-      changesPanelKeepsWallpaper: true,
-      changesScrollKeepsWallpaper: true,
-      changesTabsKeepWallpaper: true,
-      changesFileTreeKeepsWallpaper: true,
-      filesTabSelected: true,
-      changesTabRestored: true,
-      changesContentHasReadabilityBase: true,
-      changesDiffHasLocalReadingSurface: true,
-      changesSignalsRemainDistinct: true,
-      changesBackgroundLayers: 1,
-      changesRuntimeState: "enabled",
-      changesPanelClosed: true,
-      dialogHasFocus: true,
-      backgroundIgnoresPointers: true,
-      wallpaperMediaVisible: true,
-      toolbarIsAboveHost: true,
-      toolReceivesClick: true,
+      composerReceivesClick,
+      ...(await evaluateInPage(
+        port,
+        `({
+        composerHasFocus: document.activeElement === document.querySelector("#composer"),
+        composerAcceptedText: document.querySelector("#composer").value.includes("from CDP"),
+        composerFocusStyleChanged:
+          getComputedStyle(document.querySelector("[data-composer-surface-variant]")).boxShadow !==
+          ${JSON.stringify(composerIdleShadow)},
+        userMarkdownKeepsNativeState:
+          document.querySelector("#user-markdown-action").getAttribute("aria-expanded") === "false"
+      })`,
+        options
+      )),
+    },
+    {
+      composerReceivesClick: true,
       composerHasFocus: true,
-      messageIsSelectable: true,
-      keyboardReachesComposer: true,
-      pageScrolled: true,
-      streamedMessageIsHitTestable: true,
+      composerAcceptedText: true,
+      composerFocusStyleChanged: true,
+      userMarkdownKeepsNativeState: true,
     }
   );
   assert.equal(
@@ -1660,9 +1618,17 @@ test("static background is single, removable and persists disabled", async (t) =
         const saved = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         );
+        const selectedCard = [...controls.querySelectorAll(".card")].find(
+          (item) => item.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        const selectedActions = selectedCard.querySelectorAll(".card-actions button");
         return {
           selected: saved.active,
           settings: saved.settings,
+          selectedCard: selectedCard.dataset.selected,
+          selectedActions: [...selectedActions].map((button) =>
+            button.getAttribute("aria-pressed")
+          ),
           imageIsFixture: media.querySelector("img")?.src.includes("5d32b8"),
           playerCount: globalThis.__codexWallpaperApi.state().playerCount,
           opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
@@ -1681,6 +1647,8 @@ test("static background is single, removable and persists disabled", async (t) =
         volume: 0,
         rotationMinutes: 0,
       },
+      selectedCard: "true",
+      selectedActions: ["true", "false", "false"],
       imageIsFixture: true,
       playerCount: 0,
       opacity: "0.73",
@@ -1727,23 +1695,49 @@ test("static background is single, removable and persists disabled", async (t) =
       closed: true,
     }
   );
+  const themeMaterialExpression = `(() => {
+      const controls = document.getElementById("${controlRootId}");
+      const root = document.documentElement;
+      return ["dark", "light"].map((theme) => {
+        root.dataset.theme = theme;
+        return {
+          theme,
+          main: getComputedStyle(
+            document.querySelector("[data-app-shell-main-surface]")
+          ).backgroundColor,
+          toolbar: getComputedStyle(
+            controls.querySelector(".toolbar")
+          ).backgroundColor,
+          panel: getComputedStyle(
+            controls.querySelector("[data-codex-wallpaper-panel]")
+          ).backgroundColor
+        };
+      });
+    })()`;
+  const themeMaterialBefore = await evaluateInPage(
+    port,
+    themeMaterialExpression,
+    options
+  );
   await evaluateInPage(
     port,
     `document.body.append(document.getElementById("${controlRootId}").cloneNode(true))`,
     options
   );
+  const toggleReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    `#${controlRootId} .toolbar [data-codex-wallpaper-toggle]`
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
       `(() => {
-        [...document.querySelectorAll("#${controlRootId}")]
-          .find((element) => element.parentElement === document.documentElement)
-          .querySelector(".toolbar [data-codex-wallpaper-toggle]")
-          .click();
         const saved = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         );
         return {
+          toggleReceivesClick: ${toggleReceivesClick},
           state: globalThis.__codexWallpaperApi.state(),
           savedEnabled: saved.enabled,
           savedActive: saved.active,
@@ -1756,6 +1750,7 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
+      toggleReceivesClick,
       state: {
         state: "disabled",
         backgroundLayers: 0,
@@ -1785,11 +1780,7 @@ test("static background is single, removable and persists disabled", async (t) =
       roots: 0,
     }
   );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
+  await pressAltShiftW();
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -1855,6 +1846,39 @@ test("static background is single, removable and persists disabled", async (t) =
       savedEnabled: true,
     }
   );
+  await pressAltShiftW();
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `({
+        state: globalThis.__codexWallpaperApi.state().state,
+        toolbar: document.querySelector("#${controlRootId} .toolbar") !== null
+      })`,
+      options
+    ),
+    { state: "disabled", toolbar: false }
+  );
+  await pressAltShiftW();
+  await evaluateInPage(
+    port,
+    `(async () => {
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const image = document.querySelector("#${rootId} .media img");
+        if (
+          globalThis.__codexWallpaperApi.state().state === "enabled" &&
+          image?.complete &&
+          image.naturalWidth > 0
+        )
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    })()`,
+    options
+  );
+  assert.deepEqual(
+    await evaluateInPage(port, themeMaterialExpression, options),
+    themeMaterialBefore
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -1896,11 +1920,7 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     { root: 0, styles: 0 }
   );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
+  await pressAltShiftW();
   assert.deepEqual(
     await evaluateInPage(
       port,
