@@ -966,7 +966,7 @@ export function createCodexWallpaperRuntime(payload) {
     style.id = styleId;
     style.textContent = `
       #${rootId}, #${rootId} * { box-sizing: border-box; }
-      #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: rgb(245 245 250); font: 13px/1.4 system-ui, sans-serif; }
+      #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
       #${controlsId} { z-index: 2147483647; }
       #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
       #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
@@ -978,43 +978,77 @@ export function createCodexWallpaperRuntime(payload) {
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
-      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; gap: 6px; pointer-events: auto; }
-      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid rgb(255 255 255 / .3); border-radius: 8px; background: rgb(20 20 24 / .9); color: white; padding: 7px 10px; cursor: pointer; }
-      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid rgb(255 255 255 / .22); border-radius: 14px; background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 94%, transparent); box-shadow: 0 18px 55px rgb(0 0 0 / .42); backdrop-filter: blur(18px); pointer-events: auto; display: none; }
+      #${controlsId} .toolbar { position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); backdrop-filter: blur(16px) saturate(.92); pointer-events: auto; }
+      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; }
+      #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
+      #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
+      #${controlsId} .panel { position: fixed; right: 14px; bottom: 58px; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); max-height: min(74vh, 720px); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); backdrop-filter: blur(18px) saturate(.92); pointer-events: auto; display: none; }
       #${controlsId} .panel.open { display: block; }
       #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
-      #${controlsId} .panel h3 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
-      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed rgb(255 255 255 / .3); border-radius: 8px; cursor: pointer; }
+      #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
       #${controlsId} .import-row input { width: 135px; font-size: 11px; }
-      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: rgb(215 215 225); }
+      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
       #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid rgb(255 255 255 / .16); border-radius: 10px; background: rgb(0 0 0 / .18); }
-      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: rgb(255 255 255 / .08); font-size: 10px; opacity: .9; }
+      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
       #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
       #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #${controlsId} .card small { display: block; margin-top: 2px; color: rgb(200 200 210); }
+      #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
       #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
       #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
       #${controlsId} .settings-grid { display: grid; gap: 7px; }
       #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
-      #${controlsId} .range output { color: rgb(205 205 215); font-variant-numeric: tabular-nums; }
-      #${controlsId} .reset { margin-top: 14px; width: 100%; color: rgb(255 190 190) !important; }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { z-index: 1; background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 64%, transparent) !important;
-        &:not([data-app-shell-titlebar]) { position: relative; }
-        &:not([data-app-shell-main-surface]) { backdrop-filter: blur(14px) saturate(.9); }
+      #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
+      #${controlsId} .reset { margin-top: 14px; width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
+      :root {
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 90%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 68%, transparent);
+        --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
+        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 94%, transparent);
+        --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
+        --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
+        --codex-wallpaper-radius: 14px;
+        --codex-wallpaper-radius-sm: 9px;
+        --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
       }
-      body :where([data-app-navigation-rail], [data-slate-sidebar-content], [data-app-shell-frame] > :has(> [role='menubar'])) {
-        background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 94%, transparent) !important;
+      html[data-theme='light'] {
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 94%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 78%, transparent);
+      }
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
+        &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
+        &:not([data-app-shell-main-surface], [data-app-shell-titlebar]) { backdrop-filter: blur(14px) saturate(.9); }
+      }
+      body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
+      body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
+        background-color: var(--codex-wallpaper-frame) !important;
+        backdrop-filter: blur(14px) saturate(.9);
+        box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      body [data-app-shell-trailing-sidebar]:has([data-thread-find-target='review']) { background-color: transparent !important; }
+      body [data-app-shell-titlebar] { box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-frame] > :has(> [role='menubar']) {
+        background-color: var(--codex-wallpaper-frame) !important;
+        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line), 0 8px 0 var(--codex-wallpaper-frame);
+        backdrop-filter: blur(14px) saturate(.9);
+        --color-text-tertiary: var(--color-text-secondary);
+      }
+      body [data-app-shell-workspace-row] { box-shadow: 0 4px 0 var(--codex-wallpaper-frame); }
+      body [data-app-shell-trailing-sidebar]:has([data-thread-find-target='review']) { background-color: transparent !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
-      body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], [data-composer-surface-variant], pre) { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 92%, transparent) !important; }
+      body :is([data-app-shell-main-surface], [data-app-shell-page-surface], [data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre) { background-color: var(--codex-wallpaper-raised) !important; }
+      body [data-summary-panel-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
+      body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
+      body [data-user-message-bubble] { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, var(--app-color-accent-blue, rgb(2 133 255))) !important; border-radius: 16px !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong); }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
       body [data-app-shell-trailing-sidebar] [data-thread-find-target='review'] { background-color: transparent !important; }
-      body :where([role='dialog'], [data-radix-popper-content-wrapper]) { position: relative; z-index: 3; background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 96%, transparent) !important; }
+      body :where([role='dialog'], [data-radix-popper-content-wrapper]) { position: relative; z-index: 3; background-color: var(--codex-wallpaper-panel) !important; }
     `;
     root = document.createElement("div");
     root.id = rootId;

@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
 import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
+import { callMainPage } from "./read-only-probe.mjs";
 
 const edge =
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -135,11 +136,22 @@ async function startExactCdpFixture(t) {
   };
 }
 
-async function startFixture() {
+async function startHtmlFixture(html) {
   const server = createServer((_request, response) => {
     response.setHeader("Content-Type", "text/html; charset=utf-8");
-    response.end(
-      `<!doctype html>
+    response.end(html);
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  return {
+    server,
+    url: `http://127.0.0.1:${server.address().port}/`,
+  };
+}
+
+async function startFixture() {
+  return startHtmlFixture(
+    `<!doctype html>
       <html data-theme="dark">
       <title>wallpaper fixture</title>
       <style>
@@ -214,14 +226,128 @@ async function startFixture() {
         document.querySelector('#open-changes').addEventListener('click', () => { sidebar.hidden = false; });
         document.querySelector('#close-changes').addEventListener('click', () => { sidebar.hidden = true; });
       </script>`
-    );
-  });
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  return {
-    server,
-    url: `http://127.0.0.1:${server.address().port}/`,
-  };
+  );
+}
+
+async function startTitlebarFixture() {
+  return startHtmlFixture(
+    `<!doctype html>
+      <html data-theme="dark">
+      <title>Codex titlebar fixture</title>
+      <style>
+        :root {
+          --app-color-background-surface: rgb(24 24 28);
+          --app-color-background-surface-under: rgb(12 12 16);
+          color-scheme: dark;
+        }
+        body { margin: 0; min-height: 100vh; }
+        @layer host {
+          [data-app-shell-titlebar] {
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 44px;
+            padding: 0 12px;
+            pointer-events: none;
+            -webkit-app-region: drag;
+          }
+          [data-app-shell-titlebar] button {
+            position: relative;
+            pointer-events: auto;
+            -webkit-app-region: no-drag;
+          }
+        }
+        [data-app-shell-main-surface] {
+          position: relative;
+          min-height: 100vh;
+          background: rgb(24 24 28);
+        }
+        .WorkspaceContent {
+          position: relative;
+          isolation: isolate;
+          min-height: 100vh;
+          padding: 72px 24px 24px;
+        }
+        [data-summary-panel-variant] {
+          position: absolute;
+          top: 72px;
+          right: 24px;
+        }
+        [data-composer-surface-variant] {
+          position: fixed;
+          bottom: 24px;
+          left: 24px;
+          width: 320px;
+          padding: 12px;
+          background: rgb(20 20 24);
+        }
+        [role="menu"], [role="tabpanel"] { display: block; }
+        [hidden] { display: none !important; }
+      </style>
+      <header data-app-shell-titlebar>
+        <button id="project-menu">Project</button>
+        <button id="chat-title">Current chat</button>
+        <button id="changes-tab" role="tab" aria-selected="false">Changes</button>
+        <button id="file-tab" role="tab" aria-selected="false">File</button>
+        <button id="share-action">Share</button>
+        <button id="minimize-action">Minimize</button>
+        <button id="maximize-action">Maximize</button>
+        <button id="close-action">Close</button>
+      </header>
+      <div data-app-shell-workspace-row>
+        <main data-app-shell-main-surface>
+          <div class="WorkspaceContent">
+            <section id="chat-panel" role="tabpanel">Chat content</section>
+            <section id="changes-panel" role="tabpanel" hidden>Changes content</section>
+            <section id="file-panel" role="tabpanel" hidden>File content</section>
+            <div id="project-options" role="menu" hidden>Project options</div>
+            <div id="title-options" role="menu" hidden>Chat options</div>
+            <div data-composer-surface-variant>
+              <textarea id="composer" aria-label="Message"></textarea>
+            </div>
+            <div data-summary-panel-variant>
+              <button id="summary-action">Summary action</button>
+            </div>
+          </div>
+        </main>
+      </div>
+      <script>
+        document.querySelector("#project-menu").addEventListener("click", () => {
+          document.querySelector("#project-options").hidden = false;
+        });
+        document.querySelector("#chat-title").addEventListener("click", () => {
+          document.querySelector("#title-options").hidden = false;
+        });
+        document.querySelector("#changes-tab").addEventListener("click", () => {
+          const tab = document.querySelector("#changes-tab");
+          const open = tab.getAttribute("aria-selected") !== "true";
+          tab.setAttribute("aria-selected", String(open));
+          document.querySelector("#chat-panel").hidden = open;
+          document.querySelector("#changes-panel").hidden = !open;
+        });
+        document.querySelector("#file-tab").addEventListener("click", () => {
+          document.querySelector("#changes-panel").hidden = true;
+          document.querySelector("#file-panel").hidden = false;
+          document.querySelector("#changes-tab").setAttribute("aria-selected", "false");
+          document.querySelector("#file-tab").setAttribute("aria-selected", "true");
+        });
+        document.querySelector("#share-action").addEventListener("click", (event) => {
+          event.currentTarget.dataset.clicked = "true";
+        });
+        for (const id of ["minimize-action", "maximize-action", "close-action"]) {
+          document.querySelector("#" + id).addEventListener("click", (event) => {
+            event.currentTarget.dataset.clicked = "true";
+          });
+        }
+        document.querySelector("#summary-action").addEventListener("click", (event) => {
+          event.currentTarget.dataset.clicked = "true";
+        });
+      </script>
+      </html>`
+  );
 }
 
 async function waitForPort(profile) {
@@ -246,8 +372,8 @@ async function waitForPage(port, options) {
   throw new Error("Edge did not load the fixture page");
 }
 
-async function startBrowserFixture(t) {
-  const fixture = await startFixture();
+async function startBrowserFixture(t, fixture = null) {
+  fixture ??= await startFixture();
   const profile = await mkdtemp(join(tmpdir(), "codex-wallpaper-edge-"));
   const browser = spawn(
     edge,
@@ -281,6 +407,220 @@ async function startBrowserFixture(t) {
   });
   return { fixture, port: await waitForPort(profile) };
 }
+
+async function clickAtElementCenter(port, options, selector) {
+  const target = await evaluateInPage(
+    port,
+    `(() => {
+      const control = document.querySelector(${JSON.stringify(selector)});
+      const rect = control.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const hit = document.elementFromPoint(x, y);
+      return { x, y, receivesClick: hit === control || control.contains(hit) };
+    })()`,
+    options
+  );
+  for (const type of ["mousePressed", "mouseReleased"]) {
+    await callMainPage(
+      port,
+      "Input.dispatchMouseEvent",
+      { type, x: target.x, y: target.y, button: "left", clickCount: 1 },
+      options.page,
+      true
+    );
+  }
+  return target.receivesClick;
+}
+
+test("glass chrome leaves Codex and wallpaper controls mouse-reachable", async (t) => {
+  const fixture = await startTitlebarFixture();
+  const { port } = await startBrowserFixture(t, fixture);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: { version: 1, library: [] },
+  };
+
+  await waitForPage(port, options);
+  await applyStaticBackground(port, options);
+  const projectReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#project-menu"
+  );
+  const projectMenuOpened = await evaluateInPage(
+    port,
+    `document.querySelector("#project-options").hidden === false`,
+    options
+  );
+  const titleReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#chat-title"
+  );
+  const titleMenuOpened = await evaluateInPage(
+    port,
+    `document.querySelector("#title-options").hidden === false`,
+    options
+  );
+  const changesTabReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#changes-tab"
+  );
+  const changesOpened = await evaluateInPage(
+    port,
+    `document.querySelector("#changes-tab").getAttribute("aria-selected") === "true" &&
+      document.querySelector("#changes-panel").hidden === false`,
+    options
+  );
+  const fileTabReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#file-tab"
+  );
+  const fileTabSwitched = await evaluateInPage(
+    port,
+    `document.querySelector("#file-tab").getAttribute("aria-selected") === "true" &&
+      document.querySelector("#file-panel").hidden === false &&
+      document.querySelector("#changes-panel").hidden === true`,
+    options
+  );
+  const shareReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#share-action"
+  );
+  const shareClicked = await evaluateInPage(
+    port,
+    `document.querySelector("#share-action").dataset.clicked === "true"`,
+    options
+  );
+  const summaryReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#summary-action"
+  );
+  const summaryClicked = await evaluateInPage(
+    port,
+    `document.querySelector("#summary-action").dataset.clicked === "true"`,
+    options
+  );
+  const composerReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#composer"
+  );
+  const composerFocused = await evaluateInPage(
+    port,
+    `document.activeElement?.id === "composer"`,
+    options
+  );
+  const windowReceivesClick = {};
+  for (const action of ["minimize", "maximize", "close"])
+    windowReceivesClick[action] = await clickAtElementCenter(
+      port,
+      options,
+      `#${action}-action`
+    );
+  const windowActionsResponded = await evaluateInPage(
+    port,
+    `["minimize", "maximize", "close"].every(
+      (action) => document.querySelector("#" + action + "-action").dataset.clicked === "true"
+    )`,
+    options
+  );
+  const wallpaperSettingsReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#codex-wallpaper-p1-controls .toolbar button[data-codex-wallpaper-settings]"
+  );
+  const wallpaperPanelOpened = await evaluateInPage(
+    port,
+    `document.querySelector("#codex-wallpaper-p1-controls .panel").classList.contains("open")`,
+    options
+  );
+  const wallpaperPanelCloseReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#codex-wallpaper-p1-controls .panel header button"
+  );
+  const wallpaperPanelClosed = await evaluateInPage(
+    port,
+    `!document.querySelector("#codex-wallpaper-p1-controls .panel").classList.contains("open")`,
+    options
+  );
+  assert.deepEqual(
+    {
+      projectReceivesClick,
+      projectMenuOpened,
+      titleReceivesClick,
+      titleMenuOpened,
+      changesTabReceivesClick,
+      changesOpened,
+      fileTabReceivesClick,
+      fileTabSwitched,
+      shareReceivesClick,
+      shareClicked,
+      summaryReceivesClick,
+      summaryClicked,
+      composerReceivesClick,
+      composerFocused,
+      windowReceivesClick,
+      windowActionsResponded,
+      wallpaperSettingsReceivesClick,
+      wallpaperPanelOpened,
+      wallpaperPanelCloseReceivesClick,
+      wallpaperPanelClosed,
+      ...(await evaluateInPage(
+        port,
+        `(() => {
+        const titlebar = document.querySelector("[data-app-shell-titlebar]");
+        return {
+          titlebarKeepsNativeLayer:
+            Number.parseInt(getComputedStyle(titlebar).zIndex, 10) >= 30,
+          titlebarRemainsDraggable:
+            getComputedStyle(titlebar).getPropertyValue("-webkit-app-region") ===
+              "drag" &&
+            getComputedStyle(document.querySelector("#chat-title")).getPropertyValue(
+              "-webkit-app-region"
+            ) === "no-drag"
+        };
+      })()`,
+        options
+      )),
+    },
+    {
+      projectReceivesClick: true,
+      projectMenuOpened: true,
+      titleReceivesClick: true,
+      titleMenuOpened: true,
+      changesTabReceivesClick: true,
+      changesOpened: true,
+      fileTabReceivesClick: true,
+      fileTabSwitched: true,
+      shareReceivesClick: true,
+      shareClicked: true,
+      summaryReceivesClick: true,
+      summaryClicked: true,
+      composerReceivesClick: true,
+      composerFocused: true,
+      windowReceivesClick: {
+        minimize: true,
+        maximize: true,
+        close: true,
+      },
+      windowActionsResponded: true,
+      wallpaperSettingsReceivesClick: true,
+      wallpaperPanelOpened: true,
+      wallpaperPanelCloseReceivesClick: true,
+      wallpaperPanelClosed: true,
+      titlebarKeepsNativeLayer: true,
+      titlebarRemainsDraggable: true,
+    }
+  );
+});
 
 test("persisted-disabled CLI starts the real host before a later enable", async (t) => {
   const fixture = await startExactCdpFixture(t);
@@ -1091,6 +1431,7 @@ test("static background is single, removable and persists disabled", async (t) =
         const wallpaperVisibility = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
           return {
+            theme,
             surfaceAlpha: readAlpha(surface),
             wallpaperOpacity: Number(getComputedStyle(media).opacity),
           };
@@ -1132,9 +1473,9 @@ test("static background is single, removable and persists disabled", async (t) =
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
-              ({ surfaceAlpha, wallpaperOpacity }) =>
+              ({ theme, surfaceAlpha, wallpaperOpacity }) =>
                 surfaceAlpha >= 0.5 &&
-                surfaceAlpha <= 0.68 &&
+                surfaceAlpha <= (theme === "light" ? 0.8 : 0.68) &&
                 wallpaperOpacity === 1
             ),
           panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
