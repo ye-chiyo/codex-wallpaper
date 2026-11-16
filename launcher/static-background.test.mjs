@@ -786,6 +786,24 @@ test("static background is single, removable and persists disabled", async (t) =
     },
   };
   await waitForPage(port, options);
+  const pressAltShiftW = async () => {
+    for (const type of ["rawKeyDown", "keyUp"]) {
+      await callMainPage(
+        port,
+        "Input.dispatchKeyEvent",
+        {
+          type,
+          key: "W",
+          code: "KeyW",
+          windowsVirtualKeyCode: 87,
+          nativeVirtualKeyCode: 87,
+          modifiers: 9,
+        },
+        options.page,
+        true
+      );
+    }
+  };
 
   assert.deepEqual(
     await evaluateInPage(
@@ -1350,6 +1368,7 @@ test("static background is single, removable and persists disabled", async (t) =
         const media = root.querySelector(".media");
         const controls = document.getElementById("${controlRootId}");
         const toolbar = controls.querySelector(".toolbar");
+        const panel = controls.querySelector("[data-codex-wallpaper-panel]");
         const toolbarRect = toolbar.getBoundingClientRect();
         const toolbarHit = document.elementFromPoint(
           toolbarRect.right - 8,
@@ -1492,9 +1511,19 @@ test("static background is single, removable and persists disabled", async (t) =
           panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
             (element) =>
               getComputedStyle(element).backgroundColor !==
-                "rgba(0, 0, 0, 0)" &&
-              Number.parseInt(getComputedStyle(element).zIndex, 10) >= 1
+                "rgba(0, 0, 0, 0)"
           ),
+          wallpaperControlsUseSharedPalette:
+            getComputedStyle(toolbar).backgroundColor ===
+              getComputedStyle(dialog).backgroundColor &&
+            getComputedStyle(panel).backgroundColor ===
+              getComputedStyle(dialog).backgroundColor,
+          wallpaperControlsHaveNoExtraBlur:
+            getComputedStyle(toolbar).backdropFilter === "none" &&
+            getComputedStyle(panel).backdropFilter === "none",
+          dialogKeepsHostPosition:
+            getComputedStyle(dialog).position === "static" &&
+            getComputedStyle(dialog).zIndex === "auto",
           changesPanelKeepsWallpaper: readAlpha(rightPanel) === 0,
           changesScrollKeepsWallpaper: readAlpha(diffSurface) === 0,
           changesContentHasReadabilityBase:
@@ -1545,6 +1574,9 @@ test("static background is single, removable and persists disabled", async (t) =
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
+      wallpaperControlsUseSharedPalette: true,
+      wallpaperControlsHaveNoExtraBlur: true,
+      dialogKeepsHostPosition: true,
       changesPanelKeepsWallpaper: true,
       changesScrollKeepsWallpaper: true,
       changesContentHasReadabilityBase: true,
@@ -1598,9 +1630,17 @@ test("static background is single, removable and persists disabled", async (t) =
         const saved = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         );
+        const selectedCard = [...controls.querySelectorAll(".card")].find(
+          (item) => item.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        const selectedActions = selectedCard.querySelectorAll(".card-actions button");
         return {
           selected: saved.active,
           settings: saved.settings,
+          selectedCard: selectedCard.dataset.selected,
+          selectedActions: [...selectedActions].map((button) =>
+            button.getAttribute("aria-pressed")
+          ),
           imageIsFixture: media.querySelector("img")?.src.includes("5d32b8"),
           playerCount: globalThis.__codexWallpaperApi.state().playerCount,
           opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
@@ -1619,6 +1659,8 @@ test("static background is single, removable and persists disabled", async (t) =
         volume: 0,
         rotationMinutes: 0,
       },
+      selectedCard: "true",
+      selectedActions: ["true", "false", "false"],
       imageIsFixture: true,
       playerCount: 0,
       opacity: "0.73",
@@ -1665,23 +1707,49 @@ test("static background is single, removable and persists disabled", async (t) =
       closed: true,
     }
   );
+  const themeMaterialExpression = `(() => {
+      const controls = document.getElementById("${controlRootId}");
+      const root = document.documentElement;
+      return ["dark", "light"].map((theme) => {
+        root.dataset.theme = theme;
+        return {
+          theme,
+          main: getComputedStyle(
+            document.querySelector("[data-app-shell-main-surface]")
+          ).backgroundColor,
+          toolbar: getComputedStyle(
+            controls.querySelector(".toolbar")
+          ).backgroundColor,
+          panel: getComputedStyle(
+            controls.querySelector("[data-codex-wallpaper-panel]")
+          ).backgroundColor
+        };
+      });
+    })()`;
+  const themeMaterialBefore = await evaluateInPage(
+    port,
+    themeMaterialExpression,
+    options
+  );
   await evaluateInPage(
     port,
     `document.body.append(document.getElementById("${controlRootId}").cloneNode(true))`,
     options
   );
+  const toggleReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    `#${controlRootId} .toolbar [data-codex-wallpaper-toggle]`
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
       `(() => {
-        [...document.querySelectorAll("#${controlRootId}")]
-          .find((element) => element.parentElement === document.documentElement)
-          .querySelector(".toolbar [data-codex-wallpaper-toggle]")
-          .click();
         const saved = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         );
         return {
+          toggleReceivesClick: ${toggleReceivesClick},
           state: globalThis.__codexWallpaperApi.state(),
           savedEnabled: saved.enabled,
           savedActive: saved.active,
@@ -1694,6 +1762,7 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
+      toggleReceivesClick,
       state: {
         state: "disabled",
         backgroundLayers: 0,
@@ -1723,11 +1792,7 @@ test("static background is single, removable and persists disabled", async (t) =
       roots: 0,
     }
   );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
+  await pressAltShiftW();
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -1793,6 +1858,39 @@ test("static background is single, removable and persists disabled", async (t) =
       savedEnabled: true,
     }
   );
+  await pressAltShiftW();
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `({
+        state: globalThis.__codexWallpaperApi.state().state,
+        toolbar: document.querySelector("#${controlRootId} .toolbar") !== null
+      })`,
+      options
+    ),
+    { state: "disabled", toolbar: false }
+  );
+  await pressAltShiftW();
+  await evaluateInPage(
+    port,
+    `(async () => {
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const image = document.querySelector("#${rootId} .media img");
+        if (
+          globalThis.__codexWallpaperApi.state().state === "enabled" &&
+          image?.complete &&
+          image.naturalWidth > 0
+        )
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    })()`,
+    options
+  );
+  assert.deepEqual(
+    await evaluateInPage(port, themeMaterialExpression, options),
+    themeMaterialBefore
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -1834,11 +1932,7 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     { root: 0, styles: 0 }
   );
-  await evaluateInPage(
-    port,
-    'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyW" }))',
-    options
-  );
+  await pressAltShiftW();
   assert.deepEqual(
     await evaluateInPage(
       port,
