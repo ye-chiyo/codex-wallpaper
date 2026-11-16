@@ -18,6 +18,10 @@
 - 2026-11-16 基线：现有 12 项 Node 测试通过，三个 PowerShell 测试文件通过。最终证据仍需重跑同一集成候选，不勾选真实门槛。
 - 2026-11-16 11:45（Asia/Shanghai），首次集成自动验收针对审查修订前的 `b27e257ef024f4e6a33e7e685c67132cc17467a8`。当时的运行时为 `launcher/client-runtime.mjs`（blob `dc03fc30aaeeb832b5f15ccd118e724d6ec2f7c8`），共享夹具为 `launcher/static-background.test.mjs`（blob `f3eac271e59ee81439d407a4b5bc4efbad5117ab`）。`npm test` 12/12 通过；Windows PowerShell 分别执行 `profile-preflight.test.ps1`、`startup-entry.test.ps1`、`startup-roots.test.ps1` 均退出 0，覆盖 11、1、3 个通过场景；`git diff --check a443f49...HEAD` 通过。Prettier 3.9.10 检查上述两个代码文件和 `codex-wallpaper-visual-polish` 特性 Markdown（共 8 个文件）时，因该 Windows 检出使用 CRLF，默认 LF 检查会报告行尾差异；使用同一主工作树 `D:\AI\壁纸\node_modules\.bin\prettier.cmd` 加 `--check --end-of-line auto` 后全部通过。
 - 2026-11-16 限制：此轮自动验收与首轮审查以 `b27e257` 为基线。真实宿主仅作前述旧会话只读核对；未启动、退出或操作 Codex，未截图或录屏，未改动素材、配置或登录项。因此实际版本/主界面身份、候选实际生效、真实鼠标与键盘、明暗主题及多壁纸视觉、侧栏开合、十轮聊天/变更切换、快捷键启停恢复和用户确认均保持待验。首轮自动结果仅作为历史记录；正式证据以审查修订后的集成候选为准。真实验收项均保持未勾选。
+- 2026-11-16 审查后最终源码候选：集成分支 `codex/wallpaper-visual-polish` 的 `d071cefc465089e32c28adfcaa6af434260c0fc8`。运行时 blob `29d41d3d1655efa9d81878f9ece1077be43ea519`，共享夹具 blob `0aa51d2cc4172be53983983f1162318851431a0c`；后续证据提交仅改 Markdown。该源码在日常工作树上重跑 Node 12/12、PowerShell 15/15；Prettier（适配 Windows 行尾）及 Git 差异检查通过。保留版本、目标、启停与清理保护。
+- Standards 双轴审查之一：去掉固定透明度范围，改为相对读底检查；合并重复恢复轮询和顶部材质规则，精简现有夹具的重复断言，没有新增测试架构。
+- Spec 双轴审查之一：移除文件视口的强制模糊，消除差异局部底色与内层代码底色叠加；真实主窗口外框同时带侧栏标记，已修窄局部读底防止误覆盖普通聊天状态，并在现有夹具复现该结构。原生弹层保持定位，弹出菜单只在内容层着色。文件编辑器及内嵌 guest 的内部仍由宿主绘制。
+- 2026-11-16 最后一次只读复核：专用主页面实际样式仍与 a443f49 加标题栏层级两行修正完全匹配，与最终候选不匹配。未替换运行时代码、样式或设置。当前候选没有真实截图、操作或录屏证据；素材原生播放、预览降级与失败三类均尚未实测，未记为播放通过。
 - 用户冷启动：请保存工作并手动完全退出 Codex。在 PowerShell 中使用日常工作树的只读启动器核对 `Running: []`：
 
   ```powershell
