@@ -175,12 +175,14 @@ async function startFixture() {
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
         @layer host { [data-app-shell-titlebar] { position: fixed; top: 0; height: 36px; } }
         .muted-chrome { color: var(--color-text-tertiary); }
-        [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
+        [data-testid="webmcp-tool-scroll"], [data-summary-panel-variant] { display: block; padding: 8px; }
+        #user-markdown-action { border: 0; background: transparent; }
+        pre { padding: 12px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
         .thread-scroll-footer-shell::before { content: ""; background-image: linear-gradient(transparent, var(--app-color-background-surface)); }
         .thread-scroll-footer-shell::after { content: ""; background-color: var(--app-color-background-surface); }
-        .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); }
+        .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); pointer-events: none; }
       </style>
       <div data-app-shell-workspace-row>
         <div data-app-shell-page-surface data-app-shell-frame>
@@ -188,14 +190,38 @@ async function startFixture() {
           <div data-app-shell-main-surface>
             <main>
             <article id="message" data-markdown-text-style="assistant-message">
-              ${"Long assistant response ".repeat(40)}
+              <span>${"Long assistant response ".repeat(40)}</span>
+              <p id="ordinary-status" class="bg-surface">Ordinary assistant status</p>
+              <pre id="chat-code"><code>const chatCode = true;</code></pre>
             </article>
+            <div id="user-message" data-user-message-bubble>
+              User message
+              <button id="user-markdown-action" class="rounded-md bg-transparent" type="button" aria-expanded="false">User markdown action</button>
+            </div>
             <button id="open-changes" type="button">Open Changes</button>
+            <div data-app-action-timeline-scroll>
             <section data-testid="webmcp-tool-scroll" class="bg-surface">
-              <button id="tool-action" type="button">Toggle tool</button>
+              <button id="tool-action" class="rounded-md bg-transparent" type="button" aria-expanded="false">Toggle tool</button>
               <div id="tool-details">Tool details</div>
             </section>
-            <div data-app-action-timeline-scroll>
+            <div data-turn-key="fixture-tool-turn">
+              <div>
+                <div>
+                  <div data-local-conversation-item-target-ids="fixture-tool-item">
+                    <div>
+                      <div>
+                        <div>
+                          <div id="legacy-tool-row" class="relative min-w-0 gap-1">
+                            <button class="rounded-md bg-transparent" type="button" aria-expanded="false">Legacy timeline tool</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <section data-summary-panel-variant class="bg-surface">Summary row</section>
             <div class="thread-scroll-footer-shell">
             <div data-thread-scroll-footer>
               <div class="thread-footer-backdrop bg-surface"></div>
@@ -1341,10 +1367,9 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     { root: 1, controls: 1, styles: 1, stale: 0 }
   );
-  assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `(() => {
+  const { composerIdleShadow, ...chatResults } = await evaluateInPage(
+    port,
+    `(() => {
         const root = document.getElementById("${rootId}");
         const background = root.querySelector("[data-codex-wallpaper-layer]");
         const media = root.querySelector(".media");
@@ -1357,14 +1382,21 @@ test("static background is single, removable and persists disabled", async (t) =
         );
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const frame = document.querySelector("[data-app-shell-frame]");
+        const ordinaryStatus = document.querySelector("#ordinary-status");
+        const userMessage = document.querySelector("#user-message");
+        const userMarkdownAction = document.querySelector("#user-markdown-action");
         const tool = document.querySelector("#tool-action");
         const details = document.querySelector("#tool-details");
         const toolSurface = tool.closest("[data-testid='webmcp-tool-scroll']");
+        const summarySurface = document.querySelector(
+          "[data-summary-panel-variant]"
+        );
+        const legacyToolSurface = document.querySelector("#legacy-tool-row");
         const diffSurface = document.querySelector(
           "[data-thread-find-target='review']"
         );
         const changesCodeSurface = diffSurface.querySelector("pre");
-        const codeSurface = document.querySelector("pre");
+        const codeSurface = document.querySelector("#chat-code");
         const composerSurface = document.querySelector(
           "[data-composer-surface-variant]"
         );
@@ -1401,16 +1433,6 @@ test("static background is single, removable and persists disabled", async (t) =
         let toolToggleWorked = details.hidden !== toolInitiallyHidden;
         hit.click();
         toolToggleWorked &&= details.hidden === toolInitiallyHidden;
-        const composer = document.querySelector("#composer");
-        composer.focus();
-        composer.setSelectionRange(0, 8);
-        let keyboardWorked = false;
-        composer.addEventListener("keydown", (event) => {
-          keyboardWorked = event.key === "a";
-        });
-        composer.dispatchEvent(
-          new KeyboardEvent("keydown", { key: "a", bubbles: true })
-        );
         const range = document.createRange();
         range.selectNodeContents(document.querySelector("#message"));
         const selection = getSelection();
@@ -1433,6 +1455,8 @@ test("static background is single, removable and persists disabled", async (t) =
           return [
             surface,
             toolSurface,
+            summarySurface,
+            legacyToolSurface,
             changesCodeSurface,
             codeSurface,
             composerSurface,
@@ -1469,6 +1493,8 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
           contentHasReadabilityBases: [
             toolSurface,
+            summarySurface,
+            legacyToolSurface,
             changesCodeSurface,
             codeSurface,
             composerSurface
@@ -1481,6 +1507,12 @@ test("static background is single, removable and persists disabled", async (t) =
           footerLeadingHasReadabilityBase:
             getComputedStyle(footerLeading).backgroundColor !==
             "rgba(0, 0, 0, 0)",
+          ordinaryChatSharesCanvas: [ordinaryStatus, userMessage].every(
+            (element) => readAlpha(element) === 0
+          ),
+          userMarkdownKeepsNativeState:
+            userMarkdownAction.getAttribute("aria-expanded") === "false" &&
+            readAlpha(userMarkdownAction) === 0,
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
@@ -1522,9 +1554,8 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(media).opacity === "1",
           toolbarIsAboveHost: toolbar.contains(toolbarHit),
           toolReceivesClick: hit === tool && toolToggleWorked,
-          composerHasFocus: document.activeElement === composer,
+          composerIdleShadow: getComputedStyle(composerSurface).boxShadow,
           messageIsSelectable: selection.toString().startsWith("Long assistant response"),
-          keyboardReachesComposer: keyboardWorked,
           pageScrolled: scrollY > 0,
           streamedMessageIsHitTestable:
             document.elementFromPoint(
@@ -1533,35 +1564,76 @@ test("static background is single, removable and persists disabled", async (t) =
             ) === streamed
         };
       })()`,
-      options
-    ),
+    options
+  );
+  assert.deepEqual(chatResults, {
+    mainWallpaperHasNoExtraBlur: true,
+    surfaceAboveBackground: true,
+    surfaceHasReadabilityBase: true,
+    contentHasReadabilityBases: true,
+    composerOuterPaintTransparent: true,
+    footerLeadingHasReadabilityBase: true,
+    ordinaryChatSharesCanvas: true,
+    userMarkdownKeepsNativeState: true,
+    themesHaveReadabilityBases: true,
+    wallpaperRemainsVisible: true,
+    panelSurfacesHaveReadability: true,
+    changesPanelKeepsWallpaper: true,
+    changesScrollKeepsWallpaper: true,
+    changesContentHasReadabilityBase: true,
+    changesBackgroundLayers: 1,
+    changesRuntimeState: "enabled",
+    nonReviewPanelKeepsReadability: true,
+    changesPanelClosed: true,
+    dialogHasFocus: true,
+    backgroundIgnoresPointers: true,
+    wallpaperMediaVisible: true,
+    toolbarIsAboveHost: true,
+    toolReceivesClick: true,
+    messageIsSelectable: true,
+    pageScrolled: true,
+    streamedMessageIsHitTestable: true,
+  });
+  await evaluateInPage(
+    port,
+    'document.querySelector("#composer").scrollIntoView({ block: "center" })',
+    options
+  );
+  const composerReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#composer"
+  );
+  await callMainPage(
+    port,
+    "Input.insertText",
+    { text: " from CDP" },
+    options.page,
+    true
+  );
+  assert.deepEqual(
     {
-      mainWallpaperHasNoExtraBlur: true,
-      surfaceAboveBackground: true,
-      surfaceHasReadabilityBase: true,
-      contentHasReadabilityBases: true,
-      composerOuterPaintTransparent: true,
-      footerLeadingHasReadabilityBase: true,
-      themesHaveReadabilityBases: true,
-      wallpaperRemainsVisible: true,
-      panelSurfacesHaveReadability: true,
-      changesPanelKeepsWallpaper: true,
-      changesScrollKeepsWallpaper: true,
-      changesContentHasReadabilityBase: true,
-      changesBackgroundLayers: 1,
-      changesRuntimeState: "enabled",
-      nonReviewPanelKeepsReadability: true,
-      changesPanelClosed: true,
-      dialogHasFocus: true,
-      backgroundIgnoresPointers: true,
-      wallpaperMediaVisible: true,
-      toolbarIsAboveHost: true,
-      toolReceivesClick: true,
+      composerReceivesClick,
+      ...(await evaluateInPage(
+        port,
+        `({
+        composerHasFocus: document.activeElement === document.querySelector("#composer"),
+        composerAcceptedText: document.querySelector("#composer").value.includes("from CDP"),
+        composerFocusStyleChanged:
+          getComputedStyle(document.querySelector("[data-composer-surface-variant]")).boxShadow !==
+          ${JSON.stringify(composerIdleShadow)},
+        userMarkdownKeepsNativeState:
+          document.querySelector("#user-markdown-action").getAttribute("aria-expanded") === "false"
+      })`,
+        options
+      )),
+    },
+    {
+      composerReceivesClick: true,
       composerHasFocus: true,
-      messageIsSelectable: true,
-      keyboardReachesComposer: true,
-      pageScrolled: true,
-      streamedMessageIsHitTestable: true,
+      composerAcceptedText: true,
+      composerFocusStyleChanged: true,
+      userMarkdownKeepsNativeState: true,
     }
   );
   assert.equal(
