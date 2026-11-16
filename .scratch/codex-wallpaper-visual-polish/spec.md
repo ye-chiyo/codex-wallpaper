@@ -67,7 +67,7 @@
 
 ## Further Notes
 
-- 视觉基线：[已确认的设计预览（开发机本地附件，未实现）](<C:/Users/614/.codex/generated_images/01a1e029-f690-7210-b848-73e49851ccae/exec-532cc06d-d2d6-427b-8744-c67d76aa75c0.png>)。图中内容为示例，组件位置以真实 Codex 为准；如果附件在其他机器不可访问，使用本规范确认的文字方向。
+- 视觉基线：[已确认的设计预览（开发机本地附件，未实现）](C:/Users/614/.codex/generated_images/01a1e029-f690-7210-b848-73e49851ccae/exec-532cc06d-d2d6-427b-8744-c67d76aa75c0.png)。图中内容为示例，组件位置以真实 Codex 为准；如果附件在其他机器不可访问，使用本规范确认的文字方向。
 - 本规范补充[原始移植规格](../codex-wallpaper-port/spec.md)和[质量收敛规格](../codex-wallpaper-quality-hardening/spec.md)，不改变旧任务的状态。没有同主题独立规格需要合并。
 - [变更连续性证据](../codex-wallpaper-quality-hardening/issues/03-main-detached-continuity.md)：旧候选曾把原生 fixed 标题栏改成 relative；隔离对照显示，仅保留原生定位即可停止当时的布局跳变。历史正式冷启动有 11 轮录屏未见原闪动，同一宿主观察到的是同页「变更」标签，不是未核验的 detached 目标。该记录不证明新版真实点击、拖动、面板读底或无闪动。
 - [输入区证据](../codex-wallpaper-quality-hardening/issues/04-composer-surface-polish.md)与[候选验收记录](../codex-wallpaper-quality-hardening/issues/05-unified-candidate-acceptance.md)记录了夹具回归及旧候选深色主题下无实色横带的观察。此前临时样式复查中，聊天标题和「查看变更」有真实点击响应，但不代表整套顶部交互已通过；用户也观察到停用再开启回到旧样式。新版应独立复验。
