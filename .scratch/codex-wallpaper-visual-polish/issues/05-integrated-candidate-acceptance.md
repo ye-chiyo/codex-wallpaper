@@ -16,11 +16,13 @@
 
 - 2026-11-16 初查：已核对专用会话标记、MSIX 26.1111.2228.0、日常 profile、环回监听归属和唯一精确主页面。旧运行时已启用，深色主题标题栏仍为 fixed。实际 CSS 与 a443f49 相同长度，只有两行不同：把 z-index: 1 移入标题栏排除分支；与本轮集成草稿不匹配。未改变页面、设置或素材。登录启动查询为 disabled。
 - 2026-11-16 基线：现有 12 项 Node 测试通过，三个 PowerShell 测试文件通过。最终证据仍需重跑同一集成候选，不勾选真实门槛。
-- 2026-11-16 11:45（Asia/Shanghai），源码/自动验收候选已固定为 `codex/wallpaper-visual-05` 的 `b27e257ef024f4e6a33e7e685c67132cc17467a8`。最终运行时为 `launcher/client-runtime.mjs`（blob `dc03fc30aaeeb832b5f15ccd118e724d6ec2f7c8`），共享夹具为 `launcher/static-background.test.mjs`（blob `f3eac271e59ee81439d407a4b5bc4efbad5117ab`）。`npm test` 12/12 通过；Windows PowerShell 分别执行 `profile-preflight.test.ps1`、`startup-entry.test.ps1`、`startup-roots.test.ps1` 均退出 0，覆盖 11、1、3 个通过场景；`git diff --check a443f49...HEAD` 通过。Prettier 3.9.10 检查上述两个代码文件和 `codex-wallpaper-visual-polish` 特性 Markdown（共 8 个文件）时，因该 Windows 检出使用 CRLF，默认 LF 检查会报告行尾差异；使用同一主工作树 `D:\AI\壁纸\node_modules\.bin\prettier.cmd` 加 `--check --end-of-line auto` 后全部通过。
-- 2026-11-16 限制：本轮仅完成上述源码与自动夹具验收，独立审查仍针对 `b27e257`。未启动、读取或操作真实 Codex，未退出任何应用进程，未截图/录屏，未读取或修改真实页面、素材、配置、回执或 Startup；因此实际版本/主界面身份、候选实际生效、真实鼠标与键盘、明暗主题及多壁纸视觉、侧栏开合、十轮聊天/变更切换、快捷键启停恢复和用户确认均保持待验。若 `b27e257` 代码发生变化，本结论失效，需按本单重跑适用的源码、夹具和 PowerShell 验证。以下五项门禁均不勾选。
-- 2026-11-16 用户冷启动：请先保存工作并完全退出 Codex，再在 Windows PowerShell 中从固定 worktree 执行：
+- 2026-11-16 11:45（Asia/Shanghai），首次集成自动验收针对审查修订前的 `b27e257ef024f4e6a33e7e685c67132cc17467a8`。当时的运行时为 `launcher/client-runtime.mjs`（blob `dc03fc30aaeeb832b5f15ccd118e724d6ec2f7c8`），共享夹具为 `launcher/static-background.test.mjs`（blob `f3eac271e59ee81439d407a4b5bc4efbad5117ab`）。`npm test` 12/12 通过；Windows PowerShell 分别执行 `profile-preflight.test.ps1`、`startup-entry.test.ps1`、`startup-roots.test.ps1` 均退出 0，覆盖 11、1、3 个通过场景；`git diff --check a443f49...HEAD` 通过。Prettier 3.9.10 检查上述两个代码文件和 `codex-wallpaper-visual-polish` 特性 Markdown（共 8 个文件）时，因该 Windows 检出使用 CRLF，默认 LF 检查会报告行尾差异；使用同一主工作树 `D:\AI\壁纸\node_modules\.bin\prettier.cmd` 加 `--check --end-of-line auto` 后全部通过。
+- 2026-11-16 限制：此轮自动验收与首轮审查以 `b27e257` 为基线。真实宿主仅作前述旧会话只读核对；未启动、退出或操作 Codex，未截图或录屏，未改动素材、配置或登录项。因此实际版本/主界面身份、候选实际生效、真实鼠标与键盘、明暗主题及多壁纸视觉、侧栏开合、十轮聊天/变更切换、快捷键启停恢复和用户确认均保持待验。首轮自动结果仅作为历史记录；正式证据以审查修订后的集成候选为准。真实验收项均保持未勾选。
+- 用户冷启动：请保存工作并手动完全退出 Codex。在 PowerShell 中使用日常工作树的只读启动器核对 `Running: []`：
 
   ```powershell
-  Set-Location -LiteralPath 'D:\AI\codex-wallpaper-visual-05'
-  .\launcher\Codex-Wallpaper.cmd
+  Set-Location -LiteralPath 'D:\AI\codex-wallpaper-hardening'
+  powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
   ```
+
+  确认列表为空后，从同一目录运行 `.\launcher\Codex-Wallpaper.cmd`。正常回执为 `Outcome: read-only-probe-passed`，`Wallpaper: enabled` 或用户之前保存为停用时的 `disabled`。若出现登录页或异常结果，停在当前页面并告知结果，不为本次验收登录。启动后只报告结果和方便复验的上下文，不分享个人路径、账号或聊天正文。
