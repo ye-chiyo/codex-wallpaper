@@ -196,6 +196,8 @@ async function startFixture() {
           <div id="app-menu"><div role="menubar"><button class="muted-chrome">View</button></div></div>
           <div data-app-shell-main-surface>
             <main>
+            <div data-app-shell-main-content-top-fade>
+            <div id="thread-top-fade" aria-hidden="true" style="position: absolute; pointer-events: none; background-image: linear-gradient(var(--app-color-background-surface), transparent);"></div>
             <article id="message" data-markdown-text-style="assistant-message">
               <span>${"Long assistant response ".repeat(40)}</span>
               <p id="ordinary-status" class="bg-surface">Ordinary assistant status</p>
@@ -238,6 +240,7 @@ async function startFixture() {
                   <textarea id="composer">Composer text</textarea>
                 </form>
               </div>
+            </div>
             </div>
             </div>
             </div>
@@ -1431,6 +1434,18 @@ test("static background is single, removable and persists disabled", async (t) =
             getComputedStyle(footerShell, "::before").backgroundImage === "none" &&
             getComputedStyle(footerShell, "::after").backgroundColor === "rgba(0, 0, 0, 0)";
         });
+        const fade = document.querySelector("#thread-top-fade");
+        const pixel = document.createElement("canvas").getContext("2d");
+        const fadeIsTranslucent = () => {
+          const gradient = getComputedStyle(fade).backgroundImage;
+          const color = gradient.match(/^linear-gradient\\(((?:rgba?|color)\\([^)]*\\))/)?.[1];
+          if (!color || !CSS.supports("color", color)) return false;
+          pixel.clearRect(0, 0, 1, 1);
+          pixel.fillStyle = color;
+          pixel.fillRect(0, 0, 1, 1);
+          const alpha = pixel.getImageData(0, 0, 1, 1).data[3];
+          return alpha > 0 && alpha < 255;
+        };
         const wallpaperVisibility = ["dark", "light"].map((theme) => {
           document.documentElement.dataset.theme = theme;
           const surfaceAlpha = readAlpha(surface);
@@ -1441,9 +1456,11 @@ test("static background is single, removable and persists disabled", async (t) =
             surfaceAlpha,
             compositeAlpha: 1 - (1 - frameAlpha) * (1 - surfaceAlpha),
             wallpaperOpacity: Number(getComputedStyle(media).opacity),
+            translucentTopFade: fadeIsTranslucent(),
           };
         });
         return {
+          translucentTopFade: wallpaperVisibility.every(({ translucentTopFade }) => translucentTopFade),
           mainWallpaperHasNoExtraBlur: getComputedStyle(surface).backdropFilter === "none",
           paneHasNoForcedBlur:
             getComputedStyle(pane).backdropFilter === "none",
@@ -1541,6 +1558,7 @@ test("static background is single, removable and persists disabled", async (t) =
     options
   );
   assert.deepEqual(chatResults, {
+    translucentTopFade: true,
     mainWallpaperHasNoExtraBlur: true,
     paneHasNoForcedBlur: true,
     frameCarriesPageSidebarAnchor: true,
