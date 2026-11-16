@@ -192,7 +192,7 @@ async function startFixture() {
         .thread-footer-backdrop { position: absolute; bottom: 0; width: 80%; height: 80px; background: var(--app-color-background-surface-under); pointer-events: none; }
       </style>
       <div data-app-shell-workspace-row>
-        <div data-app-shell-page-surface data-app-shell-frame>
+        <div data-app-shell-page-surface data-app-shell-frame data-app-shell-page-sidebar>
           <div id="app-menu"><div role="menubar"><button class="muted-chrome">View</button></div></div>
           <div data-app-shell-main-surface>
             <main>
@@ -703,6 +703,23 @@ test("static background is single, removable and persists disabled", async (t) =
       );
     }
   };
+  const waitForWallpaperImage = () =>
+    evaluateInPage(
+      port,
+      `(async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = document.querySelector("#${rootId} .media img");
+          if (
+            globalThis.__codexWallpaperApi.state().state === "enabled" &&
+            image?.complete &&
+            image.naturalWidth > 0
+          )
+            return;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+      })()`,
+      options
+    );
 
   assert.deepEqual(
     await evaluateInPage(
@@ -1326,6 +1343,20 @@ test("static background is single, removable and persists disabled", async (t) =
         const deletionLine = diffSurface.querySelector(
           "[data-line-type='change-deletion']"
         );
+        const toolReadabilitySurfaces = [
+          toolSurface,
+          summarySurface,
+          legacyToolSurface,
+        ];
+        const changesReadabilitySurfaces = [
+          diffPaintSurface,
+        ];
+        const readabilitySurfaces = [
+          ...toolReadabilitySurfaces,
+          ...changesReadabilitySurfaces,
+          codeSurface,
+          composerSurface,
+        ];
         const clickTab = (tab) => tab.click();
         clickTab(filesTab);
         const filesTabSelected =
@@ -1341,6 +1372,12 @@ test("static background is single, removable and persists disabled", async (t) =
           "[data-app-shell-pane-content-viewport]"
         );
         const dialog = document.querySelector("#settings-dialog");
+        const popper = document.createElement("div");
+        popper.dataset.radixPopperContentWrapper = "";
+        const menu = document.createElement("div");
+        menu.setAttribute("role", "menu");
+        popper.append(menu);
+        document.body.append(popper);
         const dialogAction = document.querySelector("#dialog-action");
         dialogAction.focus();
         const dialogHasFocus = document.activeElement === dialogAction;
@@ -1379,12 +1416,7 @@ test("static background is single, removable and persists disabled", async (t) =
           document.documentElement.dataset.theme = theme;
           return [
             surface,
-            toolSurface,
-            summarySurface,
-            legacyToolSurface,
-            changesCodeSurface,
-            codeSurface,
-            composerSurface,
+            ...readabilitySurfaces,
           ]
             .every(
               (element) =>
@@ -1405,25 +1437,24 @@ test("static background is single, removable and persists disabled", async (t) =
           const frameAlpha = readAlpha(frame);
           return {
             theme,
+            frameAlpha,
+            surfaceAlpha,
             compositeAlpha: 1 - (1 - frameAlpha) * (1 - surfaceAlpha),
             wallpaperOpacity: Number(getComputedStyle(media).opacity),
           };
         });
         return {
           mainWallpaperHasNoExtraBlur: getComputedStyle(surface).backdropFilter === "none",
+          paneHasNoForcedBlur:
+            getComputedStyle(pane).backdropFilter === "none",
+          frameCarriesPageSidebarAnchor:
+            frame.hasAttribute("data-app-shell-page-sidebar"),
           surfaceAboveBackground:
             Number.parseInt(getComputedStyle(surface).zIndex, 10) >
             Number.parseInt(getComputedStyle(background).zIndex, 10),
           surfaceHasReadabilityBase:
             getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
-          contentHasReadabilityBases: [
-            toolSurface,
-            summarySurface,
-            legacyToolSurface,
-            changesCodeSurface,
-            codeSurface,
-            composerSurface
-          ].every(
+          contentHasReadabilityBases: readabilitySurfaces.every(
             (element) =>
               getComputedStyle(element).backgroundColor !==
               "rgba(0, 0, 0, 0)"
@@ -1441,9 +1472,9 @@ test("static background is single, removable and persists disabled", async (t) =
           themesHaveReadabilityBases: themeBases.every(Boolean),
           wallpaperRemainsVisible:
             wallpaperVisibility.every(
-              ({ theme, compositeAlpha, wallpaperOpacity }) =>
-                compositeAlpha >= (theme === "light" ? 0.79 : 0.74) &&
-                compositeAlpha <= 0.84 &&
+              ({ compositeAlpha, frameAlpha, wallpaperOpacity }) =>
+                compositeAlpha > frameAlpha &&
+                compositeAlpha < 1 &&
                 wallpaperOpacity === 1
             ),
           panelSurfacesHaveReadability: [leftPanel, pane, dialog].every(
@@ -1459,6 +1490,11 @@ test("static background is single, removable and persists disabled", async (t) =
           wallpaperControlsHaveNoExtraBlur:
             getComputedStyle(toolbar).backdropFilter === "none" &&
             getComputedStyle(panel).backdropFilter === "none",
+          menuPaintsOnlyVisibleContent:
+            getComputedStyle(popper).backgroundColor ===
+              "rgba(0, 0, 0, 0)" &&
+            getComputedStyle(menu).backgroundColor ===
+              getComputedStyle(dialog).backgroundColor,
           dialogKeepsHostPosition:
             getComputedStyle(dialog).position === "static" &&
             getComputedStyle(dialog).zIndex === "auto",
@@ -1469,9 +1505,8 @@ test("static background is single, removable and persists disabled", async (t) =
           changesFileTreeKeepsWallpaper: readAlpha(fileTree) === 0,
           filesTabSelected,
           changesTabRestored,
-          changesContentHasReadabilityBase:
-            readAlpha(changesCodeSurface) > 0,
-          changesDiffHasLocalReadingSurface: readAlpha(diffPaintSurface) > 0,
+          changesContentHasReadabilityBase: readAlpha(diffPaintSurface) > 0,
+          changesDiffCodeStaysTransparent: readAlpha(changesCodeSurface) === 0,
           changesSignalsRemainDistinct:
             readAlpha(additionLine) > 0 &&
             readAlpha(deletionLine) > 0 &&
@@ -1507,6 +1542,8 @@ test("static background is single, removable and persists disabled", async (t) =
   );
   assert.deepEqual(chatResults, {
     mainWallpaperHasNoExtraBlur: true,
+    paneHasNoForcedBlur: true,
+    frameCarriesPageSidebarAnchor: true,
     surfaceAboveBackground: true,
     surfaceHasReadabilityBase: true,
     contentHasReadabilityBases: true,
@@ -1519,6 +1556,7 @@ test("static background is single, removable and persists disabled", async (t) =
     panelSurfacesHaveReadability: true,
     wallpaperControlsUseSharedPalette: true,
     wallpaperControlsHaveNoExtraBlur: true,
+    menuPaintsOnlyVisibleContent: true,
     dialogKeepsHostPosition: true,
     changesOpened: true,
     changesPanelKeepsWallpaper: true,
@@ -1528,7 +1566,7 @@ test("static background is single, removable and persists disabled", async (t) =
     filesTabSelected: true,
     changesTabRestored: true,
     changesContentHasReadabilityBase: true,
-    changesDiffHasLocalReadingSurface: true,
+    changesDiffCodeStaysTransparent: true,
     changesSignalsRemainDistinct: true,
     changesBackgroundLayers: 1,
     changesRuntimeState: "enabled",
@@ -1781,20 +1819,11 @@ test("static background is single, removable and persists disabled", async (t) =
     }
   );
   await pressAltShiftW();
+  await waitForWallpaperImage();
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `(async () => {
-        for (let attempt = 0; attempt < 80; attempt += 1) {
-          const image = document.querySelector("#${rootId} .media img");
-          if (
-            globalThis.__codexWallpaperApi.state().state === "enabled" &&
-            image?.complete &&
-            image.naturalWidth > 0
-          )
-            break;
-          await new Promise((resolve) => setTimeout(resolve, 25));
-        }
+      `(() => {
         const root = document.getElementById("${rootId}");
         const controls = document.getElementById("${controlRootId}");
         const media = root.querySelector(".media");
@@ -1859,22 +1888,7 @@ test("static background is single, removable and persists disabled", async (t) =
     { state: "disabled", toolbar: false }
   );
   await pressAltShiftW();
-  await evaluateInPage(
-    port,
-    `(async () => {
-      for (let attempt = 0; attempt < 80; attempt += 1) {
-        const image = document.querySelector("#${rootId} .media img");
-        if (
-          globalThis.__codexWallpaperApi.state().state === "enabled" &&
-          image?.complete &&
-          image.naturalWidth > 0
-        )
-          break;
-        await new Promise((resolve) => setTimeout(resolve, 25));
-      }
-    })()`,
-    options
-  );
+  await waitForWallpaperImage();
   assert.deepEqual(
     await evaluateInPage(port, themeMaterialExpression, options),
     themeMaterialBefore

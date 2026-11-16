@@ -1030,7 +1030,6 @@ export function createCodexWallpaperRuntime(payload) {
       }
       body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
         &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
-        &:not([data-app-shell-main-surface], [data-app-shell-titlebar], [data-app-shell-page-sidebar]) { backdrop-filter: blur(14px) saturate(.9); }
       }
       body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
       body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
@@ -1040,8 +1039,7 @@ export function createCodexWallpaperRuntime(payload) {
         box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      body [data-app-shell-titlebar] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); --color-text-tertiary: var(--color-text-secondary); }
-      body [data-app-shell-frame] > :has(> [role='menubar']) {
+      body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
         background-color: transparent !important;
         box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
@@ -1052,7 +1050,7 @@ export function createCodexWallpaperRuntime(payload) {
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
       body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
       body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent), pre) { background-color: var(--codex-wallpaper-raised) !important; }
-      body :is([data-app-shell-page-sidebar], [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre) { background-color: var(--codex-wallpaper-raised) !important; }
+      body :is([data-app-shell-page-sidebar]:not([data-app-shell-frame]), [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre:not(.composer-diff-simple-line pre)) { background-color: var(--codex-wallpaper-raised) !important; }
       body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent)) { border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
       body [data-pip-obstacle='thread-footer-leading'] { background-color: var(--codex-wallpaper-raised) !important; }
       body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
@@ -1067,7 +1065,8 @@ export function createCodexWallpaperRuntime(payload) {
         --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
       }
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='dialog'], [role='menu'], [data-radix-popper-content-wrapper]) { background-color: var(--codex-wallpaper-panel) !important; }
+      body :where([role='dialog'], [role='menu']) { background-color: var(--codex-wallpaper-panel) !important; }
+      body [data-radix-popper-content-wrapper] { background-color: transparent !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
