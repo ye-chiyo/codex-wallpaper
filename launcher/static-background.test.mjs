@@ -158,6 +158,8 @@ async function startFixture() {
         :root {
           --app-color-background-surface: rgb(24 24 28);
           --app-color-background-surface-under: rgb(12 12 16);
+          --color-codex-diff-added: rgb(55 180 105);
+          --color-codex-diff-deleted: rgb(225 82 96);
           --color-text-secondary: rgb(255 255 255 / .65);
           --color-text-tertiary: rgb(255 255 255 / .5);
           color-scheme: dark;
@@ -165,6 +167,8 @@ async function startFixture() {
         :root[data-theme="light"] {
           --app-color-background-surface: rgb(247 247 249);
           --app-color-background-surface-under: rgb(232 232 237);
+          --color-codex-diff-added: rgb(20 135 70);
+          --color-codex-diff-deleted: rgb(180 45 58);
           --color-text-secondary: rgb(0 0 0 / .65);
           --color-text-tertiary: rgb(0 0 0 / .5);
           color-scheme: light;
@@ -177,6 +181,9 @@ async function startFixture() {
         .muted-chrome { color: var(--color-text-tertiary); }
         [data-testid="webmcp-tool-scroll"] { display: block; padding: 24px; }
         [data-testid="diff-preview-scroll"] { display: block; padding: 24px; }
+        #changes-panel [data-line-type] { display: block; min-height: 1lh; }
+        #changes-panel [data-line-type="change-deletion"] { background-color: var(--diffs-bg-deletion, transparent); }
+        #changes-panel [data-line-type="change-addition"] { background-color: var(--diffs-bg-addition, transparent); }
         [data-composer-surface-variant] { display: block; padding: 24px; background: var(--app-color-background-surface); }
         .thread-scroll-footer-shell::before { content: ""; background-image: linear-gradient(transparent, var(--app-color-background-surface)); }
         .thread-scroll-footer-shell::after { content: ""; background-color: var(--app-color-background-surface); }
@@ -212,7 +219,7 @@ async function startFixture() {
             <header data-app-shell-titlebar>Chat toolbar</header>
           </div>
         </div>
-        <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header class="bg-surface-elevated-secondary"><span>Changes</span><button id="close-changes" type="button">Close</button></header><section data-testid="diff-preview-scroll" data-thread-find-target="review"><pre><code id="code">const visible = true;</code></pre></section></div></aside>
+        <aside data-app-shell-trailing-sidebar hidden><div class="h-full min-w-0"><header><div role="tablist" aria-label="Workspace panels"><button id="changes-tab" role="tab" aria-selected="true">Changes</button><button id="files-tab" role="tab" aria-selected="false">Files</button></div><button id="close-changes" type="button">Close</button></header><section id="files-panel" hidden><file-tree-container>src</file-tree-container></section><section id="changes-panel" data-testid="diff-preview-scroll" data-thread-find-target="review"><div class="composer-diff-simple-line"><pre><code id="code"><span id="deletion-line" data-line-type="change-deletion" aria-label="Deleted line"></span><span id="addition-line" data-line-type="change-addition" aria-label="Added line"></span>const visible = true;</code></pre></div></section></div></aside>
       </div>
       <aside data-app-shell-page-sidebar>
         <nav data-app-navigation-rail><button data-sidebar-destination class="muted-chrome">Home</button></nav>
@@ -225,6 +232,18 @@ async function startFixture() {
         const sidebar = document.querySelector('[data-app-shell-trailing-sidebar]');
         document.querySelector('#open-changes').addEventListener('click', () => { sidebar.hidden = false; });
         document.querySelector('#close-changes').addEventListener('click', () => { sidebar.hidden = true; });
+        const changesTab = document.querySelector('#changes-tab');
+        const filesTab = document.querySelector('#files-tab');
+        const changesPanel = document.querySelector('#changes-panel');
+        const filesPanel = document.querySelector('#files-panel');
+        const selectPanel = (changes) => {
+          changesTab.setAttribute('aria-selected', String(changes));
+          filesTab.setAttribute('aria-selected', String(!changes));
+          changesPanel.hidden = !changes;
+          filesPanel.hidden = changes;
+        };
+        changesTab.addEventListener('click', () => selectPanel(true));
+        filesTab.addEventListener('click', () => selectPanel(false));
       </script>`
   );
 }
@@ -1379,7 +1398,40 @@ test("static background is single, removable and persists disabled", async (t) =
         const rightPanel = document.querySelector(
           "[data-app-shell-trailing-sidebar]"
         );
-        rightPanel.hidden = false;
+        const openChanges = document.querySelector("#open-changes");
+        openChanges.scrollIntoView({ block: "center" });
+        const openChangesRect = openChanges.getBoundingClientRect();
+        const openChangesHit = document.elementFromPoint(
+          openChangesRect.left + openChangesRect.width / 2,
+          openChangesRect.top + openChangesRect.height / 2
+        );
+        openChangesHit.click();
+        const changesOpened = !rightPanel.hidden;
+        const workspaceTabs = rightPanel.querySelector('[role="tablist"]');
+        const changesTab = rightPanel.querySelector("#changes-tab");
+        const filesTab = rightPanel.querySelector("#files-tab");
+        const filesPanel = rightPanel.querySelector("#files-panel");
+        const fileTree = rightPanel.querySelector("file-tree-container");
+        const diffPaintSurface = diffSurface.querySelector(
+          ".composer-diff-simple-line"
+        );
+        const additionLine = diffSurface.querySelector(
+          "[data-line-type='change-addition']"
+        );
+        const deletionLine = diffSurface.querySelector(
+          "[data-line-type='change-deletion']"
+        );
+        const clickTab = (tab) => tab.click();
+        clickTab(filesTab);
+        const filesTabSelected =
+          filesTab.getAttribute("aria-selected") === "true" &&
+          !filesPanel.hidden &&
+          diffSurface.hidden;
+        clickTab(changesTab);
+        const changesTabRestored =
+          changesTab.getAttribute("aria-selected") === "true" &&
+          filesPanel.hidden &&
+          !diffSurface.hidden;
         const pane = document.querySelector(
           "[data-app-shell-pane-content-viewport]"
         );
@@ -1495,21 +1547,25 @@ test("static background is single, removable and persists disabled", async (t) =
                 "rgba(0, 0, 0, 0)" &&
               Number.parseInt(getComputedStyle(element).zIndex, 10) >= 1
           ),
+          changesOpened,
           changesPanelKeepsWallpaper: readAlpha(rightPanel) === 0,
           changesScrollKeepsWallpaper: readAlpha(diffSurface) === 0,
+          changesTabsKeepWallpaper: readAlpha(workspaceTabs) === 0,
+          changesFileTreeKeepsWallpaper: readAlpha(fileTree) === 0,
+          filesTabSelected,
+          changesTabRestored,
           changesContentHasReadabilityBase:
             readAlpha(changesCodeSurface) > 0,
+          changesDiffHasLocalReadingSurface: readAlpha(diffPaintSurface) > 0,
+          changesSignalsRemainDistinct:
+            readAlpha(additionLine) > 0 &&
+            readAlpha(deletionLine) > 0 &&
+            getComputedStyle(additionLine).backgroundColor !==
+              getComputedStyle(deletionLine).backgroundColor,
           changesBackgroundLayers: document.querySelectorAll(
             "#${rootId} [data-codex-wallpaper-layer]"
           ).length,
           changesRuntimeState: globalThis.__codexWallpaperApi.state().state,
-          nonReviewPanelKeepsReadability: (() => {
-            const target = diffSurface.dataset.threadFindTarget;
-            delete diffSurface.dataset.threadFindTarget;
-            const readable = readAlpha(rightPanel) > 0;
-            diffSurface.dataset.threadFindTarget = target;
-            return readable;
-          })(),
           changesPanelClosed: (() => {
             rightPanel.hidden = true;
             return rightPanel.hidden;
@@ -1545,12 +1601,18 @@ test("static background is single, removable and persists disabled", async (t) =
       themesHaveReadabilityBases: true,
       wallpaperRemainsVisible: true,
       panelSurfacesHaveReadability: true,
+      changesOpened: true,
       changesPanelKeepsWallpaper: true,
       changesScrollKeepsWallpaper: true,
+      changesTabsKeepWallpaper: true,
+      changesFileTreeKeepsWallpaper: true,
+      filesTabSelected: true,
+      changesTabRestored: true,
       changesContentHasReadabilityBase: true,
+      changesDiffHasLocalReadingSurface: true,
+      changesSignalsRemainDistinct: true,
       changesBackgroundLayers: 1,
       changesRuntimeState: "enabled",
-      nonReviewPanelKeepsReadability: true,
       changesPanelClosed: true,
       dialogHasFocus: true,
       backgroundIgnoresPointers: true,
