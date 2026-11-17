@@ -72,7 +72,7 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .card-current { position: absolute; top: 11px; right: 11px; padding: 2px 5px; border-radius: 999px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 82%, transparent); color: var(--app-color-text-foreground, white); font-size: 9px; font-weight: 650; }
       #${controlsId} .card-current[hidden] { display: none; }
       #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
-      #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
+      #${controlsId} .thumb img, #${controlsId} .thumb video { width: 100%; height: 100%; object-fit: cover; }
       #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
       #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -328,6 +328,17 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   const settingKeys = new Set(Object.keys(settingDefinitions));
   const surfaceScopes = new Set(["chat", "sidebar", "right", "settings"]);
 
+  function normalizePerformanceProfile(settings) {
+    const profile = performanceProfiles[settings.performanceProfile];
+    if (
+      profile &&
+      (Number(settings.fps) !== profile.fps ||
+        Boolean(settings.pauseWhenHidden) !== profile.pauseWhenHidden)
+    )
+      settings.performanceProfile = "custom";
+    return settings;
+  }
+
   function cloneSettings(source = defaults.settings) {
     const next = structuredClone(defaults.settings);
     for (const key of settingKeys) {
@@ -343,7 +354,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         ? structuredClone(source.surfaceOverrides[scope])
         : defaults.settings.surfaceOverrides[scope];
     }
-    return next;
+    return normalizePerformanceProfile(next);
   }
 
   function validateSettingsInput(input) {
@@ -454,6 +465,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   const pendingAssetRequests = new Set();
   const pendingPreviewRequests = new Set();
   const failedPreviewIds = new Set();
+  const importedPreviewUrls = new Map();
   const assetTransfers = new Map();
   const channel = new BroadcastChannel("codex-wallpaper-p1");
   const previewObserver = new IntersectionObserver((entries) => {
@@ -574,7 +586,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         type: mediaType(item.blob),
         playable: true,
         fallback: false,
-        previewDataUrl: null,
+        previewDataUrl: importedPreviewUrls.get(item.id) || null,
         assetDataUrl: null,
         reason: null,
       })),
@@ -586,6 +598,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   function requestPreview(id) {
+    const importedItem = imported.find((candidate) => candidate.id === id);
     const entry = sourcePayload.library?.find(
       (candidate) => candidate.id === id
     );
@@ -594,10 +607,26 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       entry?.previewDataUrl ||
       pendingPreviewRequests.has(id) ||
       failedPreviewIds.has(id) ||
-      typeof globalThis.__codexWallpaperHostRequest !== "function"
+      (!importedItem &&
+        typeof globalThis.__codexWallpaperHostRequest !== "function")
     )
       return;
     pendingPreviewRequests.add(id);
+    if (importedItem) {
+      try {
+        const url = URL.createObjectURL(importedItem.blob);
+        importedPreviewUrls.set(id, url);
+        receivePreview({
+          id,
+          previewDataUrl: url,
+          fallback: true,
+          thumbnailKind: mediaType(importedItem.blob),
+        });
+      } catch {
+        receivePreviewError(id);
+      }
+      return;
+    }
     globalThis.__codexWallpaperHostRequest(
       JSON.stringify({ type: "load-preview", id })
     );
@@ -637,6 +666,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       if (asset.assetUrl === url) runtimeAssets.delete(key);
     }
     URL.revokeObjectURL(url);
+  }
+
+  function clearImportedPreviews() {
+    for (const url of importedPreviewUrls.values()) URL.revokeObjectURL(url);
+    importedPreviewUrls.clear();
   }
 
   function cancelPendingRender() {
@@ -869,10 +903,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     scheduleRotation();
   }
 
-  function markSettingsChanged() {
+  function markSettingsChanged(performance = false) {
     config.activePresetId = null;
-    config.settings.performanceProfile = "custom";
-    pendingConfigFields.add("performanceProfile");
+    if (performance) {
+      config.settings.performanceProfile = "custom";
+      pendingConfigFields.add("performanceProfile");
+    }
     syncPresetUi();
   }
 
@@ -1620,17 +1656,32 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     visual.removeAttribute("data-preview-id");
     const visualUrl = entry.previewDataUrl || entry.assetDataUrl;
     if (visualUrl) {
-      const image = document.createElement("img");
-      image.src = visualUrl;
-      image.alt = "";
-      image.onerror = () => {
+      const useVideo =
+        entry.thumbnailKind === "video" ||
+        (entry.type === "video" && !entry.previewDataUrl);
+      const thumbnail = document.createElement(useVideo ? "video" : "img");
+      thumbnail.src = visualUrl;
+      if (useVideo) {
+        thumbnail.muted = true;
+        thumbnail.playsInline = true;
+        thumbnail.preload = "metadata";
+        thumbnail.onloadedmetadata = () => {
+          try {
+            thumbnail.currentTime = 0.001;
+          } catch {}
+        };
+        thumbnail.onloadeddata = () => thumbnail.pause();
+      } else {
+        thumbnail.alt = "";
+      }
+      thumbnail.onerror = () => {
         failedPreviewIds.add(entry.id);
-        image.remove();
+        thumbnail.remove();
         visual.textContent = entry.type.toUpperCase();
         visual.dataset.previewId = entry.id;
         previewObserver.observe(visual);
       };
-      visual.append(image);
+      visual.append(thumbnail);
       return;
     }
     visual.textContent = entry.type.toUpperCase();
@@ -1719,7 +1770,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     };
     input.oninput = () => {
       config.settings[key] = Number(input.value);
-      markSettingsChanged();
+      markSettingsChanged(key === "fps");
       if (key === "volume" && Number(input.value) > 0)
         config.settings.muted = false;
       if (key === "fps") config.settings.performanceProfile = "custom";
@@ -1759,7 +1810,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     text.textContent = hint ? `${label}（${hint}）` : label;
     input.onchange = () => {
       config.settings[key] = input.checked;
-      markSettingsChanged();
+      markSettingsChanged(key === "pauseWhenHidden");
       if (key === "pauseWhenHidden")
         config.settings.performanceProfile = "custom";
       applyPlaybackSettings({ volume: key === "muted" });
@@ -1823,7 +1874,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     select.value = config.settings.performanceProfile;
     select.onchange = () => {
       config.activePresetId = null;
-      if (performanceProfiles[select.value]) {
+      if (select.value === "custom") {
+        config.settings.performanceProfile = "custom";
+        saveConfig();
+      } else if (performanceProfiles[select.value]) {
         config.settings.performanceProfile = select.value;
         config.settings.fps = performanceProfiles[select.value].fps;
         config.settings.pauseWhenHidden =
@@ -1891,7 +1945,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       config.settings.surfaceOverrides[scope] = Number(input.value);
       output.textContent = `${input.value}%`;
       applyInterfaceAppearance();
-      scheduleConfigSave("surfaceOverrides");
+      scheduleConfigSave(`surfaceOverrides.${scope}`);
     };
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
@@ -2056,6 +2110,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   async function removeImportedMedia() {
+    clearImportedPreviews();
     const db = await openDatabase();
     await requestResult(
       db.transaction(dbStore, "readwrite").objectStore(dbStore).clear()
@@ -2187,6 +2242,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   async function deleteImported(id) {
+    const previewUrl = importedPreviewUrls.get(id);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    importedPreviewUrls.delete(id);
     const db = await openDatabase();
     const transaction = db.transaction(dbStore, "readwrite");
     transaction.objectStore(dbStore).delete(id);
@@ -2209,6 +2267,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     stopRotation();
     pendingAssetRequests.clear();
     pendingPreviewRequests.clear();
+    clearImportedPreviews();
     assetTransfers.clear();
     previewObserver.disconnect();
     database?.close();
@@ -2272,17 +2331,34 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       item.previewDataUrl = entry.previewDataUrl;
       item.fallback = true;
     }
+    const importedItem = imported.find(
+      (candidate) => candidate.id === entry.id
+    );
+    const previewEntry = item
+      ? { ...item, kind: "workshop" }
+      : importedItem
+        ? {
+            kind: "imported",
+            id: importedItem.id,
+            title: importedItem.title,
+            type: mediaType(importedItem.blob),
+            playable: true,
+            previewDataUrl: entry.previewDataUrl,
+            assetDataUrl: null,
+            thumbnailKind: entry.thumbnailKind,
+          }
+        : null;
     const previewCard = panel
       ? [...panel.querySelectorAll(".card")].find(
           (candidate) =>
-            candidate.dataset.entryKind === "workshop" &&
+            candidate.dataset.entryKind === previewEntry?.kind &&
             candidate.dataset.entryId === entry.id
         )
       : null;
     const visual = previewCard?.querySelector(".thumb");
-    if (visual) {
+    if (visual && previewEntry) {
       previewObserver.unobserve(visual);
-      renderThumb({ ...item, kind: "workshop" }, visual);
+      renderThumb(previewEntry, visual);
     }
     return state();
   }
@@ -2650,6 +2726,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     stopRotation();
     pendingAssetRequests.clear();
     pendingPreviewRequests.clear();
+    clearImportedPreviews();
     assetTransfers.clear();
     previewObserver.disconnect();
     database?.close();
@@ -2731,11 +2808,18 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   installHotkey();
   addEventListener("storage", (event) => {
     if (event.key !== configKey && event.key !== null) return;
-    if (configSaveTimer) {
+    if (configSaveTimer || pendingConfigFields.size > 0) {
       const previous = config;
       const remote = readConfig();
-      for (const field of pendingConfigFields)
-        remote.settings[field] = config.settings[field];
+      for (const field of pendingConfigFields) {
+        const overrideScope = field.startsWith("surfaceOverrides.")
+          ? field.slice("surfaceOverrides.".length)
+          : null;
+        if (overrideScope)
+          remote.settings.surfaceOverrides[overrideScope] =
+            config.settings.surfaceOverrides[overrideScope];
+        else remote.settings[field] = config.settings[field];
+      }
       remote.activePresetId = config.activePresetId;
       config = remote;
       saveConfig();

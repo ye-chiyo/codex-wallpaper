@@ -1619,6 +1619,19 @@ test("wallpaper library shell combines filters without reloading the current med
           (card) => card.querySelector("strong")?.textContent ===
             "Imported Sunset.svg"
         );
+      const importedCard = [...panel.querySelectorAll(".card")].find(
+        (card) =>
+          card.querySelector("strong")?.textContent === "Imported Sunset.svg"
+      );
+      importedCard.scrollIntoView({ block: "center" });
+      let importedPreviewLoaded = false;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        importedPreviewLoaded = Boolean(
+          importedCard.querySelector(".thumb img, .thumb video")
+        );
+        if (importedPreviewLoaded) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
       search.value = "";
       search.dispatchEvent(new Event("input", { bubbles: true }));
       panel
@@ -1701,6 +1714,7 @@ test("wallpaper library shell combines filters without reloading the current med
         resultText,
         statuses,
         importedFilterVisible,
+        importedPreviewLoaded,
         lazyPreviewRequested,
         loadingStatus,
         loadedStatus,
@@ -1738,6 +1752,7 @@ test("wallpaper library shell combines filters without reloading the current med
       onDemand: "image · 按需加载",
     },
     importedFilterVisible: true,
+    importedPreviewLoaded: true,
     lazyPreviewRequested: true,
     loadingStatus: "image · 加载中",
     loadedStatus: "image · 原生显示",
@@ -1990,6 +2005,15 @@ test("playback profiles and capability controls apply without replacing media", 
         paused: globalThis.__t05ScenePaused,
         resumed: globalThis.__t05SceneResumed
       };
+      const directProfile = panel.querySelector("[data-playback-profile]");
+      directProfile.value = "balanced";
+      directProfile.dispatchEvent(new Event("change", { bubbles: true }));
+      directProfile.value = "custom";
+      directProfile.dispatchEvent(new Event("change", { bubbles: true }));
+      const directCustom = {
+        profile: panel.querySelector("[data-playback-profile]").value,
+        fps: globalThis.__codexWallpaperApi.state().fpsCap
+      };
 
       await selectMedia(
         "fixture-image",
@@ -2077,6 +2101,7 @@ test("playback profiles and capability controls apply without replacing media", 
         custom,
         pauseEnabled,
         pauseDisabled,
+        directCustom,
         imageCapability,
         webCapability,
         crossWindow,
@@ -2122,6 +2147,10 @@ test("playback profiles and capability controls apply without replacing media", 
     },
     pauseEnabled: { paused: true, resumed: true },
     pauseDisabled: { paused: false, resumed: true },
+    directCustom: {
+      profile: "custom",
+      fps: 30,
+    },
     imageCapability: {
       fpsControl: false,
       pauseDisabled: true,
@@ -2357,6 +2386,15 @@ test("appearance controls update wallpaper and surface layers without reloading 
       };
 
       const previous = localStorage.getItem("codex-wallpaper-p1-config");
+      const pendingChatOverride = panel.querySelector(
+        "[data-surface-override='chat']"
+      );
+      pendingChatOverride.click();
+      const pendingChatRange = panel.querySelector(
+        "[data-surface-override-value='chat']"
+      );
+      pendingChatRange.value = "44";
+      pendingChatRange.dispatchEvent(new Event("input", { bubbles: true }));
       const next = JSON.stringify({
         ...JSON.parse(previous),
         settings: {
@@ -2384,6 +2422,9 @@ test("appearance controls update wallpaper and surface layers without reloading 
         surface:
           panel.querySelector("[data-setting='surfaceOpacity']").value,
         fit: panel.querySelector("[data-setting='fitMode']").value,
+        chatOverride: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-chat-opacity"
+        ),
         settingsOverride: document.documentElement.style.getPropertyValue(
           "--codex-wallpaper-settings-opacity"
         )
@@ -2474,6 +2515,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
       mediaSame: true,
       surface: "60",
       fit: "contain",
+      chatOverride: "44%",
       settingsOverride: "70%",
     },
   });
@@ -2934,6 +2976,37 @@ test("settings presets import export migration and scoped resets form a complete
           beforeInvalidRange,
         status: recovery.querySelector("[data-settings-status]").textContent
       };
+      recovery.querySelector("[data-settings-status]").textContent = "";
+      const mismatchTransfer = new DataTransfer();
+      mismatchTransfer.items.add(
+        new File(
+          [
+            JSON.stringify({
+              version: 1,
+              settings: {
+                ...exported.settings,
+                fps: 17,
+                pauseWhenHidden: false,
+                performanceProfile: "balanced"
+              }
+            })
+          ],
+          "mismatched-profile.json",
+          { type: "application/json" }
+        )
+      );
+      settingsImport.files = mismatchTransfer.files;
+      settingsImport.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (recovery.querySelector("[data-settings-status]").textContent)
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const normalizedProfile = {
+        profile: panel.querySelector("[data-playback-profile]").value,
+        fps: globalThis.__codexWallpaperApi.state().fpsCap,
+        status: recovery.querySelector("[data-settings-status]").textContent
+      };
 
       recovery.querySelector("[data-reset-group='appearance']").click();
       const appearanceReset = {
@@ -3013,6 +3086,7 @@ test("settings presets import export migration and scoped resets form a complete
         importedReopened,
         invalid,
         invalidRange,
+        normalizedProfile,
         appearanceReset,
         playbackReset,
         allReset,
@@ -3079,6 +3153,11 @@ test("settings presets import export migration and scoped resets form a complete
   assert.match(result.invalid.status, /^导入失败：/);
   assert.equal(result.invalidRange.unchanged, true);
   assert.match(result.invalidRange.status, /^导入失败：/);
+  assert.deepEqual(result.normalizedProfile, {
+    profile: "custom",
+    fps: 17,
+    status: "设置已导入",
+  });
   assert.deepEqual(result.appearanceReset, {
     dim: "18",
     fitMode: "cover",
