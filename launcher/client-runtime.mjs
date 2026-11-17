@@ -35,6 +35,8 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
       #${controlsId} .panel {
         position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
         position-anchor: --codex-wallpaper-toolbar;
         position-area: top span-left;
         inset: 14px 0 3px 14px;
@@ -48,23 +50,43 @@ function createRuntimeStyles(rootId, controlsId) {
         inset: 14px 0 8px 14px;
       }
       #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
-      #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+      #${controlsId} .panel-region { margin-top: 10px; border: 1px solid var(--codex-wallpaper-line); border-radius: var(--codex-wallpaper-radius-sm); background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 24%, transparent); }
+      #${controlsId} .panel-region > h3, #${controlsId} .panel-region > summary { margin: 0; padding: 10px 11px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 80%, transparent); font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+      #${controlsId} .panel-region > summary { cursor: pointer; list-style-position: inside; }
+      #${controlsId} .panel-region > summary::marker { color: color-mix(in srgb, var(--app-color-text-foreground, white) 56%, transparent); }
+      #${controlsId} .panel-region-body { display: grid; gap: 8px; padding: 0 10px 10px; }
       #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
+      #${controlsId} .panel-region-body .import-row { margin-top: 0; }
       #${controlsId} .import-row input { width: 135px; font-size: 11px; }
       #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
+      #${controlsId} .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 7px; }
+      #${controlsId} .library-filter { display: grid; gap: 4px; min-width: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 70%, transparent); font-size: 11px; }
+      #${controlsId} .library-filter:last-child { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; }
+      #${controlsId} .library-filter input[type='search'], #${controlsId} .library-filter select { min-width: 0; width: 100%; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 8px; font: inherit; }
+      #${controlsId} .library-filter input[type='search']:focus-visible, #${controlsId} .library-filter select:focus-visible, #${controlsId} .library-filter input[type='checkbox']:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
+      #${controlsId} .library-result { min-height: 1.4em; margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 68%, transparent); font-size: 11px; }
       #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .card { position: relative; min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .card[hidden] { display: none; }
       #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .card-current { position: absolute; top: 11px; right: 11px; padding: 2px 5px; border-radius: 999px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 82%, transparent); color: var(--app-color-text-foreground, white); font-size: 9px; font-weight: 650; }
+      #${controlsId} .card-current[hidden] { display: none; }
       #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
       #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
       #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
       #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
       #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
-      #${controlsId} .settings-grid { display: grid; gap: 7px; }
+      #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 7px; }
       #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
       #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
-      #${controlsId} .reset { margin-top: 14px; width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
+      #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
+      @media (max-width: 520px) {
+        #${controlsId} .panel { width: min(340px, calc(100vw - 16px)); max-height: min(82vh, calc(100% - 10px)); }
+        #${controlsId} .library-filters { grid-template-columns: 1fr; }
+        #${controlsId} .library-filter:last-child { grid-column: auto; }
+        #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
+      }
       :root {
         --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 72%, transparent);
         --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 18%, transparent);
@@ -261,6 +283,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   let frameWindowStartedAt = performance.now();
   let configSaveTimer = null;
   const pendingConfigFields = new Set();
+  const libraryFilters = {
+    query: "",
+    type: "all",
+    favoritesOnly: false,
+  };
+  let loadingEntryKey = null;
+  const failedEntryKeys = new Set();
 
   function saveConfig() {
     if (configSaveTimer) clearTimeout(configSaveTimer);
@@ -388,6 +417,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     };
   }
 
+  function entryKey(entry) {
+    return `${entry.kind}:${entry.id}`;
+  }
+
   function setStatus(message) {
     if (status) status.textContent = message;
   }
@@ -494,6 +527,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     }
   }
 
+  function entryStatusText(entry) {
+    const key = entryKey(entry);
+    if (loadingEntryKey === key) return `${entry.type} · 加载中`;
+    if (failedEntryKeys.has(key)) return `${entry.type} · 加载失败`;
+    const state = entryState(entry);
+    if (state === "scene-native") return "scene · 原生渲染";
+    if (state.endsWith("-on-demand")) return `${entry.type} · 按需加载`;
+    if (state === "web-offline") return "web · 离线沙箱";
+    if (entry.type === "scene" || entry.type === "web")
+      return `${entry.type} · 预览降级`;
+    if (entry.playable)
+      return entry.type === "video"
+        ? "video · 原生播放"
+        : `${entry.type} · 原生显示`;
+    return `${entry.type} · 不可播放`;
+  }
+
   function updateCardState(card) {
     const key = {
       kind: card.dataset.entryKind,
@@ -507,7 +557,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const use = card.querySelector("[data-entry-action='use']");
     const favoriteButton = card.querySelector("[data-entry-action='favorite']");
     const queueButton = card.querySelector("[data-entry-action='queue']");
+    const current = card.querySelector(".card-current");
+    const status = card.querySelector("[data-card-status]");
     if (use) use.setAttribute("aria-pressed", String(selected));
+    if (current) current.hidden = !selected;
     if (favoriteButton) {
       favoriteButton.textContent = favorite ? "★" : "☆";
       favoriteButton.setAttribute("aria-pressed", String(favorite));
@@ -516,11 +569,60 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       queueButton.textContent = queued ? "移除轮播" : "加入轮播";
       queueButton.setAttribute("aria-pressed", String(queued));
     }
+    if (status) {
+      const entry = libraryEntries().find(
+        (candidate) => candidate.kind === key.kind && candidate.id === key.id
+      );
+      if (entry) status.textContent = entryStatusText(entry);
+    }
   }
 
   function syncCardStates() {
     if (!panel) return;
     for (const item of panel.querySelectorAll(".card")) updateCardState(item);
+  }
+
+  function applyLibraryFilters() {
+    if (!panel) return;
+    const query = libraryFilters.query.trim().toLocaleLowerCase();
+    let visible = 0;
+    const cards = [...panel.querySelectorAll(".card")];
+    for (const item of cards) {
+      const matchesQuery = !query
+        ? true
+        : item.dataset.entryTitle.toLocaleLowerCase().includes(query);
+      const matchesType =
+        libraryFilters.type === "all" ||
+        item.dataset.entryType === libraryFilters.type;
+      const matchesFavorite =
+        !libraryFilters.favoritesOnly ||
+        item
+          .querySelector("[data-entry-action='favorite']")
+          ?.getAttribute("aria-pressed") === "true";
+      item.hidden = !(matchesQuery && matchesType && matchesFavorite);
+      if (item.hidden) previewObserver.unobserve(item.querySelector(".thumb"));
+      else visible += 1;
+    }
+    const result = panel.querySelector("[data-library-result]");
+    if (result) result.textContent = `显示 ${visible} / ${cards.length} 项`;
+  }
+
+  function renderRuntimeStatus() {
+    const active = findEntry(config.active);
+    if (!active) {
+      setStatus("已跳过缺失的壁纸");
+      return;
+    }
+    const key = entryKey(active);
+    if (loadingEntryKey === key) {
+      setStatus(`正在加载：${active.title}`);
+      return;
+    }
+    if (failedEntryKeys.has(key)) {
+      setStatus(`${active.title} · 加载失败`);
+      return;
+    }
+    setStatus(`${active.title} · ${entryStatusText(active)}`);
   }
 
   function syncPlaylistSummary() {
@@ -535,7 +637,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   function syncConfigUi(change) {
     if (change.appearance) applyVisualSettings();
     applyPlaybackSettings(change);
-    if (change.favorites || change.playlist) syncCardStates();
+    if (change.favorites || change.playlist) {
+      syncCardStates();
+      if (change.favorites) applyLibraryFilters();
+    }
     if (change.playlist) syncPlaylistSummary();
     syncSettingControls();
     if (change.rotation || change.playlist) scheduleRotation();
@@ -1041,6 +1146,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       `.card[data-entry-kind="${entry.kind}"][data-entry-id="${entry.id}"]`
     );
     if (item) updateCardState(item);
+    if (listName === "favorites") applyLibraryFilters();
     if (listName === "playlist") {
       syncPlaylistSummary();
       scheduleRotation();
@@ -1049,11 +1155,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
 
   function entryState(entry) {
     if (
-      hostReady &&
       entry.kind === "workshop" &&
       entry.type !== "web" &&
-      !entry.playable &&
-      !entry.webHtml
+      !entry.webHtml &&
+      !entry.assetDataUrl &&
+      !runtimeAssets.has(entryKey(entry)) &&
+      (!entry.playable || entry.reason === "asset-not-loaded")
     )
       return `${entry.type}-on-demand`;
     if (entry.type === "scene")
@@ -1097,28 +1204,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     item.className = "card";
     item.dataset.entryKind = entry.kind;
     item.dataset.entryId = entry.id;
+    item.dataset.entryTitle = entry.title;
+    item.dataset.entryType = entry.type;
     const selected =
       config.active.kind === entry.kind && config.active.id === entry.id;
     item.dataset.selected = String(selected);
     const visual = document.createElement("div");
     visual.className = "thumb";
     renderThumb(entry, visual);
+    const current = document.createElement("span");
+    current.className = "card-current";
+    current.textContent = "当前";
+    current.hidden = !selected;
     const title = document.createElement("strong");
     title.textContent = entry.title;
     const meta = document.createElement("small");
-    const state = entryState(entry);
-    meta.textContent =
-      state === "scene-native"
-        ? "scene · 原生渲染"
-        : state.endsWith("-on-demand")
-          ? `${entry.type} · 按需加载`
-          : state === "web-offline"
-            ? "web · 离线沙箱"
-            : entry.type === "scene" || entry.type === "web"
-              ? `${entry.type} · 预览降级`
-              : entry.playable
-                ? entry.type
-                : `${entry.type} · 不可播放`;
+    meta.dataset.cardStatus = "";
+    meta.textContent = entryStatusText(entry);
     const actions = document.createElement("div");
     actions.className = "card-actions";
     const use = document.createElement("button");
@@ -1126,11 +1228,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     use.dataset.entryAction = "use";
     use.setAttribute("aria-pressed", String(selected));
     use.onclick = () => {
+      loadingEntryKey = entryKey(entry);
+      failedEntryKeys.delete(entryKey(entry));
       config.active = { kind: entry.kind, id: entry.id };
       saveConfig();
       requestPreview(entry.id);
-      applyActive();
-      renderPanel();
+      syncCardStates();
+      renderRuntimeStatus();
+      applyActive().finally(() => {
+        if (
+          loadingEntryKey === entryKey(entry) &&
+          (!pendingAssetRequests.has(entry.id) ||
+            typeof globalThis.__codexWallpaperHostRequest !== "function")
+        )
+          loadingEntryKey = null;
+        syncCardStates();
+        renderRuntimeStatus();
+      });
     };
     const favorite = document.createElement("button");
     favorite.textContent = isFavorite(entry) ? "★" : "☆";
@@ -1144,7 +1258,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     queue.setAttribute("aria-pressed", String(inPlaylist(entry)));
     queue.onclick = () => toggleKey("playlist", entry);
     actions.append(use, favorite, queue);
-    item.append(visual, title, meta, actions);
+    item.append(current, visual, title, meta, actions);
     return item;
   }
 
@@ -1187,30 +1301,28 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     if (!panel) return;
     const list = panel.querySelector(".wallpaper-list");
     const playlist = panel.querySelector(".playlist-summary");
-    const settings = panel.querySelector(".settings-grid");
-    if (!list || !playlist || !settings) return;
+    const playbackSettings = panel.querySelector("[data-playback-settings]");
+    const appearanceSettings = panel.querySelector(".settings-grid");
+    if (!list || !playlist || !playbackSettings || !appearanceSettings) return;
     previewObserver.disconnect();
     list.replaceChildren(...libraryEntries().map(card));
+    applyLibraryFilters();
     const queued = playlistEntries();
     playlist.textContent = queued.length
       ? `轮播：${queued.map((entry) => entry.title).join(" · ")}`
       : "轮播列表为空";
-    settings.replaceChildren(
-      range("暗化", "dim", 0, 70, 1, "%"),
-      range("模糊", "blur", 0, 24, 1, "px"),
-      range("不透明度", "opacity", 20, 100, 1, "%"),
+    playbackSettings.replaceChildren(
       range("帧率", "fps", 15, 30, 15, " FPS"),
       range("音量", "volume", 0, 100, 5, "%"),
       range("轮播", "rotationMinutes", 0, 120, 5, " 分钟")
     );
-    const active = findEntry(config.active);
-    setStatus(
-      config.active.kind === "builtin"
-        ? "内置渐变"
-        : active
-          ? `${active.title} · ${entryState(active)}`
-          : "已跳过缺失的壁纸"
+    appearanceSettings.replaceChildren(
+      range("暗化", "dim", 0, 70, 1, "%"),
+      range("模糊", "blur", 0, 24, 1, "px"),
+      range("不透明度", "opacity", 20, 100, 1, "%")
     );
+    if (config.active.kind === "builtin") setStatus("内置渐变");
+    else renderRuntimeStatus();
   }
 
   async function importFiles(files) {
@@ -1382,6 +1494,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       config.active.kind === "workshop" &&
       config.active.id === id
     ) {
+      failedEntryKeys.delete(`workshop:${id}`);
       runtimeAssets.set(`workshop:${id}`, {
         ...metadata,
         kind: "workshop",
@@ -1400,6 +1513,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     panel = document.createElement("aside");
     panel.className = "panel";
     panel.dataset.codexWallpaperPanel = "";
+    panel.setAttribute("aria-label", "Codex 壁纸设置");
     const header = document.createElement("header");
     const heading = document.createElement("strong");
     heading.textContent = "Codex 壁纸";
@@ -1411,6 +1525,57 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       panel.classList.remove("open");
     };
     header.append(heading, close);
+
+    const library = document.createElement("section");
+    library.className = "panel-region";
+    library.dataset.panelRegion = "library";
+    library.setAttribute("aria-labelledby", "codex-wallpaper-library-title");
+    const libraryTitle = document.createElement("h3");
+    libraryTitle.id = "codex-wallpaper-library-title";
+    libraryTitle.textContent = "壁纸库";
+    const libraryBody = document.createElement("div");
+    libraryBody.className = "panel-region-body";
+    const filters = document.createElement("div");
+    filters.className = "library-filters";
+    filters.setAttribute("role", "search");
+    filters.setAttribute("aria-label", "查找壁纸");
+    const searchLabel = document.createElement("label");
+    searchLabel.className = "library-filter";
+    const searchText = document.createElement("span");
+    searchText.textContent = "标题";
+    const search = document.createElement("input");
+    search.type = "search";
+    search.placeholder = "搜索壁纸";
+    search.dataset.librarySearch = "";
+    searchLabel.append(searchText, search);
+    const typeLabel = document.createElement("label");
+    typeLabel.className = "library-filter";
+    const typeText = document.createElement("span");
+    typeText.textContent = "类型";
+    const type = document.createElement("select");
+    type.dataset.libraryType = "";
+    for (const [value, label] of [
+      ["all", "全部类型"],
+      ["image", "图片"],
+      ["video", "视频"],
+      ["scene", "Scene"],
+      ["web", "Web"],
+    ]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      type.append(option);
+    }
+    typeLabel.append(typeText, type);
+    const favoritesLabel = document.createElement("label");
+    favoritesLabel.className = "library-filter";
+    const favorites = document.createElement("input");
+    favorites.type = "checkbox";
+    favorites.dataset.libraryFavorites = "";
+    const favoritesText = document.createElement("span");
+    favoritesText.textContent = "只看收藏";
+    favoritesLabel.append(favorites, favoritesText);
+    filters.append(searchLabel, typeLabel, favoritesLabel);
 
     const importRow = document.createElement("label");
     importRow.className = "import-row";
@@ -1424,27 +1589,66 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
 
     status = document.createElement("p");
     status.className = "runtime-status";
-    const library = document.createElement("section");
-    const libraryTitle = document.createElement("h3");
-    libraryTitle.textContent = "壁纸库";
+    status.setAttribute("aria-live", "polite");
+    const result = document.createElement("p");
+    result.className = "library-result";
+    result.dataset.libraryResult = "";
+    result.setAttribute("aria-live", "polite");
     const list = document.createElement("div");
     list.className = "wallpaper-list";
-    library.append(libraryTitle, list);
+    list.setAttribute("aria-label", "壁纸素材");
+    const applyFilters = () => {
+      libraryFilters.query = search.value;
+      libraryFilters.type = type.value;
+      libraryFilters.favoritesOnly = favorites.checked;
+      const scrollTop = panel.scrollTop;
+      applyLibraryFilters();
+      panel.scrollTop = scrollTop;
+    };
+    search.oninput = applyFilters;
+    type.onchange = applyFilters;
+    favorites.onchange = applyFilters;
+    libraryBody.append(filters, importRow, status, result, list);
+    library.append(libraryTitle, libraryBody);
 
-    const playlist = document.createElement("section");
-    const playlistTitle = document.createElement("h3");
-    playlistTitle.textContent = "播放与轮播";
+    const playback = document.createElement("details");
+    playback.className = "panel-region";
+    playback.dataset.panelRegion = "playback";
+    const playbackTitle = document.createElement("summary");
+    playbackTitle.textContent = "播放与性能";
+    const playbackBody = document.createElement("div");
+    playbackBody.className = "panel-region-body";
     const playlistSummary = document.createElement("p");
     playlistSummary.className = "playlist-summary";
-    playlist.append(playlistTitle, playlistSummary);
+    const playbackSettings = document.createElement("div");
+    playbackSettings.className = "control-grid";
+    playbackSettings.dataset.playbackSettings = "";
+    playbackBody.append(playlistSummary, playbackSettings);
+    playback.append(playbackTitle, playbackBody);
 
-    const settings = document.createElement("section");
-    const settingsTitle = document.createElement("h3");
-    settingsTitle.textContent = "外观";
+    const appearance = document.createElement("details");
+    appearance.className = "panel-region";
+    appearance.dataset.panelRegion = "appearance";
+    const appearanceTitle = document.createElement("summary");
+    appearanceTitle.textContent = "画面与界面";
+    const appearanceBody = document.createElement("div");
+    appearanceBody.className = "panel-region-body";
     const settingsGrid = document.createElement("div");
     settingsGrid.className = "settings-grid";
-    settings.append(settingsTitle, settingsGrid);
+    appearanceBody.append(settingsGrid);
+    appearance.append(appearanceTitle, appearanceBody);
 
+    const recovery = document.createElement("details");
+    recovery.className = "panel-region";
+    recovery.dataset.panelRegion = "recovery";
+    const recoveryTitle = document.createElement("summary");
+    recoveryTitle.textContent = "预设与恢复";
+    const recoveryBody = document.createElement("div");
+    recoveryBody.className = "panel-region-body";
+    const resetHelp = document.createElement("p");
+    resetHelp.className = "playlist-summary";
+    resetHelp.textContent =
+      "预设、导入导出和分组恢复将在同一区域提供；清除操作会移除本项目数据。";
     const reset = document.createElement("button");
     reset.className = "reset";
     reset.textContent = "停用并清除本项目数据";
@@ -1461,7 +1665,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       }
       await resetAll();
     };
-    panel.append(header, importRow, status, library, playlist, settings, reset);
+    recoveryBody.append(resetHelp, reset);
+    recovery.append(recoveryTitle, recoveryBody);
+    panel.append(header, library, playback, appearance, recovery);
     return panel;
   }
 
@@ -1639,6 +1845,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     finishAssetTransfer,
     receiveAsset(entry) {
       pendingAssetRequests.delete(entry.id);
+      failedEntryKeys.delete(`workshop:${entry.id}`);
       runtimeAssets.set(`workshop:${entry.id}`, {
         ...entry,
         kind: "workshop",
@@ -1651,6 +1858,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     receiveAssetError(id, message) {
       pendingAssetRequests.delete(id);
       assetTransfers.delete(id);
+      loadingEntryKey = null;
+      failedEntryKeys.add(`workshop:${id}`);
       renderPanel();
       if (config.active.kind === "workshop" && config.active.id === id)
         setStatus(`素材加载失败：${message}`);

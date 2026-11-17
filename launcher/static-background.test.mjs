@@ -848,6 +848,9 @@ test("continuous slider input previews immediately and persists the settled valu
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         controls.querySelector("[data-codex-wallpaper-settings]").click();
+        controls.querySelector(
+          "[data-panel-region='appearance']"
+        ).open = true;
         const opacity = [...controls.querySelectorAll(".range")].find(
           (range) => range.querySelector("span")?.textContent === "不透明度"
         ).querySelector("input");
@@ -1077,6 +1080,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
         }
         controls.querySelector("[data-codex-wallpaper-settings]").click();
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+        panel.querySelector("[data-panel-region='playback']").open = true;
         const settings = controls.querySelector(".settings-grid");
         const cards = [...controls.querySelectorAll(".card")];
         const media = root.querySelector(".media");
@@ -1404,6 +1408,255 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
   );
 });
 
+test("wallpaper library shell combines filters without reloading the current media", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const preview =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: preview,
+          reason: null,
+        },
+        {
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: null,
+        },
+        {
+          id: "fixture-scene",
+          title: "Fixture Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: "data:application/octet-stream;base64,AA==",
+          reason: "scene-native",
+        },
+        {
+          id: "fixture-web-fallback",
+          title: "Fixture Web Fallback",
+          type: "web",
+          playable: false,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          webHtml: null,
+          reason: "web-preview-fallback",
+        },
+        {
+          id: "fixture-on-demand",
+          title: "Fixture On Demand",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 0,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const controls = document.getElementById("${controlRootId}");
+      const root = document.getElementById("${rootId}");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      const media = root.querySelector("[data-codex-wallpaper-layer] .media");
+      let stableMediaChild = null;
+      let mediaMutations = 0;
+      const observer = new MutationObserver((records) => {
+        mediaMutations += records.length;
+      });
+      observer.observe(media, { childList: true, subtree: true });
+
+      const regionNames = [...panel.querySelectorAll("[data-panel-region]")].map(
+        (region) => region.dataset.panelRegion
+      );
+      const imageCard = panel.querySelector(
+        ".card[data-entry-id='fixture-image']"
+      );
+      imageCard
+        .querySelector("[data-entry-action='favorite']")
+        .click();
+      imageCard.querySelector("[data-entry-action='queue']").click();
+
+      const search = panel.querySelector("[data-library-search]");
+      const type = panel.querySelector("[data-library-type]");
+      const favorites = panel.querySelector("[data-library-favorites]");
+      search.value = "fixture";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      type.value = "image";
+      type.dispatchEvent(new Event("change", { bubbles: true }));
+      favorites.click();
+      const visibleTitles = [...panel.querySelectorAll(".card")]
+        .filter((card) => !card.hidden)
+        .map((card) => card.querySelector("strong").textContent);
+      const resultText = panel.querySelector("[data-library-result]").textContent;
+
+      search.value = "";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      type.value = "all";
+      type.dispatchEvent(new Event("change", { bubbles: true }));
+      favorites.click();
+      const cardStatus = (id) =>
+        panel
+          .querySelector(\`.card[data-entry-id="\${id}"] [data-card-status]\`)
+          ?.textContent;
+      const statuses = {
+        scene: cardStatus("fixture-scene"),
+        webFallback: cardStatus("fixture-web-fallback"),
+        onDemand: cardStatus("fixture-on-demand")
+      };
+
+      const fileInput = panel.querySelector(".import-row input");
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File(
+          ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+          "Imported Sunset.svg",
+          { type: "image/svg+xml" }
+        )
+      );
+      fileInput.files = transfer.files;
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (globalThis.__codexWallpaperApi.state().importedCount > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      search.value = "sunset";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      const importedFilterVisible = [...panel.querySelectorAll(".card")]
+        .filter((card) => !card.hidden)
+        .some(
+          (card) => card.querySelector("strong")?.textContent ===
+            "Imported Sunset.svg"
+        );
+      search.value = "";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      panel
+        .querySelector(".card[data-entry-id='fixture-image'] [data-entry-action='use']")
+        .click();
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        const image = root.querySelector(".media:not(.staged) img");
+        if (image?.src.includes("5d32b8") && globalThis.__codexWallpaperApi.state().activeId === "fixture-image")
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      stableMediaChild = media.firstElementChild;
+      mediaMutations = 0;
+
+      const cards = [...panel.querySelectorAll(".card")];
+      panel.style.width = "280px";
+      panel.style.maxHeight = "320px";
+      search.focus();
+      const keyboardReachable =
+        document.activeElement === search &&
+        search.tabIndex >= 0 &&
+        type.tabIndex >= 0 &&
+        favorites.tabIndex >= 0;
+      panel.scrollTop = panel.scrollHeight;
+      const scrollable =
+        getComputedStyle(panel).overflowY === "auto" &&
+        panel.scrollHeight > panel.clientHeight &&
+        panel.scrollTop > 0;
+
+      const close = panel.querySelector("header button");
+      close.click();
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const reopenedImageCard = panel.querySelector(
+        ".card[data-entry-id='fixture-image']"
+      );
+      observer.disconnect();
+      return {
+        regionNames,
+        visibleTitles,
+        resultText,
+        statuses,
+        importedFilterVisible,
+        keyboardReachable,
+        scrollable,
+        reopened: panel.classList.contains("open"),
+        sameCards: cards.every(
+          (card, index) => card === panel.querySelectorAll(".card")[index]
+        ),
+        sameMediaChild: media.firstElementChild === stableMediaChild,
+        mediaMutations,
+        favoriteRetained:
+          reopenedImageCard
+            .querySelector("[data-entry-action='favorite']")
+            .getAttribute("aria-pressed") === "true",
+        queueRetained:
+          reopenedImageCard
+            .querySelector("[data-entry-action='queue']")
+            .getAttribute("aria-pressed") === "true"
+      };
+    })()`,
+    options
+  );
+
+  assert.deepEqual(result, {
+    regionNames: ["library", "playback", "appearance", "recovery"],
+    visibleTitles: ["Fixture Image"],
+    resultText: "显示 1 / 5 项",
+    statuses: {
+      scene: "scene · 原生渲染",
+      webFallback: "web · 预览降级",
+      onDemand: "image · 按需加载",
+    },
+    importedFilterVisible: true,
+    keyboardReachable: true,
+    scrollable: true,
+    reopened: true,
+    sameCards: true,
+    sameMediaChild: true,
+    mediaMutations: 0,
+    favoriteRetained: true,
+    queueRetained: true,
+  });
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -1691,7 +1944,10 @@ test("static background is single, removable and persists disabled", async (t) =
         await new Promise((resolve) => setTimeout(resolve, 20));
         return {
           hostRequests,
-          meta: fallbackCard.querySelector("small")?.textContent,
+          meta: controls
+            .querySelector(
+              ".card[data-entry-id='fixture-web-fallback'] [data-card-status]"
+            )?.textContent,
           preview:
             document.querySelector(
               "#${rootId} .media:not(.staged) img"
@@ -2210,11 +2466,12 @@ test("static background is single, removable and persists disabled", async (t) =
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
-        const ranges = controls.querySelectorAll(".range input");
-        ranges[3].value = "15";
-        ranges[3].dispatchEvent(new Event("input", { bubbles: true }));
-        ranges[4].value = "40";
-        ranges[4].dispatchEvent(new Event("input", { bubbles: true }));
+        const fps = controls.querySelector("[data-setting='fps']");
+        const volume = controls.querySelector("[data-setting='volume']");
+        fps.value = "15";
+        fps.dispatchEvent(new Event("input", { bubbles: true }));
+        volume.value = "40";
+        volume.dispatchEvent(new Event("input", { bubbles: true }));
         const canvas = root.querySelector("[data-scene-canvas]");
         const layer = root.querySelector("[data-codex-wallpaper-layer]");
         return {
@@ -2282,7 +2539,7 @@ test("static background is single, removable and persists disabled", async (t) =
         imageCard.querySelector(".card-actions button").click();
         imageCard.querySelectorAll(".card-actions button")[1].click();
         imageCard.querySelectorAll(".card-actions button")[2].click();
-        const opacity = controls.querySelectorAll(".range input")[2];
+        const opacity = controls.querySelector("[data-setting='opacity']");
         opacity.value = "66";
         opacity.dispatchEvent(new Event("input", { bubbles: true }));
         const input = controls.querySelector(".import-row input");
@@ -2971,17 +3228,18 @@ test("static background is single, removable and persists disabled", async (t) =
           (item) => item.querySelector("strong")?.textContent === "Fixture Image"
         );
         card.querySelector(".card-actions button").click();
-        const ranges = controls.querySelectorAll(".range input");
         for (const [input, value] of [
-          [ranges[0], "42"],
-          [ranges[1], "6"],
-          [ranges[2], "73"],
-          [ranges[3], "15"]
+          [controls.querySelector("[data-setting='dim']"), "42"],
+          [controls.querySelector("[data-setting='blur']"), "6"],
+          [controls.querySelector("[data-setting='opacity']"), "73"],
+          [controls.querySelector("[data-setting='fps']"), "15"]
         ]) {
           input.value = value;
           input.dispatchEvent(new Event("input", { bubbles: true }));
         }
-        ranges[3].dispatchEvent(new Event("change", { bubbles: true }));
+        controls
+          .querySelector("[data-setting='fps']")
+          .dispatchEvent(new Event("change", { bubbles: true }));
         for (let attempt = 0; attempt < 40; attempt += 1) {
           const image = document.querySelector(
             "#${rootId} .media:not(.staged) img"
@@ -3178,9 +3436,12 @@ test("static background is single, removable and persists disabled", async (t) =
           imageIsFixture: media.querySelector("img")?.src.includes("5d32b8"),
           opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
           filter: media.style.filter,
-          settingsInputs: [...controls.querySelectorAll(".range input")]
-            .slice(0, 5)
-            .map((input) => Number(input.value)),
+          settingsInputs: Object.fromEntries(
+            [...controls.querySelectorAll(".range input")].map((input) => [
+              input.dataset.setting,
+              Number(input.value)
+            ])
+          ),
           savedActive: saved.active,
           savedEnabled: saved.enabled
         };
@@ -3208,7 +3469,14 @@ test("static background is single, removable and persists disabled", async (t) =
       imageIsFixture: true,
       opacity: "0.73",
       filter: "blur(6px)",
-      settingsInputs: [42, 6, 73, 15, 0],
+      settingsInputs: {
+        fps: 15,
+        volume: 0,
+        rotationMinutes: 0,
+        dim: 42,
+        blur: 6,
+        opacity: 73,
+      },
       savedActive: { kind: "workshop", id: "fixture-image" },
       savedEnabled: true,
     }
