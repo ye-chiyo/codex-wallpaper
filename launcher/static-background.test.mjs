@@ -2691,7 +2691,15 @@ test("settings presets import export migration and scoped resets form a complete
           opacity: 90,
           fps: 30,
           volume: 20,
-          rotationMinutes: 0
+          rotationMinutes: 0,
+          legacyPath: "C:\\\\private\\\\wallpaper",
+          surfaceOverrides: {
+            chat: null,
+            sidebar: null,
+            right: null,
+            settings: null,
+            unknown: 77
+          }
         }
       })
     )`,
@@ -3045,6 +3053,8 @@ test("settings presets import export migration and scoped resets form a complete
   assert.deepEqual(Object.keys(result.exported), ["version", "settings"]);
   assert.equal("favorites" in result.exported, false);
   assert.equal("active" in result.exported, false);
+  assert.equal("legacyPath" in result.exported.settings, false);
+  assert.equal("unknown" in result.exported.settings.surfaceOverrides, false);
   assert.equal(result.exported.settings.dim, 33);
   assert.deepEqual(result.crossWindow, {
     dim: "41",
@@ -3648,6 +3658,16 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         const api = globalThis.__codexWallpaperApi;
+        const originalFrameCallback =
+          HTMLVideoElement.prototype.requestVideoFrameCallback;
+        const originalCancelFrameCallback =
+          HTMLVideoElement.prototype.cancelVideoFrameCallback;
+        let presentedFrame = null;
+        HTMLVideoElement.prototype.requestVideoFrameCallback = (callback) => {
+          presentedFrame = callback;
+          return 1;
+        };
+        HTMLVideoElement.prototype.cancelVideoFrameCallback = () => {};
         api.beginAssetTransfer({
           id: "fixture-video",
           title: "Fixture Video",
@@ -3665,6 +3685,14 @@ test("static background is single, removable and persists disabled", async (t) =
         api.appendAssetTransferChunk("fixture-video", ${JSON.stringify(tinyMp4)});
         await api.finishAssetTransfer("fixture-video");
         for (let attempt = 0; attempt < 160; attempt += 1) {
+          const stagedVideo =
+            document.querySelector("#${rootId} .media.staged video");
+          if (typeof presentedFrame === "function" && stagedVideo?.readyState >= 2)
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        presentedFrame?.(performance.now(), {});
+        for (let attempt = 0; attempt < 160; attempt += 1) {
           const activeVideo = document.querySelector(
             "#${rootId} .media:not(.staged) video"
           );
@@ -3678,10 +3706,15 @@ test("static background is single, removable and persists disabled", async (t) =
         const video = document.querySelector(
           "#${rootId} .media:not(.staged) video"
         );
-        return {
+        const result = {
           playerCount: api.state().playerCount,
           blobUrl: video?.src.startsWith("blob:") ?? false
         };
+        HTMLVideoElement.prototype.requestVideoFrameCallback =
+          originalFrameCallback;
+        HTMLVideoElement.prototype.cancelVideoFrameCallback =
+          originalCancelFrameCallback;
+        return result;
       })()`,
       options
     ),

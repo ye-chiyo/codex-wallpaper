@@ -334,10 +334,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       if (Object.hasOwn(source || {}, key))
         next[key] = structuredClone(source[key]);
     }
-    next.surfaceOverrides = {
-      ...defaults.settings.surfaceOverrides,
-      ...(source?.surfaceOverrides || {}),
-    };
+    next.surfaceOverrides = {};
+    for (const scope of surfaceScopes) {
+      next.surfaceOverrides[scope] = Object.hasOwn(
+        source?.surfaceOverrides || {},
+        scope
+      )
+        ? structuredClone(source.surfaceOverrides[scope])
+        : defaults.settings.surfaceOverrides[scope];
+    }
     return next;
   }
 

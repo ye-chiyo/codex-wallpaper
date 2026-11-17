@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 
 const host = "127.0.0.1";
 const page = "app://-/index.html";
-const timeoutMs = 2_500;
+const timeoutMs = 5_000;
 
 function isMainPage(value, expectedPage = page) {
   if (typeof value !== "string") return false;
