@@ -1170,9 +1170,8 @@ test("cross-window settings update in place without rebuilding cards or media", 
             ).textContent,
           playlistSummary:
             controls.querySelector(".playlist-summary").textContent,
-          fpsValue: [...controls.querySelectorAll(".range")]
-            .find((range) => range.querySelector("span")?.textContent === "帧率")
-            .querySelector("input").value,
+          stateFps: globalThis.__codexWallpaperApi.state().fpsCap,
+          profile: controls.querySelector("[data-playback-profile]").value,
           opacityValue: [...controls.querySelectorAll(".range")]
             .find(
               (range) => range.querySelector("span")?.textContent === "不透明度"
@@ -1202,7 +1201,8 @@ test("cross-window settings update in place without rebuilding cards or media", 
       favoritePressed: "true",
       queueLabel: "移除轮播",
       playlistSummary: "轮播：Fixture Video · Fixture Image",
-      fpsValue: "15",
+      stateFps: 15,
+      profile: "custom",
       opacityValue: "73",
     }
   );
@@ -1752,6 +1752,381 @@ test("wallpaper library shell combines filters without reloading the current med
     mediaMutations: 0,
     favoriteRetained: true,
     queueRetained: true,
+  });
+});
+
+test("playback profiles and capability controls apply without replacing media", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const image =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: image,
+          reason: null,
+        },
+        {
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+          reason: null,
+        },
+        {
+          id: "fixture-scene",
+          title: "Fixture Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: "data:application/octet-stream;base64,AA==",
+          reason: "scene-native",
+        },
+        {
+          id: "fixture-web",
+          title: "Fixture Web",
+          type: "web",
+          playable: false,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: null,
+          webHtml:
+            "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
+          reason: "web-offline",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 60,
+          muted: true,
+          rotationMinutes: 0,
+          performanceProfile: "balanced",
+          pauseWhenHidden: true
+        }
+      })
+    )`,
+    options
+  );
+  await evaluateInPage(
+    port,
+    `(() => {
+      globalThis.WebWallGL = {
+        bytesSource: () => ({}),
+        createScene: (host, options) => {
+          globalThis.__t05SceneFps = options.fps;
+          const canvas = document.createElement("canvas");
+          canvas.dataset.sceneCanvas = "";
+          host.append(canvas);
+          return {
+            load: () => {
+              globalThis.__t05SceneLoaded = true;
+              return Promise.resolve();
+            },
+            pause: () => {
+              globalThis.__t05ScenePaused = true;
+            },
+            resume: () => {
+              globalThis.__t05SceneResumed = true;
+            },
+            setFps: (fps) => {
+              globalThis.__t05SceneFps = fps;
+            },
+            setVolume: (volume) => {
+              globalThis.__t05SceneVolume = volume;
+            },
+            destroy() {}
+          };
+        }
+      };
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const root = document.getElementById("${rootId}");
+      const controls = document.getElementById("${controlRootId}");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      panel.querySelector("[data-panel-region='playback']").open = true;
+
+      const initial = {
+        profile: panel.querySelector("[data-playback-profile]").value,
+        summary: panel.querySelector("[data-performance-summary]").textContent,
+        capability: panel.querySelector("[data-playback-capability]").textContent,
+        fpsControl: Boolean(panel.querySelector("[data-setting='fps']"))
+      };
+
+      const selectMedia = async (id, ready) => {
+        panel
+          .querySelector(\`.card[data-entry-id="\${id}"] [data-entry-action='use']\`)
+          .click();
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (ready()) return;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        throw new Error(\`Timed out selecting \${id}\`);
+      };
+
+      await selectMedia(
+        "fixture-video",
+        () => Boolean(root.querySelector(".media:not(.staged) video"))
+      );
+      const videoMedia = root.querySelector(".media:not(.staged)");
+      const video = videoMedia.querySelector("video");
+      const volume = panel.querySelector("[data-setting='volume']");
+      volume.value = "45";
+      volume.dispatchEvent(new Event("input", { bubbles: true }));
+      volume.dispatchEvent(new Event("change", { bubbles: true }));
+      const mute = panel.querySelector("[data-setting='muted']");
+      const unmutedByVolume =
+        mute.checked === false && video.muted === false && video.volume === 0.45;
+      mute.click();
+      const muteRoundTrip = video.muted === true && video.volume === 0;
+      mute.click();
+      const videoControls = {
+        volume: video.volume,
+        muted: video.muted,
+        unmutedByVolume,
+        muteRoundTrip,
+        fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        capability: panel.querySelector("[data-playback-capability]").textContent
+      };
+
+      const profile = panel.querySelector("[data-playback-profile]");
+      profile.value = "performance";
+      profile.dispatchEvent(new Event("change", { bubbles: true }));
+      const priority = {
+        stateFps: globalThis.__codexWallpaperApi.state().fpsCap,
+        profile: panel.querySelector("[data-playback-profile]").value,
+        summary: panel.querySelector("[data-performance-summary]").textContent,
+        mediaSame: root.querySelector(".media:not(.staged)") === videoMedia
+      };
+
+      await selectMedia(
+        "fixture-scene",
+        () => Boolean(root.querySelector(".media:not(.staged) .scene-host.ready"))
+      );
+      const sceneFpsFromProfile = globalThis.__t05SceneFps;
+      const fps = panel.querySelector("[data-setting='fps']");
+      fps.value = "30";
+      fps.dispatchEvent(new Event("input", { bubbles: true }));
+      fps.dispatchEvent(new Event("change", { bubbles: true }));
+      const custom = {
+        profile: panel.querySelector("[data-playback-profile]").value,
+        fps: fps.value,
+        sceneFps: globalThis.__t05SceneFps,
+        summary: panel.querySelector("[data-performance-summary]").textContent
+      };
+
+      globalThis.__t05ScenePaused = false;
+      globalThis.__t05SceneResumed = false;
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden"
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "visible"
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      const pauseEnabled = {
+        paused: globalThis.__t05ScenePaused,
+        resumed: globalThis.__t05SceneResumed
+      };
+
+      const hiddenPause = panel.querySelector("[data-setting='pauseWhenHidden']");
+      hiddenPause.click();
+      globalThis.__t05ScenePaused = false;
+      globalThis.__t05SceneResumed = false;
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden"
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "visible"
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      const pauseDisabled = {
+        paused: globalThis.__t05ScenePaused,
+        resumed: globalThis.__t05SceneResumed
+      };
+
+      await selectMedia(
+        "fixture-image",
+        () => Boolean(root.querySelector(".media:not(.staged) img"))
+      );
+      const imageCapability = {
+        fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        text: panel.querySelector("[data-playback-capability]").textContent
+      };
+
+      await selectMedia(
+        "fixture-web",
+        () => Boolean(root.querySelector(".media:not(.staged) iframe"))
+      );
+      const webCapability =
+        panel.querySelector("[data-playback-capability]").textContent;
+
+      await selectMedia(
+        "fixture-image",
+        () => Boolean(root.querySelector(".media:not(.staged) img"))
+      );
+      const syncedMedia = root.querySelector(".media:not(.staged)");
+      const previous = localStorage.getItem("codex-wallpaper-p1-config");
+      const next = JSON.stringify({
+        ...JSON.parse(previous),
+        settings: {
+          ...JSON.parse(previous).settings,
+          fps: 15,
+          volume: 35,
+          muted: false,
+          performanceProfile: "performance",
+          pauseWhenHidden: true
+        }
+      });
+      localStorage.setItem("codex-wallpaper-p1-config", next);
+      dispatchEvent(
+        new StorageEvent("storage", {
+          key: "codex-wallpaper-p1-config",
+          oldValue: previous,
+          newValue: next,
+          storageArea: localStorage
+        })
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      const crossWindow = {
+        mediaSame: root.querySelector(".media:not(.staged)") === syncedMedia,
+        profile: panel.querySelector("[data-playback-profile]").value,
+        volume: panel.querySelector("[data-setting='volume']").value,
+        muted: panel.querySelector("[data-setting='muted']").checked,
+        pauseWhenHidden: panel.querySelector(
+          "[data-setting='pauseWhenHidden']"
+        ).checked
+      };
+
+      panel.querySelector("header button").click();
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const saved = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      ).settings;
+      const reopened = {
+        profile: panel.querySelector("[data-playback-profile]").value,
+        fps: panel.querySelector("[data-setting='fps']")?.value ?? null,
+        volume: panel.querySelector("[data-setting='volume']").value,
+        saved: {
+          fps: saved.fps,
+          volume: saved.volume,
+          muted: saved.muted,
+          performanceProfile: saved.performanceProfile,
+          pauseWhenHidden: saved.pauseWhenHidden
+        }
+      };
+      return {
+        initial,
+        videoControls,
+        priority,
+        sceneFpsFromProfile,
+        custom,
+        pauseEnabled,
+        pauseDisabled,
+        imageCapability,
+        webCapability,
+        crossWindow,
+        reopened
+      };
+    })()`,
+    options
+  );
+
+  assert.deepEqual(result, {
+    initial: {
+      profile: "balanced",
+      summary: "参数：Scene 上限 30 FPS · 不可见时暂停",
+      capability: "图片稳定显示后不持续绘制；帧率不适用。",
+      fpsControl: false,
+    },
+    videoControls: {
+      volume: 0.45,
+      muted: false,
+      unmutedByVolume: true,
+      muteRoundTrip: true,
+      fpsControl: false,
+      capability:
+        "视频按源文件解码并直接合成；性能档限制 Scene 上限，不伪造视频绘制帧率。",
+    },
+    priority: {
+      stateFps: 15,
+      profile: "performance",
+      summary: "参数：Scene 上限 15 FPS · 不可见时暂停",
+      mediaSame: true,
+    },
+    sceneFpsFromProfile: 15,
+    custom: {
+      profile: "custom",
+      fps: "30",
+      sceneFps: 30,
+      summary: "参数：Scene 上限 30 FPS · 不可见时暂停",
+    },
+    pauseEnabled: { paused: true, resumed: true },
+    pauseDisabled: { paused: false, resumed: true },
+    imageCapability: {
+      fpsControl: false,
+      text: "图片稳定显示后不持续绘制；帧率不适用。",
+    },
+    webCapability: "Web iframe 内部帧率和暂停无法由父页面可靠控制。",
+    crossWindow: {
+      mediaSame: true,
+      profile: "performance",
+      volume: "35",
+      muted: false,
+      pauseWhenHidden: true,
+    },
+    reopened: {
+      profile: "performance",
+      fps: null,
+      volume: "35",
+      saved: {
+        fps: 15,
+        volume: 35,
+        muted: false,
+        performanceProfile: "performance",
+        pauseWhenHidden: true,
+      },
+    },
   });
 });
 
@@ -3329,15 +3704,33 @@ test("static background is single, removable and persists disabled", async (t) =
         for (const [input, value] of [
           [controls.querySelector("[data-setting='dim']"), "42"],
           [controls.querySelector("[data-setting='blur']"), "6"],
-          [controls.querySelector("[data-setting='opacity']"), "73"],
-          [controls.querySelector("[data-setting='fps']"), "15"]
+          [controls.querySelector("[data-setting='opacity']"), "73"]
         ]) {
           input.value = value;
           input.dispatchEvent(new Event("input", { bubbles: true }));
         }
-        controls
-          .querySelector("[data-setting='fps']")
-          .dispatchEvent(new Event("change", { bubbles: true }));
+        [...controls.querySelectorAll(".card")]
+          .find(
+            (item) =>
+              item.querySelector("strong")?.textContent === "Fixture Scene"
+          )
+          .querySelector(".card-actions button")
+          .click();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          if (controls.querySelector("[data-setting='fps']")) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const fps = controls.querySelector("[data-setting='fps']");
+        fps.value = "15";
+        fps.dispatchEvent(new Event("input", { bubbles: true }));
+        fps.dispatchEvent(new Event("change", { bubbles: true }));
+        [...controls.querySelectorAll(".card")]
+          .find(
+            (item) =>
+              item.querySelector("strong")?.textContent === "Fixture Image"
+          )
+          .querySelector(".card-actions button")
+          .click();
         for (let attempt = 0; attempt < 40; attempt += 1) {
           const image = document.querySelector(
             "#${rootId} .media:not(.staged) img"
@@ -3377,7 +3770,10 @@ test("static background is single, removable and persists disabled", async (t) =
         opacity: 73,
         fps: 15,
         volume: 0,
+        muted: true,
         rotationMinutes: 0,
+        performanceProfile: "custom",
+        pauseWhenHidden: true,
       },
       selectedCard: "true",
       selectedActions: ["true", "false", "false"],
@@ -3507,7 +3903,10 @@ test("static background is single, removable and persists disabled", async (t) =
         opacity: 73,
         fps: 15,
         volume: 0,
+        muted: true,
         rotationMinutes: 0,
+        performanceProfile: "custom",
+        pauseWhenHidden: true,
       },
       roots: 0,
     }
@@ -3568,7 +3967,6 @@ test("static background is single, removable and persists disabled", async (t) =
       opacity: "0.73",
       filter: "blur(6px)",
       settingsInputs: {
-        fps: 15,
         volume: 0,
         rotationMinutes: 0,
         dim: 42,

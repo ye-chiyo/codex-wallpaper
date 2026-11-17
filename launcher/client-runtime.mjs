@@ -80,6 +80,11 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 7px; }
       #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
       #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
+      #${controlsId} .profile-control { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 7px; }
+      #${controlsId} .profile-control select { min-width: 0; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 6px 7px; font: inherit; }
+      #${controlsId} .setting-toggle { display: flex; align-items: center; gap: 7px; min-height: 28px; }
+      #${controlsId} .playback-capability { margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 64%, transparent); font-size: 11px; }
+      #${controlsId} .profile-control select:focus-visible, #${controlsId} .setting-toggle input:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
       #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
       @media (max-width: 520px) {
         #${controlsId} .panel { width: min(340px, calc(100vw - 16px)); max-height: min(82vh, calc(100% - 10px)); }
@@ -214,6 +219,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   const configKey = "codex-wallpaper-p1-config";
   const dbName = "codex-wallpaper-media";
   const dbStore = "media";
+  const performanceProfiles = {
+    performance: { fps: 15, pauseWhenHidden: true },
+    balanced: { fps: 30, pauseWhenHidden: true },
+  };
 
   const defaults = {
     enabled: true,
@@ -226,13 +235,30 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       opacity: 100,
       fps: 30,
       volume: 0,
+      muted: true,
       rotationMinutes: 0,
+      performanceProfile: "balanced",
+      pauseWhenHidden: true,
     },
   };
 
   function readConfig() {
     try {
       const value = JSON.parse(localStorage.getItem(configKey) || "null");
+      const settings = {
+        ...defaults.settings,
+        ...(value?.settings || {}),
+      };
+      if (typeof value?.settings?.muted !== "boolean")
+        settings.muted = !(Number(settings.volume) > 0);
+      if (
+        value?.settings &&
+        typeof value.settings.performanceProfile !== "string"
+      )
+        settings.performanceProfile =
+          Number(settings.fps) === performanceProfiles.balanced.fps
+            ? "balanced"
+            : "custom";
       return {
         ...defaults,
         ...(value && typeof value === "object" ? value : {}),
@@ -242,7 +268,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
             : defaults.active,
         favorites: Array.isArray(value?.favorites) ? value.favorites : [],
         playlist: Array.isArray(value?.playlist) ? value.playlist : [],
-        settings: { ...defaults.settings, ...(value?.settings || {}) },
+        settings,
       };
     } catch {
       return structuredClone(defaults);
@@ -321,8 +347,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       appearance: ["dim", "blur", "opacity"].some(
         (key) => previous.settings[key] !== next.settings[key]
       ),
-      volume: previous.settings.volume !== next.settings.volume,
+      volume:
+        previous.settings.volume !== next.settings.volume ||
+        previous.settings.muted !== next.settings.muted,
       fps: previous.settings.fps !== next.settings.fps,
+      profile:
+        previous.settings.performanceProfile !==
+        next.settings.performanceProfile,
+      pauseWhenHidden:
+        previous.settings.pauseWhenHidden !== next.settings.pauseWhenHidden,
       rotation:
         previous.settings.rotationMinutes !== next.settings.rotationMinutes,
     };
@@ -496,6 +529,35 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     rotationTimer = null;
   }
 
+  function activeMediaType() {
+    if (config.active.kind === "builtin") return "builtin";
+    return findEntry(config.active)?.type || "missing";
+  }
+
+  function effectiveVolume() {
+    return config.settings.muted
+      ? 0
+      : Math.max(0, Math.min(1, Number(config.settings.volume) / 100));
+  }
+
+  function performanceSummary() {
+    return `参数：Scene 上限 ${config.settings.fps} FPS · ${
+      config.settings.pauseWhenHidden ? "不可见时暂停" : "不可见时不暂停"
+    }`;
+  }
+
+  function playbackCapabilityText() {
+    const type = activeMediaType();
+    if (type === "image") return "图片稳定显示后不持续绘制；帧率不适用。";
+    if (type === "video")
+      return "视频按源文件解码并直接合成；性能档限制 Scene 上限，不伪造视频绘制帧率。";
+    if (type === "scene")
+      return "Scene 使用现有渲染器的 15/30 FPS 上限；不提供未验证的画质档。";
+    if (type === "web")
+      return "Web iframe 内部帧率和暂停无法由父页面可靠控制。";
+    return "内置渐变没有媒体解码或帧率。";
+  }
+
   function applyVisualSettings() {
     if (!layer || !media || !dim) return;
     layer.style.opacity = String(config.settings.opacity / 100);
@@ -506,13 +568,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   function applyPlaybackSettings(change) {
-    const volume = Number(config.settings.volume) / 100;
+    const volume = effectiveVolume();
     if (change.volume && playback?.video) {
       playback.video.muted = volume === 0;
       playback.video.volume = volume;
     }
     if (change.volume) playback?.setVolume?.(volume);
     if (change.fps) playback?.setFps?.(Number(config.settings.fps));
+  }
+
+  function applyHiddenPolicy() {
+    if (!playback) return;
+    if (
+      config.settings.pauseWhenHidden &&
+      document.visibilityState === "hidden"
+    ) {
+      playback.video?.pause();
+      playback.pause?.();
+      if (playback.raf) cancelAnimationFrame(playback.raf);
+      return;
+    }
+    playback.video?.play().catch(() => {});
+    playback.resume?.();
+    playback.start?.();
   }
 
   function syncSettingControls() {
@@ -525,6 +603,16 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       if (output)
         output.textContent = `${input.value}${output.dataset.unit || ""}`;
     }
+    for (const input of panel.querySelectorAll("[data-setting-toggle]")) {
+      const key = input.dataset.settingToggle;
+      input.checked = Boolean(config.settings[key]);
+    }
+    const profile = panel.querySelector("[data-playback-profile]");
+    if (profile) profile.value = config.settings.performanceProfile;
+    const summary = panel.querySelector("[data-performance-summary]");
+    if (summary) summary.textContent = performanceSummary();
+    const capability = panel.querySelector("[data-playback-capability]");
+    if (capability) capability.textContent = playbackCapabilityText();
   }
 
   function entryStatusText(entry) {
@@ -669,6 +757,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     }
     if (change.playlist) syncPlaylistSummary();
     syncSettingControls();
+    if (change.pauseWhenHidden) applyHiddenPolicy();
     if (change.rotation || change.playlist) scheduleRotation();
   }
 
@@ -777,11 +866,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     video.loop = true;
     video.playsInline = true;
     video.preload = "auto";
-    video.muted = Number(config.settings.volume) === 0;
-    video.volume = Math.max(
-      0,
-      Math.min(1, Number(config.settings.volume) || 0)
-    );
+    const volume = effectiveVolume();
+    video.muted = volume === 0;
+    video.volume = volume;
     next.append(video);
     let cancelled = false;
     let settled = false;
@@ -827,7 +914,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       finishPending(pending);
       current.cancelled = false;
       commitMedia(next, current, objectUrl);
-      if (document.visibilityState === "hidden") video.pause();
+      if (
+        config.settings.pauseWhenHidden &&
+        document.visibilityState === "hidden"
+      )
+        video.pause();
       if (message) setStatus(message);
     };
     const waitForPresentedFrame = () => {
@@ -842,7 +933,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       }
     };
     const drawLoadedFrame = () => {
-      if (document.visibilityState === "hidden") drawFirstFrame();
+      if (
+        config.settings.pauseWhenHidden &&
+        document.visibilityState === "hidden"
+      )
+        drawFirstFrame();
       else requestAnimationFrame(drawFirstFrame);
     };
     resume = () => {
@@ -870,7 +965,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
           pending.cancel();
           return;
         }
-        if (document.visibilityState === "hidden") {
+        if (
+          config.settings.pauseWhenHidden &&
+          document.visibilityState === "hidden"
+        ) {
           video.pause();
           if (video.readyState >= 2) drawLoadedFrame();
           else {
@@ -935,7 +1033,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     next.append(host);
     const instance = engine.createScene(host, {
       fps: Math.max(1, Math.min(30, Number(config.settings.fps) || 30)),
-      volume: Math.max(0, Math.min(1, Number(config.settings.volume) || 0)),
+      volume: effectiveVolume(),
       fit: "cover",
     });
     let cancelled = false;
@@ -989,7 +1087,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         finishPending(pending);
         host.classList.add("ready");
         commitMedia(next, current);
-        if (document.visibilityState === "hidden") instance.pause();
+        if (
+          config.settings.pauseWhenHidden &&
+          document.visibilityState === "hidden"
+        )
+          instance.pause();
         setStatus(`${entry.title} · Scene`);
       })
       .catch(fail);
@@ -1306,6 +1408,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     };
     input.oninput = () => {
       config.settings[key] = Number(input.value);
+      if (key === "volume" && Number(input.value) > 0)
+        config.settings.muted = false;
+      if (key === "fps") config.settings.performanceProfile = "custom";
       renderLabel();
       applyVisualSettings();
       applyPlaybackSettings({
@@ -1314,12 +1419,74 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       });
       if (key === "rotationMinutes") scheduleRotation();
       scheduleConfigSave(key);
+      if (key === "fps" || key === "volume") {
+        if (key === "fps") scheduleConfigSave("performanceProfile");
+        if (key === "volume") scheduleConfigSave("muted");
+        syncSettingControls();
+      }
     };
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
     heading.textContent = label;
     row.append(heading, value, input);
     renderLabel();
+    return row;
+  }
+
+  function settingToggle(label, key) {
+    const row = document.createElement("label");
+    row.className = "setting-toggle";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = Boolean(config.settings[key]);
+    input.dataset.setting = key;
+    input.dataset.settingToggle = key;
+    const text = document.createElement("span");
+    text.textContent = label;
+    input.onchange = () => {
+      config.settings[key] = input.checked;
+      if (key === "pauseWhenHidden")
+        config.settings.performanceProfile = "custom";
+      applyPlaybackSettings({ volume: key === "muted" });
+      if (key === "pauseWhenHidden") applyHiddenPolicy();
+      saveConfig();
+      syncSettingControls();
+    };
+    row.append(input, text);
+    return row;
+  }
+
+  function playbackProfileControl() {
+    const row = document.createElement("label");
+    row.className = "profile-control";
+    const label = document.createElement("span");
+    label.textContent = "性能档位";
+    const select = document.createElement("select");
+    select.dataset.playbackProfile = "";
+    for (const [value, text] of [
+      ["performance", "性能优先"],
+      ["balanced", "均衡"],
+      ["custom", "自定义"],
+    ]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = text;
+      select.append(option);
+    }
+    select.value = config.settings.performanceProfile;
+    select.onchange = () => {
+      if (performanceProfiles[select.value]) {
+        config.settings.performanceProfile = select.value;
+        config.settings.fps = performanceProfiles[select.value].fps;
+        config.settings.pauseWhenHidden =
+          performanceProfiles[select.value].pauseWhenHidden;
+        applyPlaybackSettings({ fps: true });
+        applyHiddenPolicy();
+        saveConfig();
+      }
+      syncSettingControls();
+    };
+    row.append(label, select);
     return row;
   }
 
@@ -1337,9 +1504,24 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     playlist.textContent = queued.length
       ? `轮播：${queued.map((entry) => entry.title).join(" · ")}`
       : "轮播列表为空";
+    const performance = document.createElement("p");
+    performance.className = "playlist-summary";
+    performance.dataset.performanceSummary = "";
+    performance.textContent = performanceSummary();
+    const capability = document.createElement("p");
+    capability.className = "playback-capability";
+    capability.dataset.playbackCapability = "";
+    capability.textContent = playbackCapabilityText();
     playbackSettings.replaceChildren(
-      range("帧率", "fps", 15, 30, 15, " FPS"),
+      playbackProfileControl(),
+      performance,
+      capability,
+      settingToggle("静音", "muted"),
       range("音量", "volume", 0, 100, 5, "%"),
+      ...(activeMediaType() === "scene"
+        ? [range("Scene 上限", "fps", 15, 30, 15, " FPS")]
+        : []),
+      settingToggle("不可见时暂停", "pauseWhenHidden"),
       range("轮播", "rotationMinutes", 0, 120, 5, " 分钟")
     );
     appearanceSettings.replaceChildren(
@@ -1796,6 +1978,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   function syncVisibility() {
     if (document.visibilityState === "hidden") {
       flushConfigSave();
+      if (!config.settings.pauseWhenHidden) return;
       playback?.video?.pause();
       playback?.pause?.();
       if (playback?.raf) cancelAnimationFrame(playback.raf);
