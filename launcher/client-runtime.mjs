@@ -34,7 +34,7 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
       #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
       #${controlsId} .panel {
-        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); backdrop-filter: var(--codex-wallpaper-interface-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
         overscroll-behavior: contain;
         scrollbar-gutter: stable;
         position-anchor: --codex-wallpaper-toolbar;
@@ -85,6 +85,11 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .setting-toggle { display: flex; align-items: center; gap: 7px; min-height: 28px; }
       #${controlsId} .playback-capability { margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 64%, transparent); font-size: 11px; }
       #${controlsId} .profile-control select:focus-visible, #${controlsId} .setting-toggle input:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
+      #${controlsId} .surface-override { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .surface-override:last-child { border-bottom: 0; }
+      #${controlsId} .surface-override-controls { display: grid; grid-template-columns: minmax(0, 1fr) 42px auto; align-items: center; gap: 7px; }
+      #${controlsId} .surface-override-controls output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
+      #${controlsId} .surface-override-controls button { padding: 5px 7px; font-size: 10px; }
       #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
       @media (max-width: 520px) {
         #${controlsId} .panel { width: min(340px, calc(100vw - 16px)); max-height: min(82vh, calc(100% - 10px)); }
@@ -93,10 +98,16 @@ function createRuntimeStyles(rootId, controlsId) {
         #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
       }
       :root {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 72%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 18%, transparent);
+        --codex-wallpaper-surface-opacity: 72%;
+        --codex-wallpaper-chat-opacity: 18%;
+        --codex-wallpaper-sidebar-opacity: 72%;
+        --codex-wallpaper-right-opacity: 72%;
+        --codex-wallpaper-settings-opacity: 94%;
+        --codex-wallpaper-interface-blur: none;
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-surface-opacity), transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-chat-opacity), transparent);
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
-        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 94%, transparent);
+        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) var(--codex-wallpaper-settings-opacity), transparent);
         --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 64%, transparent);
         --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 42%, transparent);
         --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
@@ -107,16 +118,15 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
       }
       html[data-theme='light'] {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 80%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 12%, transparent);
         --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(232 232 237)) 72%, transparent);
         --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(247 247 249)) 62%, transparent);
       }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: var(--codex-wallpaper-frame) !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
         &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
       }
       body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
-      body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-page-sidebar], body [data-app-shell-titlebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-sidebar-opacity), transparent) !important; }
+      body [data-app-shell-pane-content-viewport], body [data-app-shell-trailing-sidebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-right-opacity), transparent) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
       body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
         background-color: transparent !important;
@@ -128,7 +138,6 @@ function createRuntimeStyles(rootId, controlsId) {
         box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      body [data-app-shell-trailing-sidebar] { background-color: transparent !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
@@ -233,6 +242,16 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       dim: 18,
       blur: 0,
       opacity: 100,
+      fitMode: "cover",
+      surfaceOpacity: 72,
+      interfaceBlur: 0,
+      interfaceBorders: true,
+      surfaceOverrides: {
+        chat: null,
+        sidebar: null,
+        right: null,
+        settings: null,
+      },
       fps: 30,
       volume: 0,
       muted: true,
@@ -248,6 +267,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       const settings = {
         ...defaults.settings,
         ...(value?.settings || {}),
+        surfaceOverrides: {
+          ...defaults.settings.surfaceOverrides,
+          ...(value?.settings?.surfaceOverrides || {}),
+        },
       };
       if (typeof value?.settings?.muted !== "boolean")
         settings.muted = !(Number(settings.volume) > 0);
@@ -344,9 +367,20 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       identity: !valuesEqual(previous.active, next.active),
       favorites: !valuesEqual(previous.favorites, next.favorites),
       playlist: !valuesEqual(previous.playlist, next.playlist),
-      appearance: ["dim", "blur", "opacity"].some(
-        (key) => previous.settings[key] !== next.settings[key]
-      ),
+      appearance:
+        [
+          "dim",
+          "blur",
+          "opacity",
+          "fitMode",
+          "surfaceOpacity",
+          "interfaceBlur",
+          "interfaceBorders",
+        ].some((key) => previous.settings[key] !== next.settings[key]) ||
+        !valuesEqual(
+          previous.settings.surfaceOverrides,
+          next.settings.surfaceOverrides
+        ),
       volume:
         previous.settings.volume !== next.settings.volume ||
         previous.settings.muted !== next.settings.muted,
@@ -572,13 +606,78 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     return "内置渐变没有媒体解码或帧率。";
   }
 
+  function hasSurfaceOverride(scope) {
+    const value = config.settings.surfaceOverrides?.[scope];
+    return (
+      value !== null && value !== undefined && Number.isFinite(Number(value))
+    );
+  }
+
+  function surfaceOpacityValue(scope) {
+    const globalOpacity = Math.max(
+      20,
+      Math.min(100, Number(config.settings.surfaceOpacity) || 72)
+    );
+    const overrides = config.settings.surfaceOverrides || {};
+    if (hasSurfaceOverride(scope))
+      return Math.max(0, Math.min(100, Number(overrides[scope])));
+    const factor = { chat: 0.25, sidebar: 1, right: 0, settings: 1.3 }[scope];
+    return Math.min(100, Math.round(globalOpacity * (factor ?? 1)));
+  }
+
+  function applyInterfaceAppearance() {
+    const style = document.documentElement.style;
+    const globalOpacity = Math.max(
+      20,
+      Math.min(100, Number(config.settings.surfaceOpacity) || 72)
+    );
+    style.setProperty("--codex-wallpaper-surface-opacity", `${globalOpacity}%`);
+    style.setProperty(
+      "--codex-wallpaper-chat-opacity",
+      `${surfaceOpacityValue("chat")}%`
+    );
+    style.setProperty(
+      "--codex-wallpaper-sidebar-opacity",
+      `${surfaceOpacityValue("sidebar")}%`
+    );
+    style.setProperty(
+      "--codex-wallpaper-right-opacity",
+      `${surfaceOpacityValue("right")}%`
+    );
+    style.setProperty(
+      "--codex-wallpaper-settings-opacity",
+      `${surfaceOpacityValue("settings")}%`
+    );
+    const blur = Math.max(
+      0,
+      Math.min(24, Number(config.settings.interfaceBlur) || 0)
+    );
+    style.setProperty(
+      "--codex-wallpaper-interface-blur",
+      blur > 0 ? `blur(${blur}px)` : "none"
+    );
+    if (config.settings.interfaceBorders) {
+      style.removeProperty("--codex-wallpaper-line");
+      style.removeProperty("--codex-wallpaper-line-strong");
+    } else {
+      style.setProperty("--codex-wallpaper-line", "transparent");
+      style.setProperty("--codex-wallpaper-line-strong", "transparent");
+    }
+  }
+
   function applyVisualSettings() {
+    applyInterfaceAppearance();
     if (!layer || !media || !dim) return;
     layer.style.opacity = String(config.settings.opacity / 100);
     media.style.filter = config.settings.blur
       ? `blur(${config.settings.blur}px)`
       : "";
     dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
+    const fit = config.settings.fitMode === "contain" ? "contain" : "cover";
+    media.dataset.fit = fit;
+    for (const element of media.querySelectorAll("img, video, canvas"))
+      element.style.objectFit = fit;
+    playback?.setFit?.(fit);
   }
 
   function applyPlaybackSettings(change) {
@@ -620,6 +719,28 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     for (const input of panel.querySelectorAll("[data-setting-toggle]")) {
       const key = input.dataset.settingToggle;
       input.checked = Boolean(config.settings[key]);
+    }
+    for (const select of panel.querySelectorAll("[data-setting-select]")) {
+      const key = select.dataset.settingSelect;
+      select.value = config.settings[key];
+    }
+    for (const override of panel.querySelectorAll("[data-surface-override]")) {
+      const scope = override.dataset.surfaceOverride;
+      const enabled = hasSurfaceOverride(scope);
+      override.checked = enabled;
+      const input = panel.querySelector(
+        `[data-surface-override-value="${scope}"]`
+      );
+      const restore = panel.querySelector(`[data-restore-surface="${scope}"]`);
+      if (input) {
+        input.disabled = !enabled;
+        input.value = String(surfaceOpacityValue(scope));
+        const output = input
+          .closest(".surface-override-controls")
+          ?.querySelector("output");
+        if (output) output.textContent = `${input.value}%`;
+      }
+      if (restore) restore.disabled = !enabled;
     }
     const profile = panel.querySelector("[data-playback-profile]");
     if (profile) profile.value = config.settings.performanceProfile;
@@ -1050,7 +1171,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const instance = engine.createScene(host, {
       fps: Math.max(1, Math.min(30, Number(config.settings.fps) || 30)),
       volume: effectiveVolume(),
-      fit: "cover",
+      fit: config.settings.fitMode === "contain" ? "contain" : "cover",
     });
     let cancelled = false;
     let settled = false;
@@ -1061,6 +1182,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       resume: () => instance.resume(),
       setFps: (fps) => instance.setFps?.(fps),
       setVolume: (volume) => instance.setVolume?.(volume),
+      setFit: (fit) => instance.setFit?.(fit),
     };
     const pending = trackPending(() => {
       if (cancelled) return;
@@ -1467,10 +1589,41 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         config.settings.performanceProfile = "custom";
       applyPlaybackSettings({ volume: key === "muted" });
       if (key === "pauseWhenHidden") applyHiddenPolicy();
+      if (key === "interfaceBorders") applyVisualSettings();
       saveConfig();
       syncSettingControls();
     };
     row.append(input, text);
+    return row;
+  }
+
+  function settingSelect(
+    label,
+    key,
+    options,
+    { disabled = false, hint = "" } = {}
+  ) {
+    const row = document.createElement("label");
+    row.className = "profile-control";
+    const text = document.createElement("span");
+    text.textContent = hint ? `${label}（${hint}）` : label;
+    const select = document.createElement("select");
+    select.dataset.setting = key;
+    select.dataset.settingSelect = key;
+    select.disabled = disabled;
+    for (const [value, labelText] of options) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = labelText;
+      select.append(option);
+    }
+    select.value = config.settings[key];
+    select.onchange = () => {
+      config.settings[key] = select.value;
+      applyVisualSettings();
+      saveConfig();
+    };
+    row.append(text, select);
     return row;
   }
 
@@ -1505,6 +1658,72 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       syncSettingControls();
     };
     row.append(label, select);
+    return row;
+  }
+
+  function surfaceOverrideControl(label, scope) {
+    const row = document.createElement("div");
+    row.className = "surface-override";
+    const top = document.createElement("label");
+    top.className = "setting-toggle";
+    const override = document.createElement("input");
+    override.type = "checkbox";
+    override.dataset.surfaceOverride = scope;
+    override.checked = hasSurfaceOverride(scope);
+    const text = document.createElement("span");
+    text.textContent = label;
+    top.append(override, text);
+
+    const controls = document.createElement("div");
+    controls.className = "surface-override-controls";
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = "0";
+    input.max = "100";
+    input.step = "1";
+    input.dataset.surfaceOverrideValue = scope;
+    input.disabled = !override.checked;
+    input.value = String(surfaceOpacityValue(scope));
+    const output = document.createElement("output");
+    output.textContent = `${input.value}%`;
+    const restore = document.createElement("button");
+    restore.type = "button";
+    restore.dataset.restoreSurface = scope;
+    restore.textContent = "恢复继承";
+    restore.disabled = !override.checked;
+
+    const sync = () => {
+      const enabled = override.checked;
+      input.disabled = !enabled;
+      restore.disabled = !enabled;
+      input.value = String(surfaceOpacityValue(scope));
+      output.textContent = `${input.value}%`;
+    };
+    override.onchange = () => {
+      config.settings.surfaceOverrides[scope] = override.checked
+        ? surfaceOpacityValue(scope)
+        : null;
+      applyInterfaceAppearance();
+      saveConfig();
+      sync();
+    };
+    input.oninput = () => {
+      config.settings.surfaceOverrides[scope] = Number(input.value);
+      output.textContent = `${input.value}%`;
+      applyInterfaceAppearance();
+      scheduleConfigSave("surfaceOverrides");
+    };
+    input.onchange = flushConfigSave;
+    input.onblur = flushConfigSave;
+    restore.onclick = () => {
+      override.checked = false;
+      config.settings.surfaceOverrides[scope] = null;
+      applyInterfaceAppearance();
+      saveConfig();
+      sync();
+    };
+    controls.append(input, output, restore);
+    row.append(top, controls);
     return row;
   }
 
@@ -1552,10 +1771,26 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       }),
       range("轮播", "rotationMinutes", 0, 120, 5, " 分钟")
     );
+    const type = activeMediaType();
     appearanceSettings.replaceChildren(
       range("暗化", "dim", 0, 70, 1, "%"),
       range("模糊", "blur", 0, 24, 1, "px"),
-      range("不透明度", "opacity", 20, 100, 1, "%")
+      range("不透明度", "opacity", 20, 100, 1, "%"),
+      ...(["image", "video"].includes(type)
+        ? [
+            settingSelect("画面适配", "fitMode", [
+              ["cover", "保持比例填充"],
+              ["contain", "完整显示"],
+            ]),
+          ]
+        : []),
+      range("界面读底", "surfaceOpacity", 20, 100, 1, "%"),
+      range("界面雾化", "interfaceBlur", 0, 24, 1, "px"),
+      settingToggle("细边框", "interfaceBorders"),
+      surfaceOverrideControl("聊天区覆盖", "chat"),
+      surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
+      surfaceOverrideControl("右侧面板覆盖", "right"),
+      surfaceOverrideControl("设置面板覆盖", "settings")
     );
     if (config.active.kind === "builtin") setStatus("内置渐变");
     else renderRuntimeStatus();
@@ -1945,6 +2180,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     controls.append(toolbar, buildPanel());
     document.documentElement.append(style, root, controls);
     root.append(layer);
+    applyInterfaceAppearance();
   }
 
   async function enable() {

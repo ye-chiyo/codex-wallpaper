@@ -2153,6 +2153,299 @@ test("playback profiles and capability controls apply without replacing media", 
   });
 });
 
+test("appearance controls update wallpaper and surface layers without reloading media", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const image =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: image,
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 0,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  const first = await evaluateInPage(
+    port,
+    `(async () => {
+      const controls = document.getElementById("${controlRootId}");
+      const root = document.getElementById("${rootId}");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      panel.querySelector("[data-panel-region='appearance']").open = true;
+      const media = root.querySelector(".media:not(.staged)");
+      const image = media.querySelector("img");
+      const setRange = (name, value) => {
+        const input = panel.querySelector(\`[data-setting="\${name}"]\`);
+        input.value = value;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      setRange("dim", "35");
+      setRange("blur", "7");
+      setRange("opacity", "80");
+
+      const fit = panel.querySelector("[data-setting='fitMode']");
+      const fitAvailable = Boolean(fit);
+      fit.value = "contain";
+      fit.dispatchEvent(new Event("change", { bubbles: true }));
+      const fitResult = {
+        fit: fit.value,
+        objectFit: getComputedStyle(image).objectFit,
+        mediaSame: root.querySelector(".media:not(.staged)") === media
+      };
+
+      setRange("surfaceOpacity", "55");
+      const globalSurface = document.documentElement.style.getPropertyValue(
+        "--codex-wallpaper-surface-opacity"
+      );
+      const inheritedChat = document.documentElement.style.getPropertyValue(
+        "--codex-wallpaper-chat-opacity"
+      );
+      const inheritedSidebar =
+        document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-sidebar-opacity"
+        );
+      setRange("interfaceBlur", "8");
+      const blur = {
+        variable: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-interface-blur"
+        ),
+        computed: getComputedStyle(
+          document.querySelector("[data-app-shell-main-surface]")
+        ).backdropFilter
+      };
+
+      const borders = panel.querySelector(
+        "[data-setting-toggle='interfaceBorders']"
+      );
+      borders.click();
+      const bordersOff =
+        document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-line"
+        ) === "transparent";
+
+      const chatOverride = panel.querySelector(
+        "[data-surface-override='chat']"
+      );
+      chatOverride.click();
+      const chatRange = panel.querySelector(
+        "[data-surface-override-value='chat']"
+      );
+      chatRange.value = "30";
+      chatRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const override = {
+        enabled: chatOverride.checked,
+        rangeEnabled: !chatRange.disabled,
+        value: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-chat-opacity"
+        )
+      };
+      panel.querySelector("[data-restore-surface='chat']").click();
+      const restored = {
+        enabled: chatOverride.checked,
+        value: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-chat-opacity"
+        )
+      };
+
+      document.documentElement.dataset.theme = "light";
+      const lightBackground = getComputedStyle(
+        document.querySelector("[data-app-shell-main-surface]")
+      ).backgroundColor;
+      const lightAlpha = Number(
+        lightBackground.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1]
+      );
+      document.documentElement.dataset.theme = "dark";
+
+      panel.querySelector("header button").click();
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const reopened = {
+        fit: panel.querySelector("[data-setting='fitMode']").value,
+        surface:
+          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        blur: panel.querySelector("[data-setting='interfaceBlur']").value,
+        borders: panel.querySelector(
+          "[data-setting-toggle='interfaceBorders']"
+        ).checked,
+        overrideEnabled: panel.querySelector(
+          "[data-surface-override='chat']"
+        ).checked,
+        mediaSame: root.querySelector(".media:not(.staged)") === media
+      };
+
+      const previous = localStorage.getItem("codex-wallpaper-p1-config");
+      const next = JSON.stringify({
+        ...JSON.parse(previous),
+        settings: {
+          ...JSON.parse(previous).settings,
+          fitMode: "contain",
+          surfaceOpacity: 60,
+          interfaceBlur: 4,
+          interfaceBorders: true,
+          surfaceOverrides: { chat: null, sidebar: null, right: null, settings: 70 }
+        }
+      });
+      localStorage.setItem("codex-wallpaper-p1-config", next);
+      const syncedMedia = root.querySelector(".media:not(.staged)");
+      dispatchEvent(
+        new StorageEvent("storage", {
+          key: "codex-wallpaper-p1-config",
+          oldValue: previous,
+          newValue: next,
+          storageArea: localStorage
+        })
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      const crossWindow = {
+        mediaSame: root.querySelector(".media:not(.staged)") === syncedMedia,
+        surface:
+          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        fit: panel.querySelector("[data-setting='fitMode']").value,
+        settingsOverride: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-settings-opacity"
+        )
+      };
+
+      return {
+        mediaSame:
+          root.querySelector(".media:not(.staged) img") === image,
+        dim: root.querySelector(
+          "[data-codex-wallpaper-layer] .dim"
+        ).style.background,
+        filter: media.style.filter,
+        opacity:
+          root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
+        fitAvailable,
+        fitResult,
+        globalSurface,
+        inheritedChat,
+        inheritedSidebar,
+        blur,
+        bordersOff,
+        override,
+        restored,
+        lightSurfaceTranslucent: lightAlpha > 0 && lightAlpha < 1,
+        reopened,
+        crossWindow
+      };
+    })()`,
+    options
+  );
+
+  assert.deepEqual(first, {
+    mediaSame: true,
+    dim: "rgba(4, 6, 15, 0.35)",
+    filter: "blur(7px)",
+    opacity: "0.8",
+    fitAvailable: true,
+    fitResult: {
+      fit: "contain",
+      objectFit: "contain",
+      mediaSame: true,
+    },
+    globalSurface: "55%",
+    inheritedChat: "14%",
+    inheritedSidebar: "55%",
+    blur: {
+      variable: "blur(8px)",
+      computed: "blur(8px)",
+    },
+    bordersOff: true,
+    override: {
+      enabled: true,
+      rangeEnabled: true,
+      value: "30%",
+    },
+    restored: {
+      enabled: false,
+      value: "14%",
+    },
+    lightSurfaceTranslucent: true,
+    reopened: {
+      fit: "contain",
+      surface: "55",
+      blur: "8",
+      borders: false,
+      overrideEnabled: false,
+      mediaSame: true,
+    },
+    crossWindow: {
+      mediaSame: true,
+      surface: "60",
+      fit: "contain",
+      settingsOverride: "70%",
+    },
+  });
+
+  const second = await evaluateInPage(
+    port,
+    `(async () => {
+      await globalThis.__codexWallpaperApi.disable();
+      await globalThis.__codexWallpaperApi.enable();
+      const root = document.getElementById("${rootId}");
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const image = root?.querySelector(".media:not(.staged) img");
+        if (image?.complete && image.naturalWidth > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const controls = document.getElementById("${controlRootId}");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      return {
+        state: globalThis.__codexWallpaperApi.state().state,
+        fit: getComputedStyle(root.querySelector(".media img")).objectFit,
+        surface:
+          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        settingsOverride: document.documentElement.style.getPropertyValue(
+          "--codex-wallpaper-settings-opacity"
+        )
+      };
+    })()`,
+    options
+  );
+  assert.deepEqual(second, {
+    state: "enabled",
+    fit: "contain",
+    surface: "60",
+    settingsOverride: "70%",
+  });
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -3791,6 +4084,16 @@ test("static background is single, removable and persists disabled", async (t) =
         dim: 42,
         blur: 6,
         opacity: 73,
+        fitMode: "cover",
+        surfaceOpacity: 72,
+        interfaceBlur: 0,
+        interfaceBorders: true,
+        surfaceOverrides: {
+          chat: null,
+          sidebar: null,
+          right: null,
+          settings: null,
+        },
         fps: 15,
         volume: 0,
         muted: true,
@@ -3818,10 +4121,12 @@ test("static background is single, removable and persists disabled", async (t) =
           "[data-thread-find-target='review']"
         );
         const titlebar = document.querySelector("[data-app-shell-titlebar]");
+        const panelBackground = getComputedStyle(sidebar).backgroundColor;
         const opened = {
           titlebarRemainsFixed: getComputedStyle(titlebar).position === "fixed",
           panel: !sidebar.hidden,
-          panelAlpha: getComputedStyle(sidebar).backgroundColor,
+          panelKeepsWallpaper:
+            panelBackground.includes("/ 0)") || panelBackground.endsWith("0, 0)"),
           reviewAlpha: getComputedStyle(review).backgroundColor,
           code: review.querySelector("code")?.textContent,
           wallpaperLayers: document.querySelectorAll(
@@ -3838,7 +4143,7 @@ test("static background is single, removable and persists disabled", async (t) =
     {
       titlebarRemainsFixed: true,
       panel: true,
-      panelAlpha: "rgba(0, 0, 0, 0)",
+      panelKeepsWallpaper: true,
       reviewAlpha: "rgba(0, 0, 0, 0)",
       code: "const visible = true;",
       wallpaperLayers: 1,
@@ -3924,6 +4229,16 @@ test("static background is single, removable and persists disabled", async (t) =
         dim: 42,
         blur: 6,
         opacity: 73,
+        fitMode: "cover",
+        surfaceOpacity: 72,
+        interfaceBlur: 0,
+        interfaceBorders: true,
+        surfaceOverrides: {
+          chat: null,
+          sidebar: null,
+          right: null,
+          settings: null,
+        },
         fps: 15,
         volume: 0,
         muted: true,
@@ -3972,7 +4287,7 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 25,
+        controls: 29,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-image",
@@ -3995,6 +4310,8 @@ test("static background is single, removable and persists disabled", async (t) =
         dim: 42,
         blur: 6,
         opacity: 73,
+        surfaceOpacity: 72,
+        interfaceBlur: 0,
       },
       savedActive: { kind: "workshop", id: "fixture-image" },
       savedEnabled: true,
@@ -4115,7 +4432,7 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 25,
+        controls: 29,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-on-demand",
