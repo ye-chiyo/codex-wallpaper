@@ -2736,14 +2736,35 @@ test("settings presets import export migration and scoped resets form a complete
 
       dim.value = "50";
       dim.dispatchEvent(new Event("input", { bubbles: true }));
+      const beforeRemoteEdit = localStorage.getItem(
+        "codex-wallpaper-p1-config"
+      );
+      const remoteDuringEdit = JSON.stringify({
+        ...JSON.parse(beforeRemoteEdit),
+        activePresetId: "night",
+        settings: {
+          ...JSON.parse(beforeRemoteEdit).settings,
+          dim: 33,
+          performanceProfile: "custom"
+        }
+      });
+      localStorage.setItem("codex-wallpaper-p1-config", remoteDuringEdit);
+      dispatchEvent(
+        new StorageEvent("storage", {
+          key: "codex-wallpaper-p1-config",
+          oldValue: beforeRemoteEdit,
+          newValue: remoteDuringEdit,
+          storageArea: localStorage
+        })
+      );
       await new Promise((resolve) => setTimeout(resolve, 120));
+      const afterRemoteEdit = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
       const customAfterEdit = {
-        activePresetId: JSON.parse(
-          localStorage.getItem("codex-wallpaper-p1-config")
-        ).activePresetId,
-        profile: JSON.parse(
-          localStorage.getItem("codex-wallpaper-p1-config")
-        ).settings.performanceProfile
+        dim: afterRemoteEdit.settings.dim,
+        activePresetId: afterRemoteEdit.activePresetId,
+        profile: afterRemoteEdit.settings.performanceProfile
       };
 
       recovery
@@ -2813,32 +2834,7 @@ test("settings presets import export migration and scoped resets form a complete
       const validTransfer = new DataTransfer();
       validTransfer.items.add(
         new File(
-          [
-            JSON.stringify({
-              version: 1,
-              settings: {
-                dim: 28,
-                blur: 4,
-                opacity: 84,
-                fitMode: "contain",
-                surfaceOpacity: 58,
-                interfaceBlur: 3,
-                interfaceBorders: false,
-                surfaceOverrides: {
-                  chat: 35,
-                  sidebar: null,
-                  right: null,
-                  settings: null
-                },
-                fps: 15,
-                volume: 30,
-                muted: false,
-                rotationMinutes: 5,
-                performanceProfile: "performance",
-                pauseWhenHidden: true
-              }
-            })
-          ],
+          [exportedText],
           "valid-settings.json",
           { type: "application/json" }
         )
@@ -2857,8 +2853,20 @@ test("settings presets import export migration and scoped resets form a complete
         activePresetId: JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         ).activePresetId,
+        activePresetUi:
+          recovery
+            .querySelector("[data-preset-id='night']")
+            .getAttribute("data-active"),
         mediaSame: root.querySelector(".media:not(.staged)") === media,
         status: recovery.querySelector("[data-settings-status]").textContent
+      };
+      panel.querySelector("header button").click();
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const importedReopened = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        fitMode:
+          panel.querySelector("[data-setting='fitMode']")?.value ?? null,
+        volume: panel.querySelector("[data-setting='volume']").value
       };
 
       const beforeInvalid = localStorage.getItem("codex-wallpaper-p1-config");
@@ -2886,6 +2894,36 @@ test("settings presets import export migration and scoped resets form a complete
       const invalid = {
         unchanged:
           localStorage.getItem("codex-wallpaper-p1-config") === beforeInvalid,
+        status: recovery.querySelector("[data-settings-status]").textContent
+      };
+      const beforeInvalidRange = localStorage.getItem(
+        "codex-wallpaper-p1-config"
+      );
+      recovery.querySelector("[data-settings-status]").textContent = "";
+      const invalidRangeTransfer = new DataTransfer();
+      invalidRangeTransfer.items.add(
+        new File(
+          [
+            JSON.stringify({
+              version: 1,
+              settings: { dim: 999 }
+            })
+          ],
+          "invalid-range.json",
+          { type: "application/json" }
+        )
+      );
+      settingsImport.files = invalidRangeTransfer.files;
+      settingsImport.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (recovery.querySelector("[data-settings-status]").textContent)
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const invalidRange = {
+        unchanged:
+          localStorage.getItem("codex-wallpaper-p1-config") ===
+          beforeInvalidRange,
         status: recovery.querySelector("[data-settings-status]").textContent
       };
 
@@ -2964,7 +3002,9 @@ test("settings presets import export migration and scoped resets form a complete
         exported,
         crossWindow,
         imported,
+        importedReopened,
         invalid,
+        invalidRange,
         appearanceReset,
         playbackReset,
         allReset,
@@ -2987,6 +3027,7 @@ test("settings presets import export migration and scoped resets form a complete
   assert.equal(result.savedPreset.settings.dim, 33);
   assert.equal(result.savedPreset.settings.volume, 45);
   assert.deepEqual(result.customAfterEdit, {
+    dim: 50,
     activePresetId: null,
     profile: "custom",
   });
@@ -3011,15 +3052,23 @@ test("settings presets import export migration and scoped resets form a complete
     mediaSame: true,
   });
   assert.deepEqual(result.imported, {
-    dim: "28",
-    fitMode: "contain",
-    volume: "30",
+    dim: "33",
+    fitMode: "cover",
+    volume: "45",
     activePresetId: null,
+    activePresetUi: "false",
     mediaSame: true,
     status: "设置已导入",
   });
+  assert.deepEqual(result.importedReopened, {
+    dim: "33",
+    fitMode: "cover",
+    volume: "45",
+  });
   assert.equal(result.invalid.unchanged, true);
   assert.match(result.invalid.status, /^导入失败：/);
+  assert.equal(result.invalidRange.unchanged, true);
+  assert.match(result.invalidRange.status, /^导入失败：/);
   assert.deepEqual(result.appearanceReset, {
     dim: "18",
     fitMode: "cover",

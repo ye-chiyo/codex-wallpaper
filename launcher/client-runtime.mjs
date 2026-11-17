@@ -291,28 +291,54 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     },
   };
 
-  const settingRanges = {
-    dim: [0, 70],
-    blur: [0, 24],
-    opacity: [20, 100],
-    surfaceOpacity: [20, 100],
-    interfaceBlur: [0, 24],
-    fps: [1, 30],
-    volume: [0, 100],
-    rotationMinutes: [0, 120],
+  const settingDefinitions = {
+    dim: { group: "appearance", type: "number", min: 0, max: 70 },
+    blur: { group: "appearance", type: "number", min: 0, max: 24 },
+    opacity: { group: "appearance", type: "number", min: 20, max: 100 },
+    fitMode: {
+      group: "appearance",
+      type: "enum",
+      values: ["cover", "contain"],
+    },
+    surfaceOpacity: {
+      group: "appearance",
+      type: "number",
+      min: 20,
+      max: 100,
+    },
+    interfaceBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    interfaceBorders: { group: "appearance", type: "boolean" },
+    surfaceOverrides: { group: "appearance", type: "surfaceOverrides" },
+    fps: { group: "playback", type: "number", min: 1, max: 30 },
+    volume: { group: "playback", type: "number", min: 0, max: 100 },
+    muted: { group: "playback", type: "boolean" },
+    rotationMinutes: {
+      group: "playback",
+      type: "number",
+      min: 0,
+      max: 120,
+    },
+    performanceProfile: {
+      group: "playback",
+      type: "enum",
+      values: ["performance", "balanced", "custom"],
+    },
+    pauseWhenHidden: { group: "playback", type: "boolean" },
   };
-  const settingKeys = new Set(Object.keys(defaults.settings));
+  const settingKeys = new Set(Object.keys(settingDefinitions));
   const surfaceScopes = new Set(["chat", "sidebar", "right", "settings"]);
 
   function cloneSettings(source = defaults.settings) {
-    return {
-      ...structuredClone(defaults.settings),
-      ...structuredClone(source),
-      surfaceOverrides: {
-        ...defaults.settings.surfaceOverrides,
-        ...(source?.surfaceOverrides || {}),
-      },
+    const next = structuredClone(defaults.settings);
+    for (const key of settingKeys) {
+      if (Object.hasOwn(source || {}, key))
+        next[key] = structuredClone(source[key]);
+    }
+    next.surfaceOverrides = {
+      ...defaults.settings.surfaceOverrides,
+      ...(source?.surfaceOverrides || {}),
     };
+    return next;
   }
 
   function validateSettingsInput(input) {
@@ -321,46 +347,37 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const unknown = Object.keys(input).find((key) => !settingKeys.has(key));
     if (unknown) return { error: `未知设置字段：${unknown}` };
     const next = cloneSettings(input);
-    for (const [key, [min, max]] of Object.entries(settingRanges)) {
+    for (const [key, definition] of Object.entries(settingDefinitions)) {
       const value = input[key];
       if (value === undefined) continue;
-      if (
-        typeof value !== "number" ||
-        !Number.isFinite(value) ||
-        value < min ||
-        value > max
-      )
-        return { error: `${key} 超出有效范围` };
-    }
-    for (const key of ["muted", "interfaceBorders", "pauseWhenHidden"]) {
-      if (input[key] !== undefined && typeof input[key] !== "boolean")
-        return { error: `${key} 类型无效` };
-    }
-    for (const [key, allowed] of [
-      ["fitMode", ["cover", "contain"]],
-      ["performanceProfile", ["performance", "balanced", "custom"]],
-    ]) {
-      if (input[key] !== undefined && !allowed.includes(input[key]))
-        return { error: `${key} 值无效` };
-    }
-    if (input.surfaceOverrides !== undefined) {
-      if (
-        !input.surfaceOverrides ||
-        typeof input.surfaceOverrides !== "object" ||
-        Array.isArray(input.surfaceOverrides)
-      )
-        return { error: "surfaceOverrides 结构无效" };
-      for (const [scope, value] of Object.entries(input.surfaceOverrides)) {
-        if (!surfaceScopes.has(scope))
-          return { error: `surfaceOverrides 包含未知分区：${scope}` };
+      if (definition.type === "number") {
         if (
-          value !== null &&
-          (typeof value !== "number" ||
-            !Number.isFinite(value) ||
-            value < 0 ||
-            value > 100)
+          typeof value !== "number" ||
+          !Number.isFinite(value) ||
+          value < definition.min ||
+          value > definition.max
         )
-          return { error: `surfaceOverrides.${scope} 超出有效范围` };
+          return { error: `${key} 超出有效范围` };
+      } else if (definition.type === "boolean") {
+        if (typeof value !== "boolean") return { error: `${key} 类型无效` };
+      } else if (definition.type === "enum") {
+        if (!definition.values.includes(value))
+          return { error: `${key} 值无效` };
+      } else if (definition.type === "surfaceOverrides") {
+        if (!value || typeof value !== "object" || Array.isArray(value))
+          return { error: "surfaceOverrides 结构无效" };
+        for (const [scope, override] of Object.entries(value)) {
+          if (!surfaceScopes.has(scope))
+            return { error: `surfaceOverrides 包含未知分区：${scope}` };
+          if (
+            override !== null &&
+            (typeof override !== "number" ||
+              !Number.isFinite(override) ||
+              override < 0 ||
+              override > 100)
+          )
+            return { error: `surfaceOverrides.${scope} 超出有效范围` };
+        }
       }
     }
     return { value: next };
@@ -369,14 +386,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   function readConfig() {
     try {
       const value = JSON.parse(localStorage.getItem(configKey) || "null");
-      const settings = {
-        ...defaults.settings,
-        ...(value?.settings || {}),
-        surfaceOverrides: {
-          ...defaults.settings.surfaceOverrides,
-          ...(value?.settings?.surfaceOverrides || {}),
-        },
-      };
+      const settings = cloneSettings(value?.settings);
       if (typeof value?.settings?.muted !== "boolean")
         settings.muted = !(Number(settings.volume) > 0);
       if (
@@ -491,19 +501,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       presets:
         !valuesEqual(previous.presets, next.presets) ||
         previous.activePresetId !== next.activePresetId,
-      appearance:
-        [
-          "dim",
-          "blur",
-          "opacity",
-          "fitMode",
-          "surfaceOpacity",
-          "interfaceBlur",
-          "interfaceBorders",
-        ].some((key) => previous.settings[key] !== next.settings[key]) ||
-        !valuesEqual(
-          previous.settings.surfaceOverrides,
-          next.settings.surfaceOverrides
+      appearance: Object.entries(settingDefinitions)
+        .filter(([, definition]) => definition.group === "appearance")
+        .some(
+          ([key]) => !valuesEqual(previous.settings[key], next.settings[key])
         ),
       volume:
         previous.settings.volume !== next.settings.volume ||
@@ -866,6 +867,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   function markSettingsChanged() {
     config.activePresetId = null;
     config.settings.performanceProfile = "custom";
+    pendingConfigFields.add("performanceProfile");
     syncPresetUi();
   }
 
@@ -1945,12 +1947,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         const apply = document.createElement("button");
         apply.type = "button";
         apply.dataset.presetApply = preset.id;
-        apply.textContent =
-          config.activePresetId === preset.id ? "当前预设" : "应用";
-        apply.setAttribute(
-          "aria-pressed",
-          String(config.activePresetId === preset.id)
-        );
         apply.onclick = () => {
           config.activePresetId = preset.id;
           config.settings = cloneSettings(preset.settings);
@@ -2026,6 +2022,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       config.activePresetId = null;
       saveConfig();
       applyCurrentSettings();
+      syncPresetUi();
       setSettingsStatus("设置已导入");
     } catch (error) {
       setSettingsStatus(`导入失败：${error.message}`);
@@ -2033,32 +2030,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   function resetSettingGroup(group) {
-    const groups = {
-      playback: [
-        "fps",
-        "volume",
-        "muted",
-        "rotationMinutes",
-        "performanceProfile",
-        "pauseWhenHidden",
-      ],
-      appearance: [
-        "dim",
-        "blur",
-        "opacity",
-        "fitMode",
-        "surfaceOpacity",
-        "interfaceBlur",
-        "interfaceBorders",
-        "surfaceOverrides",
-      ],
-    };
     config.activePresetId = null;
     if (group === "all") config.settings = cloneSettings();
     else {
-      for (const key of groups[group] || [])
+      for (const [key, definition] of Object.entries(settingDefinitions)) {
+        if (definition.group !== group) continue;
         config.settings[key] = structuredClone(defaults.settings[key]);
-      if (group === "appearance") config.settings.performanceProfile = "custom";
+      }
     }
     saveConfig();
     applyCurrentSettings();
@@ -2753,6 +2731,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       const remote = readConfig();
       for (const field of pendingConfigFields)
         remote.settings[field] = config.settings[field];
+      remote.activePresetId = config.activePresetId;
       config = remote;
       saveConfig();
       applyConfigChange(configChanges(previous, config));
