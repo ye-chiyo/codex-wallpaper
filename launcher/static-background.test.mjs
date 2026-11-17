@@ -898,7 +898,8 @@ test("continuous slider input previews immediately and persists the settled valu
           ...JSON.parse(beforeRemoteEvent),
           settings: {
             ...JSON.parse(beforeRemoteEvent).settings,
-            opacity: 65
+            opacity: 65,
+            volume: 80
           }
         });
         localStorage.setItem(
@@ -913,14 +914,21 @@ test("continuous slider input previews immediately and persists the settled valu
             storageArea: localStorage
           })
         );
-        const localAfterRemote = JSON.parse(
+        const afterCombinedSave = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
-        ).settings.opacity;
+        );
+        const displayedVolume = [...controls.querySelectorAll(".range")]
+          .find((range) => range.querySelector("span")?.textContent === "音量")
+          .querySelector("input").value;
+        const displayedOpacityAfterCombinedSave = pendingLocal.value;
+        const stateVolumeAfterCombinedSave =
+          globalThis.__codexWallpaperApi.state().volume;
         const remoteAfterLocalSettled = JSON.stringify({
           ...JSON.parse(remoteDuringLocalEdit),
           settings: {
             ...JSON.parse(remoteDuringLocalEdit).settings,
-            opacity: 80
+            opacity: 80,
+            volume: 60
           }
         });
         localStorage.setItem(
@@ -938,6 +946,9 @@ test("continuous slider input previews immediately and persists the settled valu
         const remoteApplied = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         ).settings.opacity;
+        const remoteVolumeApplied = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.volume;
         Storage.prototype.setItem = originalSetItem;
         return {
           previewBeforeSettle,
@@ -946,8 +957,13 @@ test("continuous slider input previews immediately and persists the settled valu
           savedAfterBlur,
           reopenedOpacity,
           localBeforeRemote,
-          localAfterRemote,
+          localOpacityAfterCombinedSave: afterCombinedSave.settings.opacity,
+          remoteVolumeAfterCombinedSave: afterCombinedSave.settings.volume,
+          displayedOpacityAfterCombinedSave,
+          displayedVolumeAfterCombinedSave: displayedVolume,
+          stateVolumeAfterCombinedSave,
           remoteApplied,
+          remoteVolumeApplied,
           displayedAfterRemote: pendingLocal.value
         };
       })()`,
@@ -960,8 +976,13 @@ test("continuous slider input previews immediately and persists the settled valu
       savedAfterBlur: 50,
       reopenedOpacity: "50",
       localBeforeRemote: 50,
-      localAfterRemote: 40,
+      localOpacityAfterCombinedSave: 40,
+      remoteVolumeAfterCombinedSave: 80,
+      displayedOpacityAfterCombinedSave: "40",
+      displayedVolumeAfterCombinedSave: "80",
+      stateVolumeAfterCombinedSave: 80,
       remoteApplied: 80,
+      remoteVolumeApplied: 60,
       displayedAfterRemote: "80",
     }
   );

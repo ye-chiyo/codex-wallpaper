@@ -260,14 +260,17 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   let frameCount = 0;
   let frameWindowStartedAt = performance.now();
   let configSaveTimer = null;
+  const pendingConfigFields = new Set();
 
   function saveConfig() {
     if (configSaveTimer) clearTimeout(configSaveTimer);
     configSaveTimer = null;
+    pendingConfigFields.clear();
     localStorage.setItem(configKey, JSON.stringify(config));
   }
 
-  function scheduleConfigSave() {
+  function scheduleConfigSave(field) {
+    pendingConfigFields.add(field);
     if (configSaveTimer) clearTimeout(configSaveTimer);
     configSaveTimer = setTimeout(saveConfig, 100);
   }
@@ -1170,7 +1173,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         fps: key === "fps",
       });
       if (key === "rotationMinutes") scheduleRotation();
-      scheduleConfigSave();
+      scheduleConfigSave(key);
     };
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
@@ -1599,7 +1602,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   addEventListener("storage", (event) => {
     if (event.key !== configKey && event.key !== null) return;
     if (configSaveTimer) {
-      flushConfigSave();
+      const previous = config;
+      const remote = readConfig();
+      for (const field of pendingConfigFields)
+        remote.settings[field] = config.settings[field];
+      config = remote;
+      saveConfig();
+      applyConfigChange(configChanges(previous, config));
       return;
     }
     const previous = config;

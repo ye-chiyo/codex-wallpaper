@@ -189,7 +189,7 @@ The fixed pre-change live baseline recorded:
 The T03 candidate starts from integration `7668cae`. Headless Edge behavior evidence from the existing browser fixture now records:
 
 - A 30-event opacity burst updates the visible preview immediately and performs one config write when the slider is committed; the final value survives panel close/reopen.
-- A remote event received while that local write is pending flushes the pending local value and does not drop it. A later remote event, received with no pending local write, is applied normally.
+- A remote volume event received while a local opacity write is pending combines both values: the newer local opacity and distinct remote volume survive in one persisted config and both UI values update. A later remote event, received with no pending local write, is applied normally.
 - An appearance, volume, FPS, favorites, and playlist `StorageEvent` preserves the same wallpaper cards, settings elements, visible media node, panel focus, and panel scroll position. It creates zero cards and zero staged media nodes. Video volume changes on the existing video.
 - A material identity `StorageEvent` still reloads to the new material and settles with zero staged media nodes.
 - Opening, closing, and reopening the mounted panel adds zero cards.
