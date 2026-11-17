@@ -1,0 +1,21 @@
+{
+  "on": true,
+  "library": 106,
+  "ready": true,
+  "type": "scene",
+  "stage": 0,
+  "attached": 1,
+  "visible": "visible",
+  "size": [687, 1084, 1.5],
+  "theme": "dark",
+  "source": null,
+  "canvas": [1031, 1626],
+  "decoded": null,
+  "paused": null,
+  "playbackTime": null,
+  "drawFps": 0,
+  "cap": 30,
+  "initialWorkshopHash": "16f531121815eb59",
+  "webEntryCount": 4,
+  "nativeOfflineWeb": false
+}

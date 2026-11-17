@@ -1,0 +1,22 @@
+{
+  "image": {
+    "type": "image",
+    "staged": 0,
+    "media": 1,
+    "pass": true,
+    "elapsedMs": 667.1579
+  },
+  "video": {
+    "type": "video",
+    "staged": 0,
+    "media": 1,
+    "pass": true,
+    "elapsedMs": 6689.3805999999995
+  },
+  "requestsDuringVideoSelection": [
+    {
+      "type": "load-asset",
+      "id": "3787353838"
+    }
+  ]
+}

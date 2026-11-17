@@ -1,0 +1,62 @@
+{
+  "runs": [
+    {
+      "run": 1,
+      "mainRendererId": 33508,
+      "mainRendererCpuPercent": 19.525868674857985,
+      "summary": {
+        "durationSeconds": 60.552,
+        "mainRendererCpuPercent": 19.525868674857985,
+        "taskDurationSeconds": 6.775135,
+        "taskOccupancyPercent": 11.188953296340335,
+        "scriptDurationSeconds": 0.6389630000000001,
+        "jsHeapStartBytes": 290967576,
+        "jsHeapEndBytes": 298249676,
+        "jsHeapDeltaBytes": 7282100,
+        "nodesStart": 11499,
+        "nodesEnd": 11499,
+        "measuredFpsSupported": false
+      }
+    },
+    {
+      "run": 2,
+      "mainRendererId": 33508,
+      "mainRendererCpuPercent": 24.241278359367502,
+      "summary": {
+        "durationSeconds": 60.562,
+        "mainRendererCpuPercent": 24.241278359367502,
+        "taskDurationSeconds": 8.889610000000001,
+        "taskOccupancyPercent": 14.678527789703116,
+        "scriptDurationSeconds": 0.7662019999999999,
+        "jsHeapStartBytes": 298252628,
+        "jsHeapEndBytes": 288248904,
+        "jsHeapDeltaBytes": -10003724,
+        "nodesStart": 11499,
+        "nodesEnd": 12211,
+        "measuredFpsSupported": false
+      }
+    },
+    {
+      "run": 3,
+      "mainRendererId": 33508,
+      "mainRendererCpuPercent": 44.59846669307445,
+      "summary": {
+        "durationSeconds": 60.588,
+        "mainRendererCpuPercent": 44.59846669307445,
+        "taskDurationSeconds": 18.006000999999998,
+        "taskOccupancyPercent": 29.718757839836268,
+        "scriptDurationSeconds": 2.546259,
+        "jsHeapStartBytes": 288251856,
+        "jsHeapEndBytes": 302191096,
+        "jsHeapDeltaBytes": 13939240,
+        "nodesStart": 12211,
+        "nodesEnd": 17816,
+        "measuredFpsSupported": false
+      }
+    }
+  ],
+  "cpuMedianSingleCorePercent": 24.241278359367502,
+  "cpuMaxSingleCorePercent": 44.59846669307445,
+  "cpuRange": 25.072598018216464,
+  "taskOccupancyMedianPercent": 14.678527789703116
+}

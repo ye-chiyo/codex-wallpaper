@@ -1,0 +1,95 @@
+{
+  "before": "video",
+  "expected": "image",
+  "pass": true,
+  "steps": [
+    {
+      "ms": 65,
+      "type": "video",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 13,
+      "visible": "visible"
+    },
+    {
+      "ms": 151,
+      "type": "video",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 16,
+      "visible": "visible"
+    },
+    {
+      "ms": 252,
+      "type": "video",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 19,
+      "visible": "visible"
+    },
+    {
+      "ms": 412,
+      "type": "video",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 24,
+      "visible": "visible"
+    },
+    {
+      "ms": 535,
+      "type": "video",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 27,
+      "visible": "visible"
+    },
+    {
+      "ms": 631,
+      "type": "video",
+      "staged": 1,
+      "media": 2,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 27,
+      "visible": "visible"
+    },
+    {
+      "ms": 752,
+      "type": "video",
+      "staged": 1,
+      "media": 2,
+      "selected": true,
+      "source": [1888, 1078],
+      "canvas": [1888, 1078],
+      "decoded": 27,
+      "visible": "visible"
+    },
+    {
+      "ms": 844,
+      "type": "image",
+      "staged": 0,
+      "media": 1,
+      "selected": true,
+      "source": [4856, 2732],
+      "canvas": null,
+      "decoded": null,
+      "visible": "visible"
+    }
+  ]
+}
