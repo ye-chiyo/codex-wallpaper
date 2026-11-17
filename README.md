@@ -48,7 +48,7 @@ Codex Wallpaper 面向 Windows 版 Codex 桌面端，把本地图片、视频、
 | Node.js    | 24 或更新版本；需要内建 WebSocket 和 `--no-use-env-proxy` 支持                                                                                                                       |
 | 包管理器   | pnpm `11.25.0`；版本记录在 `package.json` 的 `packageManager` 字段                                                                                                                   |
 | 可选依赖   | 本机 Steam 和 Wallpaper Engine。未安装时仍可使用内置背景和导入素材，但没有 WE 壁纸库                                                                                                 |
-| 仓库访问   | 仓库为私有仓库，使用者需要相应 GitHub 访问权限                                                                                                                                       |
+| 仓库访问   | 仓库为公开仓库；无需额外 GitHub 授权即可读取                                                                                                                                         |
 
 运行依赖是 `webwallgl@3.0.0`。开发依赖包括 `husky`、`lint-staged` 和 `prettier`。候选没有业务代码构建步骤，安装依赖后直接运行启动器。
 
@@ -56,7 +56,7 @@ Codex Wallpaper 面向 Windows 版 Codex 桌面端，把本地图片、视频、
 
 以下命令均在仓库根目录执行。PowerShell 示例使用通用相对路径，不依赖个人绝对路径。
 
-1. 获取私有仓库并安装依赖：
+1. 获取仓库并安装依赖：
 
 ```powershell
 git clone https://github.com/ye-chiyo/codex-wallpaper.git

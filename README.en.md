@@ -48,7 +48,7 @@ Status definitions:
 | Node.js           | Node.js 24 or newer with built-in WebSocket and `--no-use-env-proxy` support                                                                                                                   |
 | Package manager   | pnpm `11.25.0`, as recorded in the `packageManager` field of `package.json`                                                                                                                    |
 | Optional          | A local Steam and Wallpaper Engine installation. Without them, the built-in background and imported media still work, but the WE library is unavailable                                        |
-| Repository access | The repository is private; users need appropriate GitHub access                                                                                                                                |
+| Repository access | The repository is public; no additional GitHub authorization is required to read it                                                                                                            |
 
 The runtime dependency is `webwallgl@3.0.0`. Development dependencies are `husky`, `lint-staged`, and `prettier`. There is no business-code build step: install dependencies and run the launcher.
 
@@ -56,7 +56,7 @@ The runtime dependency is `webwallgl@3.0.0`. Development dependencies are `husky
 
 Run these commands from the repository root. The examples use relative or generic paths rather than a personal absolute path.
 
-1. Clone the private repository and install dependencies:
+1. Clone the repository and install dependencies:
 
 ```powershell
 git clone https://github.com/ye-chiyo/codex-wallpaper.git
