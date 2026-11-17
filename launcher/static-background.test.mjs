@@ -1605,6 +1605,11 @@ test("wallpaper library shell combines filters without reloading the current med
           { type: "image/svg+xml" }
         )
       );
+      transfer.items.add(
+        new File([Uint8Array.from(atob(${JSON.stringify(tinyMp4)}), (char) => char.charCodeAt(0))], "Imported Motion.mp4", {
+          type: "video/mp4"
+        })
+      );
       fileInput.files = transfer.files;
       fileInput.dispatchEvent(new Event("change", { bubbles: true }));
       for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -1630,6 +1635,21 @@ test("wallpaper library shell combines filters without reloading the current med
           importedCard.querySelector(".thumb img, .thumb video")
         );
         if (importedPreviewLoaded) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      search.value = "motion";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      const importedVideoCard = [...panel.querySelectorAll(".card")].find(
+        (card) =>
+          card.querySelector("strong")?.textContent === "Imported Motion.mp4"
+      );
+      importedVideoCard.scrollIntoView({ block: "center" });
+      let importedVideoPreviewLoaded = false;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        importedVideoPreviewLoaded = Boolean(
+          importedVideoCard.querySelector(".thumb video")
+        );
+        if (importedVideoPreviewLoaded) break;
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
       search.value = "";
@@ -1715,6 +1735,7 @@ test("wallpaper library shell combines filters without reloading the current med
         statuses,
         importedFilterVisible,
         importedPreviewLoaded,
+        importedVideoPreviewLoaded,
         lazyPreviewRequested,
         loadingStatus,
         loadedStatus,
@@ -1753,6 +1774,7 @@ test("wallpaper library shell combines filters without reloading the current med
     },
     importedFilterVisible: true,
     importedPreviewLoaded: true,
+    importedVideoPreviewLoaded: true,
     lazyPreviewRequested: true,
     loadingStatus: "image · 加载中",
     loadedStatus: "image · 原生显示",
@@ -2734,6 +2756,7 @@ test("settings presets import export migration and scoped resets form a complete
           fps: 30,
           volume: 20,
           rotationMinutes: 0,
+          pauseWhenHidden: false,
           legacyPath: "C:\\\\private\\\\wallpaper",
           surfaceOverrides: {
             chat: null,
@@ -2768,7 +2791,8 @@ test("settings presets import export migration and scoped resets form a complete
         playlist: panel.querySelector(".playlist-summary").textContent,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
         surfaceOpacity:
-          panel.querySelector("[data-setting='surfaceOpacity']").value
+          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        profile: panel.querySelector("[data-playback-profile]").value
       };
 
       const dim = panel.querySelector("[data-setting='dim']");
@@ -3103,6 +3127,7 @@ test("settings presets import export migration and scoped resets form a complete
     playlist: "轮播：Fixture Image",
     fitMode: "cover",
     surfaceOpacity: "72",
+    profile: "custom",
   });
   assert.equal(result.savedPreset.id, "night");
   assert.equal(result.savedPreset.name, "Night");

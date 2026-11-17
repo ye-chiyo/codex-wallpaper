@@ -410,7 +410,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         typeof value.settings.performanceProfile !== "string"
       )
         settings.performanceProfile =
-          Number(settings.fps) === performanceProfiles.balanced.fps
+          Number(settings.fps) === performanceProfiles.balanced.fps &&
+          Boolean(settings.pauseWhenHidden) ===
+            performanceProfiles.balanced.pauseWhenHidden
             ? "balanced"
             : "custom";
       return {
@@ -588,6 +590,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         fallback: false,
         previewDataUrl: importedPreviewUrls.get(item.id) || null,
         assetDataUrl: null,
+        thumbnailKind: mediaType(item.blob),
         reason: null,
       })),
       ...(sourcePayload.library || []).map((item) => ({
