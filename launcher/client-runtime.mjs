@@ -90,6 +90,17 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .surface-override-controls { display: grid; grid-template-columns: minmax(0, 1fr) 42px auto; align-items: center; gap: 7px; }
       #${controlsId} .surface-override-controls output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
       #${controlsId} .surface-override-controls button { padding: 5px 7px; font-size: 10px; }
+      #${controlsId} .preset-editor, #${controlsId} .settings-transfer, #${controlsId} .preset-row, #${controlsId} .reset-groups { display: grid; gap: 6px; }
+      #${controlsId} .preset-editor { grid-template-columns: minmax(0, 1fr) auto; }
+      #${controlsId} .preset-editor input, #${controlsId} .preset-row input { min-width: 0; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 8px; font: inherit; }
+      #${controlsId} .preset-list { display: grid; gap: 6px; }
+      #${controlsId} .preset-row { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; padding: 6px; border: 1px solid var(--codex-wallpaper-line); border-radius: var(--codex-wallpaper-radius-sm); }
+      #${controlsId} .preset-row[data-active='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 10%, transparent); }
+      #${controlsId} .settings-transfer { grid-template-columns: 1fr 1fr; align-items: center; }
+      #${controlsId} .settings-import { display: grid; gap: 4px; font-size: 11px; }
+      #${controlsId} .settings-status { min-height: 1.4em; margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 11px; }
+      #${controlsId} .reset-groups { grid-template-columns: 1fr 1fr; }
+      #${controlsId} .reset-groups button { font-size: 11px; }
       #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
       @media (max-width: 520px) {
         #${controlsId} .panel { width: min(340px, calc(100vw - 16px)); max-height: min(82vh, calc(100% - 10px)); }
@@ -255,6 +266,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     active: { kind: "builtin", id: "aurora" },
     favorites: [],
     playlist: [],
+    presets: [],
+    activePresetId: null,
     settings: {
       dim: 18,
       blur: 0,
@@ -277,6 +290,81 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       pauseWhenHidden: true,
     },
   };
+
+  const settingRanges = {
+    dim: [0, 70],
+    blur: [0, 24],
+    opacity: [20, 100],
+    surfaceOpacity: [20, 100],
+    interfaceBlur: [0, 24],
+    fps: [1, 30],
+    volume: [0, 100],
+    rotationMinutes: [0, 120],
+  };
+  const settingKeys = new Set(Object.keys(defaults.settings));
+  const surfaceScopes = new Set(["chat", "sidebar", "right", "settings"]);
+
+  function cloneSettings(source = defaults.settings) {
+    return {
+      ...structuredClone(defaults.settings),
+      ...structuredClone(source),
+      surfaceOverrides: {
+        ...defaults.settings.surfaceOverrides,
+        ...(source?.surfaceOverrides || {}),
+      },
+    };
+  }
+
+  function validateSettingsInput(input) {
+    if (!input || typeof input !== "object" || Array.isArray(input))
+      return { error: "设置结构无效" };
+    const unknown = Object.keys(input).find((key) => !settingKeys.has(key));
+    if (unknown) return { error: `未知设置字段：${unknown}` };
+    const next = cloneSettings(input);
+    for (const [key, [min, max]] of Object.entries(settingRanges)) {
+      const value = input[key];
+      if (value === undefined) continue;
+      if (
+        typeof value !== "number" ||
+        !Number.isFinite(value) ||
+        value < min ||
+        value > max
+      )
+        return { error: `${key} 超出有效范围` };
+    }
+    for (const key of ["muted", "interfaceBorders", "pauseWhenHidden"]) {
+      if (input[key] !== undefined && typeof input[key] !== "boolean")
+        return { error: `${key} 类型无效` };
+    }
+    for (const [key, allowed] of [
+      ["fitMode", ["cover", "contain"]],
+      ["performanceProfile", ["performance", "balanced", "custom"]],
+    ]) {
+      if (input[key] !== undefined && !allowed.includes(input[key]))
+        return { error: `${key} 值无效` };
+    }
+    if (input.surfaceOverrides !== undefined) {
+      if (
+        !input.surfaceOverrides ||
+        typeof input.surfaceOverrides !== "object" ||
+        Array.isArray(input.surfaceOverrides)
+      )
+        return { error: "surfaceOverrides 结构无效" };
+      for (const [scope, value] of Object.entries(input.surfaceOverrides)) {
+        if (!surfaceScopes.has(scope))
+          return { error: `surfaceOverrides 包含未知分区：${scope}` };
+        if (
+          value !== null &&
+          (typeof value !== "number" ||
+            !Number.isFinite(value) ||
+            value < 0 ||
+            value > 100)
+        )
+          return { error: `surfaceOverrides.${scope} 超出有效范围` };
+      }
+    }
+    return { value: next };
+  }
 
   function readConfig() {
     try {
@@ -308,6 +396,21 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
             : defaults.active,
         favorites: Array.isArray(value?.favorites) ? value.favorites : [],
         playlist: Array.isArray(value?.playlist) ? value.playlist : [],
+        presets: Array.isArray(value?.presets)
+          ? value.presets.filter(
+              (preset) =>
+                preset &&
+                typeof preset === "object" &&
+                typeof preset.id === "string" &&
+                typeof preset.name === "string" &&
+                preset.settings &&
+                typeof preset.settings === "object"
+            )
+          : [],
+        activePresetId:
+          typeof value?.activePresetId === "string"
+            ? value.activePresetId
+            : null,
         settings,
       };
     } catch {
@@ -385,6 +488,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       identity: !valuesEqual(previous.active, next.active),
       favorites: !valuesEqual(previous.favorites, next.favorites),
       playlist: !valuesEqual(previous.playlist, next.playlist),
+      presets:
+        !valuesEqual(previous.presets, next.presets) ||
+        previous.activePresetId !== next.activePresetId,
       appearance:
         [
           "dim",
@@ -749,6 +855,20 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     playback.start?.();
   }
 
+  function applyCurrentSettings() {
+    applyVisualSettings();
+    applyPlaybackSettings({ volume: true, fps: true });
+    applyHiddenPolicy();
+    syncSettingControls();
+    scheduleRotation();
+  }
+
+  function markSettingsChanged() {
+    config.activePresetId = null;
+    config.settings.performanceProfile = "custom";
+    syncPresetUi();
+  }
+
   function syncSettingControls() {
     if (!panel) return;
     for (const input of panel.querySelectorAll(".range input")) {
@@ -937,6 +1057,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     }
     if (change.playlist) syncPlaylistSummary();
     syncSettingControls();
+    if (change.presets) renderPresetList();
     if (change.pauseWhenHidden) applyHiddenPolicy();
     if (change.rotation || change.playlist) scheduleRotation();
   }
@@ -1591,6 +1712,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     };
     input.oninput = () => {
       config.settings[key] = Number(input.value);
+      markSettingsChanged();
       if (key === "volume" && Number(input.value) > 0)
         config.settings.muted = false;
       if (key === "fps") config.settings.performanceProfile = "custom";
@@ -1630,6 +1752,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     text.textContent = hint ? `${label}（${hint}）` : label;
     input.onchange = () => {
       config.settings[key] = input.checked;
+      markSettingsChanged();
       if (key === "pauseWhenHidden")
         config.settings.performanceProfile = "custom";
       applyPlaybackSettings({ volume: key === "muted" });
@@ -1665,6 +1788,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     select.value = config.settings[key];
     select.onchange = () => {
       config.settings[key] = select.value;
+      markSettingsChanged();
       applyVisualSettings();
       saveConfig();
     };
@@ -1691,6 +1815,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     }
     select.value = config.settings.performanceProfile;
     select.onchange = () => {
+      config.activePresetId = null;
       if (performanceProfiles[select.value]) {
         config.settings.performanceProfile = select.value;
         config.settings.fps = performanceProfiles[select.value].fps;
@@ -1701,6 +1826,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         saveConfig();
       }
       syncSettingControls();
+      syncPresetUi();
     };
     row.append(label, select);
     return row;
@@ -1745,6 +1871,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       output.textContent = `${input.value}%`;
     };
     override.onchange = () => {
+      markSettingsChanged();
       config.settings.surfaceOverrides[scope] = override.checked
         ? surfaceOpacityValue(scope)
         : null;
@@ -1753,6 +1880,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       sync();
     };
     input.oninput = () => {
+      markSettingsChanged();
       config.settings.surfaceOverrides[scope] = Number(input.value);
       output.textContent = `${input.value}%`;
       applyInterfaceAppearance();
@@ -1761,6 +1889,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
     restore.onclick = () => {
+      markSettingsChanged();
       override.checked = false;
       config.settings.surfaceOverrides[scope] = null;
       applyInterfaceAppearance();
@@ -1770,6 +1899,196 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     controls.append(input, output, restore);
     row.append(top, controls);
     return row;
+  }
+
+  function presetIdFor(name) {
+    const base =
+      String(name)
+        .trim()
+        .toLocaleLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "preset";
+    let id = base;
+    let sequence = 2;
+    while (config.presets.some((preset) => preset.id === id))
+      id = `${base}-${sequence++}`;
+    return id;
+  }
+
+  function syncPresetUi() {
+    if (!panel) return;
+    for (const item of panel.querySelectorAll("[data-preset-id]")) {
+      const active = item.dataset.presetId === config.activePresetId;
+      item.dataset.active = String(active);
+      const button = item.querySelector("[data-preset-apply]");
+      if (button) {
+        button.textContent = active ? "当前预设" : "应用";
+        button.setAttribute("aria-pressed", String(active));
+      }
+    }
+  }
+
+  function renderPresetList() {
+    if (!panel) return;
+    const list = panel.querySelector("[data-preset-list]");
+    if (!list) return;
+    list.replaceChildren(
+      ...config.presets.map((preset) => {
+        const item = document.createElement("article");
+        item.className = "preset-row";
+        item.dataset.presetId = preset.id;
+        const name = document.createElement("input");
+        name.type = "text";
+        name.value = preset.name;
+        name.dataset.presetName = preset.id;
+        name.setAttribute("aria-label", `预设 ${preset.name} 名称`);
+        const apply = document.createElement("button");
+        apply.type = "button";
+        apply.dataset.presetApply = preset.id;
+        apply.textContent =
+          config.activePresetId === preset.id ? "当前预设" : "应用";
+        apply.setAttribute(
+          "aria-pressed",
+          String(config.activePresetId === preset.id)
+        );
+        apply.onclick = () => {
+          config.activePresetId = preset.id;
+          config.settings = cloneSettings(preset.settings);
+          saveConfig();
+          applyCurrentSettings();
+          renderPresetList();
+          setSettingsStatus(`已应用预设：${preset.name}`);
+        };
+        const rename = document.createElement("button");
+        rename.type = "button";
+        rename.dataset.presetRename = preset.id;
+        rename.textContent = "重命名";
+        rename.onclick = () => {
+          const value = name.value.trim();
+          if (!value) {
+            setSettingsStatus("预设名称不能为空");
+            return;
+          }
+          preset.name = value;
+          saveConfig();
+          renderPresetList();
+          setSettingsStatus(`预设已重命名为：${value}`);
+        };
+        item.append(name, apply, rename);
+        return item;
+      })
+    );
+    syncPresetUi();
+  }
+
+  function setSettingsStatus(message) {
+    const target = panel?.querySelector("[data-settings-status]");
+    if (target) target.textContent = message;
+  }
+
+  function exportSettings() {
+    const payload = {
+      version: 1,
+      settings: cloneSettings(config.settings),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "codex-wallpaper-settings.json";
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    setSettingsStatus("设置已导出");
+  }
+
+  async function importSettings(file) {
+    try {
+      const payload = JSON.parse(await file.text());
+      if (!payload || typeof payload !== "object" || payload.version !== 1)
+        throw new Error("版本无效");
+      if (
+        Object.keys(payload).some(
+          (key) => !["version", "settings"].includes(key)
+        )
+      )
+        throw new Error("文件结构无效");
+      if (
+        !payload.settings ||
+        typeof payload.settings !== "object" ||
+        Array.isArray(payload.settings)
+      )
+        throw new Error("设置结构无效");
+      const validation = validateSettingsInput(payload.settings);
+      if (validation.error) throw new Error(validation.error);
+      config.settings = validation.value;
+      config.activePresetId = null;
+      saveConfig();
+      applyCurrentSettings();
+      setSettingsStatus("设置已导入");
+    } catch (error) {
+      setSettingsStatus(`导入失败：${error.message}`);
+    }
+  }
+
+  function resetSettingGroup(group) {
+    const groups = {
+      playback: [
+        "fps",
+        "volume",
+        "muted",
+        "rotationMinutes",
+        "performanceProfile",
+        "pauseWhenHidden",
+      ],
+      appearance: [
+        "dim",
+        "blur",
+        "opacity",
+        "fitMode",
+        "surfaceOpacity",
+        "interfaceBlur",
+        "interfaceBorders",
+        "surfaceOverrides",
+      ],
+    };
+    config.activePresetId = null;
+    if (group === "all") config.settings = cloneSettings();
+    else {
+      for (const key of groups[group] || [])
+        config.settings[key] = structuredClone(defaults.settings[key]);
+      if (group === "appearance") config.settings.performanceProfile = "custom";
+    }
+    saveConfig();
+    applyCurrentSettings();
+    renderPresetList();
+    setSettingsStatus(
+      group === "playback"
+        ? "已恢复播放默认值"
+        : group === "appearance"
+          ? "已恢复外观默认值"
+          : "已恢复全部设置默认值"
+    );
+  }
+
+  async function removeImportedMedia() {
+    const db = await openDatabase();
+    await requestResult(
+      db.transaction(dbStore, "readwrite").objectStore(dbStore).clear()
+    );
+    await loadImported();
+    config.favorites = config.favorites.filter(
+      (entry) => entry.kind !== "imported"
+    );
+    config.playlist = config.playlist.filter(
+      (entry) => entry.kind !== "imported"
+    );
+    if (config.active.kind === "imported") config.active = defaults.active;
+    saveConfig();
+    await applyActive();
+    renderPanel();
+    setSettingsStatus("已移除导入素材");
   }
 
   function renderPanel() {
@@ -1848,6 +2167,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       surfaceOverrideControl("右侧面板覆盖", "right"),
       surfaceOverrideControl("设置面板覆盖", "settings")
     );
+    renderPresetList();
     if (config.active.kind === "builtin") setStatus("内置渐变");
     else renderRuntimeStatus();
   }
@@ -2178,7 +2498,88 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const resetHelp = document.createElement("p");
     resetHelp.className = "playlist-summary";
     resetHelp.textContent =
-      "预设、导入导出和分组恢复将在同一区域提供；清除操作会移除本项目数据。";
+      "预设保存画面与播放参数；导入导出只包含设置，不包含素材或个人数据。";
+    const presetEditor = document.createElement("div");
+    presetEditor.className = "preset-editor";
+    const presetName = document.createElement("input");
+    presetName.type = "text";
+    presetName.placeholder = "预设名称";
+    presetName.dataset.presetNameInput = "";
+    presetName.setAttribute("aria-label", "新预设名称");
+    const presetSave = document.createElement("button");
+    presetSave.type = "button";
+    presetSave.dataset.presetSave = "";
+    presetSave.textContent = "保存当前设置";
+    presetSave.onclick = () => {
+      const value = presetName.value.trim();
+      if (!value) {
+        setSettingsStatus("预设名称不能为空");
+        return;
+      }
+      const id = presetIdFor(value);
+      config.presets.push({
+        id,
+        name: value,
+        settings: cloneSettings(config.settings),
+      });
+      config.activePresetId = id;
+      saveConfig();
+      presetName.value = "";
+      renderPresetList();
+      setSettingsStatus(`已保存预设：${value}`);
+    };
+    presetEditor.append(presetName, presetSave);
+    const presetList = document.createElement("div");
+    presetList.className = "preset-list";
+    presetList.dataset.presetList = "";
+
+    const transfer = document.createElement("div");
+    transfer.className = "settings-transfer";
+    const exportButton = document.createElement("button");
+    exportButton.type = "button";
+    exportButton.dataset.settingsExport = "";
+    exportButton.textContent = "导出设置";
+    exportButton.onclick = exportSettings;
+    const importLabel = document.createElement("label");
+    importLabel.className = "settings-import";
+    importLabel.textContent = "导入设置";
+    const importInput = document.createElement("input");
+    importInput.type = "file";
+    importInput.accept = "application/json,.json";
+    importInput.dataset.settingsImport = "";
+    importInput.onchange = async () => {
+      const [file] = importInput.files;
+      if (file) await importSettings(file);
+      importInput.value = "";
+    };
+    importLabel.append(importInput);
+    transfer.append(exportButton, importLabel);
+    const settingsStatus = document.createElement("p");
+    settingsStatus.className = "settings-status";
+    settingsStatus.dataset.settingsStatus = "";
+    settingsStatus.setAttribute("aria-live", "polite");
+
+    const resetGroups = document.createElement("div");
+    resetGroups.className = "reset-groups";
+    for (const [group, label] of [
+      ["playback", "恢复播放默认"],
+      ["appearance", "恢复外观默认"],
+      ["all", "恢复全部设置"],
+    ]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.resetGroup = group;
+      button.textContent = label;
+      button.onclick = () => resetSettingGroup(group);
+      resetGroups.append(button);
+    }
+    const removeImported = document.createElement("button");
+    removeImported.type = "button";
+    removeImported.dataset.removeImported = "";
+    removeImported.textContent = "移除全部导入素材";
+    removeImported.onclick = removeImportedMedia;
+    resetGroups.append(removeImported);
+
     const reset = document.createElement("button");
     reset.className = "reset";
     reset.textContent = "停用并清除本项目数据";
@@ -2195,7 +2596,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       }
       await resetAll();
     };
-    recoveryBody.append(resetHelp, reset);
+    recoveryBody.append(
+      resetHelp,
+      presetEditor,
+      presetList,
+      transfer,
+      settingsStatus,
+      resetGroups,
+      reset
+    );
     recovery.append(recoveryTitle, recoveryBody);
     panel.append(header, library, playback, appearance, recovery);
     return panel;

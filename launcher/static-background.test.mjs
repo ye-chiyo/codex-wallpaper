@@ -2652,6 +2652,407 @@ test("scene fit uses the installed renderer without replacing the active scene",
   });
 });
 
+test("settings presets import export migration and scoped resets form a complete loop", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const image =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: image,
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [{ kind: "workshop", id: "fixture-image" }],
+        playlist: [{ kind: "workshop", id: "fixture-image" }],
+        settings: {
+          dim: 25,
+          blur: 2,
+          opacity: 90,
+          fps: 30,
+          volume: 20,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const root = document.getElementById("${rootId}");
+      const controls = document.getElementById("${controlRootId}");
+      const media = root.querySelector(".media:not(.staged)");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      panel.querySelector("[data-panel-region='recovery']").open = true;
+      const recovery = panel.querySelector("[data-panel-region='recovery']");
+
+      const migrated = {
+        active: globalThis.__codexWallpaperApi.state().activeId,
+        favorite: panel
+          .querySelector("[data-entry-action='favorite']")
+          .getAttribute("aria-pressed"),
+        playlist: panel.querySelector(".playlist-summary").textContent,
+        fitMode: panel.querySelector("[data-setting='fitMode']").value,
+        surfaceOpacity:
+          panel.querySelector("[data-setting='surfaceOpacity']").value
+      };
+
+      const dim = panel.querySelector("[data-setting='dim']");
+      dim.value = "33";
+      dim.dispatchEvent(new Event("input", { bubbles: true }));
+      const volume = panel.querySelector("[data-setting='volume']");
+      volume.value = "45";
+      volume.dispatchEvent(new Event("input", { bubbles: true }));
+      const name = recovery.querySelector("[data-preset-name-input]");
+      name.value = "Night";
+      recovery.querySelector("[data-preset-save]").click();
+      const savedPreset = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      ).presets[0];
+
+      dim.value = "50";
+      dim.dispatchEvent(new Event("input", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      const customAfterEdit = {
+        activePresetId: JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).activePresetId,
+        profile: JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.performanceProfile
+      };
+
+      recovery
+        .querySelector("[data-preset-apply='night']")
+        .click();
+      const applied = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        volume: panel.querySelector("[data-setting='volume']").value,
+        activePresetId: JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).activePresetId,
+        mediaSame: root.querySelector(".media:not(.staged)") === media
+      };
+
+      const rename = recovery.querySelector("[data-preset-name='night']");
+      rename.value = "Night A";
+      recovery.querySelector("[data-preset-rename='night']").click();
+      const renamed = {
+        text: recovery.querySelector("[data-preset-name='night']").value,
+        stored: JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).presets[0].name
+      };
+
+      const originalCreate = URL.createObjectURL;
+      let exportedBlob = null;
+      URL.createObjectURL = (blob) => {
+        exportedBlob = blob;
+        return "blob:fixture-settings";
+      };
+      recovery.querySelector("[data-settings-export]").click();
+      URL.createObjectURL = originalCreate;
+      const exportedText = await exportedBlob.text();
+      const exported = JSON.parse(exportedText);
+
+      const previous = localStorage.getItem("codex-wallpaper-p1-config");
+      const next = JSON.stringify({
+        ...JSON.parse(previous),
+        activePresetId: null,
+        settings: {
+          ...JSON.parse(previous).settings,
+          dim: 41
+        }
+      });
+      localStorage.setItem("codex-wallpaper-p1-config", next);
+      const syncedMedia = root.querySelector(".media:not(.staged)");
+      dispatchEvent(
+        new StorageEvent("storage", {
+          key: "codex-wallpaper-p1-config",
+          oldValue: previous,
+          newValue: next,
+          storageArea: localStorage
+        })
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      const crossWindow = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        activePreset:
+          recovery
+            .querySelector("[data-preset-id='night']")
+            .getAttribute("data-active"),
+        mediaSame: root.querySelector(".media:not(.staged)") === syncedMedia
+      };
+
+      const settingsImport = recovery.querySelector("[data-settings-import]");
+      recovery.querySelector("[data-settings-status]").textContent = "";
+      const validTransfer = new DataTransfer();
+      validTransfer.items.add(
+        new File(
+          [
+            JSON.stringify({
+              version: 1,
+              settings: {
+                dim: 28,
+                blur: 4,
+                opacity: 84,
+                fitMode: "contain",
+                surfaceOpacity: 58,
+                interfaceBlur: 3,
+                interfaceBorders: false,
+                surfaceOverrides: {
+                  chat: 35,
+                  sidebar: null,
+                  right: null,
+                  settings: null
+                },
+                fps: 15,
+                volume: 30,
+                muted: false,
+                rotationMinutes: 5,
+                performanceProfile: "performance",
+                pauseWhenHidden: true
+              }
+            })
+          ],
+          "valid-settings.json",
+          { type: "application/json" }
+        )
+      );
+      settingsImport.files = validTransfer.files;
+      settingsImport.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (recovery.querySelector("[data-settings-status]").textContent)
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const imported = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        fitMode: panel.querySelector("[data-setting='fitMode']").value,
+        volume: panel.querySelector("[data-setting='volume']").value,
+        activePresetId: JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).activePresetId,
+        mediaSame: root.querySelector(".media:not(.staged)") === media,
+        status: recovery.querySelector("[data-settings-status]").textContent
+      };
+
+      const beforeInvalid = localStorage.getItem("codex-wallpaper-p1-config");
+      recovery.querySelector("[data-settings-status]").textContent = "";
+      const invalidTransfer = new DataTransfer();
+      invalidTransfer.items.add(
+        new File(
+          [
+            JSON.stringify({
+              version: 99,
+              settings: { dim: 999, opacity: "broken" }
+            })
+          ],
+          "invalid-settings.json",
+          { type: "application/json" }
+        )
+      );
+      settingsImport.files = invalidTransfer.files;
+      settingsImport.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (recovery.querySelector("[data-settings-status]").textContent)
+          break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const invalid = {
+        unchanged:
+          localStorage.getItem("codex-wallpaper-p1-config") === beforeInvalid,
+        status: recovery.querySelector("[data-settings-status]").textContent
+      };
+
+      recovery.querySelector("[data-reset-group='appearance']").click();
+      const appearanceReset = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        fitMode: panel.querySelector("[data-setting='fitMode']").value,
+        activeId: globalThis.__codexWallpaperApi.state().activeId,
+        favorite: panel
+          .querySelector("[data-entry-action='favorite']")
+          .getAttribute("aria-pressed"),
+        playlist: panel.querySelector(".playlist-summary").textContent
+      };
+      recovery.querySelector("[data-reset-group='playback']").click();
+      const playbackReset = {
+        volume: panel.querySelector("[data-setting='volume']").value,
+        fps: globalThis.__codexWallpaperApi.state().fpsCap,
+        profile: panel.querySelector("[data-playback-profile]").value
+      };
+      recovery.querySelector("[data-reset-group='all']").click();
+      const allReset = {
+        dim: panel.querySelector("[data-setting='dim']").value,
+        volume: panel.querySelector("[data-setting='volume']").value,
+        activeId: globalThis.__codexWallpaperApi.state().activeId,
+        favorite: panel
+          .querySelector("[data-entry-action='favorite']")
+          .getAttribute("aria-pressed"),
+        playlist: panel.querySelector(".playlist-summary").textContent
+      };
+
+      const mediaImport = panel.querySelector(".import-row input");
+      const mediaTransfer = new DataTransfer();
+      mediaTransfer.items.add(
+        new File(
+          ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+          "Remove Me.svg",
+          { type: "image/svg+xml" }
+        )
+      );
+      mediaImport.files = mediaTransfer.files;
+      mediaImport.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (globalThis.__codexWallpaperApi.state().importedCount > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const importedBeforeRemove =
+        globalThis.__codexWallpaperApi.state().importedCount;
+      recovery.querySelector("[data-remove-imported]").click();
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (globalThis.__codexWallpaperApi.state().importedCount === 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const removedImported = {
+        before: importedBeforeRemove,
+        after: globalThis.__codexWallpaperApi.state().importedCount,
+        state: globalThis.__codexWallpaperApi.state().state,
+        activeKind: globalThis.__codexWallpaperApi.state().activeKind,
+        activeId: globalThis.__codexWallpaperApi.state().activeId,
+        favorite: panel
+          .querySelector("[data-entry-action='favorite']")
+          .getAttribute("aria-pressed")
+      };
+
+      panel.querySelector("header button").click();
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const reopened = {
+        presetName: panel.querySelector("[data-preset-name='night']").value,
+        presetCount: panel.querySelectorAll("[data-preset-id]").length
+      };
+      return {
+        migrated,
+        savedPreset,
+        customAfterEdit,
+        applied,
+        renamed,
+        exported,
+        crossWindow,
+        imported,
+        invalid,
+        appearanceReset,
+        playbackReset,
+        allReset,
+        removedImported,
+        reopened
+      };
+    })()`,
+    options
+  );
+
+  assert.deepEqual(result.migrated, {
+    active: "fixture-image",
+    favorite: "true",
+    playlist: "轮播：Fixture Image",
+    fitMode: "cover",
+    surfaceOpacity: "72",
+  });
+  assert.equal(result.savedPreset.id, "night");
+  assert.equal(result.savedPreset.name, "Night");
+  assert.equal(result.savedPreset.settings.dim, 33);
+  assert.equal(result.savedPreset.settings.volume, 45);
+  assert.deepEqual(result.customAfterEdit, {
+    activePresetId: null,
+    profile: "custom",
+  });
+  assert.deepEqual(result.applied, {
+    dim: "33",
+    volume: "45",
+    activePresetId: "night",
+    mediaSame: true,
+  });
+  assert.deepEqual(result.renamed, {
+    text: "Night A",
+    stored: "Night A",
+  });
+  assert.equal(result.exported.version, 1);
+  assert.deepEqual(Object.keys(result.exported), ["version", "settings"]);
+  assert.equal("favorites" in result.exported, false);
+  assert.equal("active" in result.exported, false);
+  assert.equal(result.exported.settings.dim, 33);
+  assert.deepEqual(result.crossWindow, {
+    dim: "41",
+    activePreset: "false",
+    mediaSame: true,
+  });
+  assert.deepEqual(result.imported, {
+    dim: "28",
+    fitMode: "contain",
+    volume: "30",
+    activePresetId: null,
+    mediaSame: true,
+    status: "设置已导入",
+  });
+  assert.equal(result.invalid.unchanged, true);
+  assert.match(result.invalid.status, /^导入失败：/);
+  assert.deepEqual(result.appearanceReset, {
+    dim: "18",
+    fitMode: "cover",
+    activeId: "fixture-image",
+    favorite: "true",
+    playlist: "轮播：Fixture Image",
+  });
+  assert.deepEqual(result.playbackReset, {
+    volume: "0",
+    fps: 30,
+    profile: "balanced",
+  });
+  assert.deepEqual(result.allReset, {
+    dim: "18",
+    volume: "0",
+    activeId: "fixture-image",
+    favorite: "true",
+    playlist: "轮播：Fixture Image",
+  });
+  assert.deepEqual(result.removedImported, {
+    before: 1,
+    after: 0,
+    state: "enabled",
+    activeKind: "builtin",
+    activeId: "aurora",
+    favorite: "true",
+  });
+  assert.deepEqual(result.reopened, {
+    presetName: "Night A",
+    presetCount: 1,
+  });
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -4493,7 +4894,7 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 29,
+        controls: 35,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-image",
@@ -4638,7 +5039,7 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 29,
+        controls: 35,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-on-demand",
