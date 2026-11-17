@@ -695,6 +695,100 @@ test("failed first video shows its preview instead of a blank background", async
   );
 });
 
+test("disable cancels a staged video before its first frame can commit", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `(() => {
+      localStorage.setItem(
+        "codex-wallpaper-p1-config",
+        JSON.stringify({
+          enabled: true,
+          active: { kind: "workshop", id: "fixture-video" },
+          favorites: [],
+          playlist: [],
+          settings: { dim: 18, blur: 0, opacity: 100, fps: 30, volume: 0, rotationMinutes: 0 }
+        })
+      );
+      globalThis.__t02OriginalFrameCallback =
+        HTMLVideoElement.prototype.requestVideoFrameCallback;
+      globalThis.__t02OriginalCancelFrameCallback =
+        HTMLVideoElement.prototype.cancelVideoFrameCallback;
+      globalThis.__t02PendingFrame = null;
+      HTMLVideoElement.prototype.requestVideoFrameCallback = (callback) => {
+        globalThis.__t02PendingFrame = callback;
+        return 1;
+      };
+      HTMLVideoElement.prototype.cancelVideoFrameCallback = () => {};
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          if (typeof globalThis.__t02PendingFrame === "function") break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const stagedBefore = root.querySelectorAll(".media.staged").length;
+        const pendingFrame = globalThis.__t02PendingFrame;
+        await globalThis.__codexWallpaperApi.disable();
+        pendingFrame?.(performance.now(), {});
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        const state = globalThis.__codexWallpaperApi.state();
+        const result = {
+          stagedBefore,
+          state: state.state,
+          root: document.querySelectorAll("#${rootId}").length,
+          mediaAfter: document.querySelectorAll(
+            "#${rootId} [data-codex-wallpaper-layer] .media"
+          ).length,
+          videoAfter: document.querySelectorAll("#${rootId} video").length,
+          playerCount: state.playerCount
+        };
+        HTMLVideoElement.prototype.requestVideoFrameCallback =
+          globalThis.__t02OriginalFrameCallback;
+        HTMLVideoElement.prototype.cancelVideoFrameCallback =
+          globalThis.__t02OriginalCancelFrameCallback;
+        return result;
+      })()`,
+      options
+    ),
+    {
+      stagedBefore: 1,
+      state: "disabled",
+      root: 0,
+      mediaAfter: 0,
+      videoAfter: 0,
+      playerCount: 0,
+    }
+  );
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -1047,22 +1141,28 @@ test("static background is single, removable and persists disabled", async (t) =
             root.querySelector(".media-preview")
           )
         };
+        const originalRequestAnimationFrame = window.requestAnimationFrame;
+        let drawLoopFrames = 0;
+        window.requestAnimationFrame = (callback) => {
+          drawLoopFrames += 1;
+          return originalRequestAnimationFrame(callback);
+        };
         videoFrameCallback?.();
-        await new Promise((resolve) => setTimeout(resolve, 80));
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        window.requestAnimationFrame = originalRequestAnimationFrame;
         const canvas = root.querySelector(".media canvas");
-        const video = root.querySelector(".media video");
+        const video = root.querySelector(".media:not(.staged) video");
         const afterFrame = {
           oldFrameReleased: !oldImage.isConnected,
           previewGone: !root.querySelector(".media-preview"),
-          canvasVisible:
-            canvas?.getBoundingClientRect().width ===
+          videoVisible:
+            video?.getBoundingClientRect().width ===
               root.querySelector(".media").clientWidth &&
-            canvas?.getBoundingClientRect().height ===
+            video?.getBoundingClientRect().height ===
               root.querySelector(".media").clientHeight,
-          canvasMatchesVideo:
-            canvas?.width === video?.videoWidth &&
-            canvas?.height === video?.videoHeight,
-          objectFit: canvas ? getComputedStyle(canvas).objectFit : null,
+          directVideo: !canvas,
+          drawLoopFrames,
+          objectFit: video ? getComputedStyle(video).objectFit : null,
           playerCount: globalThis.__codexWallpaperApi.state().playerCount
         };
         HTMLVideoElement.prototype.requestVideoFrameCallback =
@@ -1080,10 +1180,11 @@ test("static background is single, removable and persists disabled", async (t) =
       afterFrame: {
         oldFrameReleased: true,
         previewGone: true,
-        canvasVisible: true,
-        canvasMatchesVideo: true,
+        videoVisible: true,
+        directVideo: true,
+        drawLoopFrames: 0,
         objectFit: "cover",
-        playerCount: 2,
+        playerCount: 1,
       },
     }
   );
@@ -1123,7 +1224,7 @@ test("static background is single, removable and persists disabled", async (t) =
           (card) => card.querySelector("strong")?.textContent === "Fixture Video"
         );
         videoCard.querySelector(".card-actions button").click();
-        for (let attempt = 0; attempt < 80; attempt += 1) {
+        for (let attempt = 0; attempt < 40; attempt += 1) {
           if (
             controls
               .querySelector(".runtime-status")
@@ -1176,7 +1277,7 @@ test("static background is single, removable and persists disabled", async (t) =
           (card) => card.querySelector("strong")?.textContent === "Fixture Video"
         );
         videoCard.querySelector(".card-actions button").click();
-        for (let attempt = 0; attempt < 80; attempt += 1) {
+        for (let attempt = 0; attempt < 40; attempt += 1) {
           if (
             document.querySelector(
               "#${rootId} .media:not(.staged) video"
@@ -1187,6 +1288,12 @@ test("static background is single, removable and persists disabled", async (t) =
         }
         const videoAfterRejectedPlay =
           document.querySelector("#${rootId} video") instanceof HTMLVideoElement;
+        const originalRequestAnimationFrame = window.requestAnimationFrame;
+        let drawLoopFrames = 0;
+        window.requestAnimationFrame = (callback) => {
+          drawLoopFrames += 1;
+          return originalRequestAnimationFrame(callback);
+        };
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "hidden"
@@ -1198,11 +1305,13 @@ test("static background is single, removable and persists disabled", async (t) =
         });
         document.dispatchEvent(new Event("visibilitychange"));
         await new Promise((resolve) => setTimeout(resolve, 80));
+        window.requestAnimationFrame = originalRequestAnimationFrame;
         const result = {
           videoAfterRejectedPlay,
           videoAfterVisible:
             document.querySelector("#${rootId} video") instanceof HTMLVideoElement,
           playCalls,
+          drawLoopFrames,
           status: controls.querySelector(".runtime-status")?.textContent
         };
         HTMLMediaElement.prototype.play = originalPlay;
@@ -1214,6 +1323,7 @@ test("static background is single, removable and persists disabled", async (t) =
       videoAfterRejectedPlay: true,
       videoAfterVisible: true,
       playCalls: 2,
+      drawLoopFrames: 0,
       status: "Fixture Video · 视频",
     }
   );
@@ -1243,7 +1353,7 @@ test("static background is single, removable and persists disabled", async (t) =
             "#${rootId} .media:not(.staged) video"
           );
           if (
-            api.state().playerCount === 2 &&
+            api.state().playerCount === 1 &&
             activeVideo?.src.startsWith("blob:")
           )
             break;
@@ -1259,7 +1369,7 @@ test("static background is single, removable and persists disabled", async (t) =
       })()`,
       options
     ),
-    { playerCount: 2, blobUrl: true }
+    { playerCount: 1, blobUrl: true }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -1336,7 +1446,7 @@ test("static background is single, removable and persists disabled", async (t) =
       })()`,
       options
     ),
-    { mutations: 0, playerCount: 2 }
+    { mutations: 0, playerCount: 1 }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -1447,7 +1557,9 @@ test("static background is single, removable and persists disabled", async (t) =
         return {
           activeId: globalThis.__codexWallpaperApi.state().activeId,
           heldWhileSceneLoads,
-          imageIsCurrentAsset: image?.src.includes("5d32b8") ?? false
+          imageIsCurrentAsset: image?.src.includes("5d32b8") ?? false,
+          mediaCount: root.querySelectorAll(".media:not(.staged)").length,
+          staged: root.querySelectorAll(".media.staged").length
         };
       })()`,
       options
@@ -1456,6 +1568,8 @@ test("static background is single, removable and persists disabled", async (t) =
       activeId: "fixture-image",
       heldWhileSceneLoads: true,
       imageIsCurrentAsset: true,
+      mediaCount: 1,
+      staged: 0,
     }
   );
   assert.deepEqual(

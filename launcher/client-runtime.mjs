@@ -9,9 +9,8 @@ function createRuntimeStyles(rootId, controlsId) {
       #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
       #${rootId} .scene-host { position: absolute; inset: 0; opacity: 0; }
       #${rootId} .scene-host.ready { opacity: 1; }
-      #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
+      #${rootId} .media img, #${rootId} .media video, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
-      #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       #${rootId} .dim { position: absolute; inset: 0; }
       /* Keep the corner when the toolbar fits beside the composer. */
       body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
@@ -442,7 +441,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     return Boolean(
       media &&
       (media.classList.contains("builtin") ||
-        media.querySelector("img, canvas, iframe, .scene-host.ready"))
+        media.querySelector("img, video, canvas, iframe, .scene-host.ready"))
     );
   }
 
@@ -529,12 +528,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       0,
       Math.min(1, Number(config.settings.volume) || 0)
     );
-    const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 720;
-    next.append(canvas, video);
-    video.className = "playback-source";
-    const context = canvas.getContext("2d", { alpha: false });
+    next.append(video);
     let cancelled = false;
     let settled = false;
     let frameRequest = 0;
@@ -542,30 +536,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const current = {
       cancelled: false,
       video,
-      raf: 0,
-      lastFrame: 0,
-      draw(timestamp) {
-        if (current.cancelled || document.visibilityState === "hidden") return;
-        const interval = 1000 / Math.max(1, Number(config.settings.fps) || 30);
-        if (timestamp - current.lastFrame >= interval) {
-          current.lastFrame = timestamp;
-          if (video.readyState >= 2) {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            frameCount += 1;
-            if (timestamp - frameWindowStartedAt >= 1000) {
-              measuredFps = Math.round(
-                (frameCount * 1000) / (timestamp - frameWindowStartedAt)
-              );
-              frameCount = 0;
-              frameWindowStartedAt = timestamp;
-            }
-          }
-        }
-        current.raf = requestAnimationFrame(current.draw);
-      },
-      start() {
-        if (!video.paused) current.raf = requestAnimationFrame(current.draw);
-      },
     };
     const pending = trackPending(
       () => {
@@ -591,31 +561,19 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       pending.cancel();
       recoverFailedMedia("视频加载失败", previewUrl);
     };
-    const prepareCanvas = () => {
-      if (!video.videoWidth || !video.videoHeight) return false;
-      const scale = Math.min(
-        1,
-        1920 / video.videoWidth,
-        1080 / video.videoHeight
-      );
-      canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
-      canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-      return true;
-    };
     const drawFirstFrame = () => {
       if (settled) return;
       if (cancelled || generation !== activeGeneration) {
         pending.cancel();
         return;
       }
-      if (!prepareCanvas() || video.readyState < 2) return;
+      if (!video.videoWidth || !video.videoHeight || video.readyState < 2)
+        return;
       settled = true;
       finishPending(pending);
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
       current.cancelled = false;
       commitMedia(next, current, objectUrl);
       if (document.visibilityState === "hidden") video.pause();
-      current.start();
       if (message) setStatus(message);
     };
     const waitForPresentedFrame = () => {
@@ -646,7 +604,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
         pending.cancel();
         return;
       }
-      prepareCanvas();
       waitForPresentedFrame();
     };
     video.onerror = () => {
