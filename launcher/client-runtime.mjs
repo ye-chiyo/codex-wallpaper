@@ -1,8 +1,190 @@
-export function runtimeSource(payload) {
-  return `(${createCodexWallpaperRuntime.toString()})(${JSON.stringify(payload)})`;
+function createRuntimeStyles(rootId, controlsId) {
+  return `
+      #${rootId}, #${rootId} * { box-sizing: border-box; }
+      #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
+      #${controlsId} { z-index: 2147483647; }
+      #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+      #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
+      #${rootId} .media.staged { opacity: 0; }
+      #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
+      #${rootId} .scene-host { position: absolute; inset: 0; opacity: 0; }
+      #${rootId} .scene-host.ready { opacity: 1; }
+      #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
+      #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
+      #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+      #${rootId} .dim { position: absolute; inset: 0; }
+      /* Keep the corner when the toolbar fits beside the composer. */
+      body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
+      #${controlsId} .toolbar {
+        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
+        position-anchor: --codex-wallpaper-composer;
+        left: calc(anchor(right) + 8px);
+        width: max-content; justify-self: end;
+        position-try-fallbacks: --codex-wallpaper-above-composer;
+        anchor-name: --codex-wallpaper-toolbar;
+      }
+      @position-try --codex-wallpaper-above-composer {
+        left: auto;
+        bottom: max(14px, calc(anchor(top, 6px) + 8px));
+      }
+      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
+      #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
+      #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button:active, #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button[aria-pressed='true'], #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
+      #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
+      #${controlsId} .panel {
+        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        position-anchor: --codex-wallpaper-toolbar;
+        position-area: top span-left;
+        inset: 14px 0 3px 14px;
+        place-self: end;
+        max-height: min(74vh, 720px, calc(100% - 17px));
+      }
+      #${controlsId} .panel.open { display: block; }
+      html:has([data-composer-surface-variant]) #${controlsId} .panel {
+        position-anchor: --codex-wallpaper-composer;
+        position-area: top span-right;
+        inset: 14px 0 8px 14px;
+      }
+      #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
+      #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
+      #${controlsId} .import-row input { width: 135px; font-size: 11px; }
+      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
+      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
+      #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
+      #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
+      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
+      #${controlsId} .settings-grid { display: grid; gap: 7px; }
+      #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
+      #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
+      #${controlsId} .reset { margin-top: 14px; width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
+      :root {
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 72%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 18%, transparent);
+        --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
+        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 94%, transparent);
+        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 64%, transparent);
+        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 42%, transparent);
+        --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
+        --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
+        --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
+        --codex-wallpaper-radius: 14px;
+        --codex-wallpaper-radius-sm: 9px;
+        --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
+      }
+      html[data-theme='light'] {
+        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 80%, transparent);
+        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 12%, transparent);
+        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(232 232 237)) 72%, transparent);
+        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(247 247 249)) 62%, transparent);
+      }
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
+        &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
+      }
+      body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
+      body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
+        background-color: transparent !important;
+        box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
+        --color-text-tertiary: var(--color-text-secondary);
+      }
+      body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
+        background-color: transparent !important;
+        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
+        --color-text-tertiary: var(--color-text-secondary);
+      }
+      body [data-app-shell-trailing-sidebar] { background-color: transparent !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
+      body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
+      body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
+      body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) {
+        & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: var(--codex-wallpaper-settings-canvas) !important; }
+        & main[data-app-shell-main-surface] :where([class~='rounded-2xl'][class~='border-default']) {
+          background-color: var(--codex-wallpaper-settings-card) !important;
+          border-color: var(--codex-wallpaper-line-strong) !important;
+          border-radius: var(--codex-wallpaper-radius) !important;
+          --color-border: var(--codex-wallpaper-line);
+        }
+        & :where([class~='bg-background-secondary-soft-alpha']) {
+          background-color: var(--codex-wallpaper-settings-control) !important;
+          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
+        }
+        & :where([class~='bg-background-secondary-soft-alpha']):focus-within {
+          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 0 0 2px color-mix(in srgb, var(--color-text-accent, rgb(51 156 255)) 20%, transparent);
+        }
+        & nav button[data-settings-panel-slug] {
+          border-radius: var(--codex-wallpaper-radius-sm) !important;
+        }
+        & nav button[data-settings-panel-slug][aria-current='page'] {
+          background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, transparent) !important;
+          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
+        }
+        & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']) {
+          background-color: var(--codex-wallpaper-settings-control) !important;
+          border-color: var(--codex-wallpaper-line-strong) !important;
+          border-radius: var(--codex-wallpaper-radius-sm) !important;
+        }
+        & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']):is(:hover, [data-state='open']) {
+          background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 9%, var(--codex-wallpaper-settings-control)) !important;
+        }
+        & main[data-app-shell-main-surface] :where([class~='bg-segmented-selected']) {
+          background-color: var(--codex-wallpaper-settings-control) !important;
+        }
+        & :where(button, [role='combobox']):focus-visible {
+          outline: 2px solid var(--color-text-accent, rgb(51 156 255));
+          outline-offset: 2px;
+        }
+        & main[data-app-shell-main-surface] [role='switch'] > [data-state] {
+          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong);
+        }
+      }
+      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], pre) { background-color: var(--codex-wallpaper-raised) !important; }
+      body :is([data-app-shell-page-sidebar]:not([data-app-shell-frame]), [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre:not(.composer-diff-simple-line pre)) { background-color: var(--codex-wallpaper-raised) !important; }
+      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant]) { border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
+      body [data-pip-obstacle='thread-footer-leading'] { background-color: var(--codex-wallpaper-raised) !important; }
+      body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
+      body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
+      body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
+      body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(var(--codex-wallpaper-canvas), transparent) !important; }
+      body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
+      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
+      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
+      body [data-app-shell-trailing-sidebar] [data-thread-find-target='review'] { background-color: transparent !important; }
+      body [data-app-shell-trailing-sidebar] :is([data-thread-find-target='review'], [data-testid='diff-preview-scroll']) {
+        --diffs-bg-addition: color-mix(in srgb, var(--color-codex-diff-added, transparent) 24%, transparent) !important;
+        --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
+      }
+      body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
+      body :where([role='dialog'], [role='menu']) { background-color: var(--codex-wallpaper-panel) !important; }
+      body [data-radix-popper-content-wrapper] { background-color: transparent !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled) { opacity: .48; cursor: not-allowed; }
+    `;
 }
 
-export function createCodexWallpaperRuntime(payload) {
+export function runtimeSource(payload) {
+  const runtimeCss = createRuntimeStyles(
+    "codex-wallpaper-p1",
+    "codex-wallpaper-p1-controls"
+  );
+  return `(${createCodexWallpaperRuntime.toString()})(${JSON.stringify(
+    payload
+  )}, ${JSON.stringify(runtimeCss)})`;
+}
+
+export function createCodexWallpaperRuntime(payload, runtimeCss) {
   const rootId = "codex-wallpaper-p1";
   const controlsId = "codex-wallpaper-p1-controls";
   const styleId = "codex-wallpaper-p1-style";
@@ -56,8 +238,8 @@ export function createCodexWallpaperRuntime(payload) {
   let playback = null;
   let currentObjectUrl = null;
   let rotationTimer = null;
-  let renderGeneration = 0;
   let activeGeneration = 0;
+  let pendingRender = null;
   let imported = [];
   let database = null;
   const runtimeAssets = new Map();
@@ -174,26 +356,70 @@ export function createCodexWallpaperRuntime(payload) {
     if (status) status.textContent = message;
   }
 
+  function releasePlayback(target) {
+    if (!target) return;
+    target.cancelled = true;
+    if (target.raf) cancelAnimationFrame(target.raf);
+    target.video?.pause();
+    target.video?.remove();
+    target.scene?.destroy();
+  }
+
+  function releaseObjectUrl(url, keepUrl = null) {
+    if (!url || url === keepUrl) return;
+    for (const [key, asset] of runtimeAssets) {
+      if (asset.assetUrl === url) runtimeAssets.delete(key);
+    }
+    URL.revokeObjectURL(url);
+  }
+
+  function cancelPendingRender() {
+    const pending = pendingRender;
+    pendingRender = null;
+    pending?.cancel();
+  }
+
   function revokePlayback() {
-    renderGeneration += 1;
+    cancelPendingRender();
     measuredFps = 0;
     frameCount = 0;
     frameWindowStartedAt = performance.now();
-    if (playback) {
-      playback.cancelled = true;
-      if (playback.raf) cancelAnimationFrame(playback.raf);
-      playback.video?.pause();
-      playback.video?.remove();
-      playback.scene?.destroy();
-      playback = null;
-    }
-    if (currentObjectUrl) {
-      for (const [key, asset] of runtimeAssets) {
-        if (asset.assetUrl === currentObjectUrl) runtimeAssets.delete(key);
-      }
-      URL.revokeObjectURL(currentObjectUrl);
-    }
+    releasePlayback(playback);
+    releaseObjectUrl(currentObjectUrl);
+    playback = null;
     currentObjectUrl = null;
+  }
+
+  function commitMedia(next, nextPlayback = null, objectUrl = null) {
+    const previousMedia = media;
+    const previousPlayback = playback;
+    const previousObjectUrl = currentObjectUrl;
+    if (next.parentNode !== layer) layer.insertBefore(next, dim);
+    next.classList.remove("staged");
+    media = next;
+    playback = nextPlayback;
+    currentObjectUrl = objectUrl;
+    previousMedia?.remove();
+    releasePlayback(previousPlayback);
+    releaseObjectUrl(previousObjectUrl, objectUrl);
+    applyVisualSettings();
+  }
+
+  function stageMedia() {
+    const next = document.createElement("div");
+    next.className = "media staged";
+    layer.insertBefore(next, dim);
+    return next;
+  }
+
+  function trackPending(cancel, resume = null) {
+    const pending = { cancel, resume };
+    pendingRender = pending;
+    return pending;
+  }
+
+  function finishPending(pending) {
+    if (pendingRender === pending) pendingRender = null;
   }
 
   function stopRotation() {
@@ -210,6 +436,26 @@ export function createCodexWallpaperRuntime(payload) {
     dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
   }
 
+  function hasCurrentFrame() {
+    return Boolean(
+      media &&
+      (media.classList.contains("builtin") ||
+        media.querySelector("img, canvas, iframe, .scene-host.ready"))
+    );
+  }
+
+  function recoverFailedMedia(message, previewUrl = null) {
+    if (hasCurrentFrame()) {
+      setStatus(`${message}，已保留当前画面`);
+      return;
+    }
+    if (previewUrl) {
+      showImage(previewUrl, `${message}，已使用预览`);
+      return;
+    }
+    showGradient(`${message}，已使用静态背景`);
+  }
+
   async function configureHost() {
     hostReady = true;
     pendingAssetRequests.clear();
@@ -219,54 +465,78 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function showGradient(message) {
-    revokePlayback();
-    media.replaceChildren();
-    media.className = "media builtin";
+    const next = document.createElement("div");
+    next.className = "media builtin";
+    commitMedia(next);
     if (message) setStatus(message);
-    applyVisualSettings();
   }
 
-  function showImage(url, message) {
-    revokePlayback();
-    const generation = renderGeneration;
+  function showImage(url, message, objectUrl = null) {
+    const generation = activeGeneration;
+    const next = stageMedia();
     const image = document.createElement("img");
     image.alt = "";
-    image.src = url;
-    image.onerror = () => {
-      if (generation === renderGeneration)
-        showGradient("素材加载失败，已保留静态渐变");
+    next.append(image);
+    let cancelled = false;
+    let settled = false;
+    const pending = trackPending(() => {
+      if (cancelled) return;
+      cancelled = true;
+      image.onerror = null;
+      next.remove();
+      releaseObjectUrl(objectUrl, currentObjectUrl);
+    });
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      finishPending(pending);
+      if (cancelled || generation !== activeGeneration) {
+        pending.cancel();
+        return;
+      }
+      next.remove();
+      releaseObjectUrl(objectUrl, currentObjectUrl);
+      recoverFailedMedia("素材加载失败");
     };
-    media.replaceChildren(image);
-    media.className = "media";
-    if (message) setStatus(message);
-    applyVisualSettings();
+    const commit = () => {
+      if (settled) return;
+      settled = true;
+      finishPending(pending);
+      if (cancelled || generation !== activeGeneration) {
+        pending.cancel();
+        return;
+      }
+      commitMedia(next, null, objectUrl);
+      if (message) setStatus(message);
+    };
+    image.onerror = fail;
+    image.src = url;
+    image.decode().then(commit).catch(fail);
   }
 
-  function showVideo(url, message, previewUrl) {
-    revokePlayback();
-    const generation = renderGeneration;
+  function showVideo(url, message, objectUrl = null, previewUrl = null) {
+    const generation = activeGeneration;
+    const next = stageMedia();
     const video = document.createElement("video");
     video.src = url;
     video.loop = true;
+    video.playsInline = true;
+    video.preload = "auto";
     video.muted = Number(config.settings.volume) === 0;
     video.volume = Math.max(
       0,
       Math.min(1, Number(config.settings.volume) || 0)
     );
-    video.playsInline = true;
     const canvas = document.createElement("canvas");
     canvas.width = 1280;
     canvas.height = 720;
-    const preview = previewUrl ? document.createElement("img") : null;
-    if (preview) {
-      preview.className = "media-preview";
-      preview.alt = "";
-      preview.src = previewUrl;
-    }
-    media.replaceChildren(...(preview ? [preview] : []), canvas, video);
+    next.append(canvas, video);
     video.className = "playback-source";
-    media.className = "media";
     const context = canvas.getContext("2d", { alpha: false });
+    let cancelled = false;
+    let settled = false;
+    let frameRequest = 0;
+    let resume = null;
     const current = {
       cancelled: false,
       video,
@@ -279,7 +549,6 @@ export function createCodexWallpaperRuntime(payload) {
           current.lastFrame = timestamp;
           if (video.readyState >= 2) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            preview?.remove();
             frameCount += 1;
             if (timestamp - frameWindowStartedAt >= 1000) {
               measuredFps = Math.round(
@@ -296,9 +565,32 @@ export function createCodexWallpaperRuntime(payload) {
         if (!video.paused) current.raf = requestAnimationFrame(current.draw);
       },
     };
-    playback = current;
-    video.onloadedmetadata = () => {
-      if (generation !== renderGeneration) return;
+    const pending = trackPending(
+      () => {
+        if (cancelled) return;
+        cancelled = true;
+        video.onerror = null;
+        video.onloadedmetadata = null;
+        if (frameRequest) video.cancelVideoFrameCallback?.(frameRequest);
+        releasePlayback(current);
+        next.remove();
+        releaseObjectUrl(objectUrl, currentObjectUrl);
+      },
+      () => resume?.()
+    );
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      finishPending(pending);
+      if (cancelled || generation !== activeGeneration) {
+        pending.cancel();
+        return;
+      }
+      pending.cancel();
+      recoverFailedMedia("视频加载失败", previewUrl);
+    };
+    const prepareCanvas = () => {
+      if (!video.videoWidth || !video.videoHeight) return false;
       const scale = Math.min(
         1,
         1920 / video.videoWidth,
@@ -306,23 +598,94 @@ export function createCodexWallpaperRuntime(payload) {
       );
       canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
       canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+      return true;
+    };
+    const drawFirstFrame = () => {
+      if (settled) return;
+      if (cancelled || generation !== activeGeneration) {
+        pending.cancel();
+        return;
+      }
+      if (!prepareCanvas() || video.readyState < 2) return;
+      settled = true;
+      finishPending(pending);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      current.cancelled = false;
+      commitMedia(next, current, objectUrl);
+      if (document.visibilityState === "hidden") video.pause();
       current.start();
+      if (message) setStatus(message);
+    };
+    const waitForPresentedFrame = () => {
+      if (frameRequest) return;
+      if (typeof video.requestVideoFrameCallback === "function") {
+        frameRequest = video.requestVideoFrameCallback(() => {
+          frameRequest = 0;
+          drawFirstFrame();
+        });
+      } else {
+        video.addEventListener("loadeddata", drawFirstFrame, { once: true });
+      }
+    };
+    const drawLoadedFrame = () => {
+      if (document.visibilityState === "hidden") drawFirstFrame();
+      else requestAnimationFrame(drawFirstFrame);
+    };
+    resume = () => {
+      if (settled || cancelled || generation !== activeGeneration) return;
+      if (video.readyState >= 2) drawLoadedFrame();
+      video
+        .play()
+        .then(waitForPresentedFrame)
+        .catch(() => {});
+    };
+    video.onloadedmetadata = () => {
+      if (cancelled || generation !== activeGeneration) {
+        pending.cancel();
+        return;
+      }
+      prepareCanvas();
+      waitForPresentedFrame();
     };
     video.onerror = () => {
-      if (generation !== renderGeneration) return;
-      if (config.settings.volume) setStatus("视频加载失败，已降级");
-      if (previewUrl) showImage(previewUrl, "视频加载失败，已保留预览");
-      else showGradient("视频加载失败，已保留静态渐变");
+      fail();
     };
     video
       .play()
       .then(() => {
-        if (generation !== renderGeneration) return;
-        if (document.visibilityState === "hidden") video.pause();
+        if (cancelled || generation !== activeGeneration) {
+          pending.cancel();
+          return;
+        }
+        if (document.visibilityState === "hidden") {
+          video.pause();
+          if (video.readyState >= 2) drawLoadedFrame();
+          else {
+            video.addEventListener("loadeddata", drawLoadedFrame, {
+              once: true,
+            });
+            video.addEventListener("seeked", drawLoadedFrame, {
+              once: true,
+            });
+            try {
+              video.currentTime = 0.001;
+            } catch {}
+          }
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (video.readyState >= 2) drawLoadedFrame();
+        else {
+          video.addEventListener("loadeddata", drawLoadedFrame, {
+            once: true,
+          });
+          video.addEventListener("seeked", drawLoadedFrame, { once: true });
+          try {
+            video.currentTime = 0.001;
+          } catch {}
+        }
+      });
     if (message) setStatus(message);
-    applyVisualSettings();
   }
 
   function bytesFromBase64(encoded) {
@@ -345,31 +708,26 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function showScene(entry, assetUrl, previewUrl) {
-    revokePlayback();
-    const generation = renderGeneration;
+    const generation = activeGeneration;
     const engine = globalThis.WebWallGL;
     if (!engine?.createScene || !engine?.bytesSource) {
       if (previewUrl)
         showImage(previewUrl, `${entry.title} · Scene 渲染器不可用，预览降级`);
-      else showGradient(`${entry.title} · Scene 渲染器不可用`);
+      else recoverFailedMedia(`${entry.title} · Scene 渲染器不可用`);
       return;
     }
+    const next = stageMedia();
     const host = document.createElement("div");
     host.className = "scene-host";
-    const preview = previewUrl ? document.createElement("img") : null;
-    if (preview) {
-      preview.className = "media-preview";
-      preview.alt = "";
-      preview.src = previewUrl;
-    }
-    media.replaceChildren(host, ...(preview ? [preview] : []));
-    media.className = "media";
+    next.append(host);
     const instance = engine.createScene(host, {
       fps: Math.max(1, Math.min(30, Number(config.settings.fps) || 30)),
       volume: Math.max(0, Math.min(1, Number(config.settings.volume) || 0)),
       fit: "cover",
     });
-    playback = {
+    let cancelled = false;
+    let settled = false;
+    const current = {
       cancelled: false,
       scene: instance,
       pause: () => instance.pause(),
@@ -377,9 +735,23 @@ export function createCodexWallpaperRuntime(payload) {
       setFps: (fps) => instance.setFps?.(fps),
       setVolume: (volume) => instance.setVolume?.(volume),
     };
+    const pending = trackPending(() => {
+      if (cancelled) return;
+      cancelled = true;
+      releasePlayback(current);
+      next.remove();
+    });
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      finishPending(pending);
+      pending.cancel();
+      if (generation === activeGeneration)
+        recoverFailedMedia(`${entry.title} · Scene 加载失败`, previewUrl);
+    };
     sceneBytes(assetUrl)
       .then((bytes) => {
-        if (generation !== renderGeneration) return;
+        if (cancelled || generation !== activeGeneration) throw null;
         return instance.load(
           engine.bytesSource(
             bytes,
@@ -388,37 +760,65 @@ export function createCodexWallpaperRuntime(payload) {
           )
         );
       })
+      .then(
+        () =>
+          new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve))
+          )
+      )
       .then(() => {
-        if (generation !== renderGeneration) return;
-        if (document.visibilityState === "hidden") instance.pause();
+        if (settled) return;
+        if (cancelled || generation !== activeGeneration) {
+          pending.cancel();
+          return;
+        }
+        settled = true;
+        finishPending(pending);
         host.classList.add("ready");
-        preview?.remove();
+        commitMedia(next, current);
+        if (document.visibilityState === "hidden") instance.pause();
         setStatus(`${entry.title} · Scene`);
       })
-      .catch(() => {
-        if (generation !== renderGeneration) return;
-        if (previewUrl)
-          showImage(previewUrl, `${entry.title} · Scene 失败，预览降级`);
-        else showGradient(`${entry.title} · Scene 不支持`);
-      });
-    applyVisualSettings();
+      .catch(fail);
   }
 
   function showWeb(entry) {
-    revokePlayback();
+    const generation = activeGeneration;
+    const next = stageMedia();
     const frame = document.createElement("iframe");
     frame.setAttribute("sandbox", "allow-scripts");
     frame.setAttribute("referrerpolicy", "no-referrer");
+    let cancelled = false;
+    let settled = false;
+    const pending = trackPending(() => {
+      if (cancelled) return;
+      cancelled = true;
+      frame.onload = null;
+      next.remove();
+    });
+    frame.onload = () => {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (settled) return;
+          if (cancelled || generation !== activeGeneration) {
+            pending.cancel();
+            return;
+          }
+          settled = true;
+          finishPending(pending);
+          commitMedia(next);
+          setStatus(`${entry.title} · Web 离线沙箱`);
+        })
+      );
+    };
+    next.append(frame);
     frame.srcdoc = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; script-src 'none'">${entry.webHtml}`;
-    media.replaceChildren(frame);
-    media.className = "media";
-    setStatus(`${entry.title} · Web 离线沙箱`);
-    applyVisualSettings();
   }
 
   async function applyActive() {
     if (!root) return;
     const generation = ++activeGeneration;
+    cancelPendingRender();
     stopRotation();
     const active = config.active || defaults.active;
     if (active.kind === "builtin") {
@@ -426,7 +826,7 @@ export function createCodexWallpaperRuntime(payload) {
     } else {
       const entry = findEntry(active);
       if (!entry) {
-        showGradient("已跳过缺失的壁纸");
+        setStatus("已跳过缺失的壁纸，已保留当前画面");
       } else if (entry.kind === "imported") {
         const db = await openDatabase();
         if (generation !== activeGeneration) return state();
@@ -435,16 +835,14 @@ export function createCodexWallpaperRuntime(payload) {
         );
         if (generation !== activeGeneration) return state();
         if (!item?.blob) {
-          showGradient("已跳过缺失的素材");
+          setStatus("已跳过缺失的素材，已保留当前画面");
         } else {
           const url = URL.createObjectURL(item.blob);
           const kind = mediaType(item.blob);
           if (kind === "video") {
-            showVideo(url, `${entry.title} · 视频`);
-            currentObjectUrl = url;
+            showVideo(url, `${entry.title} · 视频`, url);
           } else {
-            showImage(url, `${entry.title} · 图片`);
-            currentObjectUrl = url;
+            showImage(url, `${entry.title} · 图片`, url);
           }
         }
       } else {
@@ -453,7 +851,7 @@ export function createCodexWallpaperRuntime(payload) {
         if (entry.type === "web" && !entry.webHtml) {
           if (previewUrl)
             showImage(previewUrl, `${entry.title} · Web 预览降级`);
-          else showGradient(`${entry.title} · Web 离线文件不可用`);
+          else recoverFailedMedia(`${entry.title} · Web 离线文件不可用`);
           scheduleRotation();
           renderPanel();
           return;
@@ -468,30 +866,33 @@ export function createCodexWallpaperRuntime(payload) {
               );
             }
           }
-          if (previewUrl) showImage(previewUrl, `${entry.title} · 预览降级`);
-          else showGradient(`${entry.title} · 重启专用入口后载入`);
           scheduleRotation();
           renderPanel();
           return;
         }
         const url = assetUrl || previewUrl;
         if (!url && !entry.webHtml) {
-          showGradient(`${entry.title} · 无可用画面`);
+          setStatus(`${entry.title} · 无可用画面，已保留当前画面`);
         } else if (entry.type === "scene" && assetUrl) {
           showScene(entry, assetUrl, previewUrl);
         } else if (entry.type === "web" && entry.webHtml) {
           showWeb(entry);
         } else if (assetUrl && entry.type === "video") {
-          showVideo(url, `${entry.title} · 视频`, previewUrl);
+          showVideo(
+            url,
+            `${entry.title} · 视频`,
+            url.startsWith("blob:") ? url : null,
+            previewUrl
+          );
         } else {
           showImage(
             url,
             assetUrl
               ? `${entry.title} · ${entry.type}`
-              : `${entry.title} · 预览降级`
+              : `${entry.title} · 预览降级`,
+            url?.startsWith("blob:") ? url : null
           );
         }
-        if (assetUrl?.startsWith("blob:")) currentObjectUrl = assetUrl;
       }
     }
     scheduleRotation();
@@ -580,16 +981,10 @@ export function createCodexWallpaperRuntime(payload) {
       : entry.reason || "asset-too-large-or-missing";
   }
 
-  function card(entry) {
-    const item = document.createElement("article");
-    item.className = "card";
-    const selected =
-      config.active.kind === entry.kind && config.active.id === entry.id;
-    item.dataset.selected = String(selected);
-    const visual = document.createElement("div");
-    visual.className = "thumb";
-    const previewUrl = entry.previewDataUrl;
-    const visualUrl = previewUrl || entry.assetDataUrl;
+  function renderThumb(entry, visual) {
+    visual.replaceChildren();
+    visual.removeAttribute("data-preview-id");
+    const visualUrl = entry.previewDataUrl || entry.assetDataUrl;
     if (visualUrl) {
       const image = document.createElement("img");
       image.src = visualUrl;
@@ -602,11 +997,24 @@ export function createCodexWallpaperRuntime(payload) {
         previewObserver.observe(visual);
       };
       visual.append(image);
-    } else {
-      visual.textContent = entry.type.toUpperCase();
-      visual.dataset.previewId = entry.id;
-      previewObserver.observe(visual);
+      return;
     }
+    visual.textContent = entry.type.toUpperCase();
+    visual.dataset.previewId = entry.id;
+    previewObserver.observe(visual);
+  }
+
+  function card(entry) {
+    const item = document.createElement("article");
+    item.className = "card";
+    item.dataset.entryKind = entry.kind;
+    item.dataset.entryId = entry.id;
+    const selected =
+      config.active.kind === entry.kind && config.active.id === entry.id;
+    item.dataset.selected = String(selected);
+    const visual = document.createElement("div");
+    visual.className = "thumb";
+    renderThumb(entry, visual);
     const title = document.createElement("strong");
     title.textContent = entry.title;
     const meta = document.createElement("small");
@@ -831,11 +1239,17 @@ export function createCodexWallpaperRuntime(payload) {
       item.previewDataUrl = entry.previewDataUrl;
       item.fallback = true;
     }
-    renderPanel();
-    if (config.active.kind === "workshop" && config.active.id === entry.id) {
-      const active = findEntry(config.active);
-      if (!active?.assetUrl && !active?.assetDataUrl && !active?.webHtml)
-        return applyActive();
+    const previewCard = panel
+      ? [...panel.querySelectorAll(".card")].find(
+          (candidate) =>
+            candidate.dataset.entryKind === "workshop" &&
+            candidate.dataset.entryId === entry.id
+        )
+      : null;
+    const visual = previewCard?.querySelector(".thumb");
+    if (visual) {
+      previewObserver.unobserve(visual);
+      renderThumb({ ...item, kind: "workshop" }, visual);
     }
     return state();
   }
@@ -843,7 +1257,6 @@ export function createCodexWallpaperRuntime(payload) {
   function receivePreviewError(id) {
     pendingPreviewRequests.delete(id);
     failedPreviewIds.add(id);
-    renderPanel();
     return state();
   }
 
@@ -853,12 +1266,6 @@ export function createCodexWallpaperRuntime(payload) {
       parts: [],
       received: 0,
     });
-    if (
-      config.active.kind === "workshop" &&
-      config.active.id === entry.id &&
-      entry.previewDataUrl
-    )
-      showImage(entry.previewDataUrl, `${entry.title} · 正在载入`);
     return state();
   }
 
@@ -971,128 +1378,7 @@ export function createCodexWallpaperRuntime(payload) {
     removeAdapterNodes();
     const style = document.createElement("style");
     style.id = styleId;
-    style.textContent = `
-      #${rootId}, #${rootId} * { box-sizing: border-box; }
-      #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
-      #${controlsId} { z-index: 2147483647; }
-      #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-      #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
-      #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
-      #${rootId} .scene-host { position: absolute; inset: 0; opacity: 0; transition: opacity .16s ease-out; }
-      #${rootId} .scene-host.ready { opacity: 1; }
-      #${rootId} .media-preview { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: block; }
-      #${rootId} .media img, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
-      #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
-      #${rootId} .playback-source { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-      #${rootId} .dim { position: absolute; inset: 0; }
-      /* Keep the corner when the toolbar fits beside the composer. */
-      body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
-      #${controlsId} .toolbar {
-        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
-        position-anchor: --codex-wallpaper-composer;
-        left: calc(anchor(right) + 8px);
-        width: max-content; justify-self: end;
-        position-try-fallbacks: --codex-wallpaper-above-composer;
-        anchor-name: --codex-wallpaper-toolbar;
-      }
-      @position-try --codex-wallpaper-above-composer {
-        left: auto;
-        bottom: max(14px, calc(anchor(top, 6px) + 8px));
-      }
-      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
-      #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
-      #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button:active, #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button[aria-pressed='true'], #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
-      #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
-      #${controlsId} .panel {
-        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
-        position-anchor: --codex-wallpaper-toolbar;
-        position-area: top span-left;
-        inset: 14px 0 3px 14px;
-        place-self: end;
-        max-height: min(74vh, 720px, calc(100% - 17px));
-      }
-      #${controlsId} .panel.open { display: block; }
-      #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
-      #${controlsId} .panel h3 { margin: 16px 0 8px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
-      #${controlsId} .import-row input { width: 135px; font-size: 11px; }
-      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
-      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #${controlsId} .card { min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
-      #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
-      #${controlsId} .thumb img { width: 100%; height: 100%; object-fit: cover; }
-      #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
-      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-      #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
-      #${controlsId} .settings-grid { display: grid; gap: 7px; }
-      #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
-      #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
-      #${controlsId} .reset { margin-top: 14px; width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
-      :root {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 72%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 18%, transparent);
-        --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
-        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 94%, transparent);
-        --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
-        --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
-        --codex-wallpaper-radius: 14px;
-        --codex-wallpaper-radius-sm: 9px;
-        --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
-      }
-      html[data-theme='light'] {
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 80%, transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(255 255 255)) 12%, transparent);
-      }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport]) { background-color: var(--codex-wallpaper-frame) !important;
-        &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
-      }
-      body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
-      body [data-app-shell-pane-content-viewport] { background-color: var(--codex-wallpaper-canvas) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
-      body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
-      body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
-        background-color: transparent !important;
-        box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
-        --color-text-tertiary: var(--color-text-secondary);
-      }
-      body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
-        background-color: transparent !important;
-        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
-        --color-text-tertiary: var(--color-text-secondary);
-      }
-      body [data-app-shell-trailing-sidebar] { background-color: transparent !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
-      body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
-      body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
-      body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
-      body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
-      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent), pre) { background-color: var(--codex-wallpaper-raised) !important; }
-      body :is([data-app-shell-page-sidebar]:not([data-app-shell-frame]), [data-app-shell-trailing-sidebar], [data-app-shell-pane-content-viewport]) :where([class~='bg-surface'], [data-testid='diff-preview-scroll'], pre:not(.composer-diff-simple-line pre)) { background-color: var(--codex-wallpaper-raised) !important; }
-      body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], [data-app-action-timeline-scroll] [data-local-conversation-item-target-ids] :has(> button[aria-expanded].rounded-md.bg-transparent)) { border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 34px rgb(0 0 0 / .18) !important; }
-      body [data-pip-obstacle='thread-footer-leading'] { background-color: var(--codex-wallpaper-raised) !important; }
-      body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
-      body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
-      body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
-      body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(var(--codex-wallpaper-canvas), transparent) !important; }
-      body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
-      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
-      body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
-      body [data-app-shell-trailing-sidebar] [data-thread-find-target='review'] { background-color: transparent !important; }
-      body [data-app-shell-trailing-sidebar] :is([data-thread-find-target='review'], [data-testid='diff-preview-scroll']) {
-        --diffs-bg-addition: color-mix(in srgb, var(--color-codex-diff-added, transparent) 24%, transparent) !important;
-        --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
-      }
-      body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='dialog'], [role='menu']) { background-color: var(--codex-wallpaper-panel) !important; }
-      body [data-radix-popper-content-wrapper] { background-color: transparent !important; }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled) { opacity: .48; cursor: not-allowed; }
-    `;
+    style.textContent = runtimeCss;
     root = document.createElement("div");
     root.id = rootId;
     const controls = document.createElement("div");
@@ -1100,7 +1386,8 @@ export function createCodexWallpaperRuntime(payload) {
     layer = document.createElement("div");
     layer.dataset.codexWallpaperLayer = "";
     media = document.createElement("div");
-    media.className = "media builtin";
+    media.className =
+      config.active.kind === "builtin" ? "media builtin" : "media";
     dim = document.createElement("div");
     dim.className = "dim";
     layer.append(media, dim);
@@ -1179,16 +1466,16 @@ export function createCodexWallpaperRuntime(payload) {
   }
 
   function syncVisibility() {
-    if (!playback) return;
     if (document.visibilityState === "hidden") {
-      playback.video?.pause();
-      playback.pause?.();
-      if (playback.raf) cancelAnimationFrame(playback.raf);
-    } else {
-      playback.video?.play().catch(() => {});
-      playback.resume?.();
-      playback.start?.();
+      playback?.video?.pause();
+      playback?.pause?.();
+      if (playback?.raf) cancelAnimationFrame(playback.raf);
+      return;
     }
+    playback?.video?.play().catch(() => {});
+    playback?.resume?.();
+    playback?.start?.();
+    pendingRender?.resume?.();
   }
 
   function installHotkey() {

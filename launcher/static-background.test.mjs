@@ -158,6 +158,7 @@ async function startFixture() {
         :root {
           --app-color-background-surface: rgb(24 24 28);
           --app-color-background-surface-under: rgb(12 12 16);
+          --app-color-text-foreground: rgb(245 245 250);
           --color-codex-diff-added: rgb(55 180 105);
           --color-codex-diff-deleted: rgb(225 82 96);
           --color-text-secondary: rgb(255 255 255 / .65);
@@ -167,6 +168,7 @@ async function startFixture() {
         :root[data-theme="light"] {
           --app-color-background-surface: rgb(247 247 249);
           --app-color-background-surface-under: rgb(232 232 237);
+          --app-color-text-foreground: rgb(20 20 24);
           --color-codex-diff-added: rgb(20 135 70);
           --color-codex-diff-deleted: rgb(180 45 58);
           --color-text-secondary: rgb(0 0 0 / .65);
@@ -209,6 +211,24 @@ async function startFixture() {
             </div>
             <button id="open-changes" type="button">Open Changes</button>
             <div data-app-action-timeline-scroll>
+            <div data-local-conversation-item-target-ids="fixture-activity-item">
+              <div class="outline-none">
+                <div class="min-w-0 text-size-chat relative overflow-visible py-0">
+                  <div class="flex min-w-0 flex-col">
+                    <div id="ordinary-activity-header" class="group/activity-header relative inline-flex min-w-0 max-w-full self-start items-center gap-1 p-0 text-start">
+                      <button id="ordinary-activity-action" class="absolute inset-0 cursor-interaction rounded-md bg-transparent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:outline-none focus-visible:ring-inset" type="button" aria-expanded="false">Toggle activity</button>
+                      <span id="ordinary-activity-icon" aria-hidden="true">◆</span>
+                      <span class="inline-flex min-w-0 gap-2 items-center shrink truncate text-size-chat pointer-events-none relative">
+                        <span class="min-w-0 flex-1 truncate">
+                          <span id="ordinary-activity-text" class="block min-w-0 max-w-full flex-1 truncate">${"Long ordinary execution explanation ".repeat(18)}</span>
+                        </span>
+                      </span>
+                      <span aria-hidden="true">›</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <section data-testid="webmcp-tool-scroll" class="bg-surface">
               <button id="tool-action" class="rounded-md bg-transparent" type="button" aria-expanded="false">Toggle tool</button>
               <div id="tool-details">Tool details</div>
@@ -596,6 +616,83 @@ test("persisted-disabled CLI starts the real host before a later enable", async 
   child.kill();
 });
 
+test("failed first video shows its preview instead of a blank background", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-broken-video",
+          title: "Fixture Broken Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
+          assetDataUrl: "data:video/mp4;base64,AA==",
+          reason: "video-preview-fallback",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-broken-video" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 0,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  assert.equal((await applyStaticBackground(port, options)).state, "enabled");
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const media = root.querySelector(".media:not(.staged)");
+        return {
+          previewShown: media
+            ?.querySelector("img")
+            ?.src.includes("fb923c"),
+          mediaCount: root.querySelectorAll(".media:not(.staged)").length,
+          playerCount: globalThis.__codexWallpaperApi.state().playerCount,
+          status: controls.querySelector(".runtime-status")?.textContent
+        };
+      })()`,
+      options
+    ),
+    {
+      previewShown: true,
+      mediaCount: 1,
+      playerCount: 0,
+      status: "视频加载失败，已使用预览",
+    }
+  );
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -711,7 +808,9 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         for (let attempt = 0; attempt < 80; attempt += 1) {
-          const image = document.querySelector("#${rootId} .media img");
+          const image = document.querySelector(
+            "#${rootId} .media:not(.staged) img"
+          );
           if (
             globalThis.__codexWallpaperApi.state().state === "enabled" &&
             image?.complete &&
@@ -809,6 +908,45 @@ test("static background is single, removable and persists disabled", async (t) =
     await evaluateInPage(
       port,
       `(async () => {
+        const panel = document.querySelector(
+          "#${controlRootId} [data-codex-wallpaper-panel]"
+        );
+        const card = [...panel.querySelectorAll(".card")].find(
+          (item) => item.querySelector("strong")?.textContent === "Fixture Lazy"
+        );
+        const settings = panel.querySelector(".settings-grid").firstElementChild;
+        panel.scrollTop = 80;
+        await globalThis.__codexWallpaperApi.receivePreview({
+          id: "fixture-lazy",
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          fallback: true
+        });
+        return {
+          sameCard:
+            [...panel.querySelectorAll(".card")].find(
+              (item) => item.querySelector("strong")?.textContent === "Fixture Lazy"
+            ) === card,
+          sameSettings: panel.querySelector(".settings-grid").firstElementChild === settings,
+          previewAttached: Boolean(card.querySelector(".thumb img")),
+          placeholderRemaining: Boolean(card.querySelector(".thumb[data-preview-id]")),
+          scrollTop: panel.scrollTop
+        };
+      })()`,
+      options
+    ),
+    {
+      sameCard: true,
+      sameSettings: true,
+      previewAttached: true,
+      placeholderRemaining: false,
+      scrollTop: 80,
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
         const state = await globalThis.__codexWallpaperApi.configureHost();
         const controls = document.getElementById("${controlRootId}");
         const webCard = [...controls.querySelectorAll(".card")].find(
@@ -844,7 +982,9 @@ test("static background is single, removable and persists disabled", async (t) =
           hostRequests,
           meta: fallbackCard.querySelector("small")?.textContent,
           preview:
-            document.querySelector("#${rootId} .media img")?.naturalWidth > 0,
+            document.querySelector(
+              "#${rootId} .media:not(.staged) img"
+            )?.naturalWidth > 0,
           status: controls.querySelector(".runtime-status")?.textContent
         };
       })()`,
@@ -854,7 +994,167 @@ test("static background is single, removable and persists disabled", async (t) =
       hostRequests: 0,
       meta: "web · 预览降级",
       preview: true,
-      status: "Fixture Web Fallback · web-preview-fallback",
+      status: "Fixture Web Fallback · Web 预览降级",
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const imageCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        imageCard.querySelector(".card-actions button").click();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          const image = root.querySelector(".media img");
+          if (
+            image?.complete &&
+            image.naturalWidth > 0 &&
+            !image.closest(".media.staged")
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const oldImage = root.querySelector(".media img");
+        const originalFrameCallback =
+          HTMLVideoElement.prototype.requestVideoFrameCallback;
+        let videoFrameCallback = null;
+        HTMLVideoElement.prototype.requestVideoFrameCallback = (callback) => {
+          videoFrameCallback = () => callback(performance.now(), {});
+          return 1;
+        };
+        const videoCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Video"
+        );
+        videoCard.querySelector(".card-actions button").click();
+        for (
+          let attempt = 0;
+          attempt < 40 &&
+          (typeof videoFrameCallback !== "function" ||
+            root.querySelector(".media video")?.readyState < 2);
+          attempt += 1
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const beforeFrame = {
+          callbackAvailable: typeof videoFrameCallback === "function",
+          oldFrameStillVisible: root.querySelector(".media img") === oldImage,
+          fullWindowPreview: Boolean(
+            root.querySelector(".media-preview")
+          )
+        };
+        videoFrameCallback?.();
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        const canvas = root.querySelector(".media canvas");
+        const video = root.querySelector(".media video");
+        const afterFrame = {
+          oldFrameReleased: !oldImage.isConnected,
+          previewGone: !root.querySelector(".media-preview"),
+          canvasVisible:
+            canvas?.getBoundingClientRect().width ===
+              root.querySelector(".media").clientWidth &&
+            canvas?.getBoundingClientRect().height ===
+              root.querySelector(".media").clientHeight,
+          canvasMatchesVideo:
+            canvas?.width === video?.videoWidth &&
+            canvas?.height === video?.videoHeight,
+          objectFit: canvas ? getComputedStyle(canvas).objectFit : null,
+          playerCount: globalThis.__codexWallpaperApi.state().playerCount
+        };
+        HTMLVideoElement.prototype.requestVideoFrameCallback =
+          originalFrameCallback;
+        return { beforeFrame, afterFrame };
+      })()`,
+      options
+    ),
+    {
+      beforeFrame: {
+        callbackAvailable: true,
+        oldFrameStillVisible: true,
+        fullWindowPreview: false,
+      },
+      afterFrame: {
+        oldFrameReleased: true,
+        previewGone: true,
+        canvasVisible: true,
+        canvasMatchesVideo: true,
+        objectFit: "cover",
+        playerCount: 2,
+      },
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const imageCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        imageCard.querySelector(".card-actions button").click();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          const image = root.querySelector(".media img");
+          if (
+            image?.src.includes("5d32b8") &&
+            image.complete &&
+            !image.closest(".media.staged")
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const oldImage = root.querySelector(".media img");
+        globalThis.__codexWallpaperApi.receiveAsset({
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: "data:video/mp4;base64,AAAA",
+          reason: null
+        });
+        const videoCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Video"
+        );
+        videoCard.querySelector(".card-actions button").click();
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (
+            controls
+              .querySelector(".runtime-status")
+              ?.textContent.includes("视频加载失败")
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const result = {
+          oldFrameRetained: root.querySelector(".media img") === oldImage,
+          previewShown: Boolean(root.querySelector(".media-preview")),
+          status: controls.querySelector(".runtime-status")?.textContent
+        };
+        globalThis.__codexWallpaperApi.receiveAsset({
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: "data:video/mp4;base64,${tinyMp4}",
+          reason: null
+        });
+        imageCard.querySelector(".card-actions button").click();
+        return result;
+      })()`,
+      options
+    ),
+    {
+      oldFrameRetained: true,
+      previewShown: false,
+      status: "视频加载失败，已保留当前画面",
     }
   );
   assert.deepEqual(
@@ -874,7 +1174,15 @@ test("static background is single, removable and persists disabled", async (t) =
           (card) => card.querySelector("strong")?.textContent === "Fixture Video"
         );
         videoCard.querySelector(".card-actions button").click();
-        await new Promise((resolve) => setTimeout(resolve, 40));
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (
+            document.querySelector(
+              "#${rootId} .media:not(.staged) video"
+            )
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
         const videoAfterRejectedPlay =
           document.querySelector("#${rootId} video") instanceof HTMLVideoElement;
         Object.defineProperty(document, "visibilityState", {
@@ -887,7 +1195,7 @@ test("static background is single, removable and persists disabled", async (t) =
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
-        await new Promise((resolve) => setTimeout(resolve, 40));
+        await new Promise((resolve) => setTimeout(resolve, 80));
         const result = {
           videoAfterRejectedPlay,
           videoAfterVisible:
@@ -904,7 +1212,7 @@ test("static background is single, removable and persists disabled", async (t) =
       videoAfterRejectedPlay: true,
       videoAfterVisible: true,
       playCalls: 2,
-      status: "Fixture Video · video",
+      status: "Fixture Video · 视频",
     }
   );
   assert.deepEqual(
@@ -928,8 +1236,20 @@ test("static background is single, removable and persists disabled", async (t) =
         });
         api.appendAssetTransferChunk("fixture-video", ${JSON.stringify(tinyMp4)});
         await api.finishAssetTransfer("fixture-video");
-        await new Promise((resolve) => setTimeout(resolve, 40));
-        const video = document.querySelector("#${rootId} video");
+        for (let attempt = 0; attempt < 160; attempt += 1) {
+          const activeVideo = document.querySelector(
+            "#${rootId} .media:not(.staged) video"
+          );
+          if (
+            api.state().playerCount === 2 &&
+            activeVideo?.src.startsWith("blob:")
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const video = document.querySelector(
+          "#${rootId} .media:not(.staged) video"
+        );
         return {
           playerCount: api.state().playerCount,
           blobUrl: video?.src.startsWith("blob:") ?? false
@@ -938,6 +1258,56 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     { playerCount: 2, blobUrl: true }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const imageCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Image"
+        );
+        imageCard.querySelector(".card-actions button").click();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          get: () => "hidden"
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        const originalFrameCallback =
+          HTMLVideoElement.prototype.requestVideoFrameCallback;
+        HTMLVideoElement.prototype.requestVideoFrameCallback = () => 1;
+        const videoCard = [...controls.querySelectorAll(".card")].find(
+          (card) => card.querySelector("strong")?.textContent === "Fixture Video"
+        );
+        videoCard.querySelector(".card-actions button").click();
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (root.querySelector(".media:not(.staged) video")) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const result = {
+          activeVideo: Boolean(root.querySelector(".media:not(.staged) video")),
+          staged: root.querySelectorAll(".media.staged").length,
+          preview: Boolean(root.querySelector(".media-preview"))
+        };
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          get: () => "visible"
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        HTMLVideoElement.prototype.requestVideoFrameCallback =
+          originalFrameCallback;
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        return result;
+      })()`,
+      options
+    ),
+    { activeVideo: true, staged: 0, preview: false }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -1059,6 +1429,10 @@ test("static background is single, removable and persists disabled", async (t) =
         );
         sceneCard.querySelector(".card-actions button").click();
         await new Promise((resolve) => setTimeout(resolve, 20));
+        const oldImage = root.querySelector(".media img");
+        const heldWhileSceneLoads =
+          oldImage?.src.includes("5d32b8") &&
+          !root.querySelector(".media-preview");
         const rejectOldScene = globalThis.__sceneReject;
         const imageCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Image"
@@ -1070,12 +1444,17 @@ test("static background is single, removable and persists disabled", async (t) =
         const image = root.querySelector("[data-codex-wallpaper-layer] img");
         return {
           activeId: globalThis.__codexWallpaperApi.state().activeId,
+          heldWhileSceneLoads,
           imageIsCurrentAsset: image?.src.includes("5d32b8") ?? false
         };
       })()`,
       options
     ),
-    { activeId: "fixture-image", imageIsCurrentAsset: true }
+    {
+      activeId: "fixture-image",
+      heldWhileSceneLoads: true,
+      imageIsCurrentAsset: true,
+    }
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -1295,6 +1674,10 @@ test("static background is single, removable and persists disabled", async (t) =
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const frame = document.querySelector("[data-app-shell-frame]");
         const ordinaryStatus = document.querySelector("#ordinary-status");
+        const ordinaryActivity = document.querySelector("#ordinary-activity-header");
+        const ordinaryActivityAction = document.querySelector(
+          "#ordinary-activity-action"
+        );
         const userMessage = document.querySelector("#user-message");
         const userMarkdownAction = document.querySelector("#user-markdown-action");
         const tool = document.querySelector("#tool-action");
@@ -1303,7 +1686,6 @@ test("static background is single, removable and persists disabled", async (t) =
         const summarySurface = document.querySelector(
           "[data-summary-panel-variant]"
         );
-        const legacyToolSurface = document.querySelector("#legacy-tool-row");
         const diffSurface = document.querySelector(
           "[data-thread-find-target='review']"
         );
@@ -1349,7 +1731,6 @@ test("static background is single, removable and persists disabled", async (t) =
         const toolReadabilitySurfaces = [
           toolSurface,
           summarySurface,
-          legacyToolSurface,
         ];
         const changesReadabilitySurfaces = [
           diffPaintSurface,
@@ -1398,6 +1779,16 @@ test("static background is single, removable and persists disabled", async (t) =
         let toolToggleWorked = details.hidden !== toolInitiallyHidden;
         hit.click();
         toolToggleWorked &&= details.hidden === toolInitiallyHidden;
+        ordinaryActivityAction.scrollIntoView({ block: "center" });
+        ordinaryActivityAction.focus();
+        const ordinaryActivityActionRect =
+          ordinaryActivityAction.getBoundingClientRect();
+        const ordinaryActivityActionHit = document.elementFromPoint(
+          ordinaryActivityActionRect.left +
+            ordinaryActivityActionRect.width / 2,
+          ordinaryActivityActionRect.top +
+            ordinaryActivityActionRect.height / 2
+        );
         const range = document.createRange();
         range.selectNodeContents(document.querySelector("#message"));
         const selection = getSelection();
@@ -1483,6 +1874,14 @@ test("static background is single, removable and persists disabled", async (t) =
           ordinaryChatSharesCanvas: [ordinaryStatus, userMessage].every(
             (element) => readAlpha(element) === 0
           ),
+          ordinaryActivityHasNoCard:
+            readAlpha(ordinaryActivity) === 0 &&
+            getComputedStyle(ordinaryActivity).boxShadow === "none" &&
+            getComputedStyle(ordinaryActivity).borderRadius === "0px",
+          ordinaryActivityKeepsNativeInteraction:
+            document.activeElement === ordinaryActivityAction &&
+            ordinaryActivity.contains(ordinaryActivityActionHit) &&
+            ordinaryActivityAction.getAttribute("aria-expanded") === "false",
           userMarkdownKeepsNativeState:
             userMarkdownAction.getAttribute("aria-expanded") === "false" &&
             readAlpha(userMarkdownAction) === 0,
@@ -1568,6 +1967,8 @@ test("static background is single, removable and persists disabled", async (t) =
     composerOuterPaintTransparent: true,
     footerLeadingHasReadabilityBase: true,
     ordinaryChatSharesCanvas: true,
+    ordinaryActivityHasNoCard: true,
+    ordinaryActivityKeepsNativeInteraction: true,
     userMarkdownKeepsNativeState: true,
     themesHaveReadabilityBases: true,
     wallpaperRemainsVisible: true,
@@ -1643,6 +2044,64 @@ test("static background is single, removable and persists disabled", async (t) =
   const metrics = await openMainPageSession(port, options.page, true);
   t.after(() => metrics.close());
   await metrics.send("Emulation.setDeviceMetricsOverride", {
+    width: 1707,
+    height: 1066,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      document.querySelector("[data-composer-surface-variant]").style.cssText =
+        "position:fixed;z-index:10;right:108px;bottom:20px;width:736px;height:98px;box-sizing:border-box";
+      document.querySelector("[data-app-shell-pane-content-viewport]").hidden = true;
+      document.querySelector("#${controlRootId} .toolbar").style.cssText =
+        "position-anchor:none;right:14px;left:auto;bottom:14px";
+    })()`,
+    options
+  );
+  const settingsButton = `#${controlRootId} [data-codex-wallpaper-settings]`;
+  await evaluateInPage(
+    port,
+    `(() => {
+      document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click();
+    })()`,
+    options
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        const panel = document.querySelector("#${controlRootId} .panel.open");
+        const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
+        const p = panel.getBoundingClientRect();
+        return { visible: p.top >= 0 && p.right <= innerWidth, clear: p.bottom <= c.top - 3 };
+      })()`,
+      options
+    ),
+    { visible: true, clear: true }
+  );
+  await evaluateInPage(
+    port,
+    `(() => {
+      document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click();
+    })()`,
+    options
+  );
+  assert.equal(
+    await evaluateInPage(
+      port,
+      `!document.querySelector("#${controlRootId} .panel").classList.contains("open")`,
+      options
+    ),
+    true
+  );
+  await evaluateInPage(
+    port,
+    `document.querySelector("#${controlRootId} .toolbar").removeAttribute("style")`,
+    options
+  );
+  await metrics.send("Emulation.setDeviceMetricsOverride", {
     width: 1290,
     height: 900,
     deviceScaleFactor: 1,
@@ -1663,10 +2122,38 @@ test("static background is single, removable and persists disabled", async (t) =
     })()`,
     options
   );
-  assert.equal(
-    await clickAtElementCenter(port, options, "#fixture-composer-action"),
-    true,
-    "the wallpaper toolbar must leave the narrow composer action clickable"
+  const narrowComposerReceivesClick = await clickAtElementCenter(
+    port,
+    options,
+    "#fixture-composer-action"
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        const action = document.querySelector("#fixture-composer-action");
+        const center = action.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          center.left + center.width / 2,
+          center.top + center.height / 2
+        );
+        return {
+          receivesClick: ${narrowComposerReceivesClick},
+          hitTag: hit?.tagName || null,
+          hitInsideAction: hit === action || action.contains(hit),
+          panelOpen: document
+            .querySelector("#${controlRootId} .panel")
+            .classList.contains("open")
+        };
+      })()`,
+      options
+    ),
+    {
+      receivesClick: true,
+      hitTag: "BUTTON",
+      hitInsideAction: true,
+      panelOpen: false,
+    }
   );
   assert.equal(
     await evaluateInPage(
@@ -1676,7 +2163,6 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
-  const settingsButton = `#${controlRootId} [data-codex-wallpaper-settings]`;
   assert.equal(await clickAtElementCenter(port, options, settingsButton), true);
   assert.deepEqual(
     await evaluateInPage(
@@ -1697,6 +2183,7 @@ test("static background is single, removable and persists disabled", async (t) =
     `(() => {
       document.querySelector("#fixture-composer-action").remove();
       document.querySelector("[data-composer-surface-variant]").removeAttribute("style");
+      document.querySelector("[data-app-shell-pane-content-viewport]").hidden = false;
     })()`,
     options
   );
@@ -1726,12 +2213,14 @@ test("static background is single, removable and persists disabled", async (t) =
           input.dispatchEvent(new Event("input", { bubbles: true }));
         }
         for (let attempt = 0; attempt < 40; attempt += 1) {
-          const image = document.querySelector("#${rootId} .media img");
+          const image = document.querySelector(
+            "#${rootId} .media:not(.staged) img"
+          );
           if (image?.complete && image.naturalWidth > 0) break;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         const root = document.getElementById("${rootId}");
-        const media = root.querySelector(".media");
+        const media = root.querySelector(".media:not(.staged)");
         const saved = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         );
@@ -2023,8 +2512,12 @@ test("static background is single, removable and persists disabled", async (t) =
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         const root = document.getElementById("${rootId}");
-        const previewShown = root.querySelector(".media img")?.src.includes(
-          "fb923c"
+        const media = root.querySelector(".media");
+        const nativeBeforeAsset =
+          media?.childElementCount === 0 &&
+          !media.classList.contains("builtin");
+        const previewShown = Boolean(
+          media?.querySelector(".media-preview")
         );
         const request = globalThis.__testHostRequests[0];
         globalThis.__codexWallpaperApi.receiveAsset({
@@ -2041,14 +2534,17 @@ test("static background is single, removable and persists disabled", async (t) =
           reason: null
         });
         for (let attempt = 0; attempt < 40; attempt += 1) {
-          const image = root.querySelector(".media img");
+          const image = root.querySelector(".media:not(.staged) img");
           if (image?.complete && image.naturalWidth > 0) break;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         return {
           request,
+          nativeBeforeAsset,
           previewShown,
-          assetShown: root.querySelector(".media img")?.src.includes("22c55e"),
+          assetShown: root
+            .querySelector(".media:not(.staged) img")
+            ?.src.includes("22c55e"),
           state: globalThis.__codexWallpaperApi.state()
         };
       })()`,
@@ -2056,7 +2552,8 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     {
       request: { type: "load-asset", id: "fixture-on-demand" },
-      previewShown: true,
+      nativeBeforeAsset: true,
+      previewShown: false,
       assetShown: true,
       state: {
         state: "enabled",
@@ -2073,6 +2570,330 @@ test("static background is single, removable and persists disabled", async (t) =
         fpsCap: 15,
         volume: 0,
         hostReady: true,
+      },
+    }
+  );
+  await evaluateInPage(
+    port,
+    `(() => {
+      const originalTheme = document.documentElement.dataset.theme;
+      const settings = document.createElement("div");
+      settings.id = "settings-fixture";
+      settings.dataset.appShellFeatureNavigation = "true";
+      settings.dataset.appShellFrame = "";
+      settings.style.cssText =
+        "position:fixed;inset:0;z-index:100;display:grid;grid-template-columns:340px minmax(0,1fr);color:var(--app-color-text-foreground);background:var(--app-color-background-surface)";
+      settings.innerHTML = \`
+        <div data-settings-nav-scroll-container style="padding:44px 12px">
+          <h1 style="margin:0 16px 18px">设置</h1>
+          <div id="settings-search-shell" class="bg-background-secondary-soft-alpha" style="padding:9px 12px;border-radius:9999px;background:rgba(255,255,255,.08)">
+            <input id="settings-search-input" role="searchbox" placeholder="搜索">
+          </div>
+          <nav aria-label="设置" style="display:grid;gap:1px;margin-top:16px">
+            <button id="settings-general" data-settings-panel-slug="general-settings" aria-current="page" style="padding:6px 16px;border:0;border-radius:12.5px;background:rgba(255,255,255,.08);text-align:left">常规</button>
+            <button id="settings-appearance" data-settings-panel-slug="appearance" style="padding:6px 16px;border:0;border-radius:12.5px;background:transparent;text-align:left">外观</button>
+          </nav>
+        </div>
+        <main data-app-shell-main-surface="default" style="min-height:0;overflow:auto">
+          <div id="settings-viewport" class="electron:bg-surface" style="min-height:100%;background:rgb(24,24,28)">
+            <div data-density="default" style="width:min(728px,calc(100% - 48px));margin:80px auto">
+              <h2>常规</h2>
+              <div id="settings-card" class="rounded-2xl border-default" style="padding:16px;background:rgb(35,35,35);border:1px solid rgba(255,255,255,.082);border-radius:20px;--color-border:rgba(255,255,255,.082)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0">
+                  <span>默认文件打开位置</span>
+                  <button id="settings-select" class="bg-background-neutral-soft-alpha border-default" aria-expanded="false" style="padding:4px 12px;border-radius:12.5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.082)">VS Code</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0">
+                  <span>默认使用完整视图</span>
+                  <button id="settings-switch" role="switch" aria-checked="true" data-state="checked" style="padding:0;border:0;background:transparent">
+                    <span id="settings-switch-track" data-state="checked" style="display:block;width:32px;height:20px;border-radius:9999px;background:rgb(2,133,255)"></span>
+                  </button>
+                </div>
+                <button id="settings-secondary" class="bg-text/5" style="padding:4px 12px;border:0;border-radius:12.5px;background:rgba(255,255,255,.05)">更改</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      \`;
+      document.body.append(settings);
+
+      const search = settings.querySelector("#settings-search-input");
+      const searchShell = settings.querySelector("#settings-search-shell");
+      const select = settings.querySelector("#settings-select");
+      const switchControl = settings.querySelector("#settings-switch");
+      const switchTrack = settings.querySelector("#settings-switch-track");
+      const menu = document.createElement("div");
+      menu.id = "settings-menu";
+      menu.setAttribute("role", "dialog");
+      menu.hidden = true;
+      menu.textContent = "VS Code";
+      menu.style.cssText =
+        "position:fixed;right:24px;top:24px;z-index:101;padding:12px;border-radius:14px;background:rgb(20,20,20)";
+      document.body.append(menu);
+      settings
+        .querySelectorAll("[data-settings-panel-slug]")
+        .forEach((button) => {
+          button.addEventListener("click", () => {
+            settings
+              .querySelectorAll("[data-settings-panel-slug]")
+              .forEach((item) => item.removeAttribute("aria-current"));
+            button.setAttribute("aria-current", "page");
+          });
+        });
+      select.addEventListener("click", () => {
+        const open = select.getAttribute("aria-expanded") !== "true";
+        select.setAttribute("aria-expanded", String(open));
+        menu.hidden = !open;
+      });
+      switchControl.addEventListener("click", () => {
+        const checked =
+          switchControl.getAttribute("aria-checked") !== "true";
+        switchControl.setAttribute("aria-checked", String(checked));
+        switchControl.dataset.state = checked ? "checked" : "unchecked";
+        switchTrack.dataset.state = checked ? "checked" : "unchecked";
+      });
+
+      const decoy = document.createElement("div");
+      decoy.id = "settings-scope-decoy";
+      decoy.className = "electron:bg-surface";
+      decoy.style.cssText =
+        "position:fixed;right:0;bottom:0;width:8px;height:8px;background:rgb(35,35,35)";
+      document.body.append(decoy);
+      globalThis.__settingsOriginalTheme = originalTheme;
+      globalThis.__settingsSearchShell = searchShell;
+      globalThis.__settingsSearch = search;
+      globalThis.__settingsSearchIdleShadow =
+        getComputedStyle(searchShell).boxShadow;
+    })()`,
+    options
+  );
+  assert.equal(
+    await clickAtElementCenter(port, options, "#settings-search-input"),
+    true
+  );
+  await callMainPage(
+    port,
+    "Input.insertText",
+    { text: "通用" },
+    options.page,
+    true
+  );
+  const searchInteraction = await evaluateInPage(
+    port,
+    `(() => {
+      const search = document.querySelector("#settings-search-input");
+      const searchShell = document.querySelector("#settings-search-shell");
+      return {
+        focused: document.activeElement === search,
+        acceptedText: search.value === "通用",
+        focusStyleChanged:
+          getComputedStyle(searchShell).boxShadow !==
+          globalThis.__settingsSearchIdleShadow,
+      };
+    })()`,
+    options
+  );
+  await callMainPage(
+    port,
+    "Input.dispatchKeyEvent",
+    {
+      type: "rawKeyDown",
+      key: "Tab",
+      code: "Tab",
+      windowsVirtualKeyCode: 9,
+      nativeVirtualKeyCode: 9,
+    },
+    options.page,
+    true
+  );
+  await callMainPage(
+    port,
+    "Input.dispatchKeyEvent",
+    {
+      type: "keyUp",
+      key: "Tab",
+      code: "Tab",
+      windowsVirtualKeyCode: 9,
+      nativeVirtualKeyCode: 9,
+    },
+    options.page,
+    true
+  );
+  const keyboardFocus = await evaluateInPage(
+    port,
+    `(() => ({
+      target: document.activeElement.id,
+      focusVisible: document.activeElement.matches(":focus-visible"),
+      outline: getComputedStyle(document.activeElement).outlineStyle,
+    }))()`,
+    options
+  );
+  assert.equal(
+    await clickAtElementCenter(port, options, "#settings-appearance"),
+    true
+  );
+  assert.equal(
+    await clickAtElementCenter(port, options, "#settings-select"),
+    true
+  );
+  assert.equal(
+    await clickAtElementCenter(port, options, "#settings-switch"),
+    true
+  );
+  const settingsResults = await evaluateInPage(
+    port,
+    `(() => {
+      const readAlpha = (element) => {
+        const value = getComputedStyle(element).backgroundColor;
+        const match =
+          value.match(/\\/\\s*([\\d.]+)\\s*\\)/) ||
+          value.match(/,\\s*([\\d.]+)\\s*\\)$/);
+        return match ? Number(match[1]) : 1;
+      };
+      const viewport = document.querySelector("#settings-viewport");
+      const card = document.querySelector("#settings-card");
+      const searchShell = document.querySelector("#settings-search-shell");
+      const selected = document.querySelector(
+        "[data-settings-panel-slug][aria-current='page']"
+      );
+      const select = document.querySelector("#settings-select");
+      const switchTrack = document.querySelector("#settings-switch-track");
+      const menu = document.querySelector("#settings-menu");
+      const decoy = document.querySelector("#settings-scope-decoy");
+      const readMaterials = (theme) => {
+        document.documentElement.dataset.theme = theme;
+        return {
+          viewport: getComputedStyle(viewport).backgroundColor,
+          card: getComputedStyle(card).backgroundColor,
+          search: getComputedStyle(searchShell).backgroundColor,
+        };
+      };
+      const dark = readMaterials("dark");
+      const light = readMaterials("light");
+      document.documentElement.dataset.theme =
+        globalThis.__settingsOriginalTheme;
+      return {
+        viewportTranslucent:
+          readAlpha(viewport) > 0 && readAlpha(viewport) < 1,
+        cardTranslucent: readAlpha(card) > 0 && readAlpha(card) < 1,
+        cardBelowViewport: readAlpha(card) < readAlpha(viewport),
+        searchHasMaterial:
+          getComputedStyle(searchShell).boxShadow !== "none",
+        selectedHasMaterial:
+          getComputedStyle(selected).boxShadow !== "none",
+        controlHasMaterial:
+          getComputedStyle(select).borderColor !==
+            "rgba(255, 255, 255, 0.082)" &&
+          getComputedStyle(document.querySelector("#settings-secondary"))
+            .backgroundColor !== "rgba(255, 255, 255, 0.05)",
+        switchHasMaterial:
+          getComputedStyle(switchTrack).boxShadow !== "none",
+        themesDiffer:
+          dark.viewport !== light.viewport &&
+          dark.card !== light.card &&
+          dark.search !== light.search,
+        scopedToSettings:
+          getComputedStyle(decoy).backgroundColor === "rgb(35, 35, 35)",
+        appearanceSelected:
+          document
+            .querySelector("#settings-appearance")
+            .getAttribute("aria-current") === "page",
+        menuOpened:
+          select.getAttribute("aria-expanded") === "true" && !menu.hidden,
+        switchToggled:
+          document
+            .querySelector("#settings-switch")
+            .getAttribute("aria-checked") === "false",
+      };
+    })()`,
+    options
+  );
+  assert.deepEqual(
+    {
+      ...settingsResults,
+      searchFocused: searchInteraction.focused,
+      searchAcceptedText: searchInteraction.acceptedText,
+      searchFocusStyleChanged: searchInteraction.focusStyleChanged,
+      keyboardFocusTarget: keyboardFocus.target,
+      keyboardFocusVisible:
+        keyboardFocus.focusVisible && keyboardFocus.outline !== "none",
+    },
+    {
+      viewportTranslucent: true,
+      cardTranslucent: true,
+      cardBelowViewport: true,
+      searchHasMaterial: true,
+      selectedHasMaterial: true,
+      controlHasMaterial: true,
+      switchHasMaterial: true,
+      themesDiffer: true,
+      scopedToSettings: true,
+      appearanceSelected: true,
+      menuOpened: true,
+      switchToggled: true,
+      searchFocused: true,
+      searchAcceptedText: true,
+      searchFocusStyleChanged: true,
+      keyboardFocusTarget: "settings-general",
+      keyboardFocusVisible: true,
+    }
+  );
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const initial = globalThis.__codexWallpaperApi.state();
+        const before = {
+          viewport: getComputedStyle(
+            document.querySelector("#settings-viewport")
+          ).backgroundColor,
+          card: getComputedStyle(
+            document.querySelector("#settings-card")
+          ).backgroundColor,
+        };
+        await globalThis.__codexWallpaperApi.disable();
+        const disabled = {
+          styles: document.querySelectorAll("#${rootId}-style").length,
+          viewport: getComputedStyle(
+            document.querySelector("#settings-viewport")
+          ).backgroundColor,
+          card: getComputedStyle(
+            document.querySelector("#settings-card")
+          ).backgroundColor,
+        };
+        const enabled = await globalThis.__codexWallpaperApi.enable();
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        return {
+          initiallyEnabled: initial.state === "enabled",
+          disabled,
+          reapplied: {
+            state: enabled.state,
+            styles: document.querySelectorAll("#${rootId}-style").length,
+            sameViewport:
+              getComputedStyle(
+                document.querySelector("#settings-viewport")
+              ).backgroundColor === before.viewport,
+            sameCard:
+              getComputedStyle(
+                document.querySelector("#settings-card")
+              ).backgroundColor === before.card,
+          },
+        };
+      })()`,
+      options
+    ),
+    {
+      initiallyEnabled: true,
+      disabled: {
+        styles: 0,
+        viewport: "rgb(24, 24, 28)",
+        card: "rgb(35, 35, 35)",
+      },
+      reapplied: {
+        state: "enabled",
+        styles: 1,
+        sameViewport: true,
+        sameCard: true,
       },
     }
   );
