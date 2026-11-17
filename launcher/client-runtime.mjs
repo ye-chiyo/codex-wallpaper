@@ -541,9 +541,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   function performanceSummary() {
-    return `参数：Scene 上限 ${config.settings.fps} FPS · ${
+    const scene = `Scene 上限 ${config.settings.fps} FPS · ${
       config.settings.pauseWhenHidden ? "不可见时暂停" : "不可见时不暂停"
     }`;
+    const type = activeMediaType();
+    if (type === "scene") return `参数：${scene}`;
+    if (type === "video") return `当前视频按源播放；已保存 ${scene}`;
+    if (type === "image") return `当前图片不使用帧率；已保存 ${scene}`;
+    if (type === "web") return `当前 Web 无法控帧；已保存 ${scene}`;
+    return `当前渐变没有帧率；已保存 ${scene}`;
+  }
+
+  function performanceTradeoff() {
+    if (config.settings.performanceProfile === "performance")
+      return "取舍：降低 Scene 绘制上限以减少渲染活动，画面连续性可能低于 30 FPS。";
+    if (config.settings.performanceProfile === "balanced")
+      return "取舍：保留现有 30 FPS 上限，优先画面连续性。";
+    return "取舍：使用手动参数组合，不再自动套用命名档位。";
   }
 
   function playbackCapabilityText() {
@@ -611,6 +625,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     if (profile) profile.value = config.settings.performanceProfile;
     const summary = panel.querySelector("[data-performance-summary]");
     if (summary) summary.textContent = performanceSummary();
+    const tradeoff = panel.querySelector("[data-performance-tradeoff]");
+    if (tradeoff) tradeoff.textContent = performanceTradeoff();
     const capability = panel.querySelector("[data-playback-capability]");
     if (capability) capability.textContent = playbackCapabilityText();
   }
@@ -1433,16 +1449,18 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     return row;
   }
 
-  function settingToggle(label, key) {
+  function settingToggle(label, key, { disabled = false, hint = "" } = {}) {
     const row = document.createElement("label");
     row.className = "setting-toggle";
     const input = document.createElement("input");
     input.type = "checkbox";
     input.checked = Boolean(config.settings[key]);
+    input.disabled = disabled;
+    if (hint) input.title = hint;
     input.dataset.setting = key;
     input.dataset.settingToggle = key;
     const text = document.createElement("span");
-    text.textContent = label;
+    text.textContent = hint ? `${label}（${hint}）` : label;
     input.onchange = () => {
       config.settings[key] = input.checked;
       if (key === "pauseWhenHidden")
@@ -1508,6 +1526,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     performance.className = "playlist-summary";
     performance.dataset.performanceSummary = "";
     performance.textContent = performanceSummary();
+    const tradeoff = document.createElement("p");
+    tradeoff.className = "playback-capability";
+    tradeoff.dataset.performanceTradeoff = "";
+    tradeoff.textContent = performanceTradeoff();
     const capability = document.createElement("p");
     capability.className = "playback-capability";
     capability.dataset.playbackCapability = "";
@@ -1515,13 +1537,19 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     playbackSettings.replaceChildren(
       playbackProfileControl(),
       performance,
+      tradeoff,
       capability,
       settingToggle("静音", "muted"),
       range("音量", "volume", 0, 100, 5, "%"),
       ...(activeMediaType() === "scene"
         ? [range("Scene 上限", "fps", 15, 30, 15, " FPS")]
         : []),
-      settingToggle("不可见时暂停", "pauseWhenHidden"),
+      settingToggle("不可见时暂停", "pauseWhenHidden", {
+        disabled: !["video", "scene"].includes(activeMediaType()),
+        hint: ["video", "scene"].includes(activeMediaType())
+          ? ""
+          : "当前素材不适用",
+      }),
       range("轮播", "rotationMinutes", 0, 120, 5, " 分钟")
     );
     appearanceSettings.replaceChildren(

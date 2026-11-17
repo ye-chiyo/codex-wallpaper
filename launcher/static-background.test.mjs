@@ -1883,8 +1883,12 @@ test("playback profiles and capability controls apply without replacing media", 
       const initial = {
         profile: panel.querySelector("[data-playback-profile]").value,
         summary: panel.querySelector("[data-performance-summary]").textContent,
+        tradeoff: panel.querySelector("[data-performance-tradeoff]").textContent,
         capability: panel.querySelector("[data-playback-capability]").textContent,
-        fpsControl: Boolean(panel.querySelector("[data-setting='fps']"))
+        fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        pauseDisabled: panel.querySelector(
+          "[data-setting='pauseWhenHidden']"
+        ).disabled
       };
 
       const selectMedia = async (id, ready) => {
@@ -1930,6 +1934,7 @@ test("playback profiles and capability controls apply without replacing media", 
         stateFps: globalThis.__codexWallpaperApi.state().fpsCap,
         profile: panel.querySelector("[data-playback-profile]").value,
         summary: panel.querySelector("[data-performance-summary]").textContent,
+        tradeoff: panel.querySelector("[data-performance-tradeoff]").textContent,
         mediaSame: root.querySelector(".media:not(.staged)") === videoMedia
       };
 
@@ -1946,7 +1951,8 @@ test("playback profiles and capability controls apply without replacing media", 
         profile: panel.querySelector("[data-playback-profile]").value,
         fps: fps.value,
         sceneFps: globalThis.__t05SceneFps,
-        summary: panel.querySelector("[data-performance-summary]").textContent
+        summary: panel.querySelector("[data-performance-summary]").textContent,
+        tradeoff: panel.querySelector("[data-performance-tradeoff]").textContent
       };
 
       globalThis.__t05ScenePaused = false;
@@ -1991,6 +1997,9 @@ test("playback profiles and capability controls apply without replacing media", 
       );
       const imageCapability = {
         fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        pauseDisabled: panel.querySelector(
+          "[data-setting='pauseWhenHidden']"
+        ).disabled,
         text: panel.querySelector("[data-playback-capability]").textContent
       };
 
@@ -1999,7 +2008,12 @@ test("playback profiles and capability controls apply without replacing media", 
         () => Boolean(root.querySelector(".media:not(.staged) iframe"))
       );
       const webCapability =
-        panel.querySelector("[data-playback-capability]").textContent;
+        {
+          text: panel.querySelector("[data-playback-capability]").textContent,
+          pauseDisabled: panel.querySelector(
+            "[data-setting='pauseWhenHidden']"
+          ).disabled
+        };
 
       await selectMedia(
         "fixture-image",
@@ -2075,9 +2089,11 @@ test("playback profiles and capability controls apply without replacing media", 
   assert.deepEqual(result, {
     initial: {
       profile: "balanced",
-      summary: "参数：Scene 上限 30 FPS · 不可见时暂停",
+      summary: "当前图片不使用帧率；已保存 Scene 上限 30 FPS · 不可见时暂停",
+      tradeoff: "取舍：保留现有 30 FPS 上限，优先画面连续性。",
       capability: "图片稳定显示后不持续绘制；帧率不适用。",
       fpsControl: false,
+      pauseDisabled: true,
     },
     videoControls: {
       volume: 0.45,
@@ -2091,7 +2107,9 @@ test("playback profiles and capability controls apply without replacing media", 
     priority: {
       stateFps: 15,
       profile: "performance",
-      summary: "参数：Scene 上限 15 FPS · 不可见时暂停",
+      summary: "当前视频按源播放；已保存 Scene 上限 15 FPS · 不可见时暂停",
+      tradeoff:
+        "取舍：降低 Scene 绘制上限以减少渲染活动，画面连续性可能低于 30 FPS。",
       mediaSame: true,
     },
     sceneFpsFromProfile: 15,
@@ -2100,14 +2118,19 @@ test("playback profiles and capability controls apply without replacing media", 
       fps: "30",
       sceneFps: 30,
       summary: "参数：Scene 上限 30 FPS · 不可见时暂停",
+      tradeoff: "取舍：使用手动参数组合，不再自动套用命名档位。",
     },
     pauseEnabled: { paused: true, resumed: true },
     pauseDisabled: { paused: false, resumed: true },
     imageCapability: {
       fpsControl: false,
+      pauseDisabled: true,
       text: "图片稳定显示后不持续绘制；帧率不适用。",
     },
-    webCapability: "Web iframe 内部帧率和暂停无法由父页面可靠控制。",
+    webCapability: {
+      text: "Web iframe 内部帧率和暂停无法由父页面可靠控制。",
+      pauseDisabled: true,
+    },
     crossWindow: {
       mediaSame: true,
       profile: "performance",
