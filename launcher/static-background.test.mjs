@@ -179,6 +179,7 @@ async function startFixture() {
         :root[data-theme="light"] body { color: rgb(20 20 24); }
         [data-app-shell-page-surface] { background: var(--app-color-background-surface); }
         [data-app-shell-main-surface] { min-height: 100vh; background: transparent; }
+        [data-browser-sidebar-webview] { opacity: .001; }
         @layer host { [data-app-shell-titlebar] { position: fixed; top: 0; height: 36px; } }
         .muted-chrome { color: var(--color-text-tertiary); }
         [data-testid="webmcp-tool-scroll"], [data-summary-panel-variant] { display: block; padding: 8px; }
@@ -275,6 +276,7 @@ async function startFixture() {
         <div data-slate-sidebar-content><button id="project-action" class="muted-chrome">Project</button></div>
       </aside>
       <div data-app-shell-pane-content-viewport><pre id="editor">editor</pre></div>
+      <div data-browser-sidebar-webview hidden><webview></webview></div>
       <section role="dialog" id="settings-dialog"><button id="dialog-action">Dialog</button></section>
       </html>
       <script>
@@ -1898,6 +1900,18 @@ test("static background is single, removable and persists disabled", async (t) =
               getComputedStyle(element).backgroundColor !==
                 "rgba(0, 0, 0, 0)"
           ),
+          browserSurfaceIsOpaque: (() => {
+            const host = document.querySelector("[data-browser-sidebar-webview]");
+            const webview = host.querySelector("webview");
+            const read = () => [host, webview].map((node) => getComputedStyle(node).backgroundColor).join(" / ");
+            const light = read();
+            document.documentElement.dataset.theme = "dark";
+            const dark = read();
+            document.documentElement.dataset.theme = "light";
+            return getComputedStyle(host).opacity === "1" &&
+              light === "rgb(232, 232, 237) / rgb(232, 232, 237)" &&
+              dark === "rgb(12, 12, 16) / rgb(12, 12, 16)";
+          })(),
           wallpaperControlsUseSharedPalette:
             getComputedStyle(toolbar).backgroundColor ===
               getComputedStyle(dialog).backgroundColor &&
@@ -1973,6 +1987,7 @@ test("static background is single, removable and persists disabled", async (t) =
     themesHaveReadabilityBases: true,
     wallpaperRemainsVisible: true,
     panelSurfacesHaveReadability: true,
+    browserSurfaceIsOpaque: true,
     wallpaperControlsUseSharedPalette: true,
     wallpaperControlsHaveNoExtraBlur: true,
     menuPaintsOnlyVisibleContent: true,

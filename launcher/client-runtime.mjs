@@ -106,6 +106,8 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
+      body [data-browser-sidebar-webview] { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; opacity: 1 !important; }
+      body [data-browser-sidebar-webview] > webview { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; }
       body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
       body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) {
         & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: var(--codex-wallpaper-settings-canvas) !important; }
