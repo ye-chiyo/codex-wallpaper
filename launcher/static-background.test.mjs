@@ -2210,6 +2210,17 @@ test("appearance controls update wallpaper and surface layers without reloading 
       panel.querySelector("[data-panel-region='appearance']").open = true;
       const media = root.querySelector(".media:not(.staged)");
       const image = media.querySelector("img");
+      const titlebar = document.querySelector("[data-app-shell-titlebar]");
+      const settingsHost = document.createElement("div");
+      settingsHost.dataset.appShellFeatureNavigation = "true";
+      settingsHost.innerHTML =
+        '<nav data-settings-nav-scroll-container></nav><main data-app-shell-main-surface><div class="electron:bg-surface">Settings</div></main>';
+      document.body.append(settingsHost);
+      const settingsCanvas = settingsHost.querySelector(
+        "[class~='electron:bg-surface']"
+      );
+      const alphaOf = (value) =>
+        Number(value.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1] ?? 0);
       const setRange = (name, value) => {
         const input = panel.querySelector(\`[data-setting="\${name}"]\`);
         input.value = value;
@@ -2258,6 +2269,43 @@ test("appearance controls update wallpaper and surface layers without reloading 
         document.documentElement.style.getPropertyValue(
           "--codex-wallpaper-line"
         ) === "transparent";
+
+      const titlebarBefore = alphaOf(
+        getComputedStyle(titlebar).backgroundColor
+      );
+      const sidebarOverride = panel.querySelector(
+        "[data-surface-override='sidebar']"
+      );
+      sidebarOverride.click();
+      const sidebarRange = panel.querySelector(
+        "[data-surface-override-value='sidebar']"
+      );
+      sidebarRange.value = "40";
+      sidebarRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const titlebarOverridden = alphaOf(
+        getComputedStyle(titlebar).backgroundColor
+      );
+      panel.querySelector("[data-restore-surface='sidebar']").click();
+      const titlebarRestored = alphaOf(
+        getComputedStyle(titlebar).backgroundColor
+      );
+
+      const settingsCanvasBefore = alphaOf(
+        getComputedStyle(settingsCanvas).backgroundColor
+      );
+      const settingsOverride = panel.querySelector(
+        "[data-surface-override='settings']"
+      );
+      settingsOverride.click();
+      const settingsRange = panel.querySelector(
+        "[data-surface-override-value='settings']"
+      );
+      settingsRange.value = "70";
+      settingsRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const settingsCanvasAfter = alphaOf(
+        getComputedStyle(settingsCanvas).backgroundColor
+      );
+      panel.querySelector("[data-restore-surface='settings']").click();
 
       const chatOverride = panel.querySelector(
         "[data-surface-override='chat']"
@@ -2357,6 +2405,15 @@ test("appearance controls update wallpaper and surface layers without reloading 
         inheritedSidebar,
         blur,
         bordersOff,
+        top: {
+          before: titlebarBefore,
+          overridden: titlebarOverridden,
+          restored: titlebarRestored
+        },
+        settingsSurface: {
+          changes: settingsCanvasAfter !== settingsCanvasBefore,
+          effective: settingsCanvasAfter > 0
+        },
         override,
         restored,
         lightSurfaceTranslucent: lightAlpha > 0 && lightAlpha < 1,
@@ -2386,6 +2443,15 @@ test("appearance controls update wallpaper and surface layers without reloading 
       computed: "blur(8px)",
     },
     bordersOff: true,
+    top: {
+      before: 0,
+      overridden: 0.4,
+      restored: 0,
+    },
+    settingsSurface: {
+      changes: true,
+      effective: true,
+    },
     override: {
       enabled: true,
       rangeEnabled: true,
@@ -2416,6 +2482,22 @@ test("appearance controls update wallpaper and surface layers without reloading 
     port,
     `(async () => {
       await globalThis.__codexWallpaperApi.disable();
+      const cleared = [
+        "--codex-wallpaper-surface-opacity",
+        "--codex-wallpaper-chat-opacity",
+        "--codex-wallpaper-sidebar-opacity",
+        "--codex-wallpaper-top-opacity",
+        "--codex-wallpaper-right-opacity",
+        "--codex-wallpaper-settings-opacity",
+        "--codex-wallpaper-settings-canvas-opacity",
+        "--codex-wallpaper-settings-card-opacity",
+        "--codex-wallpaper-interface-blur",
+        "--codex-wallpaper-line",
+        "--codex-wallpaper-line-strong"
+      ].every(
+        (property) =>
+          document.documentElement.style.getPropertyValue(property) === ""
+      );
       await globalThis.__codexWallpaperApi.enable();
       const root = document.getElementById("${rootId}");
       for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -2427,6 +2509,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       return {
+        cleared,
         state: globalThis.__codexWallpaperApi.state().state,
         fit: getComputedStyle(root.querySelector(".media img")).objectFit,
         surface:
@@ -2439,10 +2522,133 @@ test("appearance controls update wallpaper and surface layers without reloading 
     options
   );
   assert.deepEqual(second, {
+    cleared: true,
     state: "enabled",
     fit: "contain",
     surface: "60",
     settingsOverride: "70%",
+  });
+});
+
+test("scene fit uses the installed renderer without replacing the active scene", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const image =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-scene",
+          title: "Fixture Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: "data:application/octet-stream;base64,AA==",
+          reason: "scene-native",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-scene" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fitMode: "contain",
+          surfaceOpacity: 72,
+          interfaceBlur: 0,
+          interfaceBorders: true,
+          surfaceOverrides: { chat: null, sidebar: null, right: null, settings: null },
+          fps: 30,
+          volume: 0,
+          muted: true,
+          rotationMinutes: 0,
+          performanceProfile: "balanced",
+          pauseWhenHidden: true
+        }
+      })
+    );
+    globalThis.__sceneFitCalls = [];
+    globalThis.WebWallGL = {
+      bytesSource: () => ({}),
+      createScene: (host, sceneOptions) => {
+        globalThis.__sceneInitialFit = sceneOptions.fit;
+        const canvas = document.createElement("canvas");
+        host.append(canvas);
+        return {
+          load: () => Promise.resolve(),
+          pause: () => {},
+          resume: () => {},
+          setFps: () => {},
+          setVolume: () => {},
+          setFit: (fit) => globalThis.__sceneFitCalls.push(fit),
+          destroy: () => {}
+        };
+      }
+    };`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const root = document.getElementById("${rootId}");
+      const controls = document.getElementById("${controlRootId}");
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if (root.querySelector(".media:not(.staged) .scene-host.ready")) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const media = root.querySelector(".media:not(.staged)");
+      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      panel.querySelector("[data-panel-region='appearance']").open = true;
+      const fit = panel.querySelector("[data-setting='fitMode']");
+      const before = {
+        available: Boolean(fit),
+        enabled: !fit.disabled,
+        value: fit.value,
+        initialRendererFit: globalThis.__sceneInitialFit
+      };
+      fit.value = "cover";
+      fit.dispatchEvent(new Event("change", { bubbles: true }));
+      return {
+        before,
+        after: {
+          value: fit.value,
+          calls: globalThis.__sceneFitCalls,
+          mediaSame: root.querySelector(".media:not(.staged)") === media
+        }
+      };
+    })()`,
+    options
+  );
+
+  assert.deepEqual(result, {
+    before: {
+      available: true,
+      enabled: true,
+      value: "contain",
+      initialRendererFit: "contain",
+    },
+    after: {
+      value: "cover",
+      calls: ["contain", "cover"],
+      mediaSame: true,
+    },
   });
 });
 

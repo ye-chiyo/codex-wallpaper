@@ -101,15 +101,18 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-surface-opacity: 72%;
         --codex-wallpaper-chat-opacity: 18%;
         --codex-wallpaper-sidebar-opacity: 72%;
+        --codex-wallpaper-top-opacity: 0%;
         --codex-wallpaper-right-opacity: 72%;
         --codex-wallpaper-settings-opacity: 94%;
+        --codex-wallpaper-settings-canvas-opacity: 64%;
+        --codex-wallpaper-settings-card-opacity: 42%;
         --codex-wallpaper-interface-blur: none;
         --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-surface-opacity), transparent);
         --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-chat-opacity), transparent);
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
         --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) var(--codex-wallpaper-settings-opacity), transparent);
-        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 64%, transparent);
-        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 42%, transparent);
+        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) var(--codex-wallpaper-settings-canvas-opacity), transparent);
+        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-settings-card-opacity), transparent);
         --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
         --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
         --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
@@ -118,8 +121,8 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
       }
       html[data-theme='light'] {
-        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(232 232 237)) 72%, transparent);
-        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(247 247 249)) 62%, transparent);
+        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(232 232 237)) var(--codex-wallpaper-settings-canvas-opacity), transparent);
+        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(247 247 249)) var(--codex-wallpaper-settings-card-opacity), transparent);
       }
       body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: var(--codex-wallpaper-frame) !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
         &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
@@ -138,6 +141,7 @@ function createRuntimeStyles(rootId, controlsId) {
         box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
+      html[data-codex-wallpaper-top-surface] body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-top-opacity), transparent) !important; }
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
@@ -232,6 +236,19 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     performance: { fps: 15, pauseWhenHidden: true },
     balanced: { fps: 30, pauseWhenHidden: true },
   };
+  const interfaceStyleProperties = [
+    "--codex-wallpaper-surface-opacity",
+    "--codex-wallpaper-chat-opacity",
+    "--codex-wallpaper-sidebar-opacity",
+    "--codex-wallpaper-top-opacity",
+    "--codex-wallpaper-right-opacity",
+    "--codex-wallpaper-settings-opacity",
+    "--codex-wallpaper-settings-canvas-opacity",
+    "--codex-wallpaper-settings-card-opacity",
+    "--codex-wallpaper-interface-blur",
+    "--codex-wallpaper-line",
+    "--codex-wallpaper-line-strong",
+  ];
 
   const defaults = {
     enabled: true,
@@ -312,6 +329,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   let rotationTimer = null;
   let activeGeneration = 0;
   let pendingRender = null;
+  let sceneFitSupported = null;
   let imported = [];
   let database = null;
   const runtimeAssets = new Map();
@@ -641,12 +659,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       `${surfaceOpacityValue("sidebar")}%`
     );
     style.setProperty(
+      "--codex-wallpaper-top-opacity",
+      `${hasSurfaceOverride("sidebar") ? surfaceOpacityValue("sidebar") : 0}%`
+    );
+    document.documentElement.toggleAttribute(
+      "data-codex-wallpaper-top-surface",
+      hasSurfaceOverride("sidebar")
+    );
+    style.setProperty(
       "--codex-wallpaper-right-opacity",
       `${surfaceOpacityValue("right")}%`
     );
+    const settingsOpacity = surfaceOpacityValue("settings");
     style.setProperty(
       "--codex-wallpaper-settings-opacity",
-      `${surfaceOpacityValue("settings")}%`
+      `${settingsOpacity}%`
+    );
+    style.setProperty(
+      "--codex-wallpaper-settings-canvas-opacity",
+      `${Math.round(settingsOpacity * 0.68)}%`
+    );
+    style.setProperty(
+      "--codex-wallpaper-settings-card-opacity",
+      `${Math.round(settingsOpacity * 0.45)}%`
     );
     const blur = Math.max(
       0,
@@ -663,6 +698,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       style.setProperty("--codex-wallpaper-line", "transparent");
       style.setProperty("--codex-wallpaper-line-strong", "transparent");
     }
+  }
+
+  function clearInterfaceAppearance() {
+    for (const property of interfaceStyleProperties)
+      document.documentElement.style.removeProperty(property);
+    document.documentElement.removeAttribute(
+      "data-codex-wallpaper-top-surface"
+    );
   }
 
   function applyVisualSettings() {
@@ -1173,11 +1216,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       volume: effectiveVolume(),
       fit: config.settings.fitMode === "contain" ? "contain" : "cover",
     });
+    sceneFitSupported = typeof instance.setFit === "function";
     let cancelled = false;
     let settled = false;
     const current = {
       cancelled: false,
       scene: instance,
+      supportsFit: typeof instance.setFit === "function",
       pause: () => instance.pause(),
       resume: () => instance.resume(),
       setFps: (fps) => instance.setFps?.(fps),
@@ -1776,12 +1821,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       range("暗化", "dim", 0, 70, 1, "%"),
       range("模糊", "blur", 0, 24, 1, "px"),
       range("不透明度", "opacity", 20, 100, 1, "%"),
-      ...(["image", "video"].includes(type)
+      ...(["image", "video", "scene"].includes(type)
         ? [
-            settingSelect("画面适配", "fitMode", [
-              ["cover", "保持比例填充"],
-              ["contain", "完整显示"],
-            ]),
+            settingSelect(
+              "画面适配",
+              "fitMode",
+              [
+                ["cover", "保持比例填充"],
+                ["contain", "完整显示"],
+              ],
+              {
+                disabled: type === "scene" && sceneFitSupported === false,
+                hint:
+                  type === "scene" && sceneFitSupported === false
+                    ? "当前 Scene 不支持原位调整"
+                    : "",
+              }
+            ),
           ]
         : []),
       range("界面读底", "surfaceOpacity", 20, 100, 1, "%"),
@@ -1896,6 +1952,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   }
 
   function removeAdapterNodes() {
+    clearInterfaceAppearance();
     for (const node of document.querySelectorAll(
       `#${rootId}, #${controlsId}, #${styleId}`
     ))
