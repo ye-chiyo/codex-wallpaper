@@ -600,11 +600,37 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
           .querySelector("[data-entry-action='favorite']")
           ?.getAttribute("aria-pressed") === "true";
       item.hidden = !(matchesQuery && matchesType && matchesFavorite);
-      if (item.hidden) previewObserver.unobserve(item.querySelector(".thumb"));
-      else visible += 1;
+      const visual = item.querySelector(".thumb");
+      if (item.hidden) {
+        previewObserver.unobserve(visual);
+      } else {
+        visible += 1;
+        if (
+          visual.dataset.previewId &&
+          !pendingPreviewRequests.has(visual.dataset.previewId) &&
+          !failedPreviewIds.has(visual.dataset.previewId)
+        )
+          previewObserver.observe(visual);
+      }
     }
     const result = panel.querySelector("[data-library-result]");
     if (result) result.textContent = `显示 ${visible} / ${cards.length} 项`;
+    requestAnimationFrame(requestVisiblePreviews);
+  }
+
+  function requestVisiblePreviews() {
+    if (!panel?.classList.contains("open")) return;
+    const panelRect = panel.getBoundingClientRect();
+    for (const item of panel.querySelectorAll(".card:not([hidden])")) {
+      const visual = item.querySelector(".thumb[data-preview-id]");
+      if (!visual) continue;
+      const visualRect = visual.getBoundingClientRect();
+      if (
+        visualRect.bottom >= panelRect.top &&
+        visualRect.top <= panelRect.bottom
+      )
+        requestPreview(visual.dataset.previewId);
+    }
   }
 
   function renderRuntimeStatus() {
@@ -1495,6 +1521,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       config.active.id === id
     ) {
       failedEntryKeys.delete(`workshop:${id}`);
+      if (loadingEntryKey === `workshop:${id}`) loadingEntryKey = null;
       runtimeAssets.set(`workshop:${id}`, {
         ...metadata,
         kind: "workshop",
@@ -1608,6 +1635,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     search.oninput = applyFilters;
     type.onchange = applyFilters;
     favorites.onchange = applyFilters;
+    panel.addEventListener("scroll", requestVisiblePreviews, { passive: true });
     libraryBody.append(filters, importRow, status, result, list);
     library.append(libraryTitle, libraryBody);
 
@@ -1846,6 +1874,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     receiveAsset(entry) {
       pendingAssetRequests.delete(entry.id);
       failedEntryKeys.delete(`workshop:${entry.id}`);
+      if (loadingEntryKey === `workshop:${entry.id}`) loadingEntryKey = null;
       runtimeAssets.set(`workshop:${entry.id}`, {
         ...entry,
         kind: "workshop",
@@ -1858,7 +1887,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     receiveAssetError(id, message) {
       pendingAssetRequests.delete(id);
       assetTransfers.delete(id);
-      loadingEntryKey = null;
+      if (loadingEntryKey === `workshop:${id}`) loadingEntryKey = null;
       failedEntryKeys.add(`workshop:${id}`);
       renderPanel();
       if (config.active.kind === "workshop" && config.active.id === id)

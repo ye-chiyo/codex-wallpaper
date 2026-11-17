@@ -1469,6 +1469,26 @@ test("wallpaper library shell combines filters without reloading the current med
           assetDataUrl: null,
           reason: "asset-not-loaded",
         },
+        {
+          id: "fixture-on-demand-next",
+          title: "Fixture On Demand Next",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
+        },
+        {
+          id: "fixture-lazy",
+          title: "Fixture Lazy",
+          type: "image",
+          playable: false,
+          fallback: true,
+          previewDataUrl: null,
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
+        },
       ],
     },
   };
@@ -1501,8 +1521,13 @@ test("wallpaper library shell combines filters without reloading the current med
     `(async () => {
       const controls = document.getElementById("${controlRootId}");
       const root = document.getElementById("${rootId}");
+      const hostRequests = [];
+      globalThis.__codexWallpaperHostRequest = (raw) => {
+        hostRequests.push(JSON.parse(raw));
+      };
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+      panel.style.maxHeight = "220px";
       const media = root.querySelector("[data-codex-wallpaper-layer] .media");
       let stableMediaChild = null;
       let mediaMutations = 0;
@@ -1514,6 +1539,30 @@ test("wallpaper library shell combines filters without reloading the current med
       const regionNames = [...panel.querySelectorAll("[data-panel-region]")].map(
         (region) => region.dataset.panelRegion
       );
+      const search = panel.querySelector("[data-library-search]");
+      const type = panel.querySelector("[data-library-type]");
+      const favorites = panel.querySelector("[data-library-favorites]");
+
+      search.value = "fixture image";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      search.value = "lazy";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      panel
+        .querySelector(".card[data-entry-id='fixture-lazy']")
+        .scrollIntoView({ block: "center" });
+      let lazyPreviewRequested = false;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        lazyPreviewRequested = hostRequests.some(
+          (request) =>
+            request.type === "load-preview" && request.id === "fixture-lazy"
+        );
+        if (lazyPreviewRequested) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      search.value = "";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+
       const imageCard = panel.querySelector(
         ".card[data-entry-id='fixture-image']"
       );
@@ -1522,9 +1571,6 @@ test("wallpaper library shell combines filters without reloading the current med
         .click();
       imageCard.querySelector("[data-entry-action='queue']").click();
 
-      const search = panel.querySelector("[data-library-search]");
-      const type = panel.querySelector("[data-library-type]");
-      const favorites = panel.querySelector("[data-library-favorites]");
       search.value = "fixture";
       search.dispatchEvent(new Event("input", { bubbles: true }));
       type.value = "image";
@@ -1576,6 +1622,46 @@ test("wallpaper library shell combines filters without reloading the current med
       search.value = "";
       search.dispatchEvent(new Event("input", { bubbles: true }));
       panel
+        .querySelector(
+          ".card[data-entry-id='fixture-on-demand'] [data-entry-action='use']"
+        )
+        .click();
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const loadingStatus = cardStatus("fixture-on-demand");
+      globalThis.__codexWallpaperApi.receiveAsset({
+        id: "fixture-on-demand",
+        title: "Fixture On Demand",
+        type: "image",
+        playable: true,
+        fallback: false,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
+        reason: null
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const loadedStatus = cardStatus("fixture-on-demand");
+      panel
+        .querySelector(
+          ".card[data-entry-id='fixture-on-demand-next'] [data-entry-action='use']"
+        )
+        .click();
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const newerLoadingStatus = cardStatus("fixture-on-demand-next");
+      globalThis.__codexWallpaperApi.receiveAssetError(
+        "fixture-on-demand",
+        "old request failed"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const newerAfterOldFailure = cardStatus("fixture-on-demand-next");
+      globalThis.__codexWallpaperApi.receiveAssetError(
+        "fixture-on-demand-next",
+        "new request failed"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const failedStatus = cardStatus("fixture-on-demand-next");
+      panel
         .querySelector(".card[data-entry-id='fixture-image'] [data-entry-action='use']")
         .click();
       for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -1615,6 +1701,12 @@ test("wallpaper library shell combines filters without reloading the current med
         resultText,
         statuses,
         importedFilterVisible,
+        lazyPreviewRequested,
+        loadingStatus,
+        loadedStatus,
+        newerLoadingStatus,
+        newerAfterOldFailure,
+        failedStatus,
         keyboardReachable,
         scrollable,
         reopened: panel.classList.contains("open"),
@@ -1639,13 +1731,19 @@ test("wallpaper library shell combines filters without reloading the current med
   assert.deepEqual(result, {
     regionNames: ["library", "playback", "appearance", "recovery"],
     visibleTitles: ["Fixture Image"],
-    resultText: "显示 1 / 5 项",
+    resultText: "显示 1 / 7 项",
     statuses: {
       scene: "scene · 原生渲染",
       webFallback: "web · 预览降级",
       onDemand: "image · 按需加载",
     },
     importedFilterVisible: true,
+    lazyPreviewRequested: true,
+    loadingStatus: "image · 加载中",
+    loadedStatus: "image · 原生显示",
+    newerLoadingStatus: "image · 加载中",
+    newerAfterOldFailure: "image · 加载中",
+    failedStatus: "image · 加载失败",
     keyboardReachable: true,
     scrollable: true,
     reopened: true,
