@@ -177,3 +177,23 @@ All comparisons use the same media, 1707 x 1066 CSS-pixel window at DPR 1.5, vis
 - After the user foregrounded the existing window, the matrix reached the wallpaper-disabled state but stopped before the 60-second run: its child sampler `baseline-smoke.mjs` had been moved or removed from the T01 worktree. This attempt yields no disabled performance result.
 - The matrix cleanup verified that the exact prior stored config was restored and that all 106 library entries remained. The prior panel open state was restored, and no further live operation was started.
 - Resumed against integration `044b8bf`, completed the remaining visible controls, and fixed the budgets above before optimization.
+
+## 2026-11-17 T03 settings interaction and config sync
+
+The fixed pre-change live baseline recorded:
+
+- Thirty FPS slider changes produced 60 synchronous localStorage writes.
+- Opening and closing the mounted panel 11 times added exactly 106 cards per toggle.
+- One appearance `StorageEvent` added 106 cards, created one staged media node, and replaced the visible media node.
+
+The T03 candidate starts from integration `7668cae`. Headless Edge behavior evidence from the existing browser fixture now records:
+
+- A 30-event opacity burst updates the visible preview immediately and performs one config write when the slider is committed; the final value survives panel close/reopen.
+- A remote event received while that local write is pending flushes the pending local value and does not drop it. A later remote event, received with no pending local write, is applied normally.
+- An appearance, volume, FPS, favorites, and playlist `StorageEvent` preserves the same wallpaper cards, settings elements, visible media node, panel focus, and panel scroll position. It creates zero cards and zero staged media nodes. Video volume changes on the existing video.
+- A material identity `StorageEvent` still reloads to the new material and settles with zero staged media nodes.
+- Opening, closing, and reopening the mounted panel adds zero cards.
+
+Validation: the full Node suite passed 18/18; the profile, startup-entry, and startup-roots PowerShell preflights passed; Prettier and `git diff --check` passed.
+
+These results are headless fixture behavior evidence for source review. They do not replace the real Codex p95/maximum settings-interaction latency measurement, the same-candidate real settings path, the 8-hour gate, or the 7-day gate. The corresponding T03 acceptance boxes remain unchecked.

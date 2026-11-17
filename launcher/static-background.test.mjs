@@ -789,6 +789,600 @@ test("disable cancels a staged video before its first frame can commit", async (
   );
 });
 
+test("continuous slider input previews immediately and persists the settled value once", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 0,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        const opacity = [...controls.querySelectorAll(".range")].find(
+          (range) => range.querySelector("span")?.textContent === "不透明度"
+        ).querySelector("input");
+        const originalSetItem = Storage.prototype.setItem;
+        let configWrites = 0;
+        Storage.prototype.setItem = function (key, value) {
+          if (key === "codex-wallpaper-p1-config") configWrites += 1;
+          return originalSetItem.call(this, key, value);
+        };
+        opacity.focus();
+        for (let value = 21; value <= 50; value += 1) {
+          opacity.value = String(value);
+          opacity.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        const previewBeforeSettle =
+          root.querySelector("[data-codex-wallpaper-layer]").style.opacity;
+        const savedBeforeSettle = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.opacity;
+        opacity.blur();
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        const writesAfterBlur = configWrites;
+        const savedAfterBlur = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.opacity;
+        controls.querySelector("[data-codex-wallpaper-panel] header button").click();
+        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        const reopenedOpacity = [...controls.querySelectorAll(".range")]
+          .find(
+            (range) => range.querySelector("span")?.textContent === "不透明度"
+          )
+          .querySelector("input").value;
+        const pendingLocal = [...controls.querySelectorAll(".range")]
+          .find(
+            (range) => range.querySelector("span")?.textContent === "不透明度"
+          )
+          .querySelector("input");
+        pendingLocal.focus();
+        pendingLocal.value = "40";
+        pendingLocal.dispatchEvent(new Event("input", { bubbles: true }));
+        const localBeforeRemote = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.opacity;
+        const beforeRemoteEvent = localStorage.getItem(
+          "codex-wallpaper-p1-config"
+        );
+        const remoteDuringLocalEdit = JSON.stringify({
+          ...JSON.parse(beforeRemoteEvent),
+          settings: {
+            ...JSON.parse(beforeRemoteEvent).settings,
+            opacity: 65
+          }
+        });
+        localStorage.setItem(
+          "codex-wallpaper-p1-config",
+          remoteDuringLocalEdit
+        );
+        dispatchEvent(
+          new StorageEvent("storage", {
+            key: "codex-wallpaper-p1-config",
+            oldValue: beforeRemoteEvent,
+            newValue: remoteDuringLocalEdit,
+            storageArea: localStorage
+          })
+        );
+        const localAfterRemote = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.opacity;
+        const remoteAfterLocalSettled = JSON.stringify({
+          ...JSON.parse(remoteDuringLocalEdit),
+          settings: {
+            ...JSON.parse(remoteDuringLocalEdit).settings,
+            opacity: 80
+          }
+        });
+        localStorage.setItem(
+          "codex-wallpaper-p1-config",
+          remoteAfterLocalSettled
+        );
+        dispatchEvent(
+          new StorageEvent("storage", {
+            key: "codex-wallpaper-p1-config",
+            oldValue: remoteDuringLocalEdit,
+            newValue: remoteAfterLocalSettled,
+            storageArea: localStorage
+          })
+        );
+        const remoteApplied = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        ).settings.opacity;
+        Storage.prototype.setItem = originalSetItem;
+        return {
+          previewBeforeSettle,
+          savedBeforeSettle,
+          writesAfterBlur,
+          savedAfterBlur,
+          reopenedOpacity,
+          localBeforeRemote,
+          localAfterRemote,
+          remoteApplied,
+          displayedAfterRemote: pendingLocal.value
+        };
+      })()`,
+      options
+    ),
+    {
+      previewBeforeSettle: "0.5",
+      savedBeforeSettle: 100,
+      writesAfterBlur: 1,
+      savedAfterBlur: 50,
+      reopenedOpacity: "50",
+      localBeforeRemote: 50,
+      localAfterRemote: 40,
+      remoteApplied: 80,
+      displayedAfterRemote: "80",
+    }
+  );
+});
+
+test("cross-window settings update in place without rebuilding cards or media", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-video",
+          title: "Fixture Video",
+          type: "video",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+          reason: null,
+        },
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `(() => {
+      localStorage.setItem(
+        "codex-wallpaper-p1-config",
+        JSON.stringify({
+          enabled: true,
+          active: { kind: "workshop", id: "fixture-video" },
+          favorites: [],
+          playlist: [],
+          settings: {
+            dim: 18,
+            blur: 0,
+            opacity: 100,
+            fps: 30,
+            volume: 0,
+            rotationMinutes: 0
+          }
+        })
+      );
+      const original = HTMLVideoElement.prototype.requestVideoFrameCallback;
+      globalThis.__t03OriginalFrameCallback = original;
+      globalThis.__t03PendingFrame = null;
+      HTMLVideoElement.prototype.requestVideoFrameCallback = (callback) => {
+        globalThis.__t03PendingFrame = callback;
+        return 1;
+      };
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const stagedVideo = root.querySelector(".media.staged video");
+          if (
+            typeof globalThis.__t03PendingFrame === "function" &&
+            stagedVideo?.readyState >= 2
+          )
+            break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        globalThis.__t03PendingFrame?.(performance.now(), {});
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (root.querySelector(".media:not(.staged) video")) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+        const settings = controls.querySelector(".settings-grid");
+        const cards = [...controls.querySelectorAll(".card")];
+        const media = root.querySelector(".media");
+        const volume = [...controls.querySelectorAll(".range")].find(
+          (range) => range.querySelector("span")?.textContent === "音量"
+        ).querySelector("input");
+        volume.focus();
+        panel.scrollTop = 60;
+        let cardAdds = 0;
+        let mediaMutations = 0;
+        const cardObserver = new MutationObserver((records) => {
+          cardAdds += records.reduce(
+            (count, record) => count + record.addedNodes.length,
+            0
+          );
+        });
+        const mediaObserver = new MutationObserver((records) => {
+          mediaMutations += records.reduce(
+            (count, record) => count + record.addedNodes.length,
+            0
+          );
+        });
+        cardObserver.observe(panel.querySelector(".wallpaper-list"), {
+          childList: true
+        });
+        mediaObserver.observe(root.querySelector("[data-codex-wallpaper-layer]"), {
+          childList: true,
+          subtree: true
+        });
+        const previous = localStorage.getItem("codex-wallpaper-p1-config");
+        const next = JSON.stringify({
+          ...JSON.parse(previous),
+          favorites: [{ kind: "workshop", id: "fixture-video" }],
+          playlist: [
+            { kind: "workshop", id: "fixture-video" },
+            { kind: "workshop", id: "fixture-image" }
+          ],
+          settings: {
+            dim: 42,
+            blur: 6,
+            opacity: 73,
+            fps: 15,
+            volume: 40,
+            rotationMinutes: 0
+          }
+        });
+        localStorage.setItem("codex-wallpaper-p1-config", next);
+        dispatchEvent(
+          new StorageEvent("storage", {
+            key: "codex-wallpaper-p1-config",
+            oldValue: previous,
+            newValue: next,
+            storageArea: localStorage
+          })
+        );
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        cardObserver.disconnect();
+        mediaObserver.disconnect();
+        const video = root.querySelector(".media:not(.staged) video");
+        const result = {
+          cardsSame:
+            cards.length === controls.querySelectorAll(".card").length &&
+            cards.every((card, index) =>
+              card === controls.querySelectorAll(".card")[index]),
+          cardAdds,
+          mediaSame: media === root.querySelector(".media"),
+          mediaMutations,
+          staged: root.querySelectorAll(".media.staged").length,
+          opacity:
+            root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
+          filter: media.style.filter,
+          videoVolume: video?.volume,
+          videoMuted: video?.muted,
+          panelOpen: panel.classList.contains("open"),
+          panelScrollTop: panel.scrollTop,
+          volumeFocused: document.activeElement === volume,
+          settingsSame:
+            settings === controls.querySelector(".settings-grid"),
+          favoritePressed: controls
+            .querySelector(
+              ".card[data-entry-id='fixture-video'] [data-entry-action='favorite']"
+            )
+            .getAttribute("aria-pressed"),
+          queueLabel: controls
+            .querySelector(
+              ".card[data-entry-id='fixture-video'] [data-entry-action='queue']"
+            ).textContent,
+          playlistSummary:
+            controls.querySelector(".playlist-summary").textContent,
+          fpsValue: [...controls.querySelectorAll(".range")]
+            .find((range) => range.querySelector("span")?.textContent === "帧率")
+            .querySelector("input").value,
+          opacityValue: [...controls.querySelectorAll(".range")]
+            .find(
+              (range) => range.querySelector("span")?.textContent === "不透明度"
+            )
+            .querySelector("input").value
+        };
+        HTMLVideoElement.prototype.requestVideoFrameCallback =
+          globalThis.__t03OriginalFrameCallback;
+        return result;
+      })()`,
+      options
+    ),
+    {
+      cardsSame: true,
+      cardAdds: 0,
+      mediaSame: true,
+      mediaMutations: 0,
+      staged: 0,
+      opacity: "0.73",
+      filter: "blur(6px)",
+      videoVolume: 0.4,
+      videoMuted: false,
+      panelOpen: true,
+      panelScrollTop: 60,
+      volumeFocused: true,
+      settingsSame: true,
+      favoritePressed: "true",
+      queueLabel: "移除轮播",
+      playlistSummary: "轮播：Fixture Video · Fixture Image",
+      fpsValue: "15",
+      opacityValue: "73",
+    }
+  );
+});
+
+test("cross-window asset identity change still reloads the wallpaper", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          reason: null,
+        },
+        {
+          id: "fixture-image-next",
+          title: "Fixture Image Next",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
+          reason: null,
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: {
+          dim: 18,
+          blur: 0,
+          opacity: 100,
+          fps: 30,
+          volume: 0,
+          rotationMinutes: 0
+        }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.src.includes("5d32b8") && image.complete) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const oldImage = root.querySelector(".media:not(.staged) img");
+        const previous = localStorage.getItem("codex-wallpaper-p1-config");
+        const next = JSON.stringify({
+          ...JSON.parse(previous),
+          active: { kind: "workshop", id: "fixture-image-next" }
+        });
+        localStorage.setItem("codex-wallpaper-p1-config", next);
+        dispatchEvent(
+          new StorageEvent("storage", {
+            key: "codex-wallpaper-p1-config",
+            oldValue: previous,
+            newValue: next,
+            storageArea: localStorage
+          })
+        );
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.src.includes("123456") && image.complete) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const nextImage = root.querySelector(".media:not(.staged) img");
+        return {
+          imageReplaced: oldImage !== nextImage,
+          nextImageVisible: nextImage?.src.includes("123456") ?? false,
+          staged: root.querySelectorAll(".media.staged").length,
+          active: globalThis.__codexWallpaperApi.state().activeId
+        };
+      })()`,
+      options
+    ),
+    {
+      imageReplaced: true,
+      nextImageVisible: true,
+      staged: 0,
+      active: "fixture-image-next",
+    }
+  );
+});
+
+test("opening and closing the mounted panel does not rebuild wallpaper cards", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          assetDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+          reason: null,
+        },
+        {
+          id: "fixture-lazy",
+          title: "Fixture Lazy",
+          type: "image",
+          playable: false,
+          fallback: true,
+          previewDataUrl: null,
+          assetDataUrl: null,
+          reason: "asset-not-loaded",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const root = document.getElementById("${rootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const controls = document.getElementById("${controlRootId}");
+        const button = controls.querySelector("[data-codex-wallpaper-settings]");
+        const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+        const list = panel.querySelector(".wallpaper-list");
+        const cards = [...list.querySelectorAll(".card")];
+        let addedCards = 0;
+        const observer = new MutationObserver((records) => {
+          addedCards += records.reduce(
+            (count, record) =>
+              count +
+              [...record.addedNodes].filter((node) =>
+                node.matches?.(".card")).length,
+            0
+          );
+        });
+        observer.observe(list, { childList: true });
+        button.click();
+        const opened = panel.classList.contains("open");
+        button.click();
+        const closed = !panel.classList.contains("open");
+        button.click();
+        const reopened = panel.classList.contains("open");
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        observer.disconnect();
+        return {
+          opened,
+          closed,
+          reopened,
+          sameCards:
+            cards.length === list.querySelectorAll(".card").length &&
+            cards.every((card, index) =>
+              card === list.querySelectorAll(".card")[index]),
+          addedCards
+        };
+      })()`,
+      options
+    ),
+    {
+      opened: true,
+      closed: true,
+      reopened: true,
+      sameCards: true,
+      addedCards: 0,
+    }
+  );
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -2292,19 +2886,44 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
+  await evaluateInPage(
+    port,
+    `(() => {
+      const button = document.querySelector(${JSON.stringify(settingsButton)});
+      globalThis.__t03SettingsClicks = 0;
+      button.addEventListener("click", () => {
+        globalThis.__t03SettingsClicks += 1;
+      });
+    })()`,
+    options
+  );
   assert.equal(await clickAtElementCenter(port, options, settingsButton), true);
+  await evaluateInPage(
+    port,
+    `(() => {
+      const panel = document.querySelector("#${controlRootId} .panel");
+      panel.classList.remove("open");
+      globalThis.__t03SettingsClicks = 0;
+      document.querySelector(${JSON.stringify(settingsButton)}).click();
+    })()`,
+    options
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
       `(() => {
         const panel = document.querySelector("#${controlRootId} .panel.open");
         const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
-        const p = panel.getBoundingClientRect();
-        return { visible: p.top >= 0 && p.right <= innerWidth, clear: p.bottom < c.top };
+        const p = panel?.getBoundingClientRect();
+        return {
+          clicks: globalThis.__t03SettingsClicks,
+          visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
+          clear: Boolean(p && p.bottom < c.top)
+        };
       })()`,
       options
     ),
-    { visible: true, clear: true }
+    { clicks: 1, visible: true, clear: true }
   );
   await clickAtElementCenter(port, options, settingsButton);
   await evaluateInPage(
@@ -2341,6 +2960,7 @@ test("static background is single, removable and persists disabled", async (t) =
           input.value = value;
           input.dispatchEvent(new Event("input", { bubbles: true }));
         }
+        ranges[3].dispatchEvent(new Event("change", { bubbles: true }));
         for (let attempt = 0; attempt < 40; attempt += 1) {
           const image = document.querySelector(
             "#${rootId} .media:not(.staged) img"

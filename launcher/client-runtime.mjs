@@ -259,9 +259,41 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   let measuredFps = 0;
   let frameCount = 0;
   let frameWindowStartedAt = performance.now();
+  let configSaveTimer = null;
 
   function saveConfig() {
+    if (configSaveTimer) clearTimeout(configSaveTimer);
+    configSaveTimer = null;
     localStorage.setItem(configKey, JSON.stringify(config));
+  }
+
+  function scheduleConfigSave() {
+    if (configSaveTimer) clearTimeout(configSaveTimer);
+    configSaveTimer = setTimeout(saveConfig, 100);
+  }
+
+  function flushConfigSave() {
+    if (configSaveTimer) saveConfig();
+  }
+
+  function valuesEqual(left, right) {
+    return JSON.stringify(left) === JSON.stringify(right);
+  }
+
+  function configChanges(previous, next) {
+    return {
+      enabled: previous.enabled !== next.enabled,
+      identity: !valuesEqual(previous.active, next.active),
+      favorites: !valuesEqual(previous.favorites, next.favorites),
+      playlist: !valuesEqual(previous.playlist, next.playlist),
+      appearance: ["dim", "blur", "opacity"].some(
+        (key) => previous.settings[key] !== next.settings[key]
+      ),
+      volume: previous.settings.volume !== next.settings.volume,
+      fps: previous.settings.fps !== next.settings.fps,
+      rotation:
+        previous.settings.rotationMinutes !== next.settings.rotationMinutes,
+    };
   }
 
   function openDatabase() {
@@ -435,6 +467,94 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
       ? `blur(${config.settings.blur}px)`
       : "";
     dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
+  }
+
+  function applyPlaybackSettings(change) {
+    const volume = Number(config.settings.volume) / 100;
+    if (change.volume && playback?.video) {
+      playback.video.muted = volume === 0;
+      playback.video.volume = volume;
+    }
+    if (change.volume) playback?.setVolume?.(volume);
+    if (change.fps) playback?.setFps?.(Number(config.settings.fps));
+  }
+
+  function syncSettingControls() {
+    if (!panel) return;
+    for (const input of panel.querySelectorAll(".range input")) {
+      const key = input.dataset.setting;
+      if (!key) continue;
+      input.value = String(config.settings[key]);
+      const output = input.closest(".range")?.querySelector("output");
+      if (output)
+        output.textContent = `${input.value}${output.dataset.unit || ""}`;
+    }
+  }
+
+  function updateCardState(card) {
+    const key = {
+      kind: card.dataset.entryKind,
+      id: card.dataset.entryId,
+    };
+    const selected =
+      config.active.kind === key.kind && config.active.id === key.id;
+    const favorite = isFavorite(key);
+    const queued = inPlaylist(key);
+    card.dataset.selected = String(selected);
+    const use = card.querySelector("[data-entry-action='use']");
+    const favoriteButton = card.querySelector("[data-entry-action='favorite']");
+    const queueButton = card.querySelector("[data-entry-action='queue']");
+    if (use) use.setAttribute("aria-pressed", String(selected));
+    if (favoriteButton) {
+      favoriteButton.textContent = favorite ? "★" : "☆";
+      favoriteButton.setAttribute("aria-pressed", String(favorite));
+    }
+    if (queueButton) {
+      queueButton.textContent = queued ? "移除轮播" : "加入轮播";
+      queueButton.setAttribute("aria-pressed", String(queued));
+    }
+  }
+
+  function syncCardStates() {
+    if (!panel) return;
+    for (const item of panel.querySelectorAll(".card")) updateCardState(item);
+  }
+
+  function syncPlaylistSummary() {
+    const summary = panel?.querySelector(".playlist-summary");
+    if (!summary) return;
+    const queued = playlistEntries();
+    summary.textContent = queued.length
+      ? `轮播：${queued.map((entry) => entry.title).join(" · ")}`
+      : "轮播列表为空";
+  }
+
+  function syncConfigUi(change) {
+    if (change.appearance) applyVisualSettings();
+    applyPlaybackSettings(change);
+    if (change.favorites || change.playlist) syncCardStates();
+    if (change.playlist) syncPlaylistSummary();
+    syncSettingControls();
+    if (change.rotation || change.playlist) scheduleRotation();
+  }
+
+  async function applyConfigChange(change) {
+    if (!config.enabled) {
+      if (root) await disable(false);
+      return state();
+    }
+    if (!root) {
+      mount();
+      await loadImported();
+      await applyActive();
+      return state();
+    }
+    if (change.enabled || change.identity) {
+      await applyActive();
+      return state();
+    }
+    syncConfigUi(change);
+    return state();
   }
 
   function hasCurrentFrame() {
@@ -914,8 +1034,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     if (index >= 0) list.splice(index, 1);
     else list.push({ kind: entry.kind, id: entry.id });
     saveConfig();
-    renderPanel();
-    scheduleRotation();
+    const item = panel?.querySelector(
+      `.card[data-entry-kind="${entry.kind}"][data-entry-id="${entry.id}"]`
+    );
+    if (item) updateCardState(item);
+    if (listName === "playlist") {
+      syncPlaylistSummary();
+      scheduleRotation();
+    }
   }
 
   function entryState(entry) {
@@ -994,6 +1120,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     actions.className = "card-actions";
     const use = document.createElement("button");
     use.textContent = "使用";
+    use.dataset.entryAction = "use";
     use.setAttribute("aria-pressed", String(selected));
     use.onclick = () => {
       config.active = { kind: entry.kind, id: entry.id };
@@ -1004,11 +1131,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     };
     const favorite = document.createElement("button");
     favorite.textContent = isFavorite(entry) ? "★" : "☆";
+    favorite.dataset.entryAction = "favorite";
     favorite.title = "收藏";
     favorite.setAttribute("aria-pressed", String(isFavorite(entry)));
     favorite.onclick = () => toggleKey("favorites", entry);
     const queue = document.createElement("button");
     queue.textContent = inPlaylist(entry) ? "移除轮播" : "加入轮播";
+    queue.dataset.entryAction = "queue";
     queue.setAttribute("aria-pressed", String(inPlaylist(entry)));
     queue.onclick = () => toggleKey("playlist", entry);
     actions.append(use, favorite, queue);
@@ -1021,31 +1150,30 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     row.className = "range";
     const heading = document.createElement("span");
     const value = document.createElement("output");
+    value.dataset.unit = unit;
     const input = document.createElement("input");
     input.type = "range";
     input.min = String(min);
     input.max = String(max);
     input.step = String(step);
     input.value = String(config.settings[key]);
+    input.dataset.setting = key;
     const renderLabel = () => {
       value.textContent = `${input.value}${unit}`;
     };
     input.oninput = () => {
       config.settings[key] = Number(input.value);
       renderLabel();
-      saveConfig();
       applyVisualSettings();
-      if (key === "volume" && playback?.video) {
-        playback.video.muted = Number(input.value) === 0;
-        playback.video.volume = Number(input.value) / 100;
-      }
-      if (key === "volume") playback?.setVolume?.(Number(input.value) / 100);
-      if (key === "fps") playback?.setFps?.(Number(input.value));
-      if (key === "fps" || key === "rotationMinutes") {
-        saveConfig();
-        if (key === "rotationMinutes") scheduleRotation();
-      }
+      applyPlaybackSettings({
+        volume: key === "volume",
+        fps: key === "fps",
+      });
+      if (key === "rotationMinutes") scheduleRotation();
+      scheduleConfigSave();
     };
+    input.onchange = flushConfigSave;
+    input.onblur = flushConfigSave;
     heading.textContent = label;
     row.append(heading, value, input);
     renderLabel();
@@ -1275,7 +1403,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     const close = document.createElement("button");
     close.textContent = "×";
     close.title = "关闭";
-    close.onclick = () => panel.classList.remove("open");
+    close.onclick = () => {
+      flushConfigSave();
+      panel.classList.remove("open");
+    };
     header.append(heading, close);
 
     const importRow = document.createElement("label");
@@ -1356,8 +1487,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     settings.dataset.codexWallpaperSettings = "";
     settings.textContent = "壁纸设置";
     settings.onclick = () => {
+      if (panel.classList.contains("open")) flushConfigSave();
       panel.classList.toggle("open");
-      renderPanel();
     };
     const toggle = document.createElement("button");
     toggle.dataset.codexWallpaperToggle = "";
@@ -1378,9 +1509,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     return state();
   }
 
-  async function disable() {
+  async function disable(persist = true) {
+    if (persist) flushConfigSave();
     config.enabled = false;
-    saveConfig();
+    if (persist) saveConfig();
     revokePlayback();
     activeGeneration += 1;
     stopRotation();
@@ -1426,6 +1558,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
 
   function syncVisibility() {
     if (document.visibilityState === "hidden") {
+      flushConfigSave();
       playback?.video?.pause();
       playback?.pause?.();
       if (playback?.raf) cancelAnimationFrame(playback.raf);
@@ -1465,9 +1598,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   installHotkey();
   addEventListener("storage", (event) => {
     if (event.key !== configKey && event.key !== null) return;
+    if (configSaveTimer) {
+      flushConfigSave();
+      return;
+    }
+    const previous = config;
     config = readConfig();
-    if (config.enabled) refresh(sourcePayload);
-    else disable();
+    applyConfigChange(configChanges(previous, config));
   });
   channel.addEventListener("message", (event) => {
     if (event.data?.type === "prepare-reset") {
@@ -1475,6 +1612,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
     }
   });
   addEventListener("pagehide", () => {
+    flushConfigSave();
     revokePlayback();
     stopRotation();
   });
