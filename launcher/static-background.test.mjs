@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -55,11 +55,24 @@ function takeWebSocketText(buffer) {
   return { opcode, text: payload.toString(), rest: buffer.subarray(total) };
 }
 
-async function startExactCdpFixture(t) {
+async function startExactCdpFixture(t, evaluate = null) {
   const id = "0123456789abcdef0123456789abcdef";
   const requests = [];
   const sockets = new Set();
   let hostSocket = null;
+  function requestHost(type, id) {
+    hostSocket?.write(
+      encodeWebSocketText(
+        JSON.stringify({
+          method: "Runtime.bindingCalled",
+          params: {
+            name: "__codexWallpaperHostRequest",
+            payload: JSON.stringify({ type, id }),
+          },
+        })
+      )
+    );
+  }
   const server = createServer((request, response) => {
     assert.equal(request.url, "/json/list");
     response.end(
@@ -97,9 +110,10 @@ async function startExactCdpFixture(t) {
         requests.push(command);
         let result = {};
         if (command.method === "Runtime.evaluate") {
-          const value =
-            command.params.expression ===
-            "globalThis.__codexWallpaperApi.configureHost()"
+          const value = evaluate
+            ? evaluate(command.params.expression, requestHost)
+            : command.params.expression ===
+                "globalThis.__codexWallpaperApi.configureHost()"
               ? { state: "enabled", hostReady: true }
               : { state: "disabled", backgroundLayers: 0 };
           result = { result: { value } };
@@ -121,18 +135,9 @@ async function startExactCdpFixture(t) {
   return {
     port: server.address().port,
     requests,
+    requestHost,
     stopHost() {
-      hostSocket?.write(
-        encodeWebSocketText(
-          JSON.stringify({
-            method: "Runtime.bindingCalled",
-            params: {
-              name: "__codexWallpaperHostRequest",
-              payload: JSON.stringify({ type: "stop" }),
-            },
-          })
-        )
-      );
+      requestHost("stop");
     },
   };
 }
@@ -627,6 +632,166 @@ test("persisted-disabled CLI starts the real host before a later enable", async 
   child.kill();
 });
 
+test(
+  "host delivers a requested replacement after a discarded transfer",
+  { timeout: 15000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-transfer-")
+    );
+    const videoId = "9999999999999";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Transfer fixture",
+        file: "clip.mp4",
+      })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    const calls = [];
+    const finished = Promise.withResolvers();
+    const fixture = await startExactCdpFixture(t, (expression, requestHost) => {
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+        )
+      )
+        calls.push("begin");
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.appendAssetTransferChunk("
+        )
+      ) {
+        calls.push("chunk");
+        if (calls.length === 2) {
+          // The page disabled and re-enabled while the old host request was in flight.
+          requestHost("load-asset", videoId);
+          return false;
+        }
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.finishAssetTransfer("
+        )
+      ) {
+        calls.push("finish");
+        finished.resolve();
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi?.receiveAssetError("
+        )
+      )
+        finished.reject(new Error("Host rejected the test wallpaper"));
+      return true;
+    });
+    const child = spawn(
+      process.execPath,
+      [
+        "--no-use-env-proxy",
+        "launcher/wallpaper-host.mjs",
+        String(fixture.port),
+      ],
+      {
+        env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+        stdio: ["ignore", "pipe", "ignore"],
+      }
+    );
+    const exited = once(child, "exit");
+    t.after(async () => {
+      fixture.stopHost();
+      if (child.exitCode === null) child.kill();
+      await exited;
+    });
+    await once(child.stdout, "data");
+    fixture.requestHost("load-asset", videoId);
+    await finished.promise;
+    assert.deepEqual(calls, ["begin", "chunk", "begin", "chunk", "finish"]);
+  }
+);
+
+test("reenabling during a video transfer discards the old stream and accepts its replacement", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        { id: "fixture-video", title: "Transfer fixture", type: "video" },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await evaluateInPage(
+    port,
+    `(() => {
+    localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+      enabled: true, active: {kind:"workshop",id:"fixture-video"}
+    }));
+    globalThis.__fixtureAssetRequests = 0;
+    globalThis.__codexWallpaperHostRequest = (raw) => {
+      if (JSON.parse(raw).type === "load-asset") globalThis.__fixtureAssetRequests++;
+    };
+  })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+    const api = globalThis.__codexWallpaperApi;
+    const data = ${JSON.stringify(tinyMp4)};
+    const entry = { id:"fixture-video",title:"Transfer fixture",type:"video",mime:"video/mp4",size:atob(data).length };
+    api.beginAssetTransfer(entry);
+    await api.disable();
+    const disabled = !document.querySelector("#${rootId}");
+    await api.enable();
+    const chunkRejected = api.appendAssetTransferChunk(entry.id, data) === false;
+    const finishRejected = await api.finishAssetTransfer(entry.id) === false;
+    api.beginAssetTransfer(entry);
+    api.appendAssetTransferChunk(entry.id, data);
+    await api.finishAssetTransfer(entry.id);
+    for (let i=0;i<40&&!document.querySelector("#${rootId} .media:not(.staged) video");i++)
+      await new Promise(resolve => setTimeout(resolve, 25));
+    return {
+      disabled, chunkRejected, finishRejected, requests: globalThis.__fixtureAssetRequests,
+      player: !!document.querySelector("#${rootId} .media:not(.staged) video"),
+      staged: document.querySelectorAll("#${rootId} .media.staged").length
+    };
+  })()`,
+    options
+  );
+  assert.deepEqual(result, {
+    disabled: true,
+    chunkRejected: true,
+    finishRejected: true,
+    requests: 2,
+    player: true,
+    staged: 0,
+  });
+});
+
 test("failed first video shows its preview instead of a blank background", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = {
@@ -857,12 +1022,12 @@ test("continuous slider input previews immediately and persists the settled valu
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         controls.querySelector("[data-codex-wallpaper-settings]").click();
-        controls.querySelector(
-          "[data-panel-region='appearance']"
-        ).open = true;
+        controls.querySelector("[data-panel-page='appearance']")?.click();
         const opacity = [...controls.querySelectorAll(".range")].find(
           (range) => range.querySelector("span")?.textContent === "不透明度"
         ).querySelector("input");
+        const opacityOutput = opacity.closest(".range").querySelector("output");
+        const opacityText = opacityOutput.firstChild;
         const originalSetItem = Storage.prototype.setItem;
         let configWrites = 0;
         Storage.prototype.setItem = function (key, value) {
@@ -876,15 +1041,22 @@ test("continuous slider input previews immediately and persists the settled valu
         }
         const previewBeforeSettle =
           root.querySelector("[data-codex-wallpaper-layer]").style.opacity;
+        const visibleOpacityAfterPreview = opacityOutput.textContent;
         const savedBeforeSettle = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         ).settings.opacity;
-        opacity.blur();
+        const visiblePages = () => [...controls.querySelectorAll("[data-panel-region]")]
+          .filter((page) => page.getClientRects().length > 0)
+          .map((page) => page.dataset.panelRegion);
+        const appearancePage = visiblePages();
+        controls.querySelector("[data-panel-page='playback']")?.click();
+        const playbackPage = visiblePages();
         await new Promise((resolve) => setTimeout(resolve, 20));
         const writesAfterBlur = configWrites;
         const savedAfterBlur = JSON.parse(
           localStorage.getItem("codex-wallpaper-p1-config")
         ).settings.opacity;
+        controls.querySelector("[data-panel-page='appearance']")?.click();
         controls.querySelector("[data-codex-wallpaper-panel] header button").click();
         controls.querySelector("[data-codex-wallpaper-settings]").click();
         const reopenedOpacity = [...controls.querySelectorAll(".range")]
@@ -962,11 +1134,39 @@ test("continuous slider input previews immediately and persists the settled valu
           localStorage.getItem("codex-wallpaper-p1-config")
         ).settings.volume;
         Storage.prototype.setItem = originalSetItem;
+        const visibleOpacityAfterSync = opacityOutput.textContent;
+        const displayedAfterRemote = pendingLocal.value;
+        const image = root.querySelector(".media:not(.staged) img");
+        const name = controls.querySelector("[data-preset-name-input]");
+        name.value = "未保存预设";
+        const appearanceTab = controls.querySelector("[data-panel-page='appearance']");
+        appearanceTab.focus();
+        appearanceTab.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+        const keyboardPage = visiblePages();
+        const search = controls.querySelector("[data-library-search]");
+        search.value = "Fixture";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+        appearanceTab.click();
+        const editor = opacity.closest(".range");
+        editor.querySelector("button").click();
+        const number = editor.querySelector("input[type='number']");
+        const exactInputFocused = document.activeElement === number;
+        number.value = "64.5";
+        number.dispatchEvent(new Event("input", { bubbles: true }));
+        const exactPreview = root.querySelector("[data-codex-wallpaper-layer]").style.opacity;
+        controls.querySelector("[data-codex-wallpaper-panel] header button").click();
+        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        const exactSaved = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).settings.opacity;
         return {
           previewBeforeSettle,
+          visibleOpacityAfterPreview,
+          visibleOpacityAfterSync,
+          keptOpacityText: opacityOutput.firstChild === opacityText,
           savedBeforeSettle,
           writesAfterBlur,
           savedAfterBlur,
+          appearancePage,
+          playbackPage,
           reopenedOpacity,
           localBeforeRemote,
           localOpacityAfterCombinedSave: afterCombinedSave.settings.opacity,
@@ -976,16 +1176,29 @@ test("continuous slider input previews immediately and persists the settled valu
           stateVolumeAfterCombinedSave,
           remoteApplied,
           remoteVolumeApplied,
-          displayedAfterRemote: pendingLocal.value
+          displayedAfterRemote,
+          keyboardPage,
+          retainedFilter: search.value,
+          retainedDraft: name.value,
+          exactInputFocused,
+          exactPreview,
+          exactSaved,
+          exactReopened: opacityOutput.textContent,
+          sameImage: root.querySelector(".media:not(.staged) img") === image
         };
       })()`,
       options
     ),
     {
       previewBeforeSettle: "0.5",
+      visibleOpacityAfterPreview: "50%",
+      visibleOpacityAfterSync: "80%",
+      keptOpacityText: true,
       savedBeforeSettle: 100,
       writesAfterBlur: 1,
       savedAfterBlur: 50,
+      appearancePage: ["appearance"],
+      playbackPage: ["playback"],
       reopenedOpacity: "50",
       localBeforeRemote: 50,
       localOpacityAfterCombinedSave: 40,
@@ -996,6 +1209,14 @@ test("continuous slider input previews immediately and persists the settled valu
       remoteApplied: 80,
       remoteVolumeApplied: 60,
       displayedAfterRemote: "80",
+      keyboardPage: ["library"],
+      retainedFilter: "Fixture",
+      retainedDraft: "未保存预设",
+      exactInputFocused: true,
+      exactPreview: "0.645",
+      exactSaved: 64.5,
+      exactReopened: "64.5%",
+      sameImage: true,
     }
   );
 });
@@ -1089,7 +1310,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
         }
         controls.querySelector("[data-codex-wallpaper-settings]").click();
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-        panel.querySelector("[data-panel-region='playback']").open = true;
+        panel.querySelector("[data-panel-page='playback']").click();
         const settings = controls.querySelector(".settings-grid");
         const cards = [...controls.querySelectorAll(".card")];
         const media = root.querySelector(".media");
@@ -1136,16 +1357,13 @@ test("cross-window settings update in place without rebuilding cards or media", 
             rotationMinutes: 0
           }
         });
-        localStorage.setItem("codex-wallpaper-p1-config", next);
-        dispatchEvent(
-          new StorageEvent("storage", {
-            key: "codex-wallpaper-p1-config",
-            oldValue: previous,
-            newValue: next,
-            storageArea: localStorage
-          })
-        );
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        const peer = document.createElement("iframe");
+        peer.hidden = true;
+        document.body.append(peer);
+        const synced = new Promise((resolve) => window.addEventListener("storage", resolve, { once: true }));
+        peer.contentWindow.localStorage.setItem("codex-wallpaper-p1-config", next);
+        await synced;
+        peer.remove();
         cardObserver.disconnect();
         mediaObserver.disconnect();
         const video = root.querySelector(".media:not(.staged) video");
@@ -1415,6 +1633,106 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
       addedCards: 0,
     }
   );
+});
+
+test("rotation requests an item without a preview and respects background pause", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const image =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='red'/%3E%3C/svg%3E";
+  const options = {
+    page: fixture.url,
+    origin: new URL(fixture.url).origin,
+    payload: {
+      version: 1,
+      library: [
+        {
+          id: "still",
+          title: "Still",
+          type: "image",
+          playable: true,
+          assetDataUrl: image,
+        },
+        {
+          id: "on-demand",
+          title: "On demand",
+          type: "video",
+          reason: "asset-not-loaded",
+        },
+      ],
+    },
+  };
+  await waitForPage(port, options);
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+    const select = (selector) => document.querySelector("#${controlRootId} " + selector);
+    const action = (id, action) =>
+      select('.card[data-entry-id="' + id + '"] [data-entry-action="' + action + '"]');
+    const runtime = globalThis.__codexWallpaperApi;
+    const requests = [];
+    globalThis.__codexWallpaperHostRequest = (raw) => requests.push(JSON.parse(raw));
+    let tick = null;
+    let visibility = "visible";
+    const setInterval = window.setInterval;
+    const clearInterval = window.clearInterval;
+    window.setInterval = (callback, delay, ...args) => {
+      if (delay !== 60000) return setInterval(callback, delay, ...args);
+      tick = callback;
+      return -1;
+    };
+    window.clearInterval = (id) => {
+      if (id === -1) tick = null;
+      else clearInterval(id);
+    };
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => visibility,
+    });
+    select("[data-codex-wallpaper-settings]").click();
+    action("still", "use").click();
+    action("still", "queue").click();
+    action("on-demand", "queue").click();
+    select("[data-panel-page='playback']").click();
+    const minutes = select("[data-setting='rotationMinutes']");
+    minutes.value = "1";
+    minutes.dispatchEvent(new Event("input", { bubbles:true }));
+    select("[data-panel-page='library']").click();
+    const saved = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).settings.rotationMinutes;
+    const summary = select(".playlist-summary").textContent;
+    visibility = "hidden";
+    document.dispatchEvent(new Event("visibilitychange"));
+    const stoppedWhileHidden = tick === null;
+    visibility = "visible";
+    document.dispatchEvent(new Event("visibilitychange"));
+    tick?.();
+    const request = requests.find((entry) => entry.type === "load-asset");
+    if (!request) return { saved, summary, stoppedWhileHidden, request: null };
+    const opened = runtime.beginAssetTransfer({ id: "on-demand" });
+    action("still", "use").click();
+    return {
+      saved,
+      summary,
+      stoppedWhileHidden,
+      request,
+      startedTransfer: opened !== false,
+      discardedChunk: runtime.appendAssetTransferChunk("on-demand", "AA==") === false,
+      discardedEnd: (await runtime.finishAssetTransfer("on-demand")) === false,
+      newSelection: runtime.state().activeId,
+    };
+  })()`,
+    options
+  );
+  assert.deepEqual(result, {
+    saved: 1,
+    summary: "轮播：Still · On demand",
+    stoppedWhileHidden: true,
+    request: { type: "load-asset", id: "on-demand" },
+    startedTransfer: true,
+    discardedChunk: true,
+    discardedEnd: true,
+    newSelection: "still",
+  });
 });
 
 test("wallpaper library shell combines filters without reloading the current media", async (t) => {
@@ -1773,7 +2091,7 @@ test("wallpaper library shell combines filters without reloading the current med
   );
 
   assert.deepEqual(result, {
-    regionNames: ["library", "playback", "appearance", "recovery"],
+    regionNames: ["library", "playback", "appearance"],
     visibleTitles: ["Fixture Image"],
     resultText: "显示 1 / 7 项",
     statuses: {
@@ -1924,7 +2242,7 @@ test("playback profiles and capability controls apply without replacing media", 
       const controls = document.getElementById("${controlRootId}");
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-      panel.querySelector("[data-panel-region='playback']").open = true;
+      panel.querySelector("[data-panel-page='playback']").click();
 
       const initial = {
         profile: panel.querySelector("[data-playback-profile]").value,
@@ -1932,20 +2250,25 @@ test("playback profiles and capability controls apply without replacing media", 
         tradeoff: panel.querySelector("[data-performance-tradeoff]").textContent,
         capability: panel.querySelector("[data-playback-capability]").textContent,
         fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        audioDisabled: panel.querySelector("[data-setting='volume']").disabled && panel.querySelector("[data-setting='muted']").disabled,
         pauseDisabled: panel.querySelector(
           "[data-setting='pauseWhenHidden']"
         ).disabled
       };
 
       const selectMedia = async (id, ready) => {
+        panel.querySelector("[data-panel-page='library']").click();
         panel
           .querySelector(\`.card[data-entry-id="\${id}"] [data-entry-action='use']\`)
           .click();
-        for (let attempt = 0; attempt < 80; attempt += 1) {
-          if (ready()) return;
+        for (let attempt = 0; attempt < 200; attempt += 1) {
+          if (ready()) {
+            panel.querySelector("[data-panel-page='playback']").click();
+            return;
+          }
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
-        throw new Error(\`Timed out selecting \${id}\`);
+        throw new Error(\`Timed out selecting \${id}: \${panel.querySelector(".runtime-status").textContent}\`);
       };
 
       await selectMedia(
@@ -1955,12 +2278,12 @@ test("playback profiles and capability controls apply without replacing media", 
       const videoMedia = root.querySelector(".media:not(.staged)");
       const video = videoMedia.querySelector("video");
       const volume = panel.querySelector("[data-setting='volume']");
-      volume.value = "45";
+      volume.value = "43";
       volume.dispatchEvent(new Event("input", { bubbles: true }));
       volume.dispatchEvent(new Event("change", { bubbles: true }));
       const mute = panel.querySelector("[data-setting='muted']");
       const unmutedByVolume =
-        mute.checked === false && video.muted === false && video.volume === 0.45;
+        mute.checked === false && video.muted === false && video.volume === 0.43;
       mute.click();
       const muteRoundTrip = video.muted === true && video.volume === 0;
       mute.click();
@@ -1990,7 +2313,7 @@ test("playback profiles and capability controls apply without replacing media", 
       );
       const sceneFpsFromProfile = globalThis.__t05SceneFps;
       const fps = panel.querySelector("[data-setting='fps']");
-      fps.value = "30";
+      fps.value = "24";
       fps.dispatchEvent(new Event("input", { bubbles: true }));
       fps.dispatchEvent(new Event("change", { bubbles: true }));
       const custom = {
@@ -2052,6 +2375,7 @@ test("playback profiles and capability controls apply without replacing media", 
       );
       const imageCapability = {
         fpsControl: Boolean(panel.querySelector("[data-setting='fps']")),
+        audioDisabled: panel.querySelector("[data-setting='volume']").disabled && panel.querySelector("[data-setting='muted']").disabled,
         pauseDisabled: panel.querySelector(
           "[data-setting='pauseWhenHidden']"
         ).disabled,
@@ -2149,10 +2473,11 @@ test("playback profiles and capability controls apply without replacing media", 
       tradeoff: "取舍：保留现有 30 FPS 上限，优先画面连续性。",
       capability: "图片稳定显示后不持续绘制；帧率不适用。",
       fpsControl: false,
+      audioDisabled: true,
       pauseDisabled: true,
     },
     videoControls: {
-      volume: 0.45,
+      volume: 0.43,
       muted: false,
       unmutedByVolume: true,
       muteRoundTrip: true,
@@ -2171,9 +2496,9 @@ test("playback profiles and capability controls apply without replacing media", 
     sceneFpsFromProfile: 15,
     custom: {
       profile: "custom",
-      fps: "30",
-      sceneFps: 30,
-      summary: "参数：Scene 上限 30 FPS · 不可见时暂停",
+      fps: "24",
+      sceneFps: 24,
+      summary: "参数：Scene 上限 24 FPS · 不可见时暂停",
       tradeoff: "取舍：使用手动参数组合，不再自动套用命名档位。",
     },
     pauseEnabled: { paused: true, resumed: true },
@@ -2184,6 +2509,7 @@ test("playback profiles and capability controls apply without replacing media", 
     },
     imageCapability: {
       fpsControl: false,
+      audioDisabled: true,
       pauseDisabled: true,
       text: "图片稳定显示后不持续绘制；帧率不适用。",
     },
@@ -2267,7 +2593,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
       const root = document.getElementById("${rootId}");
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-      panel.querySelector("[data-panel-region='appearance']").open = true;
+      panel.querySelector("[data-panel-page='appearance']").click();
       const media = root.querySelector(".media:not(.staged)");
       const image = media.querySelector("img");
       const titlebar = document.querySelector("[data-app-shell-titlebar]");
@@ -2688,7 +3014,7 @@ test("scene fit uses the installed renderer without replacing the active scene",
       const media = root.querySelector(".media:not(.staged)");
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-      panel.querySelector("[data-panel-region='appearance']").open = true;
+      panel.querySelector("[data-panel-page='appearance']").click();
       const fit = panel.querySelector("[data-setting='fitMode']");
       const before = {
         available: Boolean(fit),
@@ -2789,8 +3115,8 @@ test("settings presets import export migration and scoped resets form a complete
       const media = root.querySelector(".media:not(.staged)");
       controls.querySelector("[data-codex-wallpaper-settings]").click();
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-      panel.querySelector("[data-panel-region='recovery']").open = true;
-      const recovery = panel.querySelector("[data-panel-region='recovery']");
+      panel.querySelector("[data-panel-page='appearance']").click();
+      const recovery = panel.querySelector("[data-preset-section]");
 
       const migrated = {
         active: globalThis.__codexWallpaperApi.state().activeId,
@@ -3085,7 +3411,8 @@ test("settings presets import export migration and scoped resets form a complete
       }
       const importedBeforeRemove =
         globalThis.__codexWallpaperApi.state().importedCount;
-      recovery.querySelector("[data-remove-imported]").click();
+      panel.querySelector("[data-panel-page='library']").click();
+      panel.querySelector("[data-remove-imported]").click();
       for (let attempt = 0; attempt < 40; attempt += 1) {
         if (globalThis.__codexWallpaperApi.state().importedCount === 0) break;
         await new Promise((resolve) => setTimeout(resolve, 50));
@@ -5064,7 +5391,7 @@ test("static background is single, removable and persists disabled", async (t) =
           localStorage.getItem("codex-wallpaper-p1-config")
         );
         return {
-          state: globalThis.__codexWallpaperApi.state(),
+          state: { ...globalThis.__codexWallpaperApi.state(), controls: undefined },
           roots: {
             wallpaper: document.querySelectorAll("#${rootId}").length,
             controls: document.querySelectorAll("#${controlRootId}").length,
@@ -5074,7 +5401,7 @@ test("static background is single, removable and persists disabled", async (t) =
           opacity: root.querySelector("[data-codex-wallpaper-layer]").style.opacity,
           filter: media.style.filter,
           settingsInputs: Object.fromEntries(
-            [...controls.querySelectorAll(".range input")].map((input) => [
+            [...controls.querySelectorAll(".range input[type='range']")].map((input) => [
               input.dataset.setting,
               Number(input.value)
             ])
@@ -5089,7 +5416,6 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 35,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-image",
@@ -5221,7 +5547,7 @@ test("static background is single, removable and persists disabled", async (t) =
           assetShown: root
             .querySelector(".media:not(.staged) img")
             ?.src.includes("22c55e"),
-          state: globalThis.__codexWallpaperApi.state()
+          state: { ...globalThis.__codexWallpaperApi.state(), controls: undefined }
         };
       })()`,
       options
@@ -5234,7 +5560,6 @@ test("static background is single, removable and persists disabled", async (t) =
       state: {
         state: "enabled",
         backgroundLayers: 1,
-        controls: 35,
         styles: 1,
         activeKind: "workshop",
         activeId: "fixture-on-demand",

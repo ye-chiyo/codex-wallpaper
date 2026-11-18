@@ -53,10 +53,16 @@ function createRuntimeStyles(rootId, controlsId) {
       }
       #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
       #${controlsId} .panel-region { margin-top: 10px; border: 1px solid var(--codex-wallpaper-line); border-radius: var(--codex-wallpaper-radius-sm); background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 24%, transparent); }
-      #${controlsId} .panel-region > h3, #${controlsId} .panel-region > summary { margin: 0; padding: 10px 11px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 80%, transparent); font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
-      #${controlsId} .panel-region > summary { cursor: pointer; list-style-position: inside; }
-      #${controlsId} .panel-region > summary::marker { color: color-mix(in srgb, var(--app-color-text-foreground, white) 56%, transparent); }
-      #${controlsId} .panel-region-body { display: grid; gap: 8px; padding: 0 10px 10px; }
+      #${controlsId} .panel-navigation { position: sticky; top: 0; z-index: 1; padding: 6px 0; background: var(--codex-wallpaper-raised); border-radius: var(--codex-wallpaper-radius-sm); }
+      #${controlsId} .panel-navigation header { padding: 0 6px 6px; }
+      #${controlsId} .panel-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+      #${controlsId} .panel-tabs button { padding: 6px 2px; }
+      #${controlsId} .panel-tabs button[aria-selected='true'] { background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .panel-region[hidden] { display: none; }
+      #${controlsId} .panel-region-body { display: grid; gap: 8px; padding: 10px; }
+      #${controlsId} .panel-region-body summary { cursor: pointer; padding: 7px 0; }
+      #${controlsId} .preset-section { display: grid; gap: 8px; border-top: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .preset-section h3 { margin: 8px 0 0; font: inherit; font-weight: 650; }
       #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
       #${controlsId} .panel-region-body .import-row { margin-top: 0; }
       #${controlsId} .import-row input { width: 135px; font-size: 11px; }
@@ -80,7 +86,10 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
       #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
       #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 7px; }
-      #${controlsId} .range { display: grid; grid-template-columns: 64px 48px 1fr; align-items: center; gap: 7px; }
+      #${controlsId} .range { display: grid; grid-template-columns: 64px minmax(0, 1fr) 62px; align-items: center; gap: 7px; }
+      #${controlsId} .range-value { min-width: 0; }
+      #${controlsId} .range-value button, #${controlsId} .range-value input { width: 100%; min-width: 0; box-sizing: border-box; padding: 3px 2px; font: inherit; }
+      #${controlsId} .range-value input { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; }
       #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
       #${controlsId} .profile-control { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 7px; }
       #${controlsId} .profile-control select { min-width: 0; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 6px 7px; font: inherit; }
@@ -105,7 +114,15 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .reset-groups button { font-size: 11px; }
       #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
       @media (max-width: 520px) {
-        #${controlsId} .panel { width: min(340px, calc(100vw - 16px)); max-height: min(82vh, calc(100% - 10px)); }
+        #${controlsId} .panel, html:has([data-composer-surface-variant]) #${controlsId} .panel {
+          box-sizing: border-box;
+          width: min(340px, calc(100vw - 16px));
+          max-height: min(82vh, calc(100dvh - 64px));
+          position-anchor: auto;
+          position-area: none;
+          inset: auto 8px 52px auto;
+          place-self: auto;
+        }
         #${controlsId} .library-filters { grid-template-columns: 1fr; }
         #${controlsId} .library-filter:last-child { grid-column: auto; }
         #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
@@ -475,7 +492,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   let rotationTimer = null;
   let activeGeneration = 0;
   let pendingRender = null;
-  let sceneFitSupported = null;
   let imported = [];
   let database = null;
   const runtimeAssets = new Map();
@@ -508,8 +524,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function saveConfig() {
     if (configSaveTimer) clearTimeout(configSaveTimer);
     configSaveTimer = null;
+    const rotationChanged = pendingConfigFields.delete("rotationMinutes");
     pendingConfigFields.clear();
     localStorage.setItem(configKey, JSON.stringify(config));
+    if (rotationChanged) scheduleRotation();
   }
 
   function scheduleConfigSave(field) {
@@ -536,10 +554,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         !valuesEqual(previous.presets, next.presets) ||
         previous.activePresetId !== next.activePresetId,
       appearance: Object.entries(settingDefinitions)
-        .filter(([, definition]) => definition.group === "appearance")
-        .some(
-          ([key]) => !valuesEqual(previous.settings[key], next.settings[key])
-        ),
+        .filter(
+          ([key, definition]) =>
+            definition.group === "appearance" &&
+            !valuesEqual(previous.settings[key], next.settings[key])
+        )
+        .map(([key]) => key),
       volume:
         previous.settings.volume !== next.settings.volume ||
         previous.settings.muted !== next.settings.muted,
@@ -721,6 +741,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     releasePlayback(previousPlayback);
     releaseObjectUrl(previousObjectUrl, objectUrl);
     applyVisualSettings();
+    if (playback) applyPlaybackSettings({ volume: true, fps: true });
+    syncMediaCapabilities();
+    if (loadingEntryKey) {
+      loadingEntryKey = null;
+      syncCardStates();
+    }
   }
 
   function stageMedia() {
@@ -782,7 +808,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (type === "video")
       return "视频按源文件解码并直接合成；性能档限制 Scene 上限，不伪造视频绘制帧率。";
     if (type === "scene")
-      return "Scene 使用现有渲染器的 15/30 FPS 上限；不提供未验证的画质档。";
+      return "Scene 可限制渲染帧率。性能优先为 15 FPS，均衡为 30 FPS。";
     if (type === "web")
       return "Web iframe 内部帧率和暂停无法由父页面可靠控制。";
     return "内置渐变没有媒体解码或帧率。";
@@ -872,14 +898,27 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     );
   }
 
-  function applyVisualSettings() {
-    applyInterfaceAppearance();
+  function applyVisualSettings(key) {
+    if (
+      !key ||
+      [
+        "surfaceOpacity",
+        "surfaceOverrides",
+        "interfaceBlur",
+        "interfaceBorders",
+      ].includes(key)
+    )
+      applyInterfaceAppearance();
     if (!layer || !media || !dim) return;
-    layer.style.opacity = String(config.settings.opacity / 100);
-    media.style.filter = config.settings.blur
-      ? `blur(${config.settings.blur}px)`
-      : "";
-    dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
+    if (!key || key === "opacity")
+      layer.style.opacity = String(config.settings.opacity / 100);
+    if (!key || key === "blur")
+      media.style.filter = config.settings.blur
+        ? `blur(${config.settings.blur}px)`
+        : "";
+    if (!key || key === "dim")
+      dim.style.background = `rgb(4 6 15 / ${config.settings.dim / 100})`;
+    if (key && key !== "fitMode") return;
     const fit = config.settings.fitMode === "contain" ? "contain" : "cover";
     media.dataset.fit = fit;
     for (const element of media.querySelectorAll("img, video, canvas"))
@@ -898,6 +937,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function applyHiddenPolicy() {
+    scheduleRotation();
     if (!playback) return;
     if (
       config.settings.pauseWhenHidden &&
@@ -918,28 +958,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     applyPlaybackSettings({ volume: true, fps: true });
     applyHiddenPolicy();
     syncSettingControls();
-    scheduleRotation();
   }
 
   function markSettingsChanged(performance = false) {
+    const hadActivePreset = config.activePresetId !== null;
     config.activePresetId = null;
     if (performance) {
       config.settings.performanceProfile = "custom";
       pendingConfigFields.add("performanceProfile");
     }
-    syncPresetUi();
+    if (hadActivePreset) syncPresetUi();
+  }
+
+  function setControlText(element, value) {
+    const text = `${value}${element.dataset.unit || ""}`;
+    const current = element.firstChild;
+    if (!current) element.append(text);
+    else if (current.data !== text) current.data = text;
   }
 
   function syncSettingControls() {
     if (!panel) return;
-    for (const input of panel.querySelectorAll(".range input")) {
-      const key = input.dataset.setting;
-      if (!key) continue;
-      input.value = String(config.settings[key]);
-      const output = input.closest(".range")?.querySelector("output");
-      if (output)
-        output.textContent = `${input.value}${output.dataset.unit || ""}`;
-    }
+    for (const input of panel.querySelectorAll(".range input[type='range']"))
+      syncRangeValue(input, config.settings[input.dataset.setting]);
     for (const input of panel.querySelectorAll("[data-setting-toggle]")) {
       const key = input.dataset.settingToggle;
       input.checked = Boolean(config.settings[key]);
@@ -962,18 +1003,78 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         const output = input
           .closest(".surface-override-controls")
           ?.querySelector("output");
-        if (output) output.textContent = `${input.value}%`;
+        if (output) setControlText(output, input.value);
       }
       if (restore) restore.disabled = !enabled;
     }
-    const profile = panel.querySelector("[data-playback-profile]");
-    if (profile) profile.value = config.settings.performanceProfile;
+    syncPerformanceControls();
+  }
+
+  function syncPerformanceControls() {
+    const profile = panel?.querySelector("[data-playback-profile]");
+    if (!profile) return;
+    profile.value = config.settings.performanceProfile;
     const summary = panel.querySelector("[data-performance-summary]");
-    if (summary) summary.textContent = performanceSummary();
+    setControlText(summary, performanceSummary());
     const tradeoff = panel.querySelector("[data-performance-tradeoff]");
-    if (tradeoff) tradeoff.textContent = performanceTradeoff();
-    const capability = panel.querySelector("[data-playback-capability]");
-    if (capability) capability.textContent = playbackCapabilityText();
+    setControlText(tradeoff, performanceTradeoff());
+  }
+
+  function syncMediaCapabilities() {
+    const hint = panel?.querySelector("[data-audio-capability]");
+    if (!hint) return;
+    const fit = panel.querySelector("[data-setting='fitMode']");
+    if (fit) {
+      const supported = playback?.scene
+        ? playback.supportsFit
+        : Boolean(media?.querySelector("img, video"));
+      fit.disabled = !supported;
+      setControlText(
+        fit.previousElementSibling,
+        supported ? "画面适配" : "画面适配（当前画面不适用）"
+      );
+    }
+    const type = activeMediaType();
+    const canPlayAudio =
+      (type === "video" && Boolean(playback?.video)) ||
+      (type === "scene" && Boolean(playback?.setVolume));
+    const volume = panel.querySelector("[data-setting='volume']");
+    volume.disabled = !canPlayAudio;
+    volume.closest(".range").querySelector(".range-value button").disabled =
+      !canPlayAudio;
+    panel.querySelector("[data-setting='muted']").disabled = !canPlayAudio;
+    syncPauseControl();
+    hint.hidden = canPlayAudio;
+    hint.textContent = ["video", "scene"].includes(type)
+      ? "静音和音量仅在原生播放时可用。"
+      : "当前素材不适用静音和音量。";
+    const fps = panel.querySelector("[data-setting='fps']");
+    if (fps) {
+      fps.disabled = !playback?.setFps;
+      fps.closest(".range").querySelector(".range-value button").disabled =
+        fps.disabled;
+      setControlText(
+        panel.querySelector("[data-playback-capability]"),
+        fps.disabled
+          ? "帧率上限仅在 Scene 原生渲染时可用。"
+          : playbackCapabilityText()
+      );
+    }
+  }
+
+  function syncPauseControl(
+    canRotate = config.settings.rotationMinutes > 0 &&
+      playlistEntries().length >= 2
+  ) {
+    const toggle = panel?.querySelector("[data-setting='pauseWhenHidden']");
+    if (!toggle) return;
+    toggle.disabled = !canRotate && !playback?.video && !playback?.scene;
+    setControlText(
+      toggle.nextElementSibling,
+      toggle.disabled
+        ? "不可见时暂停（当前无动态播放或轮播）"
+        : "不可见时暂停播放和轮播"
+    );
   }
 
   function entryStatusText(entry) {
@@ -1068,7 +1169,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function requestVisiblePreviews() {
-    if (!panel?.classList.contains("open")) return;
+    if (
+      !panel?.classList.contains("open") ||
+      panel.querySelector("[data-panel-region='library']").hidden
+    )
+      return;
     const panelRect = panel.getBoundingClientRect();
     for (const item of panel.querySelectorAll(".card:not([hidden])")) {
       const visual = item.querySelector(".thumb[data-preview-id]");
@@ -1082,24 +1187,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     }
   }
 
-  function renderRuntimeStatus() {
-    const active = findEntry(config.active);
-    if (!active) {
-      setStatus("已跳过缺失的壁纸");
-      return;
-    }
-    const key = entryKey(active);
-    if (loadingEntryKey === key) {
-      setStatus(`正在加载：${active.title}`);
-      return;
-    }
-    if (failedEntryKeys.has(key)) {
-      setStatus(`${active.title} · 加载失败`);
-      return;
-    }
-    setStatus(`${active.title} · ${entryStatusText(active)}`);
-  }
-
   function syncPlaylistSummary() {
     const summary = panel?.querySelector(".playlist-summary");
     if (!summary) return;
@@ -1110,7 +1197,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function syncConfigUi(change) {
-    if (change.appearance) applyVisualSettings();
+    for (const key of change.appearance) applyVisualSettings(key);
     applyPlaybackSettings(change);
     if (change.favorites || change.playlist) {
       syncCardStates();
@@ -1120,7 +1207,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     syncSettingControls();
     if (change.presets) renderPresetList();
     if (change.pauseWhenHidden) applyHiddenPolicy();
-    if (change.rotation || change.playlist) scheduleRotation();
+    else if (change.rotation || change.playlist) scheduleRotation();
   }
 
   async function applyConfigChange(change) {
@@ -1151,6 +1238,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function recoverFailedMedia(message, previewUrl = null) {
+    if (loadingEntryKey) {
+      failedEntryKeys.add(loadingEntryKey);
+      loadingEntryKey = null;
+      syncCardStates();
+    }
     if (hasCurrentFrame()) {
       setStatus(`${message}，已保留当前画面`);
       return;
@@ -1358,7 +1450,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
           } catch {}
         }
       });
-    if (message) setStatus(message);
   }
 
   function bytesFromBase64(encoded) {
@@ -1398,7 +1489,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       volume: effectiveVolume(),
       fit: config.settings.fitMode === "contain" ? "contain" : "cover",
     });
-    sceneFitSupported = typeof instance.setFit === "function";
     let cancelled = false;
     let settled = false;
     const current = {
@@ -1407,8 +1497,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       supportsFit: typeof instance.setFit === "function",
       pause: () => instance.pause(),
       resume: () => instance.resume(),
-      setFps: (fps) => instance.setFps?.(fps),
-      setVolume: (volume) => instance.setVolume?.(volume),
+      setFps: instance.setFps?.bind(instance),
+      setVolume: instance.setVolume?.bind(instance),
       setFit: (fit) => instance.setFit?.(fit),
     };
     const pending = trackPending(() => {
@@ -1501,10 +1591,21 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     cancelPendingRender();
     stopRotation();
     const active = config.active || defaults.active;
+    for (const id of pendingAssetRequests) {
+      if (active.kind === "workshop" && active.id === id) continue;
+      pendingAssetRequests.delete(id);
+      assetTransfers.delete(id);
+    }
+    const entry = findEntry(active);
+    loadingEntryKey = entry ? entryKey(entry) : null;
+    if (entry) {
+      failedEntryKeys.delete(loadingEntryKey);
+      setStatus(`正在加载：${entry.title}`);
+      syncCardStates();
+    }
     if (active.kind === "builtin") {
       showGradient("内置渐变");
     } else {
-      const entry = findEntry(active);
       if (!entry) {
         setStatus("已跳过缺失的壁纸，已保留当前画面");
       } else if (entry.kind === "imported") {
@@ -1515,7 +1616,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         );
         if (generation !== activeGeneration) return state();
         if (!item?.blob) {
-          setStatus("已跳过缺失的素材，已保留当前画面");
+          recoverFailedMedia("已跳过缺失的素材");
         } else {
           const url = URL.createObjectURL(item.blob);
           const kind = mediaType(item.blob);
@@ -1540,7 +1641,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
           if (!pendingAssetRequests.has(entry.id)) {
             pendingAssetRequests.add(entry.id);
             if (typeof globalThis.__codexWallpaperHostRequest === "function") {
-              setStatus(`${entry.title} · 正在载入`);
               globalThis.__codexWallpaperHostRequest(
                 JSON.stringify({ type: "load-asset", id: entry.id })
               );
@@ -1591,15 +1691,22 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
           (entry.kind === "imported" ||
             entry.assetDataUrl ||
             entry.previewDataUrl ||
-            entry.webHtml)
+            entry.webHtml ||
+            runtimeAssets.has(entryKey(entry)) ||
+            entryState(entry).endsWith("-on-demand"))
       );
   }
 
   function scheduleRotation() {
     stopRotation();
     const minutes = Number(config.settings.rotationMinutes);
-    const entries = playlistEntries();
-    if (!config.enabled || minutes <= 0 || entries.length < 2) return;
+    const entries = config.enabled && minutes > 0 ? playlistEntries() : [];
+    syncPauseControl(entries.length >= 2);
+    if (
+      entries.length < 2 ||
+      (config.settings.pauseWhenHidden && document.visibilityState === "hidden")
+    )
+      return;
     rotationTimer = setInterval(
       () => {
         const current = entries.findIndex(
@@ -1736,23 +1843,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     use.dataset.entryAction = "use";
     use.setAttribute("aria-pressed", String(selected));
     use.onclick = () => {
-      loadingEntryKey = entryKey(entry);
-      failedEntryKeys.delete(entryKey(entry));
       config.active = { kind: entry.kind, id: entry.id };
       saveConfig();
       requestPreview(entry.id);
-      syncCardStates();
-      renderRuntimeStatus();
-      applyActive().finally(() => {
-        if (
-          loadingEntryKey === entryKey(entry) &&
-          (!pendingAssetRequests.has(entry.id) ||
-            typeof globalThis.__codexWallpaperHostRequest !== "function")
-        )
-          loadingEntryKey = null;
-        syncCardStates();
-        renderRuntimeStatus();
-      });
+      return applyActive();
     };
     const favorite = document.createElement("button");
     favorite.textContent = isFavorite(entry) ? "★" : "☆";
@@ -1770,62 +1864,117 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return item;
   }
 
-  function range(label, key, min, max, step, unit = "") {
-    const row = document.createElement("label");
-    row.className = "range";
-    const heading = document.createElement("span");
+  function syncRangeValue(
+    input,
+    setting,
+    editor = input.parentElement.querySelector(".range-value")
+  ) {
+    const value = String(setting);
+    if (input.value !== value) input.value = value;
+    setControlText(editor.querySelector("output"), value);
+    const number = editor.querySelector("input");
+    if (document.activeElement !== number) number.value = value;
+  }
+
+  function rangeValueEditor(label, input, unit, read, preview) {
+    const editor = document.createElement("div");
+    editor.className = "range-value";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.title = "输入精确值";
+    button.setAttribute("aria-label", `${label}，输入精确值`);
     const value = document.createElement("output");
     value.dataset.unit = unit;
+    button.append(value);
+    const number = document.createElement("input");
+    number.type = "number";
+    number.min = input.min;
+    number.max = input.max;
+    number.step = "any";
+    number.hidden = true;
+    number.setAttribute(
+      "aria-label",
+      `${label}${unit ? `（${unit.trim()}）` : ""}`
+    );
+    button.onclick = () => {
+      number.value = String(read());
+      button.hidden = true;
+      number.hidden = false;
+      number.focus();
+      number.select();
+    };
+    number.oninput = () => {
+      if (number.value && number.validity.valid) preview(number.valueAsNumber);
+    };
+    number.onblur = () => {
+      number.hidden = true;
+      button.hidden = false;
+      flushConfigSave();
+    };
+    number.onkeydown = (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      number.blur();
+      button.focus();
+    };
+    editor.append(button, number);
+    syncRangeValue(input, read(), editor);
+    return editor;
+  }
+
+  function range(label, key, min, max, unit = "") {
+    const row = document.createElement("div");
+    row.className = "range";
+    const heading = document.createElement("span");
+    heading.textContent = label;
     const input = document.createElement("input");
     input.type = "range";
     input.min = String(min);
     input.max = String(max);
-    input.step = String(step);
-    input.value = String(config.settings[key]);
+    input.step = "1";
     input.dataset.setting = key;
-    const renderLabel = () => {
-      value.textContent = `${input.value}${unit}`;
-    };
-    input.oninput = () => {
-      config.settings[key] = Number(input.value);
+    input.setAttribute("aria-label", label);
+    const preview = (value) => {
+      if (value === config.settings[key]) return;
+      config.settings[key] = value;
       markSettingsChanged(key === "fps");
-      if (key === "volume" && Number(input.value) > 0)
-        config.settings.muted = false;
-      if (key === "fps") config.settings.performanceProfile = "custom";
-      renderLabel();
-      applyVisualSettings();
-      applyPlaybackSettings({
-        volume: key === "volume",
-        fps: key === "fps",
-      });
-      if (key === "rotationMinutes") scheduleRotation();
-      scheduleConfigSave(key);
-      if (key === "fps" || key === "volume") {
-        if (key === "fps") scheduleConfigSave("performanceProfile");
-        if (key === "volume") scheduleConfigSave("muted");
-        syncSettingControls();
+      syncRangeValue(input, value);
+      if (key === "volume") {
+        if (value > 0 && config.settings.muted) {
+          config.settings.muted = false;
+          panel.querySelector("[data-setting-toggle='muted']").checked = false;
+          scheduleConfigSave("muted");
+        }
+        applyPlaybackSettings({ volume: true });
+      } else if (key === "fps") {
+        applyPlaybackSettings({ fps: true });
+        syncPerformanceControls();
+      } else if (key !== "rotationMinutes") {
+        applyVisualSettings(key);
       }
+      scheduleConfigSave(key);
     };
+    input.oninput = () => preview(Number(input.value));
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
-    heading.textContent = label;
-    row.append(heading, value, input);
-    renderLabel();
+    row.append(
+      heading,
+      input,
+      rangeValueEditor(label, input, unit, () => config.settings[key], preview)
+    );
     return row;
   }
 
-  function settingToggle(label, key, { disabled = false, hint = "" } = {}) {
+  function settingToggle(label, key) {
     const row = document.createElement("label");
     row.className = "setting-toggle";
     const input = document.createElement("input");
     input.type = "checkbox";
     input.checked = Boolean(config.settings[key]);
-    input.disabled = disabled;
-    if (hint) input.title = hint;
     input.dataset.setting = key;
     input.dataset.settingToggle = key;
     const text = document.createElement("span");
-    text.textContent = hint ? `${label}（${hint}）` : label;
+    text.textContent = label;
     input.onchange = () => {
       config.settings[key] = input.checked;
       markSettingsChanged(key === "pauseWhenHidden");
@@ -1833,7 +1982,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         config.settings.performanceProfile = "custom";
       applyPlaybackSettings({ volume: key === "muted" });
       if (key === "pauseWhenHidden") applyHiddenPolicy();
-      if (key === "interfaceBorders") applyVisualSettings();
+      if (key === "interfaceBorders") applyVisualSettings(key);
       saveConfig();
       syncSettingControls();
     };
@@ -1841,20 +1990,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return row;
   }
 
-  function settingSelect(
-    label,
-    key,
-    options,
-    { disabled = false, hint = "" } = {}
-  ) {
+  function settingSelect(label, key, options) {
     const row = document.createElement("label");
     row.className = "profile-control";
     const text = document.createElement("span");
-    text.textContent = hint ? `${label}（${hint}）` : label;
+    text.textContent = label;
     const select = document.createElement("select");
     select.dataset.setting = key;
     select.dataset.settingSelect = key;
-    select.disabled = disabled;
     for (const [value, labelText] of options) {
       const option = document.createElement("option");
       option.value = value;
@@ -1865,7 +2008,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     select.onchange = () => {
       config.settings[key] = select.value;
       markSettingsChanged();
-      applyVisualSettings();
+      applyVisualSettings(key);
       saveConfig();
     };
     row.append(text, select);
@@ -1935,7 +2078,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     input.disabled = !override.checked;
     input.value = String(surfaceOpacityValue(scope));
     const output = document.createElement("output");
-    output.textContent = `${input.value}%`;
+    output.dataset.unit = "%";
+    setControlText(output, input.value);
     const restore = document.createElement("button");
     restore.type = "button";
     restore.dataset.restoreSurface = scope;
@@ -1947,7 +2091,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       input.disabled = !enabled;
       restore.disabled = !enabled;
       input.value = String(surfaceOpacityValue(scope));
-      output.textContent = `${input.value}%`;
+      setControlText(output, input.value);
     };
     override.onchange = () => {
       markSettingsChanged();
@@ -1961,7 +2105,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     input.oninput = () => {
       markSettingsChanged();
       config.settings.surfaceOverrides[scope] = Number(input.value);
-      output.textContent = `${input.value}%`;
+      setControlText(output, input.value);
       applyInterfaceAppearance();
       scheduleConfigSave(`surfaceOverrides.${scope}`);
     };
@@ -2173,59 +2317,53 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     capability.className = "playback-capability";
     capability.dataset.playbackCapability = "";
     capability.textContent = playbackCapabilityText();
+    const audioCapability = document.createElement("p");
+    audioCapability.className = "playback-capability";
+    audioCapability.dataset.audioCapability = "";
     playbackSettings.replaceChildren(
       playbackProfileControl(),
       performance,
       tradeoff,
       capability,
       settingToggle("静音", "muted"),
-      range("音量", "volume", 0, 100, 5, "%"),
+      range("音量", "volume", 0, 100, "%"),
+      audioCapability,
       ...(activeMediaType() === "scene"
-        ? [range("Scene 上限", "fps", 15, 30, 15, " FPS")]
+        ? [range("Scene 上限", "fps", 1, 30, " FPS")]
         : []),
-      settingToggle("不可见时暂停", "pauseWhenHidden", {
-        disabled: !["video", "scene"].includes(activeMediaType()),
-        hint: ["video", "scene"].includes(activeMediaType())
-          ? ""
-          : "当前素材不适用",
-      }),
-      range("轮播", "rotationMinutes", 0, 120, 5, " 分钟")
+      settingToggle("不可见时暂停", "pauseWhenHidden"),
+      range("轮播间隔", "rotationMinutes", 0, 120, " 分钟")
     );
     const type = activeMediaType();
-    appearanceSettings.replaceChildren(
-      range("暗化", "dim", 0, 70, 1, "%"),
-      range("模糊", "blur", 0, 24, 1, "px"),
-      range("不透明度", "opacity", 20, 100, 1, "%"),
-      ...(["image", "video", "scene"].includes(type)
-        ? [
-            settingSelect(
-              "画面适配",
-              "fitMode",
-              [
-                ["cover", "保持比例填充"],
-                ["contain", "完整显示"],
-              ],
-              {
-                disabled: type === "scene" && sceneFitSupported === false,
-                hint:
-                  type === "scene" && sceneFitSupported === false
-                    ? "当前 Scene 不支持原位调整"
-                    : "",
-              }
-            ),
-          ]
-        : []),
-      range("界面读底", "surfaceOpacity", 20, 100, 1, "%"),
-      range("界面雾化", "interfaceBlur", 0, 24, 1, "px"),
-      settingToggle("细边框", "interfaceBorders"),
+    const advanced = document.createElement("details");
+    const advancedTitle = document.createElement("summary");
+    advancedTitle.textContent = "分区读底覆盖";
+    advanced.append(
+      advancedTitle,
       surfaceOverrideControl("聊天区覆盖", "chat"),
       surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
       surfaceOverrideControl("右侧面板覆盖", "right"),
       surfaceOverrideControl("设置面板覆盖", "settings")
     );
+    appearanceSettings.replaceChildren(
+      range("暗化", "dim", 0, 70, "%"),
+      range("模糊", "blur", 0, 24, "px"),
+      range("不透明度", "opacity", 20, 100, "%"),
+      ...(["image", "video", "scene", "web"].includes(type)
+        ? [
+            settingSelect("画面适配", "fitMode", [
+              ["cover", "保持比例填充"],
+              ["contain", "完整显示"],
+            ]),
+          ]
+        : []),
+      range("界面读底", "surfaceOpacity", 20, 100, "%"),
+      range("界面雾化", "interfaceBlur", 0, 24, "px"),
+      settingToggle("细边框", "interfaceBorders"),
+      advanced
+    );
+    syncMediaCapabilities();
     renderPresetList();
-    if (config.active.kind === "builtin") setStatus("内置渐变");
-    else renderRuntimeStatus();
   }
 
   async function importFiles(files) {
@@ -2388,6 +2526,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function beginAssetTransfer(entry) {
+    if (
+      !config.enabled ||
+      config.active.kind !== "workshop" ||
+      config.active.id !== entry.id
+    )
+      return false;
     assetTransfers.set(entry.id, {
       entry,
       parts: [],
@@ -2398,7 +2542,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   function appendAssetTransferChunk(id, encoded) {
     const transfer = assetTransfers.get(id);
-    if (!transfer) return state();
+    if (!transfer) return false;
     const bytes = bytesFromBase64(encoded);
     transfer.parts.push(bytes);
     transfer.received += bytes.byteLength;
@@ -2407,7 +2551,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   async function finishAssetTransfer(id) {
     const transfer = assetTransfers.get(id);
-    if (!transfer) return state();
+    if (!transfer) return false;
     assetTransfers.delete(id);
     pendingAssetRequests.delete(id);
     const { mime, size, ...metadata } = transfer.entry;
@@ -2442,7 +2586,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     panel.setAttribute("aria-label", "Codex 壁纸设置");
     const header = document.createElement("header");
     const heading = document.createElement("strong");
-    heading.textContent = "Codex 壁纸";
+    heading.textContent = "壁纸设置";
     const close = document.createElement("button");
     close.textContent = "×";
     close.title = "关闭";
@@ -2455,10 +2599,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const library = document.createElement("section");
     library.className = "panel-region";
     library.dataset.panelRegion = "library";
-    library.setAttribute("aria-labelledby", "codex-wallpaper-library-title");
-    const libraryTitle = document.createElement("h3");
-    libraryTitle.id = "codex-wallpaper-library-title";
-    libraryTitle.textContent = "壁纸库";
     const libraryBody = document.createElement("div");
     libraryBody.className = "panel-region-body";
     const filters = document.createElement("div");
@@ -2536,13 +2676,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     favorites.onchange = applyFilters;
     panel.addEventListener("scroll", requestVisiblePreviews, { passive: true });
     libraryBody.append(filters, importRow, status, result, list);
-    library.append(libraryTitle, libraryBody);
+    library.append(libraryBody);
 
-    const playback = document.createElement("details");
+    const playback = document.createElement("section");
     playback.className = "panel-region";
     playback.dataset.panelRegion = "playback";
-    const playbackTitle = document.createElement("summary");
-    playbackTitle.textContent = "播放与性能";
     const playbackBody = document.createElement("div");
     playbackBody.className = "panel-region-body";
     const playlistSummary = document.createElement("p");
@@ -2551,27 +2689,23 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     playbackSettings.className = "control-grid";
     playbackSettings.dataset.playbackSettings = "";
     playbackBody.append(playlistSummary, playbackSettings);
-    playback.append(playbackTitle, playbackBody);
+    playback.append(playbackBody);
 
-    const appearance = document.createElement("details");
+    const appearance = document.createElement("section");
     appearance.className = "panel-region";
     appearance.dataset.panelRegion = "appearance";
-    const appearanceTitle = document.createElement("summary");
-    appearanceTitle.textContent = "画面与界面";
     const appearanceBody = document.createElement("div");
     appearanceBody.className = "panel-region-body";
     const settingsGrid = document.createElement("div");
     settingsGrid.className = "settings-grid";
     appearanceBody.append(settingsGrid);
-    appearance.append(appearanceTitle, appearanceBody);
+    appearance.append(appearanceBody);
 
-    const recovery = document.createElement("details");
-    recovery.className = "panel-region";
-    recovery.dataset.panelRegion = "recovery";
-    const recoveryTitle = document.createElement("summary");
+    const recovery = document.createElement("section");
+    recovery.className = "preset-section";
+    recovery.dataset.presetSection = "";
+    const recoveryTitle = document.createElement("h3");
     recoveryTitle.textContent = "预设与恢复";
-    const recoveryBody = document.createElement("div");
-    recoveryBody.className = "panel-region-body";
     const resetHelp = document.createElement("p");
     resetHelp.className = "playlist-summary";
     resetHelp.textContent =
@@ -2655,7 +2789,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     removeImported.dataset.removeImported = "";
     removeImported.textContent = "移除全部导入素材";
     removeImported.onclick = removeImportedMedia;
-    resetGroups.append(removeImported);
+    libraryBody.append(removeImported);
 
     const reset = document.createElement("button");
     reset.className = "reset";
@@ -2673,7 +2807,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       }
       await resetAll();
     };
-    recoveryBody.append(
+    recovery.append(
+      recoveryTitle,
       resetHelp,
       presetEditor,
       presetList,
@@ -2682,8 +2817,60 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       resetGroups,
       reset
     );
-    recovery.append(recoveryTitle, recoveryBody);
-    panel.append(header, library, playback, appearance, recovery);
+    appearanceBody.append(recovery);
+
+    const navigation = document.createElement("div");
+    navigation.className = "panel-navigation";
+    const tabs = document.createElement("div");
+    tabs.className = "panel-tabs";
+    tabs.setAttribute("role", "tablist");
+    tabs.setAttribute("aria-label", "壁纸设置页面");
+    const pages = [
+      [library, "壁纸库"],
+      [playback, "播放与性能"],
+      [appearance, "外观与预设"],
+    ];
+    const selectPage = (index) => {
+      flushConfigSave();
+      for (const [position, [page]] of pages.entries()) {
+        const selected = position === index;
+        page.hidden = !selected;
+        tabs.children[position].setAttribute("aria-selected", String(selected));
+        tabs.children[position].tabIndex = selected ? 0 : -1;
+      }
+      panel.scrollTop = 0;
+      if (index === 0) requestAnimationFrame(requestVisiblePreviews);
+    };
+    for (const [index, [page, label]] of pages.entries()) {
+      const key = page.dataset.panelRegion;
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.id = `codex-wallpaper-tab-${key}`;
+      tab.dataset.panelPage = key;
+      tab.textContent = label;
+      tab.setAttribute("role", "tab");
+      page.id = `codex-wallpaper-page-${key}`;
+      page.setAttribute("role", "tabpanel");
+      page.setAttribute("aria-labelledby", tab.id);
+      tab.setAttribute("aria-controls", page.id);
+      tab.onclick = () => selectPage(index);
+      tab.onkeydown = (event) => {
+        const next = {
+          ArrowLeft: (index + pages.length - 1) % pages.length,
+          ArrowRight: (index + 1) % pages.length,
+          Home: 0,
+          End: pages.length - 1,
+        }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        selectPage(next);
+        tabs.children[next].focus();
+      };
+      tabs.append(tab);
+    }
+    navigation.append(header, tabs);
+    panel.append(navigation, ...pages.map(([page]) => page));
+    selectPage(0);
     return panel;
   }
 
@@ -2713,7 +2900,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     settings.textContent = "壁纸设置";
     settings.onclick = () => {
       if (panel.classList.contains("open")) flushConfigSave();
-      panel.classList.toggle("open");
+      if (panel.classList.toggle("open"))
+        requestAnimationFrame(requestVisiblePreviews);
     };
     const toggle = document.createElement("button");
     toggle.dataset.codexWallpaperToggle = "";
@@ -2787,11 +2975,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (document.visibilityState === "hidden") {
       flushConfigSave();
       if (!config.settings.pauseWhenHidden) return;
-      playback?.video?.pause();
-      playback?.pause?.();
-      if (playback?.raf) cancelAnimationFrame(playback.raf);
+      applyHiddenPolicy();
       return;
     }
+    if (config.settings.pauseWhenHidden) scheduleRotation();
     playback?.video?.play().catch(() => {});
     playback?.resume?.();
     playback?.start?.();

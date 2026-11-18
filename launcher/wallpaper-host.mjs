@@ -14,7 +14,7 @@ const engineUrl = new URL(
   "../node_modules/webwallgl/webwallgl.global.min.js",
   import.meta.url
 );
-const inFlight = new Set();
+const inFlight = new Map();
 let stopped = false;
 const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
 let lockHandle = null;
@@ -108,26 +108,28 @@ async function loadAsset(id) {
   }
   const handle = await open(path, "r");
   try {
-    await sessionEvaluate(
+    const opened = await sessionEvaluate(
       `globalThis.__codexWallpaperApi.beginAssetTransfer(${JSON.stringify({
         ...metadata,
         mime,
         size,
       })})`
     );
+    if (opened === false) return false;
     const chunkSize = 4 * 1024 * 1024;
     for (let offset = 0; offset < size; offset += chunkSize) {
       const length = Math.min(chunkSize, size - offset);
       const buffer = Buffer.allocUnsafe(length);
       const { bytesRead } = await handle.read(buffer, 0, length, offset);
       if (bytesRead <= 0) throw new Error("Asset transfer ended early");
-      await sessionEvaluate(
+      const received = await sessionEvaluate(
         `globalThis.__codexWallpaperApi.appendAssetTransferChunk(${JSON.stringify(
           String(id)
         )}, ${JSON.stringify(buffer.subarray(0, bytesRead).toString("base64"))})`
       );
+      if (received === false) return false;
     }
-    await sessionEvaluate(
+    return await sessionEvaluate(
       `globalThis.__codexWallpaperApi.finishAssetTransfer(${JSON.stringify(
         String(id)
       )})`
@@ -163,10 +165,20 @@ try {
     const handler = requestHandlers[request.type];
     if (!handler) return;
     const key = `${request.type}:${request.id}`;
-    if (inFlight.has(key)) return;
-    inFlight.add(key);
-    handler
-      .run(request.id)
+    const running = inFlight.get(key);
+    if (running) {
+      if (request.type === "load-asset") running.replacementRequested = true;
+      return;
+    }
+    const flight = { replacementRequested: false };
+    inFlight.set(key, flight);
+    const deliver = async () => {
+      do {
+        flight.replacementRequested = false;
+        if ((await handler.run(request.id)) !== false) return;
+      } while (flight.replacementRequested && !stopped);
+    };
+    deliver()
       .catch((error) => {
         sessionEvaluate(
           `globalThis.__codexWallpaperApi?.${handler.error}(${JSON.stringify(
