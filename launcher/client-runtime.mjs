@@ -1,6 +1,16 @@
 import { createHash } from "node:crypto";
 
 function createRuntimeStyles(rootId, controlsId) {
+  const surface = "var(--app-color-background-surface, rgb(24 24 28))";
+  const under = "var(--app-color-background-surface-under, rgb(12 12 16))";
+  const surfaceColor = (base, scope) =>
+    `color-mix(in srgb, ${base} var(--codex-wallpaper-${scope}-opacity), transparent)`;
+  const frame = surfaceColor("var(--codex-wallpaper-surface-base)", "surface");
+  const canvas = surfaceColor("var(--codex-wallpaper-surface-base)", "chat");
+  const panelColor = surfaceColor(
+    "var(--codex-wallpaper-panel-base)",
+    "settings"
+  );
   return `
       #${rootId}, #${rootId} * { box-sizing: border-box; }
       #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
@@ -17,7 +27,7 @@ function createRuntimeStyles(rootId, controlsId) {
       /* Keep the corner when the toolbar fits beside the composer. */
       body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
       #${controlsId} .toolbar {
-        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background: var(--codex-wallpaper-panel); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
+        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background-color: ${panelColor}; box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
         position-anchor: --codex-wallpaper-composer;
         left: calc(anchor(right) + 8px);
         width: max-content; justify-self: end;
@@ -36,7 +46,7 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
       #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
       #${controlsId} .panel {
-        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background: var(--codex-wallpaper-panel); backdrop-filter: var(--codex-wallpaper-interface-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background-color: ${panelColor}; backdrop-filter: var(--codex-wallpaper-interface-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
         overscroll-behavior: contain;
         scrollbar-gutter: stable;
         position-anchor: --codex-wallpaper-toolbar;
@@ -128,21 +138,11 @@ function createRuntimeStyles(rootId, controlsId) {
         #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
       }
       :root {
-        --codex-wallpaper-surface-opacity: 72%;
-        --codex-wallpaper-chat-opacity: 18%;
-        --codex-wallpaper-sidebar-opacity: 72%;
-        --codex-wallpaper-top-opacity: 0%;
-        --codex-wallpaper-right-opacity: 72%;
-        --codex-wallpaper-settings-opacity: 94%;
-        --codex-wallpaper-settings-canvas-opacity: 64%;
-        --codex-wallpaper-settings-card-opacity: 42%;
-        --codex-wallpaper-interface-blur: none;
-        --codex-wallpaper-frame: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-surface-opacity), transparent);
-        --codex-wallpaper-canvas: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-chat-opacity), transparent);
+        --codex-wallpaper-surface-base: ${surface};
+        --codex-wallpaper-panel-base: ${under};
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
-        --codex-wallpaper-panel: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) var(--codex-wallpaper-settings-opacity), transparent);
-        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) var(--codex-wallpaper-settings-canvas-opacity), transparent);
-        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-settings-card-opacity), transparent);
+        --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(12 12 16));
+        --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(24 24 28));
         --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
         --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
         --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
@@ -151,13 +151,13 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-shadow: 0 12px 34px rgb(0 0 0 / .22);
       }
       html[data-theme='light'] {
-        --codex-wallpaper-settings-canvas: color-mix(in srgb, var(--app-color-background-surface-under, rgb(232 232 237)) var(--codex-wallpaper-settings-canvas-opacity), transparent);
-        --codex-wallpaper-settings-card: color-mix(in srgb, var(--app-color-background-surface, rgb(247 247 249)) var(--codex-wallpaper-settings-card-opacity), transparent);
+        --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(232 232 237));
+        --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(247 247 249));
       }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: var(--codex-wallpaper-frame) !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${frame} !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
         &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
       }
-      body [data-app-shell-main-surface] { background-color: var(--codex-wallpaper-canvas) !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-main-surface] { background-color: ${canvas} !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
       body [data-app-shell-page-sidebar], body [data-app-shell-titlebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-sidebar-opacity), transparent) !important; }
       body [data-app-shell-pane-content-viewport], body [data-app-shell-trailing-sidebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-right-opacity), transparent) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
@@ -167,21 +167,20 @@ function createRuntimeStyles(rootId, controlsId) {
         --color-text-tertiary: var(--color-text-secondary);
       }
       body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
-        background-color: transparent !important;
+        background-color: ${surfaceColor(surface, "top")} !important;
         box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
-      html[data-codex-wallpaper-top-surface] body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-top-opacity), transparent) !important; }
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
       body [data-app-shell-page-surface] { background-color: transparent !important; backdrop-filter: none; }
       body [data-browser-sidebar-webview] { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; opacity: 1 !important; }
       body [data-browser-sidebar-webview] > webview { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; }
-      body [data-app-shell-frame] { background-color: var(--codex-wallpaper-frame) !important; }
+      body [data-app-shell-frame] { background-color: ${frame} !important; }
       body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) {
-        & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: var(--codex-wallpaper-settings-canvas) !important; }
+        & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: ${surfaceColor("var(--codex-wallpaper-settings-canvas-base)", "settings-canvas")} !important; }
         & main[data-app-shell-main-surface] :where([class~='rounded-2xl'][class~='border-default']) {
-          background-color: var(--codex-wallpaper-settings-card) !important;
+          background-color: ${surfaceColor("var(--codex-wallpaper-settings-card-base)", "settings-card")} !important;
           border-color: var(--codex-wallpaper-line-strong) !important;
           border-radius: var(--codex-wallpaper-radius) !important;
           --color-border: var(--codex-wallpaper-line);
@@ -226,7 +225,7 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-composer-surface-variant] { background-color: var(--codex-wallpaper-raised) !important; border-radius: var(--codex-wallpaper-radius) !important; box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 12px 32px rgb(0 0 0 / .16) !important; }
       body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
       body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
-      body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(var(--codex-wallpaper-canvas), transparent) !important; }
+      body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(${canvas}, transparent) !important; }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
@@ -236,7 +235,7 @@ function createRuntimeStyles(rootId, controlsId) {
         --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
       }
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='dialog'], [role='menu']) { background-color: var(--codex-wallpaper-panel) !important; }
+      body :where([role='dialog'], [role='menu']) { background-color: ${panelColor} !important; }
       body [data-radix-popper-content-wrapper] { background-color: transparent !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
@@ -279,19 +278,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     performance: { fps: 15, pauseWhenHidden: true },
     balanced: { fps: 30, pauseWhenHidden: true },
   };
-  const interfaceStyleProperties = [
-    "--codex-wallpaper-surface-opacity",
-    "--codex-wallpaper-chat-opacity",
-    "--codex-wallpaper-sidebar-opacity",
-    "--codex-wallpaper-top-opacity",
-    "--codex-wallpaper-right-opacity",
-    "--codex-wallpaper-settings-opacity",
-    "--codex-wallpaper-settings-canvas-opacity",
-    "--codex-wallpaper-settings-card-opacity",
-    "--codex-wallpaper-interface-blur",
-    "--codex-wallpaper-line",
-    "--codex-wallpaper-line-strong",
-  ];
+  let interfaceRules = [];
 
   const defaults = {
     enabled: true,
@@ -833,82 +820,66 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return Math.min(100, Math.round(globalOpacity * (factor ?? 1)));
   }
 
+  function bindInterfaceAppearance(rules) {
+    const token =
+      /var\(--codex-wallpaper-((?:surface|chat|sidebar|top|right|settings(?:-canvas|-card)?)-opacity|interface-blur)\)/g;
+    for (const rule of rules) {
+      for (const property of rule.style || []) {
+        const template = rule.style.getPropertyValue(property);
+        if (!template.match(token)) continue;
+        const priority = rule.style.getPropertyPriority(property);
+        let previous;
+        interfaceRules.push((values) => {
+          const next = template.replace(token, (_, key) => values[key]);
+          if (next === previous) return;
+          rule.style.setProperty(property, next, priority);
+          previous = next;
+        });
+      }
+      if (rule.cssRules) bindInterfaceAppearance(rule.cssRules);
+    }
+  }
+
   function applyInterfaceAppearance() {
-    const style = document.documentElement.style;
-    const globalOpacity = Math.max(
-      20,
-      Math.min(100, Number(config.settings.surfaceOpacity) || 72)
-    );
-    style.setProperty("--codex-wallpaper-surface-opacity", `${globalOpacity}%`);
-    style.setProperty(
-      "--codex-wallpaper-chat-opacity",
-      `${surfaceOpacityValue("chat")}%`
-    );
-    style.setProperty(
-      "--codex-wallpaper-sidebar-opacity",
-      `${surfaceOpacityValue("sidebar")}%`
-    );
-    style.setProperty(
-      "--codex-wallpaper-top-opacity",
-      `${hasSurfaceOverride("sidebar") ? surfaceOpacityValue("sidebar") : 0}%`
-    );
-    document.documentElement.toggleAttribute(
-      "data-codex-wallpaper-top-surface",
-      hasSurfaceOverride("sidebar")
-    );
-    style.setProperty(
-      "--codex-wallpaper-right-opacity",
-      `${surfaceOpacityValue("right")}%`
-    );
     const settingsOpacity = surfaceOpacityValue("settings");
-    style.setProperty(
-      "--codex-wallpaper-settings-opacity",
-      `${settingsOpacity}%`
-    );
-    style.setProperty(
-      "--codex-wallpaper-settings-canvas-opacity",
-      `${Math.round(settingsOpacity * 0.68)}%`
-    );
-    style.setProperty(
-      "--codex-wallpaper-settings-card-opacity",
-      `${Math.round(settingsOpacity * 0.45)}%`
-    );
     const blur = Math.max(
       0,
       Math.min(24, Number(config.settings.interfaceBlur) || 0)
     );
-    style.setProperty(
-      "--codex-wallpaper-interface-blur",
-      blur > 0 ? `blur(${blur}px)` : "none"
-    );
-    if (config.settings.interfaceBorders) {
-      style.removeProperty("--codex-wallpaper-line");
-      style.removeProperty("--codex-wallpaper-line-strong");
-    } else {
-      style.setProperty("--codex-wallpaper-line", "transparent");
-      style.setProperty("--codex-wallpaper-line-strong", "transparent");
-    }
+    // Updating inherited variables on html invalidates unrelated Codex styles
+    // during a drag. Update the original surface declarations instead.
+    const values = {
+      "surface-opacity": `${Math.max(20, Math.min(100, Number(config.settings.surfaceOpacity) || 72))}%`,
+      "chat-opacity": `${surfaceOpacityValue("chat")}%`,
+      "sidebar-opacity": `${surfaceOpacityValue("sidebar")}%`,
+      "top-opacity": `${hasSurfaceOverride("sidebar") ? surfaceOpacityValue("sidebar") : 0}%`,
+      "right-opacity": `${surfaceOpacityValue("right")}%`,
+      "settings-opacity": `${settingsOpacity}%`,
+      "settings-canvas-opacity": `${Math.round(settingsOpacity * 0.68)}%`,
+      "settings-card-opacity": `${Math.round(settingsOpacity * 0.45)}%`,
+      "interface-blur": blur > 0 ? `blur(${blur}px)` : "none",
+    };
+    for (const apply of interfaceRules) apply(values);
   }
 
-  function clearInterfaceAppearance() {
-    for (const property of interfaceStyleProperties)
-      document.documentElement.style.removeProperty(property);
-    document.documentElement.removeAttribute(
-      "data-codex-wallpaper-top-surface"
-    );
+  function applyInterfaceBorders() {
+    const style = document.documentElement.style;
+    for (const property of [
+      "--codex-wallpaper-line",
+      "--codex-wallpaper-line-strong",
+    ]) {
+      if (config.settings.interfaceBorders) style.removeProperty(property);
+      else style.setProperty(property, "transparent");
+    }
   }
 
   function applyVisualSettings(key) {
     if (
       !key ||
-      [
-        "surfaceOpacity",
-        "surfaceOverrides",
-        "interfaceBlur",
-        "interfaceBorders",
-      ].includes(key)
+      ["surfaceOpacity", "surfaceOverrides", "interfaceBlur"].includes(key)
     )
       applyInterfaceAppearance();
+    if (!key || key === "interfaceBorders") applyInterfaceBorders();
     if (!layer || !media || !dim) return;
     if (!key || key === "opacity")
       layer.style.opacity = String(config.settings.opacity / 100);
@@ -2470,7 +2441,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function removeAdapterNodes() {
-    clearInterfaceAppearance();
+    interfaceRules = [];
+    document.documentElement.style.removeProperty("--codex-wallpaper-line");
+    document.documentElement.style.removeProperty(
+      "--codex-wallpaper-line-strong"
+    );
     for (const node of document.querySelectorAll(
       `#${rootId}, #${controlsId}, #${styleId}`
     ))
@@ -2911,7 +2886,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     controls.append(toolbar, buildPanel());
     document.documentElement.append(style, root, controls);
     root.append(layer);
+    bindInterfaceAppearance(style.sheet.cssRules);
     applyInterfaceAppearance();
+    applyInterfaceBorders();
   }
 
   async function enable() {

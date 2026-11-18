@@ -549,16 +549,19 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     const surrounds = frame.querySelectorAll(
       "#app-menu, [data-app-shell-titlebar], [data-app-navigation-rail], [data-slate-sidebar-content]"
     );
+    const alphaOf = (color) => color === "rgba(0, 0, 0, 0)"
+      ? 0
+      : Number(color.match(/\\/\\s*([\\d.]+)\\s*\\)/)?.[1] ?? 1);
     function sample(theme) {
       document.documentElement.dataset.theme = theme;
       const paint = getComputedStyle(frame).backgroundColor;
-      const alpha = Number(paint.match(/\\/\\s*([\\d.]+)\\s*\\)/)?.[1]);
+      const alpha = alphaOf(paint);
       return {
         paint,
         wallpaperThroughFrame: alpha > 0 && alpha < 1,
         noOverpaint: [...surrounds].every(element => {
           const style = getComputedStyle(element);
-          return style.backgroundColor === "rgba(0, 0, 0, 0)" &&
+          return alphaOf(style.backgroundColor) === 0 &&
             style.backdropFilter === "none";
         })
       };
@@ -2626,27 +2629,19 @@ test("appearance controls update wallpaper and surface layers without reloading 
         mediaSame: root.querySelector(".media:not(.staged)") === media
       };
 
+      const rootStyleBeforePreview = document.documentElement.getAttribute("style");
       setRange("surfaceOpacity", "55");
-      const globalSurface = document.documentElement.style.getPropertyValue(
-        "--codex-wallpaper-surface-opacity"
-      );
-      const inheritedChat = document.documentElement.style.getPropertyValue(
-        "--codex-wallpaper-chat-opacity"
-      );
-      const inheritedSidebar =
-        document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-sidebar-opacity"
-        );
+      const surfaceAlpha = (selector) =>
+        alphaOf(getComputedStyle(document.querySelector(selector)).backgroundColor);
+      const globalSurface = surfaceAlpha("body [data-app-shell-frame]");
+      const inheritedChat = surfaceAlpha("[data-app-shell-main-surface]");
+      const inheritedSidebar = surfaceAlpha("[data-app-shell-page-sidebar]");
       setRange("interfaceBlur", "8");
-      const blur = {
-        variable: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-interface-blur"
-        ),
-        computed: getComputedStyle(
-          document.querySelector("[data-app-shell-main-surface]")
-        ).backdropFilter
-      };
-
+      const previewKeepsRootStyle =
+        document.documentElement.getAttribute("style") === rootStyleBeforePreview;
+      const blur = getComputedStyle(
+        document.querySelector("[data-app-shell-main-surface]")
+      ).backdropFilter;
       const borders = panel.querySelector(
         "[data-setting-toggle='interfaceBorders']"
       );
@@ -2705,16 +2700,12 @@ test("appearance controls update wallpaper and surface layers without reloading 
       const override = {
         enabled: chatOverride.checked,
         rangeEnabled: !chatRange.disabled,
-        value: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-chat-opacity"
-        )
+        value: surfaceAlpha("[data-app-shell-main-surface]")
       };
       panel.querySelector("[data-restore-surface='chat']").click();
       const restored = {
         enabled: chatOverride.checked,
-        value: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-chat-opacity"
-        )
+        value: surfaceAlpha("[data-app-shell-main-surface]")
       };
 
       document.documentElement.dataset.theme = "light";
@@ -2779,12 +2770,8 @@ test("appearance controls update wallpaper and surface layers without reloading 
         surface:
           panel.querySelector("[data-setting='surfaceOpacity']").value,
         fit: panel.querySelector("[data-setting='fitMode']").value,
-        chatOverride: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-chat-opacity"
-        ),
-        settingsOverride: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-settings-opacity"
-        )
+        chatOverride: surfaceAlpha("[data-app-shell-main-surface]"),
+        settingsOverride: alphaOf(getComputedStyle(panel).backgroundColor)
       };
 
       return {
@@ -2802,6 +2789,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
         inheritedChat,
         inheritedSidebar,
         blur,
+        previewKeepsRootStyle,
         bordersOff,
         top: {
           before: titlebarBefore,
@@ -2833,13 +2821,11 @@ test("appearance controls update wallpaper and surface layers without reloading 
       objectFit: "contain",
       mediaSame: true,
     },
-    globalSurface: "55%",
-    inheritedChat: "14%",
-    inheritedSidebar: "55%",
-    blur: {
-      variable: "blur(8px)",
-      computed: "blur(8px)",
-    },
+    globalSurface: 0.55,
+    inheritedChat: 0.14,
+    inheritedSidebar: 0.55,
+    blur: "blur(8px)",
+    previewKeepsRootStyle: true,
     bordersOff: true,
     top: {
       before: 0,
@@ -2853,11 +2839,11 @@ test("appearance controls update wallpaper and surface layers without reloading 
     override: {
       enabled: true,
       rangeEnabled: true,
-      value: "30%",
+      value: 0.3,
     },
     restored: {
       enabled: false,
-      value: "14%",
+      value: 0.14,
     },
     lightSurfaceTranslucent: true,
     reopened: {
@@ -2872,8 +2858,8 @@ test("appearance controls update wallpaper and surface layers without reloading 
       mediaSame: true,
       surface: "60",
       fit: "contain",
-      chatOverride: "44%",
-      settingsOverride: "70%",
+      chatOverride: 0.44,
+      settingsOverride: 0.7,
     },
   });
 
@@ -2881,22 +2867,9 @@ test("appearance controls update wallpaper and surface layers without reloading 
     port,
     `(async () => {
       await globalThis.__codexWallpaperApi.disable();
-      const cleared = [
-        "--codex-wallpaper-surface-opacity",
-        "--codex-wallpaper-chat-opacity",
-        "--codex-wallpaper-sidebar-opacity",
-        "--codex-wallpaper-top-opacity",
-        "--codex-wallpaper-right-opacity",
-        "--codex-wallpaper-settings-opacity",
-        "--codex-wallpaper-settings-canvas-opacity",
-        "--codex-wallpaper-settings-card-opacity",
-        "--codex-wallpaper-interface-blur",
-        "--codex-wallpaper-line",
-        "--codex-wallpaper-line-strong"
-      ].every(
-        (property) =>
-          document.documentElement.style.getPropertyValue(property) === ""
-      );
+      const cleared =
+        !document.getElementById("${rootId}-style") &&
+        getComputedStyle(document.querySelector("[data-app-shell-main-surface]")).backdropFilter === "none";
       await globalThis.__codexWallpaperApi.enable();
       const root = document.getElementById("${rootId}");
       for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -2913,9 +2886,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
         fit: getComputedStyle(root.querySelector(".media img")).objectFit,
         surface:
           panel.querySelector("[data-setting='surfaceOpacity']").value,
-        settingsOverride: document.documentElement.style.getPropertyValue(
-          "--codex-wallpaper-settings-opacity"
-        )
+        settingsOverride: Number(getComputedStyle(panel).backgroundColor.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1])
       };
     })()`,
     options
@@ -2925,7 +2896,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     state: "enabled",
     fit: "contain",
     surface: "60",
-    settingsOverride: "70%",
+    settingsOverride: 0.7,
   });
 });
 
