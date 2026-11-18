@@ -5,6 +5,7 @@ Updated: 2026-11-18, Asia/Shanghai.
 ## Current state
 
 - Candidate branch: `codex/wallpaper-performance-settings`.
+- Candidate commit: resolve from the launching integration worktree with `git rev-parse HEAD` immediately before start and record that exact SHA with the receipt.
 - Candidate runtime hash: `58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85`.
 - Candidate generated style hash: `2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2`.
 - Installed package: `OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0`.

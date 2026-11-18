@@ -125,4 +125,14 @@ test("candidate identity comparison requires runtime and generated style matches
     ).checks.runtimeHash,
     false
   );
+  assert.equal(
+    compareCandidateIdentity(
+      {
+        runtimeIdentity: expected,
+        styleHash: "d".repeat(64),
+      },
+      expected
+    ).checks.styleHash,
+    false
+  );
 });
