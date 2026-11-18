@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 function createRuntimeStyles(rootId, controlsId) {
   return `
       #${rootId}, #${rootId} * { box-sizing: border-box; }
@@ -226,17 +228,30 @@ function createRuntimeStyles(rootId, controlsId) {
     `;
 }
 
+export function candidateIdentity() {
+  const hash = (value) =>
+    createHash("sha256")
+      .update(String(value).replace(/\r\n/g, "\n"))
+      .digest("hex");
+  return {
+    runtimeHash: hash(createCodexWallpaperRuntime.toString()),
+    styleHash: hash(
+      createRuntimeStyles("codex-wallpaper-p1", "codex-wallpaper-p1-controls")
+    ),
+  };
+}
+
 export function runtimeSource(payload) {
-  const runtimeCss = createRuntimeStyles(
+  const css = createRuntimeStyles(
     "codex-wallpaper-p1",
     "codex-wallpaper-p1-controls"
   );
   return `(${createCodexWallpaperRuntime.toString()})(${JSON.stringify(
     payload
-  )}, ${JSON.stringify(runtimeCss)})`;
+  )}, ${JSON.stringify(css)}, ${JSON.stringify(candidateIdentity())})`;
 }
 
-export function createCodexWallpaperRuntime(payload, runtimeCss) {
+export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   const rootId = "codex-wallpaper-p1";
   const controlsId = "codex-wallpaper-p1-controls";
   const styleId = "codex-wallpaper-p1-style";
@@ -2845,6 +2860,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss) {
   });
   document.addEventListener("visibilitychange", syncVisibility);
   globalThis.__codexWallpaperApi = {
+    identity: () => structuredClone(identity),
     refresh,
     enable,
     disable,

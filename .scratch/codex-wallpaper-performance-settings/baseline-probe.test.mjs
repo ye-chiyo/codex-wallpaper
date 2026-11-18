@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { sanitizeBaselineSnapshot } from "./baseline-probe.mjs";
+import { compareCandidateIdentity } from "./candidate-check.mjs";
 
 test("baseline snapshots keep the measurement identity without personal material data", () => {
   const secretTitle = "private wallpaper title";
@@ -31,6 +32,10 @@ test("baseline snapshots keep the measurement identity without personal material
       activeKind: "workshop",
       activeId: "2788691565",
       playerCount: 1,
+    },
+    runtimeIdentity: {
+      runtimeHash: "a".repeat(64),
+      styleHash: "b".repeat(64),
     },
     activeMedia: [
       {
@@ -71,10 +76,53 @@ test("baseline snapshots keep the measurement identity without personal material
     rotationMinutes: 0,
   });
   assert.equal(snapshot.config.favoriteCount, 1);
+  assert.deepEqual(snapshot.runtimeIdentity, {
+    runtimeHash: "a".repeat(64),
+    styleHash: "b".repeat(64),
+  });
   assert.deepEqual(snapshot.cards[0], {
     kind: "workshop",
     idHash: "16f531121815eb59",
     state: "video",
     selected: true,
   });
+});
+
+test("candidate identity comparison requires runtime and generated style matches", () => {
+  const expected = {
+    runtimeHash: "a".repeat(64),
+    styleHash: "b".repeat(64),
+  };
+  assert.deepEqual(
+    compareCandidateIdentity(
+      {
+        runtimeIdentity: expected,
+        styleHash: expected.styleHash,
+        runtimeState: { state: "enabled", libraryCount: 106 },
+      },
+      expected
+    ),
+    {
+      pass: true,
+      expected,
+      actual: {
+        runtimeHash: expected.runtimeHash,
+        styleHash: expected.styleHash,
+        capturedStyleHash: expected.styleHash,
+      },
+      checks: { runtimeHash: true, styleHash: true },
+      state: "enabled",
+      libraryCount: 106,
+    }
+  );
+  assert.equal(
+    compareCandidateIdentity(
+      {
+        runtimeIdentity: { ...expected, runtimeHash: "c".repeat(64) },
+        styleHash: expected.styleHash,
+      },
+      expected
+    ).checks.runtimeHash,
+    false
+  );
 });

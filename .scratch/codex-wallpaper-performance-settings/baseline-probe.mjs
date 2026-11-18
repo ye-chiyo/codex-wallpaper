@@ -70,6 +70,12 @@ export function sanitizeBaselineSnapshot(raw) {
           hostReady: Boolean(raw.runtimeState.hostReady),
         }
       : null,
+    runtimeIdentity: raw?.runtimeIdentity
+      ? {
+          runtimeHash: String(raw.runtimeIdentity.runtimeHash || ""),
+          styleHash: String(raw.runtimeIdentity.styleHash || ""),
+        }
+      : null,
     activeMedia: (raw?.activeMedia || []).map((media) => ({
       className: String(media.className || ""),
       children: (media.children || []).map((child) => ({
@@ -128,6 +134,8 @@ export async function captureSnapshot(port) {
           visibilityState: document.visibilityState,
           styleText: style?.textContent || null,
           runtimeState: globalThis.__codexWallpaperApi?.state?.() || null,
+          runtimeIdentity:
+            globalThis.__codexWallpaperApi?.identity?.() || null,
           config,
           activeMedia: [...document.querySelectorAll(
             "#codex-wallpaper-p1 .media:not(.staged)"

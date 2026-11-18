@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
+import { candidateIdentity } from "./client-runtime.mjs";
 import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
 import { callMainPage, openMainPageSession } from "./read-only-probe.mjs";
 
@@ -504,6 +505,14 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
   await waitForPage(port, options);
   const nativeTitlebar = await evaluateInPage(port, readTitlebar, options);
   await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      "globalThis.__codexWallpaperApi.identity()",
+      options
+    ),
+    candidateIdentity()
+  );
   assert.deepEqual(
     await evaluateInPage(port, readTitlebar, options),
     nativeTitlebar
