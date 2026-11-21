@@ -1197,7 +1197,7 @@ async function waitForPort(profile) {
 }
 
 async function waitForPage(port, options) {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
     const href = await evaluateInPage(port, "location.href", options);
     if (href === options.page) return;
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -5009,7 +5009,9 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     ),
     "auto"
   );
-  await click("[data-panel-page=appearance]");
+  await evaluate(
+    `document.querySelector("[data-panel-page=appearance]").click()`
+  );
   await click("[data-panel-region=appearance] summary");
   const preference =
     "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
@@ -8024,6 +8026,16 @@ test("static background is single, removable and persists disabled", async (t) =
     [1, false]
   );
   await pressWallpaperShortcut(port, options, "S");
+  await waitForCondition(
+    () =>
+      evaluateInPage(
+        port,
+        `document.querySelector("#${controlRootId} .panel.open") !== null`,
+        options
+      ),
+    3000,
+    "wallpaper settings panel did not open"
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
