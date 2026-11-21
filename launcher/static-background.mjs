@@ -26,15 +26,19 @@ async function evaluate(port, page, source) {
   return result?.result?.value;
 }
 
-async function payloadFor() {
+export async function payloadFor() {
   try {
     const library = await scanWallpaperLibrary({
       assetLimit: 0,
       previewLimit: 0,
     });
-    return { version: 1, library: library.entries };
+    return {
+      version: 1,
+      library: library.entries,
+      libraryRevalidationFailed: Boolean(library.revalidationFailed),
+    };
   } catch {
-    return { version: 1, library: [] };
+    return { version: 1, library: [], libraryRevalidationFailed: false };
   }
 }
 
@@ -117,9 +121,9 @@ if (
   const port = Number(process.argv[2]);
   const action = process.argv[3] === "disable" ? "disable" : "enable";
   try {
+    const bridge = action === "enable" ? await startBridge(port) : {};
     let result = await applyStaticBackground(port, { action });
     if (action === "enable") {
-      const bridge = await startBridge(port);
       if (bridge.bridgePid)
         result = await evaluate(
           port,

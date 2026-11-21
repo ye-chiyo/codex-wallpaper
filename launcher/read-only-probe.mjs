@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 
 const host = "127.0.0.1";
 const page = "app://-/index.html";
-const timeoutMs = 2_500;
+const timeoutMs = 5_000;
 
 function isMainPage(value, expectedPage = page) {
   if (typeof value !== "string") return false;
@@ -76,7 +76,8 @@ export function listPages(port) {
 export async function openMainPageSession(
   port,
   expectedPage = page,
-  exact = false
+  exact = false,
+  { allowMissing = false } = {}
 ) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535)
     throw new Error("Invalid port");
@@ -86,14 +87,17 @@ export async function openMainPageSession(
     expectedPage,
     exact
   );
-  if (endpoint === null) throw new Error("Main page not uniquely available");
+  if (endpoint === null) {
+    if (allowMissing) return null;
+    throw new Error("Main page not uniquely available");
+  }
 
   const socket = new WebSocket(endpoint);
   await new Promise((resolve, reject) => {
-    const deadline = setTimeout(
-      () => reject(new Error("WebSocket timeout")),
-      timeoutMs
-    );
+    const deadline = setTimeout(() => {
+      socket.close();
+      reject(new Error("WebSocket timeout"));
+    }, timeoutMs);
     socket.addEventListener("open", () => {
       clearTimeout(deadline);
       resolve();
@@ -108,8 +112,11 @@ export async function openMainPageSession(
   const pending = new Map();
   const listeners = new Map();
   const closeListeners = [];
+  let closed = false;
 
   function finishAll(error) {
+    if (closed) return;
+    closed = true;
     for (const entry of pending.values()) entry.reject(error);
     pending.clear();
     for (const handler of closeListeners) handler(error);
@@ -137,6 +144,8 @@ export async function openMainPageSession(
 
   return {
     send(method, params = {}) {
+      if (socket.readyState !== WebSocket.OPEN)
+        return Promise.reject(new Error("WebSocket closed"));
       const id = ++nextId;
       return new Promise((resolve, reject) => {
         pending.set(id, { resolve, reject });
@@ -149,9 +158,14 @@ export async function openMainPageSession(
       listeners.set(method, entries);
     },
     onClose(handler) {
+      if (closed) {
+        queueMicrotask(() => handler(new Error("WebSocket closed")));
+        return;
+      }
       closeListeners.push(handler);
     },
     close() {
+      finishAll(new Error("WebSocket closed"));
       socket.close();
     },
   };
@@ -213,6 +227,10 @@ export async function callMainPage(
 export async function readMainFrame(port) {
   const result = await callMainPage(port, "Page.getFrameTree", {}, page, true);
   if (result === null) return null;
+  return verifyMainFrame(result);
+}
+
+export function verifyMainFrame(result) {
   const frame = result?.frameTree?.frame;
   if (frame?.url !== page || frame.securityOrigin !== "app://-")
     throw new Error("Unverified main frame");

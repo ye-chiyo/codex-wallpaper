@@ -5,7 +5,7 @@ $family = 'OpenAI.Codex_2p2nqsd0c76g0'
 $package = 'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0'
 $hash = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
 $appId = "$family!App"
-$launcher = Join-Path $PSScriptRoot 'Start-CodexWallpaper.ps1'
+$sourceLauncher = Join-Path $PSScriptRoot 'Start-CodexWallpaper.ps1'
 $logical = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
 $cache = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) "Packages\$family\LocalCache\Roaming\Codex\web\Codex"
 $exe = Join-Path $env:TEMP 'app\ChatGPT.exe'
@@ -33,9 +33,12 @@ function Get-AppxPackage {
         [pscustomobject]@{ PackageFullName = $mockPackage; PackageFamilyName = $family; InstallLocation = $env:TEMP }
     }
 }
-function Get-CimInstance { return $mockProcesses }
+function Get-CimInstance {
+    if ($processSnapshots.Count) { return $processSnapshots.Dequeue() }
+    return $mockProcesses
+}
 function Get-NetTCPConnection { return $mockListeners }
-function Get-FileHash { @{ Hash = $mockHash } }
+function Get-FileSha256 { $mockHash }
 function Get-StartApps {
     if ($mockStartApp) { [pscustomobject]@{ AppID = $mockStartApp } }
 }
@@ -58,6 +61,20 @@ $cases = @(
         Name = 'current package and daily profile reach activation boundary'
         Package = $package; Hash = $hash; StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
         ExpectedReceipt = 'launch-or-check-error'
+    },
+    @{
+        Name = 'updated Codex package and its executable reach activation boundary'
+        Package = 'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0'
+        Hash = 'AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514'
+        StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
+        ExpectedReceipt = 'launch-or-check-error'
+    },
+    @{
+        Name = 'updated Codex package cannot use the older executable hash'
+        Package = 'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0'
+        Hash = $hash; StartApp = $appId; Directories = @($cache)
+        ReachesBoundary = $false; Expected = 'Original executable or app registration did not match'
+        ExpectedReceipt = 'executable-or-app-registration-mismatch'
     },
     @{
         Name = 'current package accepts the logical daily profile path'
@@ -111,16 +128,35 @@ $cases = @(
         Processes = @($root, $crashpad); Listeners = @([pscustomobject]@{ LocalAddress = '127.0.0.1'; OwningProcess = 41000 })
     },
     @{
+        Name = 'recorded dedicated instance without a live host is not reused'
+        Package = $package; Hash = $hash; StartApp = $appId; Directories = @($cache); ReachesBoundary = $false
+        Expected = 'no matching dedicated-launch receipt'; ExpectedReceipt = 'unverified-running-instance'
+        Processes = @($root, $crashpad); Listeners = @([pscustomobject]@{ LocalAddress = '127.0.0.1'; OwningProcess = 41000 })
+        Marker = $dedicatedMarker
+    },
+    @{
         Name = 'recorded dedicated running instance is reused without injection'
         Package = $package; Hash = $hash; StartApp = $appId; Directories = @($cache); ReachesBoundary = $false
         Expected = 'Dedicated Codex wallpaper instance is already running'; ExpectedReceipt = 'dedicated-instance-reused'
         Processes = @($root, $crashpad); Listeners = @([pscustomobject]@{ LocalAddress = '127.0.0.1'; OwningProcess = 41000 })
-        Marker = $dedicatedMarker
+        Marker = $dedicatedMarker; HostReady = $true
+    },
+    @{
+        Name = 'one launch reaches the activation boundary after the dedicated instance exits'
+        Package = $package; Hash = $hash; StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
+        ExpectedReceipt = 'launch-or-check-error'; Exiting = $true
+        Listeners = @([pscustomobject]@{ LocalAddress = '127.0.0.1'; OwningProcess = 41000 })
+        Marker = $dedicatedMarker; HostReady = $true
     }
 )
 
 $receiptBase = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-receipts-' + [guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($receiptBase)
+# Keep an already-running launcher from holding the mutex used by this offline fixture.
+$launcher = Join-Path $receiptBase 'Start-CodexWallpaper.ps1'
+$fixtureMutex = 'Local\' + (Split-Path -Leaf $receiptBase)
+$source = [IO.File]::ReadAllText($sourceLauncher).Replace('Local\CodexWallpaper.P0b', $fixtureMutex)
+[IO.File]::WriteAllText($launcher, $source, [Text.UTF8Encoding]::new($true))
 foreach ($case in $cases) {
     $hits = [Collections.Generic.List[string]]::new()
     $mockPackage = $case.Package
@@ -128,6 +164,11 @@ foreach ($case in $cases) {
     $mockHash = $case.Hash
     $mockStartApp = $case.StartApp
     $mockProcesses = @($case.Processes | Where-Object { $null -ne $_ })
+    $processSnapshots = [Collections.Generic.Queue[object]]::new()
+    if ($case.Exiting) {
+        $processSnapshots.Enqueue(@($root, $crashpad))
+        $processSnapshots.Enqueue(@($root, $crashpad))
+    }
     $mockListeners = @($case.Listeners | Where-Object { $null -ne $_ })
     $availableDirectories = $case.Directories
     $caseReceipt = Join-Path $receiptBase ([guid]::NewGuid().ToString('N'))
@@ -139,7 +180,16 @@ foreach ($case in $cases) {
             [Text.UTF8Encoding]::new($false)
         )
     }
-    $output = (& $launcher -Launch -Unattended -ReceiptRoot $caseReceipt 6>&1 | Out-String).Trim()
+    $hostLock = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-host-{0}.lock' -f $port)
+    Remove-Item -LiteralPath $hostLock -Force -ErrorAction SilentlyContinue
+    try {
+        if ($case.HostReady) {
+            [IO.File]::WriteAllText($hostLock, [string]$PID, [Text.UTF8Encoding]::new($false))
+        }
+        $output = (& $launcher -Launch -Unattended -ReceiptRoot $caseReceipt 6>&1 | Out-String).Trim()
+    } finally {
+        Remove-Item -LiteralPath $hostLock -Force -ErrorAction SilentlyContinue
+    }
     if (($hits.Count -eq 1) -ne $case.ReachesBoundary -or
         (-not $case.ReachesBoundary -and $output -notmatch [regex]::Escape($case.Expected))) {
         throw "Failed: $($case.Name). Output: $output $($Error[0].InvocationInfo.PositionMessage)"
@@ -156,4 +206,7 @@ foreach ($case in $cases) {
     }
     Write-Host "Passed: $($case.Name)"
 }
-Remove-Item -LiteralPath $receiptBase -Recurse -Force
+$resolvedReceiptBase = (Resolve-Path -LiteralPath $receiptBase).Path
+if ($resolvedReceiptBase -eq [IO.Path]::GetFullPath($receiptBase)) {
+    Remove-Item -LiteralPath $resolvedReceiptBase -Recurse -Force
+}
