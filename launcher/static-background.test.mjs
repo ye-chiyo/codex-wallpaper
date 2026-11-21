@@ -5009,8 +5009,15 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     ),
     "auto"
   );
-  await evaluate(
-    `document.querySelector("[data-panel-page=appearance]").click()`
+  await waitForCondition(
+    () =>
+      evaluate(`(() => {
+        document.querySelector("[data-panel-page=appearance]").click();
+        const region = document.querySelector("[data-panel-region=appearance]");
+        return Boolean(region && !region.hidden && region.offsetHeight > 0);
+      })()`),
+    3000,
+    "appearance settings page did not become visible"
   );
   await evaluate(
     `document.querySelector("[data-panel-region=appearance] summary").click()`
@@ -5023,10 +5030,24 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     border,
     ...scopes.map((scope) => `[data-surface-override=${scope}]`),
   ]) {
+    await waitForCondition(
+      () =>
+        evaluate(`(() => {
+          const box = document.querySelector(${JSON.stringify(selector)});
+          return Boolean(
+            box &&
+              getComputedStyle(box).appearance !== "none" &&
+              box.offsetWidth >= 16 &&
+              box.offsetHeight >= 16
+          );
+        })()`),
+      3000,
+      `${selector} did not become visible`
+    );
     const affordance = await evaluate(`(() => {
-      const box = document.querySelector(${JSON.stringify(selector)});
-      return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
-    })()`);
+        const box = document.querySelector(${JSON.stringify(selector)});
+        return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
+      })()`);
     assert.notEqual(affordance.appearance, "none", selector);
     assert.ok(affordance.width >= 16 && affordance.height >= 16, selector);
   }
@@ -8165,26 +8186,32 @@ test("static background is single, removable and persists disabled", async (t) =
     true
   );
   await pressWallpaperShortcut(port, options, "S");
-  assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `(() => {
-        const panel = document.querySelector("#${controlRootId} .panel.open");
-        const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
-        const p = panel?.getBoundingClientRect();
-        return {
-          visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
-          clear: Boolean(p && p.bottom < c.top),
-          hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
-            p.right - 8,
-            p.top + 8
-          )))
-        };
-      })()`,
-      options
-    ),
-    { visible: true, clear: true, hitTestable: true }
+  const panelLayout = `(() => {
+    const panel = document.querySelector("#${controlRootId} .panel.open");
+    const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
+    const p = panel?.getBoundingClientRect();
+    return {
+      visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
+      clear: Boolean(p && p.bottom < c.top),
+      hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
+        p.right - 8,
+        p.top + 8
+      )))
+    };
+  })()`;
+  await waitForCondition(
+    () =>
+      evaluateInPage(port, panelLayout, options).then(
+        ({ visible, clear, hitTestable }) => visible && clear && hitTestable
+      ),
+    3000,
+    "wallpaper settings panel layout did not settle"
   );
+  assert.deepEqual(await evaluateInPage(port, panelLayout, options), {
+    visible: true,
+    clear: true,
+    hitTestable: true,
+  });
   await pressWallpaperShortcut(port, options, "S");
   for (const [width, height] of [
     [1290, 900],
@@ -8197,6 +8224,16 @@ test("static background is single, removable and persists disabled", async (t) =
       mobile: false,
     });
     await pressWallpaperShortcut(port, options, "S");
+    await waitForCondition(
+      () =>
+        evaluateInPage(
+          port,
+          `Boolean(document.querySelector("#${controlRootId} .panel.open"))`,
+          options
+        ),
+      3000,
+      "wallpaper settings panel did not open after viewport resize"
+    );
     const layouts = await evaluateInPage(
       port,
       `(() => {
