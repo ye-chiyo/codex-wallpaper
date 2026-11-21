@@ -31,8 +31,8 @@
 ### 08 · Windows CI
 
 - 新增 [`.github/workflows/windows-tests.yml`](../../.github/workflows/windows-tests.yml)，在 `windows-latest` 使用 pnpm `11.25.0`、Node `24.16.0` 和锁定依赖；显式检查 Edge 路径，再运行 `pnpm test` 与 `desktop-entry`、`profile-preflight`、`startup-entry`、`startup-roots` 四个 PowerShell 入口。失败步骤会写出入口名和退出码。
-- 本地与工作流相同入口的回归结果为 Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过。Edge `158.0.4370.33` 存在。工作流 YAML 本地解析通过。
-- GitHub 托管 Windows runner 的公开日志必须等实际推送或手动触发后补记；本轮没有远端写入授权。
+- 本地与工作流相同入口的回归结果为 Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过。
+- GitHub 托管 Windows runner 已在提交 `c9e2864fd077fc2c41a0e2c6867f36b03f1103b7` 上通过：[运行 44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099)。依赖安装、Edge 检查、Node 测试和四个 PowerShell 脚本均成功；期间修正了 headless runner 的面板渲染与快捷键准备时序。
 
 ### 10 · 媒体热切
 
