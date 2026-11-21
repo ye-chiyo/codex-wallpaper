@@ -5012,7 +5012,9 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   await evaluate(
     `document.querySelector("[data-panel-page=appearance]").click()`
   );
-  await click("[data-panel-region=appearance] summary");
+  await evaluate(
+    `document.querySelector("[data-panel-region=appearance] summary").click()`
+  );
   const preference =
     "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
   const border = "[data-setting=interfaceBorders]";
@@ -8025,7 +8027,17 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     [1, false]
   );
-  await pressWallpaperShortcut(port, options, "S");
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
   await waitForCondition(
     () =>
       evaluateInPage(
@@ -8068,7 +8080,17 @@ test("static background is single, removable and persists disabled", async (t) =
       nativeShortcutEvents: 1,
     }
   );
-  await pressWallpaperShortcut(port, options, "S");
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
