@@ -8,9 +8,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$packageName = 'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0'
+$supportedExeHashes = @{
+    'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0' = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
+    'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0' = 'AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514'
+}
 $appId = 'OpenAI.Codex_2p2nqsd0c76g0!App'
-$expectedExeHash = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
 $nativeProfile = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
 $stateFolder = if ($ReceiptRoot) { $ReceiptRoot } else {
     Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'CodexWallpaper\P0b'
@@ -173,7 +175,37 @@ function Test-LoopbackOwner($Port, $OwnerPid) {
     }).Count -eq 0)
 }
 
-function Get-DedicatedRootState($Roots, $Processes, $ExpectedExecutable, $SessionMarker) {
+if (-not (Get-Command Get-FileSha256 -CommandType Function -ErrorAction SilentlyContinue)) {
+    function Get-FileSha256($Path) {
+        $stream = [IO.File]::OpenRead($Path)
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try {
+            return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '')
+        } finally {
+            $sha.Dispose()
+            $stream.Dispose()
+        }
+    }
+}
+
+function Test-WallpaperHost($Port, $LockFolder = [IO.Path]::GetTempPath()) {
+    $process = $null
+    $file = Join-Path $LockFolder ('codex-wallpaper-host-{0}.lock' -f $Port)
+    try {
+        $owner = [int]([IO.File]::ReadAllText($file).Trim())
+        $process = [Diagnostics.Process]::GetProcessById($owner)
+        # A recycled PID cannot own a lock written before its process existed.
+        return -not $process.HasExited -and $process.StartTime.ToUniversalTime() -le [IO.File]::GetLastWriteTimeUtc($file)
+    } catch [IO.IOException] {
+        return Test-Path -LiteralPath $file -PathType Leaf
+    } catch {
+        return $false
+    } finally {
+        if ($process) { $process.Dispose() }
+    }
+}
+
+function Get-DedicatedRootState($Roots, $Processes, $ExpectedExecutable, $SessionMarker, $HostLockFolder = [IO.Path]::GetTempPath()) {
     if ($null -eq $SessionMarker) { return [pscustomobject]@{ State = 'unknown'; Root = @($Roots | Select-Object -First 1) } }
     foreach ($root in $Roots) {
         if ($root.ProcessId -ne $SessionMarker.MainPid -or
@@ -186,8 +218,51 @@ function Get-DedicatedRootState($Roots, $Processes, $ExpectedExecutable, $Sessio
         if (-not $match.Success) { continue }
         $port = [int]$match.Groups[1].Value
         if ($port -ne [int]$SessionMarker.Port) { continue }
-        if (Test-LoopbackOwner $port $root.ProcessId) {
+        if ((Test-LoopbackOwner $port $root.ProcessId) -and (Test-WallpaperHost $port $HostLockFolder)) {
             return [pscustomobject]@{ State = 'dedicated'; Root = $root; Port = $port }
+        }
+    }
+    return [pscustomobject]@{ State = 'unknown'; Root = @($Roots | Select-Object -First 1) }
+}
+
+function Get-RecoverableRootState($Roots, $Processes, $ExpectedExecutable, $ReceiptFolder, $HostLockFolder = [IO.Path]::GetTempPath()) {
+    if (-not (Test-Path -LiteralPath $ReceiptFolder -PathType Container)) {
+        return [pscustomobject]@{ State = 'unknown'; Root = @($Roots | Select-Object -First 1) }
+    }
+    $receipts = @(Get-ChildItem -LiteralPath $ReceiptFolder -Filter '*.json' -File |
+        Where-Object { $_.Name -ne 'dedicated-session.json' } |
+        Sort-Object LastWriteTime -Descending)
+    foreach ($root in $Roots) {
+        if ($root.ExecutablePath -ine $ExpectedExecutable -or
+            (Test-DailyProfile $root $Processes) -ne 'matches-daily-path') {
+            continue
+        }
+        $match = [regex]::Match([string]$root.CommandLine, '(?:^|\s|\")--remote-debugging-port=(\d+)(?:\s|\"|$)')
+        if (-not $match.Success) { continue }
+        $port = [int]$match.Groups[1].Value
+        if (-not (Test-LoopbackOwner $port $root.ProcessId) -or
+            (Test-WallpaperHost $port $HostLockFolder)) {
+            continue
+        }
+        foreach ($file in $receipts) {
+            try {
+                $candidate = Get-Content -Raw -LiteralPath $file.FullName | ConvertFrom-Json
+            } catch {
+                continue
+            }
+            if ($candidate.Outcome -notin @('wallpaper-injection-failed', 'wallpaper-ready') -or
+                $candidate.TargetVerified -ne $true -or
+                [int]$candidate.MainPid -ne $root.ProcessId -or
+                [string]$candidate.MainCreated -cne $root.CreationDate.ToString('o') -or
+                [int]$candidate.Port -ne $port) {
+                continue
+            }
+            return [pscustomobject]@{
+                State = 'recoverable'
+                Root = $root
+                Port = $port
+                Receipt = $file.FullName
+            }
         }
     }
     return [pscustomobject]@{ State = 'unknown'; Root = @($Roots | Select-Object -First 1) }
@@ -213,10 +288,138 @@ function Save-DedicatedSession($Session, $Folder) {
     [IO.File]::WriteAllText($file, ($Session | ConvertTo-Json -Depth 3), [Text.UTF8Encoding]::new($false))
 }
 
+function Start-WallpaperSupervisor($Node, $LauncherFolder, $Port, $Clock, $Receipt, [scriptblock]$Recheck, [bool]$ShowStartupPreview = $false) {
+    $info = [Diagnostics.ProcessStartInfo]::new()
+    $info.FileName = $Node
+    $info.Arguments = '--no-use-env-proxy "{0}" {1}' -f (Join-Path $LauncherFolder 'startup-supervisor.mjs'), $Port
+    if ($stateFolder) {
+        $info.EnvironmentVariables['CODEX_WALLPAPER_STARTUP_CACHE'] = Join-Path $stateFolder 'startup-preview.json'
+    }
+    if ($ShowStartupPreview) { $info.Arguments += ' --desktop-preview' }
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    $info.RedirectStandardInput = $true
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::Start($info)
+    $keep = $false
+    $receipt.Outcome = 'supervisor-verification-failed'
+    $receipt.TargetVerificationCount = 0
+    try {
+        while ($true) {
+            $read = $process.StandardOutput.ReadLineAsync()
+            $remaining = [int][Math]::Max(0, 25000 - $Clock.ElapsedMilliseconds)
+            if (-not $read.Wait($remaining)) {
+                $Receipt.Outcome = 'supervisor-startup-timeout'
+                return
+            }
+            if (-not $read.Result) { return }
+            $message = $read.Result | ConvertFrom-Json
+            if ($message.state -eq 'failed') {
+                $Receipt.SupervisorError = $message.error
+                if ($Receipt.TargetVerified) { $Receipt.Outcome = 'wallpaper-injection-failed' }
+                return
+            }
+            if ($message.state -eq 'verified') {
+                if ($message.page -cne 'app://-/index.html' -or $message.origin -cne 'app://-') { return }
+                $verification = [int]$Receipt.TargetVerificationCount + 1
+                if ($message.verification -ne $verification) { return }
+                $Receipt.Probe = $message
+                $Receipt.TargetVerified = $true
+                $Receipt.TargetVerificationCount = $verification
+                if ($null -eq $Receipt.TargetAcknowledgedMs) {
+                    $Receipt.TargetAcknowledgedMs = $Clock.ElapsedMilliseconds
+                } else {
+                    $Receipt.TargetReverifiedMs = $Clock.ElapsedMilliseconds
+                }
+                $rejection = & $Recheck
+                if ($rejection) {
+                    $Receipt.Outcome = $rejection
+                    return
+                }
+                $Receipt.Outcome = 'wallpaper-injection-failed'
+                $process.StandardInput.WriteLine("attach $verification")
+                $process.StandardInput.Flush()
+                continue
+            }
+            if ($message.state -ne 'ready') { return }
+            $wallpaper = $message.wallpaper
+            if ($wallpaper.state -notin @('enabled', 'disabled') -or $wallpaper.hostReady -ne $true -or
+                $wallpaper.hostPid -ne $process.Id -or $wallpaper.identity.runtimeHash -cnotmatch '^[0-9a-f]{64}$' -or
+                $wallpaper.identity.styleHash -cnotmatch '^[0-9a-f]{64}$') { return }
+            # Pass the verified process identity and the same listener check to the
+            # supervisor so it can recheck ownership after this launcher exits.
+            $verifyOwner = @'
+$ErrorActionPreference = 'Stop'
+function Test-LoopbackOwner {{ {0} }}
+$owner = Get-CimInstance Win32_Process -Filter 'ProcessId = {1}'
+if (-not $owner -or $owner.CreationDate.ToString('o') -cne '{2}' -or
+    -not (Test-LoopbackOwner {3} {1})) {{ exit 1 }}
+'@
+            $verifyOwner = $verifyOwner -f ${function:Test-LoopbackOwner}, [int]$Receipt.MainPid, $Receipt.MainCreated, [int]$Port
+            $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($verifyOwner))
+            $process.StandardInput.WriteLine("keep $encoded")
+            $process.StandardInput.Flush()
+            $read = $process.StandardOutput.ReadLineAsync()
+            $remaining = [int][Math]::Max(0, 25000 - $Clock.ElapsedMilliseconds)
+            if (-not $read.Wait($remaining)) {
+                $Receipt.Outcome = 'supervisor-startup-timeout'
+                return
+            }
+            if ($read.Result) {
+                $ack = $read.Result | ConvertFrom-Json
+            }
+            if ($ack.state -ne 'kept' -or $ack.hostPid -ne $process.Id) {
+                $Receipt.SupervisorError = 'handoff-not-acknowledged'
+                return
+            }
+            $keep = $true
+            $Receipt.Wallpaper = $wallpaper
+            $Receipt.HostReadyMs = $Clock.ElapsedMilliseconds
+            $Receipt.HostReady = $true
+            $Receipt.Outcome = 'wallpaper-ready'
+            if ($ShowStartupPreview) {
+                $Receipt.StartupPreview = 'timeout'
+                $read = $process.StandardOutput.ReadLineAsync()
+                $remaining = [int][Math]::Max(0, 25000 - $Clock.ElapsedMilliseconds)
+                if ($read.Wait($remaining) -and $read.Result) {
+                    $presentation = $read.Result | ConvertFrom-Json
+                    if ($presentation.state -eq 'presentation' -and $presentation.hostPid -eq $process.Id -and
+                        $presentation.status -in @('visible', 'disabled', 'timeout')) {
+                        $Receipt.StartupPreview = $presentation.status
+                        $Receipt.StartupPreviewInterfaceAt = $presentation.interfaceAt
+                        $Receipt.StartupPreviewFirstFrameAt = $presentation.frameAt
+                        $Receipt.StartupPreviewHandoffMs = $Clock.ElapsedMilliseconds
+                        if ($presentation.status -ne 'timeout' -and
+                            $env:CODEX_WALLPAPER_DESKTOP_HANDSHAKE -ceq '1') {
+                            $Receipt.StartupPreviewSignalAt = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+                            [Console]::WriteLine('CodexWallpaper:presented')
+                        }
+                    }
+                }
+            }
+            return
+        }
+    } finally {
+        try {
+            $process.StandardInput.Close()
+            if (-not $keep -and -not $process.WaitForExit(2000)) {
+                try { $process.Kill() } catch [InvalidOperationException] {
+                    if (-not $process.HasExited) { throw }
+                }
+            }
+        } finally {
+            $process.StandardOutput.Dispose()
+            $process.StandardError.Dispose()
+            $process.Dispose()
+        }
+    }
+}
+
 $receipt = $null
 if ($Unattended) {
     $receipt = [ordered]@{
-        Started = [DateTimeOffset]::Now.ToString('o'); Package = $packageName
+        Started = [DateTimeOffset]::Now.ToString('o'); Package = $null
         Mode = 'unattended-startup'; Outcome = 'startup-launch-started'
     }
 }
@@ -230,7 +433,9 @@ try {
     Write-Host 'Codex package query failed. Use the original entry. No activation attempted.'
     exit 2
 }
-if ($pkg.Count -ne 1 -or $pkg[0].PackageFullName -ne $packageName) {
+$packageName = if ($pkg.Count -eq 1) { $pkg[0].PackageFullName }
+if ($receipt) { $receipt.Package = $packageName }
+if (-not $packageName -or -not $supportedExeHashes.ContainsKey($packageName)) {
     if ($receipt) {
         $receipt.Outcome = 'unsupported-package'
         Save-Receipt $receipt $stateFolder
@@ -268,6 +473,7 @@ $mutex = [Threading.Mutex]::new($false, 'Local\CodexWallpaper.P0b')
 $locked = $false
 $exitCode = 1
 $observation = $null
+$recoverableRoot = $null
 try {
     try { $locked = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $locked = $true }
     if (-not $locked) {
@@ -275,14 +481,20 @@ try {
         Write-Host 'Another probe is in progress. No activation attempted.'
         exit 2
     }
-    $existingRoots = @(Get-CodexRoots @(Get-CodexProcesses))
+    # Give a previous instance time to finish a user-initiated quit while this launch owns the mutex.
+    $exitWait = [Diagnostics.Stopwatch]::StartNew()
+    while ($true) {
+        $processes = @(Get-CodexProcesses)
+        $existingRoots = @(Get-CodexRoots $processes)
+        if ($existingRoots.Count -eq 0 -or $exitWait.Elapsed.TotalSeconds -ge 25) { break }
+        Start-Sleep -Milliseconds 300
+    }
     if ($existingRoots.Count -gt 1) {
         if ($receipt) { $receipt.Outcome = 'multiple-main-processes' }
         Write-Host 'Multiple Codex main processes were observed. No activation attempted.'
         exit 2
     }
     if ($existingRoots.Count -eq 1) {
-        $processes = @(Get-CodexProcesses)
         $dedicatedRoot = Get-DedicatedRootState $existingRoots $processes $exe (Get-DedicatedSession $stateFolder)
         if ($dedicatedRoot.State -eq 'dedicated') {
             if ($receipt) {
@@ -295,18 +507,21 @@ try {
             Write-Host 'Dedicated Codex wallpaper instance is already running. Reused without connecting or re-injecting.'
             exit 0
         }
+        $recoverableRoot = Get-RecoverableRootState $existingRoots $processes $exe $stateFolder
         $hasDebugFlag = $existingRoots[0].CommandLine -match '(?:^|\s|\")--remote-debugging-(?:port|pipe)(?:=|\s|\"|$)'
-        if ($receipt) {
-            $receipt.Outcome = if ($hasDebugFlag) { 'unverified-running-instance' } else { 'ordinary-instance-running' }
+        if ($recoverableRoot.State -ne 'recoverable') {
+            if ($receipt) {
+                $receipt.Outcome = if ($hasDebugFlag) { 'unverified-running-instance' } else { 'ordinary-instance-running' }
+            }
+            if ($hasDebugFlag) {
+                Write-Host 'Codex is already running, but no matching dedicated-launch receipt was found. Nothing was started, connected, or changed.'
+            } else {
+                Write-Host 'Codex is already running. Nothing was started or changed. Try only after manually quitting it.'
+            }
+            exit 2
         }
-        if ($hasDebugFlag) {
-            Write-Host 'Codex is already running, but no matching dedicated-launch receipt was found. Nothing was started, connected, or changed.'
-        } else {
-            Write-Host 'Codex is already running. Nothing was started or changed. Try only after manually quitting it.'
-        }
-        exit 2
     }
-    if ((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash -ine $expectedExeHash -or
+    if ((Get-FileSha256 $exe) -ine $supportedExeHashes[$packageName] -or
         -not @(Get-StartApps | Where-Object AppID -eq $appId).Count) {
         if ($receipt) { $receipt.Outcome = 'executable-or-app-registration-mismatch' }
         Write-Host 'Original executable or app registration did not match. No activation attempted.'
@@ -375,9 +590,63 @@ namespace CodexWallpaperP0b {
 }
 '@
 
+    if ($recoverableRoot) {
+        $root = $recoverableRoot.Root
+        $port = [int]$recoverableRoot.Port
+        $rootIdentity = '{0}:{1:o}' -f $root.ProcessId, $root.CreationDate
+        $clock = [Diagnostics.Stopwatch]::StartNew()
+        $observation = @{ ExpectedExecutable = $exe; Timeline = [Collections.Generic.List[object]]::new() }
+        $receipt = [ordered]@{
+            Started = [DateTimeOffset]::Now.ToString('o')
+            Package = $packageName
+            Port = $port
+            Outcome = 'recovery-attach-started'
+            Mode = 'failed-launch-recovery'
+            LoginAndChat = 'user-verification-required'
+            ActivationPid = $root.ProcessId
+            MainPid = $root.ProcessId
+            MainCreated = $root.CreationDate.ToString('o')
+            NativeProfile = Test-DailyProfile $root @(Get-CodexProcesses)
+            RecoveryReceipt = $recoverableRoot.Receipt
+        }
+        Start-WallpaperSupervisor $node $PSScriptRoot $port $clock $receipt {
+            $afterProcesses = @(Get-CodexProcesses)
+            $after = @(Get-CodexRoots $afterProcesses)
+            if ($after.Count -ne 1 -or
+                ('{0}:{1:o}' -f $after[0].ProcessId, $after[0].CreationDate) -ne $rootIdentity -or
+                $after[0].ExecutablePath -ine $exe -or
+                [CodexWallpaperP0b.Native]::PackageName($after[0].ProcessId) -ne $packageName) {
+                return 'main-process-changed'
+            }
+            if ((Test-DailyProfile $after[0] $afterProcesses) -ne 'matches-daily-path') { return 'profile-changed' }
+            if (-not (Test-LoopbackOwner $port $root.ProcessId)) { return 'listener-changed' }
+        }
+        if ($receipt.Outcome -eq 'wallpaper-ready') {
+            Save-DedicatedSession ([ordered]@{
+                MainPid = $root.ProcessId
+                MainCreated = $root.CreationDate.ToString('o')
+                Port = $port
+                Passed = [DateTimeOffset]::Now.ToString('o')
+            }) $stateFolder
+            $exitCode = 0
+            Write-Host 'Recovered the matching failed dedicated launch and attached the wallpaper host.'
+        } else {
+            $exitCode = 2
+            Write-Host "Outcome: $($receipt.Outcome)"
+        }
+        exit $exitCode
+    }
+
     $candidate = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
     $candidate.Start()
     try { $port = $candidate.LocalEndpoint.Port } finally { $candidate.Stop() }
+    $showStartupPreview = $false
+    if ($env:CODEX_WALLPAPER_DESKTOP_HANDSHAKE -ceq '1') {
+        # The desktop process acknowledges the first painted wallpaper frame before native activation.
+        $loadingIcon = Join-Path $pkg[0].InstallLocation 'assets\Square44x44Logo.targetsize-80_altform-unplated.png'
+        [Console]::WriteLine("CodexWallpaper:preview:$loadingIcon")
+        $showStartupPreview = [Console]::ReadLine() -ceq 'shown'
+    }
     if (@(Get-CodexRoots @(Get-CodexProcesses)).Count -ne 0) {
         if ($receipt) { $receipt.Outcome = 'main-process-appeared-during-preparation' }
         Write-Host 'Codex appeared during preparation. No activation attempted.'
@@ -392,6 +661,10 @@ namespace CodexWallpaperP0b {
     $beforeLaunch = Get-Date
     $receipt.ActivationPid = [CodexWallpaperP0b.Native]::Activate($appId,
         "--remote-debugging-address=127.0.0.1 --remote-debugging-port=$port")
+    if ($showStartupPreview) {
+        $receipt.StartupPreview = 'shown'
+        [Console]::WriteLine('CodexWallpaper:activated')
+    }
 
     $clock = [Diagnostics.Stopwatch]::StartNew()
     $rootIdentity = $null
@@ -429,33 +702,23 @@ namespace CodexWallpaperP0b {
         if (-not $receipt.PortFlagObserved -or $receipt.NativeProfile -ne 'matches-daily-path') {
             Start-Sleep -Milliseconds 300; continue
         }
-        $reply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'read-only-probe.mjs') $port
-        $probeExit = $LASTEXITCODE
-        if ($probeExit -eq 2) { Start-Sleep -Milliseconds 300; continue }
-        if ($probeExit -ne 0) { $receipt.Outcome = 'probe-rejected'; break }
-        $afterSample = Get-StartupRootState @(Get-CodexProcesses) $observation $clock.ElapsedMilliseconds
-        if ($afterSample.Outcome -eq 'multiple-main-processes') { $receipt.Outcome = $afterSample.Outcome; break }
-        if ($afterSample.Outcome -eq 'ambiguous') { Start-Sleep -Milliseconds 300; continue }
-        $after = $afterSample.Roots
-        if ($after.Count -ne 1 -or ('{0}:{1:o}' -f $after[0].ProcessId, $after[0].CreationDate) -ne $rootIdentity) {
-            $receipt.Outcome = 'main-process-changed'; break
-        }
-        if (-not (Test-LoopbackOwner $port $root.ProcessId)) {
-            $receipt.Outcome = 'listener-changed'; break
-        }
-        $receipt.Probe = $reply | ConvertFrom-Json
-        $receipt.Outcome = 'read-only-probe-passed'
-        $wallpaperReply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'static-background.mjs') $port
-        $wallpaperExit = $LASTEXITCODE
-        try {
-            $receipt.Wallpaper = $wallpaperReply | ConvertFrom-Json
-        } catch {
-            $receipt.Wallpaper = [pscustomobject]@{ state = 'failed'; error = 'invalid-wallpaper-response' }
-        }
-        if ($wallpaperExit -ne 0 -or $receipt.Wallpaper.state -notin @('enabled', 'disabled')) {
-            $receipt.Outcome = 'wallpaper-injection-failed'
-            break
-        }
+        Start-WallpaperSupervisor $node $PSScriptRoot $port $clock $receipt {
+            do {
+                $afterProcesses = @(Get-CodexProcesses)
+                $afterSample = Get-StartupRootState $afterProcesses $observation $clock.ElapsedMilliseconds
+                if ($afterSample.Outcome -eq 'multiple-main-processes') { return $afterSample.Outcome }
+                if ($afterSample.Outcome -eq 'ambiguous') { Start-Sleep -Milliseconds 300 }
+            } while ($afterSample.Outcome -eq 'ambiguous' -and $clock.Elapsed.TotalSeconds -lt 25)
+            if ($clock.Elapsed.TotalSeconds -ge 25) { return 'supervisor-startup-timeout' }
+            $after = $afterSample.Roots
+            if ($after.Count -ne 1 -or ('{0}:{1:o}' -f $after[0].ProcessId, $after[0].CreationDate) -ne $rootIdentity -or
+                $after[0].ExecutablePath -ine $exe -or [CodexWallpaperP0b.Native]::PackageName($root.ProcessId) -ne $packageName) {
+                return 'main-process-changed'
+            }
+            if ((Test-DailyProfile $after[0] $afterProcesses) -ne 'matches-daily-path') { return 'profile-changed' }
+            if (-not (Test-LoopbackOwner $port $root.ProcessId)) { return 'listener-changed' }
+        } $showStartupPreview
+        if ($receipt.Outcome -ne 'wallpaper-ready') { break }
         $dedicatedSession = [ordered]@{
             MainPid = $root.ProcessId
             MainCreated = $root.CreationDate.ToString('o')
@@ -475,7 +738,18 @@ namespace CodexWallpaperP0b {
     Write-Host 'Verify the account and an existing chat yourself. If you see a login screen, do not sign in for this test.'
     Write-Host 'To remove the debug listener, quit this Codex normally, then use the original entry.'
 } catch {
-    if ($receipt) { $receipt.Outcome = 'launch-or-check-error' }
+    if ($receipt) {
+        $receipt.Outcome = 'launch-or-check-error'
+        $receipt.ErrorType = $_.Exception.GetType().FullName
+        $receipt.ErrorMessage = $_.Exception.Message
+        if ($_.Exception.PSObject.Properties.Name -contains 'CommandName') {
+            $receipt.ErrorCommand = $_.Exception.CommandName
+        }
+        if ($_.InvocationInfo) {
+            $receipt.ErrorLine = $_.InvocationInfo.ScriptLineNumber
+            $receipt.ErrorStatement = $_.InvocationInfo.Line.Trim()
+        }
+    }
     Write-Host "Stopped: $($_.Exception.GetType().Name). No retry or restart."
 } finally {
     if ($locked) { $mutex.ReleaseMutex() }
