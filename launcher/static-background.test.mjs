@@ -557,7 +557,7 @@ test(
 );
 
 test(
-  "startup leaves an existing mismatched runtime in place",
+  "startup leaves a mismatched wallpaper runtime in place and tells the user to reopen Codex",
   { timeout: 8000 },
   async (t) => {
     const actions = [];
@@ -575,27 +575,14 @@ test(
     const cdp = await startExactCdpFixture(t, (expression) =>
       Promise.resolve(runInNewContext(expression, context))
     );
-    const child = spawn(
-      process.execPath,
-      ["launcher/startup-supervisor.mjs", String(cdp.port)],
-      {
-        stdio: ["pipe", "pipe", "ignore"],
-        windowsHide: true,
-      }
+    const receipt = await runStartupHandoff(t, cdp);
+    assert.equal(receipt.TargetVerified, true);
+    assert.equal(receipt.Outcome, "runtime-version-mismatch");
+    assert.match(
+      receipt.LauncherMessages.join("\n"),
+      /Fully quit Codex, then reopen it with the dedicated wallpaper launcher/
     );
-    t.after(() => child.kill());
-    const done = once(child, "exit");
-    const output = createInterface({ input: child.stdout });
-    const [first] = await once(output, "line");
-    const verified = JSON.parse(first);
-    assert.equal(verified.state, "verified");
-    const failure = once(output, "line");
-    child.stdin.write("attach " + verified.verification + "\n");
-    assert.deepEqual(JSON.parse((await failure)[0]), {
-      state: "failed",
-      error: "runtime-not-ready",
-    });
-    assert.deepEqual(await done, [1, null]);
+    assert.equal(cdp.hostConnections, 0);
     assert.deepEqual(actions, []);
     assert.equal(context.__codexWallpaperApi, existing);
     assert.equal(context.__codexWallpaperStartupPid, undefined);
@@ -764,7 +751,8 @@ async function runStartupHandoff(
     $receipt.MainCreated = (Get-CimInstance Win32_Process -Filter 'ProcessId=${listenerOwner}').CreationDate.ToString('o')
     $script:wallpaperRecheckCount = 0
     $stateFolder = ${previewFolder ? psLiteral(previewFolder) : "$null"}
-    Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"}
+    $messages = @(Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"} 6>&1 | ForEach-Object { $_.ToString() })
+    if ($messages.Count) { $receipt.LauncherMessages = $messages }
     $receipt.TargetRecheckCount = $script:wallpaperRecheckCount
     $receipt | ConvertTo-Json -Depth 6 -Compress
   `;
@@ -3000,6 +2988,119 @@ test("reenabling during a video transfer discards the old stream and accepts its
     player: true,
     staged: 0,
   });
+});
+
+test("a failed local import reports the error and leaves the active wallpaper and library intact", async (t) => {
+  const fixture = await startHtmlFixture(`<!doctype html><html><body>
+    <div data-app-shell-active-page="true">
+      <main data-app-shell-main-surface>
+        <textarea data-composer-surface-variant="default"></textarea>
+      </main>
+    </div>
+  </body></html>`);
+  const { port, options } = await startRuntimeFixture(
+    t,
+    { version: 1, library: [] },
+    fixture
+  );
+  const evaluate = (expression) => evaluateInPage(port, expression, options);
+  await evaluate(runtimeSource(options.payload, true, true));
+  const image = `document.querySelector("#${rootId} .media:not(.staged) img")`;
+  const status = `document.querySelector("#${controlRootId} .runtime-status")`;
+  await waitForCondition(
+    () => evaluate(`Boolean(${status})`),
+    3000,
+    "wallpaper settings were not mounted"
+  );
+  await evaluate(`(() => {
+    globalThis.fixtureOpen = indexedDB.open;
+    indexedDB.open = () => {
+      throw new DOMException("Database access denied", "SecurityError");
+    };
+    ${toggleSettings};
+    globalThis.chooseFixtureImage = (name) => {
+      const input = document.querySelector("#${controlRootId} .import-row input");
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(
+        ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+        name,
+        { type: "image/svg+xml" }
+      ));
+      input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+  })()`);
+  await evaluate('chooseFixtureImage("Database unavailable.svg")');
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
+    2000,
+    "a database-open failure did not report a failure in wallpaper settings"
+  );
+  await evaluate(`(() => {
+    indexedDB.open = fixtureOpen;
+    delete globalThis.fixtureOpen;
+    chooseFixtureImage("Existing wallpaper.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${image}?.naturalWidth > 0`),
+    3000,
+    "the initial import did not become visible"
+  );
+  const saved = await evaluate(
+    'localStorage.getItem("codex-wallpaper-p1-config")'
+  );
+  const source = await evaluate(`${image}.src`);
+  await evaluate(`(() => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (item) {
+      const request = put.call(this, item);
+      if (item.title === "Aborted.svg") this.transaction.abort();
+      return request;
+    };
+    chooseFixtureImage("Aborted.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
+    2000,
+    "an aborted import did not report a failure in wallpaper settings"
+  );
+  assert.deepEqual(
+    await evaluate(`(() => ({
+      saved: localStorage.getItem("codex-wallpaper-p1-config"),
+      source: ${image}.src,
+      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
+        .map((title) => title.textContent)
+    }))()`),
+    { saved, source, titles: ["Existing wallpaper.svg"] }
+  );
+  await evaluate(`(() => {
+    const get = IDBObjectStore.prototype.get;
+    const activeId = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).active.id;
+    IDBObjectStore.prototype.get = function (id) {
+      if (id !== activeId)
+        throw new DOMException("Cannot read the newly saved file", "UnknownError");
+      return get.call(this, id);
+    };
+    chooseFixtureImage("Saved but unreadable.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材已保存，但无法打开")`),
+    2000,
+    "a saved file that failed to open did not report a failure in wallpaper settings"
+  );
+  assert.deepEqual(
+    await evaluate(`(() => ({
+      saved: localStorage.getItem("codex-wallpaper-p1-config"),
+      source: ${image}.src,
+      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
+        .map((title) => title.textContent)
+    }))()`),
+    {
+      saved,
+      source,
+      titles: ["Saved but unreadable.svg", "Existing wallpaper.svg"],
+    }
+  );
 });
 
 test("failed first video shows its preview instead of a blank background", async (t) => {

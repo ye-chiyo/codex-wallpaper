@@ -639,8 +639,8 @@ function createCodexWallpaperRuntime(
   function openDatabase() {
     if (database) return Promise.resolve(database);
     if (openingDatabase) return openingDatabase;
+    const request = indexedDB.open(dbName, 1);
     const opening = new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 1);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(dbStore))
@@ -2808,33 +2808,52 @@ function createCodexWallpaperRuntime(
   }
 
   async function importFiles(files) {
-    const db = await openDatabase();
-    const transaction = db.transaction(dbStore, "readwrite");
-    const store = transaction.objectStore(dbStore);
-    let first = null;
-    for (const file of files) {
-      const type = mediaType(file);
-      if (!type) continue;
-      const id = `import-${Date.now()}-${crypto.randomUUID()}`;
-      first ??= id;
-      store.put({
-        id,
-        title: file.name,
-        type,
-        blob: file,
-        createdAt: Date.now(),
+    const entries = files.filter(mediaType).map((file) => ({
+      id: `import-${Date.now()}-${crypto.randomUUID()}`,
+      title: file.name,
+      type: mediaType(file),
+      blob: file,
+      createdAt: Date.now(),
+    }));
+    if (!entries.length) return;
+    try {
+      const db = await openDatabase();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(dbStore, "readwrite");
+        transaction.oncomplete = resolve;
+        transaction.onabort = () => reject(transaction.error);
+        try {
+          const store = transaction.objectStore(dbStore);
+          for (const entry of entries) store.put(entry);
+        } catch (error) {
+          transaction.abort();
+          reject(error);
+        }
       });
+    } catch {
+      setStatus("素材导入失败，未保存所选素材，请重试");
+      return;
     }
-    await new Promise((resolve, reject) => {
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-    });
-    await loadImported();
-    if (first) {
-      config.active = { kind: "imported", id: first };
-      saveConfig();
+    try {
+      await loadImported();
+    } catch {
+      setStatus("素材已保存，但无法刷新壁纸库");
+      return;
+    }
+    const previous = config.active;
+    const selection = { kind: "imported", id: entries[0].id };
+    config.active = selection;
+    try {
       await applyActive();
+    } catch {
+      if (config.active === selection) {
+        config.active = previous;
+        saveConfig();
+        recoverFailedMedia("素材已保存，但无法打开");
+        scheduleRotation();
+      }
     }
+    if (config.active === selection) saveConfig();
     renderPanel();
   }
 
@@ -3348,7 +3367,11 @@ function createCodexWallpaperRuntime(
     fileInput.type = "file";
     fileInput.accept = "image/*,video/*";
     fileInput.multiple = true;
-    fileInput.onchange = () => importFiles(fileInput.files);
+    fileInput.onchange = () => {
+      const files = Array.from(fileInput.files);
+      fileInput.value = "";
+      return importFiles(files);
+    };
     importRow.append(fileInput);
     filters.append(searchLabel, typeLabel, favoritesLabel, importRow);
 

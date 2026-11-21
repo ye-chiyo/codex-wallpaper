@@ -2,9 +2,11 @@
 
 [简体中文](README.md) | [English](README.en.md) | [日本語](README.ja.md)
 
-> **Project status: provisional release candidate.** This snapshot contains a runnable candidate implementation and some offline verification, but real end-to-end Codex acceptance, login/restart, resource budgets, and long-term stability remain pending. This README describes the candidate delivery scope, not an acceptance result.
+> **Project status: Windows development candidate.** Automated fixtures cover launch checks, media import, disable, and cleanup. An earlier release snapshot on x64 Codex `26.1117.3838.0` reached a dedicated cold start, restored settings, and returned to the official entry after cleanup. This update still needs desktop retesting. Login startup, multiple main windows, and long-running stability remain pending. [Candidate acceptance record](docs/planning/codex-wallpaper-candidate.md)
 >
 > **Unofficial tool:** This is not an official OpenAI feature and does not imply OpenAI endorsement of compatibility or safety. A dedicated launcher verifies the local Codex installation, then adds local wallpaper and UI adaptation to the main window.
+>
+> Reference material: [Architecture](docs/architecture.md) · [Windows development candidate release notes](docs/releases/codex-wallpaper-windows-candidate.md)
 
 ## Overview
 
@@ -12,95 +14,97 @@ Codex Wallpaper is for the Windows Codex desktop app. It displays local images, 
 
 The project does not modify the Codex package or replace account and chat data. The baseline entry point is `launcher/Codex-Wallpaper.cmd`; testers may optionally build the C# desktop wrapper described in [launcher/README.md](launcher/README.md). The original Codex entry cannot currently attach the wallpaper layer automatically, and this project does not replace or modify existing Codex, desktop, or taskbar shortcuts. The candidate checks the exact Codex package version, app registration, and original executable hash, and leaves the original UI in place when they do not match.
 
+Project source is public for reading. See [Upstream Sources and Licensing](#upstream-sources-and-licensing).
+
 ## Features and Status
 
-Status definitions:
+The table describes the implementation, the recorded evidence, and the checks still needed in the Codex desktop app.
 
-- **Implemented candidate**: the path exists in the published source, but this is not proof of complete acceptance in the real host.
-- **Direct playback / native rendering**: the media is displayed by browser media elements or WebWallGL rather than replaced by a static thumbnail.
-- **Preview fallback**: when direct playback is unavailable, the author-provided Wallpaper Engine preview is shown.
-- **Not supported**: the current candidate has no implementation for this capability.
-- **Not verified**: code may have a related path, but there is not enough live evidence to promise that it works.
-
-| Capability                                  | Candidate behavior                                                                                                      | Status                               | Known boundary                                                                                          |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Built-in background                         | Displays a gradient without requiring external media                                                                    | Implemented candidate                | Default background and failure fallback only                                                            |
-| Imported local images                       | Imports through the page file picker, stores in browser IndexedDB, and displays directly                                | Direct playback                      | Full live interaction and large-image performance not yet accepted                                      |
-| Imported local videos                       | Muted loop playback, adjustable volume, native playback, and pause while the page is hidden by default                  | Direct playback                      | Audio playback, sleep/resume, and extended playback are unverified                                      |
-| Wallpaper Engine images/videos              | Scans locally downloaded projects and reads the selected asset on demand through a hidden helper process                | Implemented candidate                | Video limit is 1 GiB; other assets and compatible fallback paths are limited to 512 MiB                 |
-| Wallpaper Engine scenes                     | Renders through WebWallGL within the size/transfer limits; uses the author preview on failure or unsupported input      | Native render or preview fallback    | Real Workshop sample coverage and long-running behavior unverified                                      |
-| Wallpaper Engine offline Web                | Reads local HTML with no scripts or external resources and displays it in a strict `srcdoc` sandbox                     | Offline sandbox or preview fallback  | Falls back when HTML exceeds 512 KiB or contains `<script>`; scripts and external links are unavailable |
-| Online Web wallpapers                       | Does not load remote pages                                                                                              | Not supported                        | No proven isolation channel for networked content                                                       |
-| UI adaptation                               | Adds translucent/readability surfaces to chat, tool cards, code/diff views, sidebars, settings, composer, and overlays  | Implemented candidate                | Complete live UI matrix and cross-DPI acceptance are pending                                            |
-| New settings UI                             | Library, playback/performance, and appearance/preset pages; includes rotation, fit controls, and settings import/export | Implemented candidate                | Full live interaction, window matrix, and persistence acceptance are pending                            |
-| Multiple windows                            | Synchronizes wallpaper/settings between same-origin windows; each window decides visibility and pause independently     | Implemented candidate                | 30–60 minute resource comparison and all window types unverified                                        |
-| Keyboard shortcuts                          | `Alt+Shift+S` opens or closes settings; `Alt+Shift+W` disables or restores the wallpaper                                | Implemented candidate                | Page shortcuts, not system-wide global hotkeys                                                          |
-| Windows login startup                       | Can create, inspect, and remove one per-user Startup shortcut                                                           | Code implemented, acceptance pending | Real login, sign-out, and restart acceptance is incomplete                                              |
-| Automatic use from the original Codex entry | The original entry remains unchanged                                                                                    | Not supported                        | The dedicated launcher must be used                                                                     |
+| Capability                         | Implementation                                                                                                                                          | Evidence and limits                                                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Built-in background                | Displays the built-in gradient without imported media                                                                                                   | Automated fixtures cover startup and restore                                                                                                                |
+| Local image and video imports      | Select files in the wallpaper library and display them after saving to IndexedDB. Video loops muted by default                                          | Fixtures cover imports, switching, preservation on failure, and cleanup. Import and reopen in the real Codex app remain pending                             |
+| Wallpaper Engine images and videos | Scans locally downloaded projects and reads the selected asset on demand through a hidden host                                                          | Video main assets up to 1 GiB. Other assets and transfer fallbacks up to 512 MiB. A front-`moov` video has live switching measurements                      |
+| Wallpaper Engine scenes            | Renders through WebWallGL and tries the author preview if rendering fails or the input is unsupported                                                   | Fixture coverage is available. Workshop compatibility and long-running stability remain pending                                                             |
+| Wallpaper Engine offline Web       | Displays local HTML in a `srcdoc` sandbox. External resources are blocked, so pages that depend on them may display incompletely                        | Tries the author preview for unreadable HTML, HTML larger than 512 KiB, or HTML with `<script>`. Online Web is unsupported                                  |
+| Interface and settings             | Adapts chat, tool cards, code/diffs, sidebars, settings, composer, and overlays. Includes Library, Playback and Performance, and Appearance and Presets | Desktop evidence covers persistence, disable, and restore. Full interaction, theme, and DPI coverage is pending                                             |
+| Same-origin settings sync          | Synchronizes settings between same-origin pages. Each page checks visibility independently                                                              | Browser fixture passed. Behavior and resource use across multiple real Codex main windows are pending. Startup still requires one verifiable main interface |
+| Shortcuts                          | `Alt+Shift+S` opens or closes settings and `Alt+Shift+W` disables or restores the wallpaper                                                             | Browser fixtures and earlier desktop checks cover restore. Shortcuts require window focus                                                                   |
+| Windows login startup (optional)   | Can create, inspect, and remove one per-user Startup shortcut                                                                                           | A temporary-directory fixture passed. Real sign-in, sign-out, restart, and repeated triggers remain pending                                                 |
 
 ## Requirements
 
-| Item              | Requirement                                                                                                                                                                                                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Operating system  | Windows; the current package is x64 MSIX. The repository does not record a confirmed minimum Windows version, so support for every edition/build should not be claimed                                                                                                                                                                            |
-| Codex             | One of two exact x64 MSIX builds: `OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0` (EXE hash `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6`) or `OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0` (`AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514`); both must match AUMID `OpenAI.Codex_2p2nqsd0c76g0!App` |
-| PowerShell        | Windows PowerShell 5.1; the launcher is run with `powershell.exe -NoProfile -STA`                                                                                                                                                                                                                                                                 |
-| Node.js           | Node.js 24 or newer with built-in WebSocket and `--no-use-env-proxy` support                                                                                                                                                                                                                                                                      |
-| Package manager   | pnpm `11.25.0`, as recorded in the `packageManager` field of `package.json`                                                                                                                                                                                                                                                                       |
-| Optional          | A local Steam and Wallpaper Engine installation. Without them, the built-in background and imported media still work, but the WE library is unavailable                                                                                                                                                                                           |
-| Repository access | The repository is public; no additional GitHub authorization is required to read it                                                                                                                                                                                                                                                               |
+| Item       | Requirement                                                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| System     | Windows with one of the x64 MSIX packages below. The minimum Windows version is still unverified                             |
+| PowerShell | Windows PowerShell 5.1, available as `powershell.exe`                                                                        |
+| Tools      | Git, Node.js `24.16.0`, and pnpm `11.25.0`. The candidate was tested with these Node.js and pnpm versions                    |
+| Optional   | Steam and Wallpaper Engine for the local Wallpaper Engine library. Built-in backgrounds and manual imports work without them |
 
-The runtime dependency is `webwallgl@3.0.0`. Development dependencies are `husky`, `lint-staged`, and `prettier`. There is no business-code build step: install dependencies and run the launcher.
+### Codex compatibility
+
+| `PackageFullName`                                | Testing in the Codex desktop app                                                                                       |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0` | A previous release snapshot reached `wallpaper-ready`. This update is pending desktop retesting                        |
+| `OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0` | An earlier candidate reached `wallpaper-ready`. This release candidate has preflight fixture coverage for this version |
+
+The launcher checks the full package name, app registration `OpenAI.Codex_2p2nqsd0c76g0!App`, and SHA-256 of the original EXE in the install directory. It also verifies a single Codex main process and the main interface during startup. See the [launcher source](launcher/Start-CodexWallpaper.ps1) for exact hashes and the [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) for desktop and fixture results.
 
 ## Quick Start
 
-Run these commands from the repository root. The examples use relative or generic paths rather than a personal absolute path.
+Follow these steps in PowerShell.
 
-1. Clone the repository and install dependencies. Candidate testers may track the release-review branch after cloning:
+1. **Get the source.** Clone the repository on GitHub’s default branch and enter the repository root.
 
-```powershell
-git clone https://github.com/ye-chiyo/codex-wallpaper.git
-Set-Location .\codex-wallpaper
-# Optional for candidate testers: git switch --track origin/codex/release-review
-pnpm install --frozen-lockfile
-```
+   ```powershell
+   git clone https://github.com/ye-chiyo/codex-wallpaper.git
+   Set-Location .\codex-wallpaper
+   ```
 
-2. Inspect the installed Codex package version:
+2. **Check your installed Codex package.** Install the dependencies only if the command returns exactly one row whose `PackageFullName` matches a row in the compatibility table. If there are zero or multiple rows, or the package name differs, use the official Codex entry in the Windows Start menu until the wallpaper project supports your package.
 
-```powershell
-Get-AppxPackage -Name OpenAI.Codex | Select-Object PackageFullName, Version
-```
+   ```powershell
+   Get-AppxPackage -Name OpenAI.Codex | Select-Object PackageFullName, Version
+   ```
 
-The launcher accepts the two verified packages `26.1111.2228.0` and `26.1117.3838.0`. After upgrading Codex, use the original entry first. If the package, app registration, or executable hash does not match, the dedicated launcher stops before attaching and leaves the original UI unchanged.
+3. **Install the tools and locked dependencies.** Install the Windows x64 MSI from the [official Node.js archive](https://nodejs.org/en/download/archive/v24.16.0), then open a new PowerShell window and return to the repository root. Use the npm bundled with Node.js to install the pinned version of [pnpm](https://pnpm.io/installation#using-npm). If pnpm `11.25.0` is already installed, skip the global install. Confirm `node --version` reports `v24.16.0` and `pnpm.cmd --version` reports `11.25.0`.
 
-3. **Quit Codex completely.** Closing the window or minimizing it is not enough. After confirming that no Codex main process remains, run the dedicated entry:
+   ```powershell
+   node --version
+   npm.cmd install --global pnpm@11.25.0
+   pnpm.cmd --version
+   ```
 
-```powershell
-.\launcher\Codex-Wallpaper.cmd
-```
+   Once the versions match, install the locked dependencies from the repository root.
 
-`Codex-Wallpaper.cmd` is the baseline launch route. The optional C# desktop wrapper only provides a startup screen and hidden-console launch; it does not change the production app, package, or existing shortcuts. Build and usage instructions are maintained in [launcher/README.md](launcher/README.md).
+   ```powershell
+   pnpm.cmd install --frozen-lockfile
+   ```
 
-4. A successful first launch normally prints:
+4. **Initialize Codex from its official entry first.** Open Codex from the Windows Start menu and sign in if prompted. Wait for the main interface and confirm you can access your account and an existing chat. For a new account, confirm you can open a new chat. Then quit Codex normally and wait for the main process to exit. Codex may keep running in the background after closing or minimizing its window.
 
-```text
-Outcome: wallpaper-ready
-Wallpaper: enabled
-```
+5. **Start the wallpaper in the main interface.** Run the dedicated CMD from the repository root.
 
-If the wallpaper was previously disabled in the page, `Wallpaper` may be `disabled`. `Outcome: wallpaper-ready` means the dedicated session reached the host-ready handshake after the coded launch and main-interface checks. It still does not replace real acceptance of account, chat, UI, media, restart, or long-term stability.
+   ```powershell
+   .\launcher\Codex-Wallpaper.cmd
+   ```
 
-5. Confirm that the original account and an existing chat are available, and that chat, tool cards, code/diff, composer, and both sidebars remain readable and interactive. If a login screen appears, do not sign in inside this verification instance; quit it and check the original entry.
+   ```text
+   Outcome: wallpaper-ready
+   Wallpaper: enabled
+   ```
 
-6. To inspect the current instance without starting, attaching, or injecting, run:
+   `Outcome: wallpaper-ready` means the launcher verified the main interface and the wallpaper host is ready. With `Wallpaper: enabled`, the wallpaper should be visible in the main interface. If a previous session saved a disabled state, you may see `Wallpaper: disabled` and the original interface. Press `Alt+Shift+W` in the Codex window to enable the wallpaper again. Confirm that you can open a chat and use the composer. If the dedicated session shows a sign-in screen, quit it and complete setup from the official entry. If the launcher stops early, use the console message to find the relevant step in [Troubleshooting](#troubleshooting).
+
+To check whether Codex has fully exited, run this read-only command from the repository root:
 
 ```powershell
 powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 ```
 
-An ordinary instance started from the original entry is expected to show `DebugFlag: false` and `ListeningPorts: []`. This command does not modify the running instance.
+For a compatible package, `"Running": []` means the launcher found no Codex main process. An ordinary instance launched from the official entry is expected to show `DebugFlag: false` and `ListeningPorts: []`.
 
-For development, `pnpm test` runs the Node tests. Automated tests and headless fixtures are not a substitute for acceptance in the real Codex app.
+Run `pnpm.cmd test` for the Node.js tests. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated fixture and desktop results separately.
 
 ## Everyday Use
 
@@ -127,55 +131,47 @@ Basic workflow:
 1. Press `Alt+Shift+S`, open `壁纸设置`, then choose the built-in background, imported media, or a locally installed Wallpaper Engine project in `壁纸库`.
 2. Click `使用` to switch to the selected wallpaper. If an asset is missing or unreadable, the page skips it or keeps the current image.
 3. Use the star button for favorites and `加入轮播` / `移除轮播` for the rotation playlist. Rotation needs at least two items and is disabled at 0 minutes.
-4. Use `播放与性能` for performance profile, Scene cap, mute, volume, and rotation. Use `外观与预设` for wallpaper visuals, interface readability, section overrides, presets, and settings import/export. Settings synchronize between same-origin windows.
+4. Use `播放与性能` for performance profile, Scene cap, mute, volume, and rotation. Use `外观与预设` for wallpaper visuals, interface readability, section overrides, presets, and settings import/export. Settings synchronize between same-origin pages. Wallpaper behavior across multiple real Codex main windows still needs verification.
 5. Press `Alt+Shift+W` to remove the background and settings panel; press it again to restore the last enabled wallpaper and settings.
 
 Appearance settings:
 
-| Setting           | Range and default        | Description                                                       |
-| ----------------- | ------------------------ | ----------------------------------------------------------------- |
-| Dim               | 0–70%, default 18%       | Darkens the background to improve text readability                |
-| Blur              | 0–24 px, default 0       | Blurs the media layer                                             |
-| Opacity           | 20–100%, default 100%    | Controls media-layer transparency                                 |
-| Frame rate        | 15 or 30 FPS, default 30 | Upper frame rate for scenes and compatibility drawing             |
-| Volume            | 0–100%, default 0        | 0 is muted; audible video and asset audio still need live testing |
-| Rotation          | 0–120 minutes, default 0 | Requires at least two items and a value greater than 0            |
-| Interface surface | 20–100%, default 72%     | Adjusts the opacity of readable Codex surfaces                    |
-| Interface blur    | 0–24 px, default 0       | Blurs the readable interface layer                                |
+| Setting           | Range and default                                              | Description                                                       |
+| ----------------- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Dim               | 0–70%, default 18%                                             | Darkens the background to improve text readability                |
+| Blur              | 0–24 px, default 0                                             | Blurs the media layer                                             |
+| Opacity           | 20–100%, default 100%                                          | Controls media-layer transparency                                 |
+| Frame rate        | Performance 15 FPS, Balanced 30 FPS (default), Custom 1–30 FPS | Scene rendering cap. Video plays at its source cadence            |
+| Volume            | 0–100%, default 0                                              | 0 is muted; audible video and asset audio still need live testing |
+| Rotation          | 0–120 minutes, default 0                                       | Requires at least two items and a value greater than 0            |
+| Interface surface | 20–100%, default 72%                                           | Adjusts the opacity of readable Codex surfaces                    |
+| Interface blur    | 0–24 px, default 0                                             | Blurs the readable interface layer                                |
 
-By default, video and scene playback pauses when the page reports that it is hidden and resumes when it becomes visible. Visibility is evaluated per window, while same-origin settings are shared.
+Video and Scene pause by default when their own page reports that it is hidden, then resume when visible. The contents of an offline Web sandbox control its own frame rate and pause behavior.
 
-## Windows Login Startup (Optional, Pending Acceptance)
+## Launcher Options and Diagnostics
 
-The published snapshot does contain optional login-startup commands. They operate only on `Codex Wallpaper.lnk` in the current user’s Startup folder. They do not register a Windows service, scheduled task, or system-wide startup item, and the shortcut starts the dedicated launcher with a hidden window. Existing Codex, desktop, and taskbar shortcuts are not changed.
-
-> **Acceptance status:** The release record says real login, sign-out, restart, and repeated-trigger acceptance has not been completed. Do not describe the feature as proven stable over time.
-
-```powershell
-# Enable or idempotently update the current-user login entry
-powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -EnableStartup
-
-# Inspect status; Status in the JSON output is enabled, stale, or disabled
-powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -StartupStatus
-
-# Remove login startup
-powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -DisableStartup
-```
-
-The login entry invokes the existing dedicated launcher with `-Launch -Unattended`. If a verifiable dedicated instance is already running, the launcher reuses it. A normal Codex instance, multiple main processes, or a missing matching receipt is not treated as a reusable dedicated instance. Unattended receipts are stored under `%LOCALAPPDATA%\CodexWallpaper\P0b`.
+The Chinese [launcher guide](launcher/README.md) links to the exact executable hashes and covers the optional GUI build, [login startup](launcher/README.md#windows-登录启动), and [detailed diagnostics](launcher/README.md#诊断与回执). The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated results, the snapshots tested in the desktop app, and remaining checks.
 
 ## Disable and Uninstall
 
-Choose the level you need. Do not delete Codex’s daily profile, login data, or chats in order to remove the wallpaper tool.
+### Upgrade the wallpaper tool
 
-1. **Disable the wallpaper temporarily:** press `Alt+Shift+W` while the dedicated Codex page has keyboard focus. Press the shortcut again to restore it. Disabling the page does not close the debug listener created by the dedicated launcher; that listener ends when the Codex instance exits normally.
-2. **Remove login startup:** run `-DisableStartup` and confirm that the reported status is `disabled`.
-3. **Clear this project’s page data:** press `Alt+Shift+S`, open `外观与预设` (Appearance and presets), then click `停用并清除本项目数据`, then `再次点击确认清除`. This deletes the page’s global configuration and imported media in IndexedDB and restores the built-in gradient. It does not delete the Codex daily profile, account, or chats.
-4. **Remove receipts and owned local files:** double-click `launcher\Reset-CodexWallpaper.cmd`. It removes only `%LOCALAPPDATA%\CodexWallpaper` and does not clear imported media in page IndexedDB, so complete step 3 first.
-5. **Return to the original entry:** fully quit the dedicated Codex instance and start Codex from its original entry. Neither the installer nor this project replaced that entry.
-6. **Remove the tool itself:** after the steps above, delete the local checkout of this repository. There is no system-level installer or separate automatic uninstaller to invoke.
+Quit the old dedicated Codex instance completely before updating the source. Recheck the Codex package, reinstall the locked dependencies, and run the updated CMD by following [Quick Start](#quick-start). A repeat launch reuses a verified dedicated instance. If an ordinary Codex instance is running, the launcher refuses to attach. If you see `Outcome: runtime-version-mismatch`, quit Codex completely and reopen it with the updated dedicated CMD. The launcher preserves the wallpaper runtime already mounted.
 
-Do not delete `%APPDATA%\Codex\web\Codex`, `%LOCALAPPDATA%\Packages\OpenAI.Codex_2p2nqsd0c76g0`, or other Codex data directories to “uninstall” the wallpaper. They do not belong to this project.
+### Disable temporarily
+
+Press `Alt+Shift+W` in the focused Codex window. Press it again to restore the previous wallpaper and settings. Disabling removes the wallpaper layer and player. The dedicated debug listener closes when Codex exits completely.
+
+### Clear data and return to the official entry
+
+1. **Clear page data first.** In the dedicated instance, press `Alt+Shift+S` and open `外观与预设` (Appearance and Presets). Click `停用并清除本项目数据`, then `再次点击确认清除`. This disables the wallpaper and clears the project’s page settings and IndexedDB imports. If you disabled the wallpaper temporarily, enable it again to open settings.
+2. **Remove login startup if enabled.** Run `-DisableStartup`, then use `-StartupStatus` to confirm `Status` is `disabled`. [Login startup commands](launcher/README.md#windows-登录启动)
+3. **Quit the dedicated Codex instance completely.** If needed, use the read-only command in Quick Start and wait for `"Running": []`.
+4. **Clear local receipts and caches.** After Codex exits, run `launcher\Reset-CodexWallpaper.cmd` to clean `%LOCALAPPDATA%\CodexWallpaper`.
+5. **Open Codex from the official entry.** Use the Windows Start menu and confirm that you can access your account and an existing chat. To remove the tool, you can delete the local checkout and any wallpaper shortcuts you created.
+
+Keep the Codex daily profile, account data, and chats. Page cleanup and local reset only target this project’s data.
 
 ## Troubleshooting
 
@@ -187,35 +183,28 @@ Confirm that Codex was completely quit, then run `launcher\Codex-Wallpaper.cmd` 
 
 The shortcuts are installed inside the page that runs the wallpaper and are not system-wide hotkeys. Click the dedicated Codex window to give the page keyboard focus, then try again. A disabled page has no settings panel; press `Alt+Shift+W` first. If they still fail, inspect `Outcome` and `Wallpaper.state` from the launcher.
 
+### The launcher reports a missing daily profile
+
+If the console says `Expected daily profile directory is missing`, use the official Codex entry in the Windows Start menu to complete step 4 of [Quick Start](#quick-start), then retry the dedicated CMD. If the same error persists, keep using the official entry. In unattended mode, the receipt records this failure as `daily-profile-missing`.
+
 ### The launcher reports a version or executable mismatch
 
-The launcher verifies the exact package, AppID, install path, executable SHA-256, and daily profile. If `Unsupported or ambiguous Codex package`, `Original executable or app registration did not match`, or `daily-profile-missing` appears after a Codex update, do not bypass the check. Use the original entry and wait for a release that targets the new version.
+- `Unsupported or ambiguous Codex package` (unattended receipt `unsupported-package`). Repeat step 2 of [Quick Start](#quick-start) and verify that exactly one x64 MSIX matches. If Codex updated to a version outside the table, keep using the official entry until the wallpaper project adds support for the new package.
+- `Original executable or app registration did not match` (unattended receipt `executable-or-app-registration-mismatch`). Even with a matching package name, the EXE’s SHA-256 or Windows app registration may differ. Check that Codex opens from the official entry. If it does and the dedicated entry still reports a mismatch, keep the message for troubleshooting.
+
+Both mismatches stop the launcher before it attaches the wallpaper. At this stage the dedicated CMD displays the message in the console. Keep the package, registration, and hash checks in place and use the official entry to open the original interface.
 
 ### A Wallpaper Engine asset will not play
 
-The candidate handles locally downloaded projects; it does not guarantee compatibility with the entire Wallpaper Engine Workshop. Video main assets are supported through the local File route up to 1 GiB; other assets and compatible fallback routes are limited to 512 MiB. Above those limits, unreadable assets, or an unavailable renderer may use the author preview. Offline Web falls back when HTML contains scripts, exceeds 512 KiB, or relies on external resources; online Web is not supported.
+The candidate handles locally downloaded projects. Video main assets are supported up to 1 GiB through the local File route. Other assets and transfer fallbacks are limited to 512 MiB. Offline Web tries the author preview for unreadable HTML, HTML above 512 KiB, or HTML containing `<script>`. External resources are blocked, so the page may show only local content.
 
 ### Switching causes a black frame, stall, or stale image
 
-Large scenes and videos are read on demand. Let the current switch finish before choosing another item; if needed, press `Alt+Shift+W` once to disable and restore. If the problem repeats, keep the time, asset type, and `Outcome` from the receipt. Do not attach chat text, account data, or an unreviewed full receipt.
+Large scenes and videos are read on demand. Let the current switch finish before choosing another item; if needed, press `Alt+Shift+W` to disable the wallpaper, then press it again to restore. If the problem repeats, keep the time, asset type, and `Outcome` from the receipt. Do not attach chat text, account data, or an unreviewed full receipt.
 
 ### A login screen appears or account state looks wrong
 
 Do not sign in inside the verification instance. Quit it completely and check the original Codex entry, including the original account and an existing chat. If the original entry is normal, use `Outcome` and `NativeProfile` from the receipt as diagnostics; do not copy or upload the profile.
-
-### Login startup does not work
-
-Run `-StartupStatus`. `stale` means the same-named shortcut points to an old path or arguments; run `-DisableStartup`, then `-EnableStartup`. Real sign-out/restart acceptance is still incomplete, so this result should not be used to claim that Codex login state or asset isolation has passed.
-
-### Required diagnostics
-
-```powershell
-powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
-Get-ChildItem "$env:LOCALAPPDATA\CodexWallpaper\P0b" -Filter *.json |
-  Select-Object Name, LastWriteTime
-```
-
-Receipts may contain metadata such as PIDs, local paths, and process timestamps. Review and redact them before sharing. Do not upload the Codex profile, credentials, or chat content.
 
 ## Project Layout
 
@@ -240,7 +229,7 @@ package.json
 pnpm-lock.yaml
 ```
 
-[launcher/README.md](launcher/README.md) contains the Chinese delivery/manual-acceptance procedure and the optional C# desktop launcher build instructions. [docs/planning/codex-wallpaper-candidate.md](docs/planning/codex-wallpaper-candidate.md) records the provisional release scope, offline evidence, and unfinished manual gates. Both documents are currently Chinese-only.
+The Chinese [launcher guide](launcher/README.md) documents launcher options and diagnostics. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) gives the evidence and pending checks.
 
 ## Known Limitations
 
@@ -257,5 +246,5 @@ pnpm-lock.yaml
 ## Upstream Sources and Licensing
 
 - Steam installation discovery and Wallpaper Engine project scanning reuse `steam-discovery.js` and `wallpaper-scan.js` from [`elysia395/dsh-wallpaper-engine`](https://github.com/elysia395/dsh-wallpaper-engine) at pinned revision `fd3e01fd11cd5ad83f46940ab4d61d971cfbcf91`. The two files are kept as unmodified copies under `launcher/vendor/dsh-wallpaper-engine/`, with the upstream MIT `LICENSE`. The DSH/Cordis host integration was not reused.
-- Scene rendering depends on [`webwallgl@3.0.0`](https://github.com/oneincase/webwallgl), licensed under MIT. See `launcher/vendor/THIRD_PARTY_NOTICES.md` for the complete third-party notice and `launcher/vendor/dsh-wallpaper-engine/UPSTREAM.md` for the pinned upstream information.
-- This repository currently has no root `LICENSE`, so the entire project must not be automatically described as MIT or any other open-source license. Third-party code is covered only by its respective notice; the rights for wallpapers, characters, fonts, and preview assets remain with their sources. This project does not grant rights to those assets.
+- Scene rendering depends on [`webwallgl@3.0.0`](https://github.com/oneincase/webwallgl), licensed under MIT. After dependency installation, see `node_modules/webwallgl/LICENSE` for the full text. See also the [third-party notices](launcher/vendor/THIRD_PARTY_NOTICES.md) and [pinned scanner revision](launcher/vendor/dsh-wallpaper-engine/UPSTREAM.md).
+- The project’s own source is public for reading and reference. The repository grants no general reuse license for that source. Contact the maintainers for permission to copy, adapt, or redistribute it. Upstream code follows its own licenses, and wallpapers, characters, fonts, and preview assets follow the terms set by their sources.
