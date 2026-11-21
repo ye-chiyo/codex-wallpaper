@@ -4970,8 +4970,21 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   });
   const evaluate = (expression) => evaluateInPage(port, expression, options);
   const click = async (selector) => {
-    await evaluate(
-      `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`
+    await waitForCondition(
+      () =>
+        evaluate(`(() => {
+          const control = document.querySelector(${JSON.stringify(selector)});
+          control?.scrollIntoView({ block: "center", inline: "nearest" });
+          const rect = control?.getBoundingClientRect();
+          if (!rect) return false;
+          const hit = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2
+          );
+          return Boolean(hit && (hit === control || control.contains(hit)));
+        })()`),
+      3000,
+      `click target did not become operable: ${selector}`
     );
     assert.equal(
       await clickAtElementCenter(port, options, selector),
@@ -7375,31 +7388,43 @@ test("static background is single, removable and persists disabled", async (t) =
     await evaluateInPage(
       port,
       `(async () => {
+        const waitFor = async (check, timeout = 2000) => {
+          const startedAt = performance.now();
+          while (performance.now() - startedAt < timeout) {
+            if (check()) return;
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          }
+          throw new Error("Timed out waiting for Scene state");
+        };
         const root = document.getElementById("${rootId}");
         const controls = document.getElementById("${controlRootId}");
         const sceneCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Scene"
         );
         sceneCard.querySelector(".card-actions button").click();
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await waitFor(() => typeof globalThis.__sceneResolve === "function");
         globalThis.__sceneResolve();
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await waitFor(() => globalThis.__sceneLoaded === true);
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "hidden"
         });
         document.dispatchEvent(new Event("visibilitychange"));
+        await waitFor(() => globalThis.__scenePaused === true);
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
+        await waitFor(() => globalThis.__sceneResumed === true);
         const fps = controls.querySelector("[data-setting='fps']");
         const volume = controls.querySelector("[data-setting='volume']");
         fps.value = "15";
         fps.dispatchEvent(new Event("input", { bubbles: true }));
+        await waitFor(() => globalThis.__sceneFps === 15);
         volume.value = "40";
         volume.dispatchEvent(new Event("input", { bubbles: true }));
+        await waitFor(() => globalThis.__sceneVolume === 0.4);
         const canvas = root.querySelector("[data-scene-canvas]");
         const layer = root.querySelector("[data-codex-wallpaper-layer]");
         return {
