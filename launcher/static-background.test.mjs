@@ -1297,6 +1297,20 @@ async function pressWallpaperShortcut(port, options, key) {
   }
 }
 
+async function toggleWallpaperPanel(port, options) {
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
+}
+
 test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = { page: fixture.url };
@@ -5002,7 +5016,15 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     document.head.append(style);
   })()`);
   await applyStaticBackground(port, options);
-  await pressWallpaperShortcut(port, options, "S");
+  await toggleWallpaperPanel(port, options);
+  await waitForCondition(
+    () =>
+      evaluate(
+        `Boolean(document.querySelector("#${controlRootId} .panel.open"))`
+      ),
+    3000,
+    "wallpaper settings panel did not open"
+  );
   assert.equal(
     await evaluate(
       'getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'
@@ -8185,7 +8207,7 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
-  await pressWallpaperShortcut(port, options, "S");
+  await toggleWallpaperPanel(port, options);
   const panelLayout = `(() => {
     const panel = document.querySelector("#${controlRootId} .panel.open");
     const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
@@ -8212,7 +8234,7 @@ test("static background is single, removable and persists disabled", async (t) =
     clear: true,
     hitTestable: true,
   });
-  await pressWallpaperShortcut(port, options, "S");
+  await toggleWallpaperPanel(port, options);
   for (const [width, height] of [
     [1290, 900],
     [360, 700],
@@ -8223,7 +8245,7 @@ test("static background is single, removable and persists disabled", async (t) =
       deviceScaleFactor: 1,
       mobile: false,
     });
-    await pressWallpaperShortcut(port, options, "S");
+    await toggleWallpaperPanel(port, options);
     await waitForCondition(
       () =>
         evaluateInPage(
@@ -8260,7 +8282,7 @@ test("static background is single, removable and persists disabled", async (t) =
       'document.querySelector("[data-panel-page=library]").click()',
       options
     );
-    await pressWallpaperShortcut(port, options, "S");
+    await toggleWallpaperPanel(port, options);
   }
   await evaluateInPage(
     port,
