@@ -512,6 +512,7 @@ function createCodexWallpaperRuntime(
     performance: { fps: 15, pauseWhenHidden: true },
     balanced: { fps: 30, pauseWhenHidden: true },
   };
+  const settingsPanelOverlayOpacity = 0;
   let interfaceRules = [];
 
   const defaults = {
@@ -1443,9 +1444,10 @@ function createCodexWallpaperRuntime(
       "left-opacity": `${surfaceOpacityValue("left")}%`,
       "sidebar-opacity": `${surfaceOpacityValue("sidebar")}%`,
       "right-opacity": `${surfaceOpacityValue("right")}%`,
-      "settings-glass-opacity": "96%",
-      "settings-canvas-opacity": "0%",
-      "settings-card-opacity": "0%",
+      "settings-opacity": `${settingsPanelOverlayOpacity}%`,
+      "settings-glass-opacity": `${settingsPanelOverlayOpacity}%`,
+      "settings-canvas-opacity": `${settingsPanelOverlayOpacity}%`,
+      "settings-card-opacity": `${settingsPanelOverlayOpacity}%`,
       "settings-blur": blurFilter(config.settings.interfaceBlur),
       "chat-blur": blurFilter(config.settings.chatBlur),
       "right-blur": blurFilter(config.settings.rightBlur),

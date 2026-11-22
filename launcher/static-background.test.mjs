@@ -5291,7 +5291,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     clearLeft: { left: 0, frame: 0, chat: 0.14 },
     restoredLeft: { left: 0.55, frame: 0, chat: 0.14 },
     allClear: {
-      zones: [0, 0, 0, 0, 0, 0, 0.96],
+      zones: [0, 0, 0, 0, 0, 0, 0],
       frameColor: 0,
       frameImage: "none",
       backingColor: 0,
@@ -5303,13 +5303,13 @@ test("appearance controls update wallpaper and surface layers without reloading 
       panelFilter: "none",
     },
     oneAtATime: [
-      [0.4, 0, 0, 0, 0, 0, 0.96],
-      [0, 0.4, 0, 0, 0, 0, 0.96],
-      [0, 0, 0.4, 0.4, 0, 0, 0.96],
-      [0, 0, 0, 0, 0.4, 0.4, 0.96],
+      [0.4, 0, 0, 0, 0, 0, 0],
+      [0, 0.4, 0, 0, 0, 0, 0],
+      [0, 0, 0.4, 0.4, 0, 0, 0],
+      [0, 0, 0, 0, 0.4, 0.4, 0],
     ],
     pinnedTreeClips: [28, 43],
-    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0.96],
+    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0],
     settingsOnlyBlur: ["blur(8px)", "none", "none", "none"],
     chatOnlyBlur: ["none", "blur(12px)", "none", "none"],
     chatBlurMatchesLayout: true,
@@ -5359,7 +5359,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
       fit: "contain",
       chatOverride: 0.44,
       projectBlur: "blur(14px)",
-      settingsOverride: 0.96,
+      settingsOverride: 0,
     },
     settingsCanvasUnchanged: true,
   });
@@ -5405,7 +5405,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     sidebarReadability: "60",
     chatBlur: "16",
     rightBlur: "20",
-    settingsOverride: 0.96,
+    settingsOverride: 0,
   });
 });
 
