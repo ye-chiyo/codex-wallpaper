@@ -1,0 +1,109 @@
+{
+  "identity": {
+    "runtimeHash": "35e13dad6ee1d3419975505eb541780779b4a3fb3b60b4bc9ca12ccfb81cd4e0",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "samples": {
+    "3272086010": {
+      "title": "《鸣潮》今昔",
+      "requested": 1,
+      "committed": 278,
+      "elapsed": null,
+      "motion": {
+        "valid": true,
+        "count": 2,
+        "first": {
+          "now": 15039366.4,
+          "time": 0.066667
+        },
+        "second": {
+          "now": 15039383,
+          "time": 0.083333
+        },
+        "readyState": 4,
+        "paused": false,
+        "width": 4680,
+        "height": 2160,
+        "currentTime": 0.065106,
+        "error": null
+      },
+      "state": {
+        "active": "3272086010",
+        "card": "video · 原生播放",
+        "status": "《鸣潮》今昔 · 视频",
+        "currentTag": "video",
+        "video": {
+          "readyState": 4,
+          "paused": false,
+          "currentTime": 0.067284,
+          "width": 4680,
+          "height": 2160,
+          "src": "blob",
+          "error": null
+        },
+        "counts": {
+          "file": 2,
+          "base64": 0
+        },
+        "staged": 0,
+        "visibility": "visible",
+        "focus": true
+      }
+    },
+    "3403349435": {
+      "title": "吊桥-义妹生活/绫濑沙季",
+      "requested": 2,
+      "committed": 255,
+      "elapsed": null,
+      "motion": {
+        "valid": true,
+        "count": 2,
+        "first": {
+          "now": 15038591.4,
+          "time": 0.083333
+        },
+        "second": {
+          "now": 15038608.1,
+          "time": 0.1
+        },
+        "readyState": 4,
+        "paused": false,
+        "width": 3840,
+        "height": 2716,
+        "currentTime": 0.101903,
+        "error": null
+      },
+      "state": {
+        "active": "3403349435",
+        "card": "video · 原生播放",
+        "status": "吊桥-义妹生活/绫濑沙季 · 视频",
+        "currentTag": "video",
+        "video": {
+          "readyState": 4,
+          "paused": false,
+          "currentTime": 0.105024,
+          "width": 3840,
+          "height": 2716,
+          "src": "blob",
+          "error": null
+        },
+        "counts": {
+          "file": 1,
+          "base64": 0
+        },
+        "staged": 0,
+        "visibility": "visible",
+        "focus": true
+      }
+    }
+  },
+  "restored": {
+    "configExact": true,
+    "runtime": {
+      "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+      "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+    },
+    "active": "3354366708",
+    "host": true
+  }
+}

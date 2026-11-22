@@ -7,6 +7,21 @@ function createRuntimeStyles(rootId, controlsId) {
     `color-mix(in srgb, ${base} var(--codex-wallpaper-${scope}-opacity), transparent)`;
   const frame = surfaceColor("var(--codex-wallpaper-surface-base)", "surface");
   const canvas = surfaceColor("var(--codex-wallpaper-surface-base)", "chat");
+  const top = surfaceColor(surface, "sidebar");
+  const right = surfaceColor(surface, "right");
+  const menuFrame = "body [data-app-shell-frame][data-app-shell-application-menu-bar='true']";
+  const topInset = "var(--codex-wallpaper-top-inset, 0px)";
+  const topHeight = `calc(var(--app-shell-application-menu-height, 0px) + ${topInset})`;
+  const scrollFade = "[aria-hidden='true'][class*='--app-shell-content-fade,']";
+  const workspace = "> [data-app-shell-workspace-row] > [data-app-shell-workspace]";
+  const workspaceFrame = `body [data-app-shell-frame]:has(${workspace} > [data-app-shell-surface-backing])`;
+  const chatLayout = "[data-app-shell-main-content-layout]";
+  const rightFocus = "[data-app-shell-main-surface] [data-app-shell-focus-area='right-panel']";
+  const paneViewport = "[data-app-shell-pane-content-viewport]";
+  const rightViewport = `${rightFocus} ${paneViewport}`;
+  const rightBody = `${rightFocus}:has(${paneViewport})`;
+  const rightTitlebar = `${workspaceFrame}:has(${rightViewport}) [data-app-shell-titlebar]:has([data-app-shell-workspace-layout-toggle='right-panel'])`;
+  const splitTitlePaint = `html:has(${rightViewport}) #${rootId} [data-codex-wallpaper-layer]`;
   const panelColor = surfaceColor(
     "var(--codex-wallpaper-panel-base)",
     "settings"
@@ -16,6 +31,15 @@ function createRuntimeStyles(rootId, controlsId) {
       #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
       #${controlsId} { z-index: 2147483647; }
       #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+      /* Sample the wallpaper below the host's clipped chat content. */
+      #${rootId}::after {
+        content: "";
+        position: fixed;
+        inset: anchor(--codex-wallpaper-chat top, 100%) anchor(--codex-wallpaper-chat right, 0px) anchor(--codex-wallpaper-chat bottom, 0px) anchor(--codex-wallpaper-chat left, 0px);
+        z-index: 1;
+        pointer-events: none;
+        backdrop-filter: var(--codex-wallpaper-chat-blur);
+      }
       #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
       #${rootId} .media.staged { opacity: 0; }
       #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
@@ -24,118 +48,194 @@ function createRuntimeStyles(rootId, controlsId) {
       #${rootId} .media img, #${rootId} .media video, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .dim { position: absolute; inset: 0; }
-      /* Keep the corner when the toolbar fits beside the composer. */
+      /* Blur the wallpaper below the right pane and its titlebar fill. */
+      ${splitTitlePaint} .dim::after {
+        content: "";
+        position: fixed;
+        top: anchor(--codex-wallpaper-split-titlebar top, anchor(--codex-wallpaper-right-pane top, 100%));
+        right: anchor(--codex-wallpaper-right-pane right, 0px);
+        bottom: anchor(--codex-wallpaper-right-pane bottom, 0px);
+        left: anchor(--codex-wallpaper-right-pane left, 100%);
+        backdrop-filter: var(--codex-wallpaper-right-blur);
+      }
+      /* Position the settings panel above the composer when it is available. */
       body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
-      #${controlsId} .toolbar {
-        position: fixed; right: 14px; bottom: 14px; z-index: 2147483647; display: flex; padding: 3px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: 12px; background-color: ${panelColor}; box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto;
-        position-anchor: --codex-wallpaper-composer;
-        left: calc(anchor(right) + 8px);
-        width: max-content; justify-self: end;
-        position-try-fallbacks: --codex-wallpaper-above-composer;
-        anchor-name: --codex-wallpaper-toolbar;
-      }
-      @position-try --codex-wallpaper-above-composer {
-        left: auto;
-        bottom: max(14px, calc(anchor(top, 6px) + 8px));
-      }
-      #${controlsId} .toolbar button, #${controlsId} .panel button { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 10px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
-      #${controlsId} .toolbar button { border-color: transparent; border-radius: 8px; background: transparent; }
-      #${controlsId} .toolbar button:hover, #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button:active, #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button[aria-pressed='true'], #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .toolbar button:focus-visible, #${controlsId} .panel button:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
-      #${controlsId} .toolbar button:disabled, #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
+      #${controlsId} .panel :where(button, .panel-file) { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; padding: 6px 10px; font: inherit; min-block-size: 32px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
+      #${controlsId} .panel .panel-file:hover,
+      #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
+      #${controlsId} .panel :is(button, select, input):focus-visible,
+      #${controlsId} .panel .panel-file:focus-within { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
+      #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
       #${controlsId} .panel {
-        position: fixed; z-index: 2147483647; width: min(390px, calc(100vw - 28px)); overflow: auto; padding: 14px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background-color: ${panelColor}; backdrop-filter: var(--codex-wallpaper-interface-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
-        overscroll-behavior: contain;
-        scrollbar-gutter: stable;
-        position-anchor: --codex-wallpaper-toolbar;
-        position-area: top span-left;
-        inset: 14px 0 3px 14px;
-        place-self: end;
-        max-height: min(74vh, 720px, calc(100% - 17px));
+        --panel-inset: 17px;
+        --panel-accent: var(--color-text-accent, var(--app-color-accent-blue, #0285ff));
+        --panel-muted: color-mix(in srgb, currentColor 80%, transparent);
+        --panel-glass: color-mix(in srgb, var(--codex-wallpaper-panel-base) 76%, #314966);
+        --panel-control: color-mix(in srgb, var(--panel-glass) 93%, currentColor);
+        --panel-selected: color-mix(in srgb, var(--panel-control) 83%, var(--panel-accent));
+        box-sizing: border-box;
+        position: fixed; z-index: 2147483647; width: min(448px, calc(100% - 28px)); overflow: hidden; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background-color: color-mix(in srgb, var(--panel-glass) var(--codex-wallpaper-settings-glass-opacity), transparent); backdrop-filter: var(--codex-wallpaper-settings-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
+        inset: auto 14px 14px auto;
+        height: min(80vh, 760px, calc(100% - 28px));
       }
-      #${controlsId} .panel.open { display: block; }
+      #${controlsId} .panel.open { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+      html[data-theme='light'] #${controlsId} .panel { --panel-glass: color-mix(in srgb, var(--codex-wallpaper-panel-base) 88%, #a2bddd); }
       html:has([data-composer-surface-variant]) #${controlsId} .panel {
         position-anchor: --codex-wallpaper-composer;
         position-area: top span-right;
-        inset: 14px 0 8px 14px;
+        inset: 14px 14px 8px 14px;
+        place-self: end;
       }
-      #${controlsId} .panel header { display: flex; align-items: center; justify-content: space-between; }
-      #${controlsId} .panel-region { margin-top: 10px; border: 1px solid var(--codex-wallpaper-line); border-radius: var(--codex-wallpaper-radius-sm); background: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 24%, transparent); }
-      #${controlsId} .panel-navigation { position: sticky; top: 0; z-index: 1; padding: 6px 0; background: var(--codex-wallpaper-raised); border-radius: var(--codex-wallpaper-radius-sm); }
-      #${controlsId} .panel-navigation header { padding: 0 6px 6px; }
-      #${controlsId} .panel-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-      #${controlsId} .panel-tabs button { padding: 6px 2px; }
-      #${controlsId} .panel-tabs button[aria-selected='true'] { background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
+      #${controlsId} :is(.panel-navigation, .panel-content) { scrollbar-width: thin; scrollbar-gutter: stable; }
+      #${controlsId} .panel-navigation { overflow: hidden; padding: 12px var(--panel-inset) 0; border-bottom: 1px solid var(--codex-wallpaper-line-strong); }
+      #${controlsId} .panel-content { overflow: auto; overscroll-behavior: contain; scroll-padding-block: 12px; }
+      #${controlsId} .panel-navigation header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+      #${controlsId} .panel-navigation h2 { margin: 0; font-size: 18px; font-weight: 650; }
+      #${controlsId} .panel-navigation .panel-close { display: grid; place-items: center; width: 32px; padding: 0; border-color: transparent; background-color: transparent; }
+      #${controlsId} .panel-navigation .panel-close:hover { background-color: var(--codex-wallpaper-settings-control); }
+      #${controlsId} .panel-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      #${controlsId} .panel-tabs button { min-width: 0; padding: 8px 4px; border: 0; border-radius: 6px 6px 0 0; background: transparent; color: var(--panel-muted); font-weight: 550; }
+      #${controlsId} .panel-tabs button:hover { background: var(--codex-wallpaper-settings-control); color: inherit; }
+      #${controlsId} .panel-tabs button:focus-visible { outline-offset: -3px; }
+      #${controlsId} .panel-tabs button[aria-selected='true'] { box-shadow: inset 0 -2px var(--panel-accent); background: var(--panel-selected); color: inherit; font-weight: 650; }
       #${controlsId} .panel-region[hidden] { display: none; }
-      #${controlsId} .panel-region-body { display: grid; gap: 8px; padding: 10px; }
-      #${controlsId} .panel-region-body summary { cursor: pointer; padding: 7px 0; }
-      #${controlsId} .preset-section { display: grid; gap: 8px; border-top: 1px solid var(--codex-wallpaper-line); }
-      #${controlsId} .preset-section h3 { margin: 8px 0 0; font: inherit; font-weight: 650; }
-      #${controlsId} .import-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 9px 10px; border: 1px dashed var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); cursor: pointer; }
-      #${controlsId} .panel-region-body .import-row { margin-top: 0; }
-      #${controlsId} .import-row input { width: 135px; font-size: 11px; }
-      #${controlsId} .runtime-status, #${controlsId} .playlist-summary { margin: 9px 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 82%, transparent); }
-      #${controlsId} .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 7px; }
-      #${controlsId} .library-filter { display: grid; gap: 4px; min-width: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 70%, transparent); font-size: 11px; }
-      #${controlsId} .library-filter:last-child { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; }
-      #${controlsId} .library-filter input[type='search'], #${controlsId} .library-filter select { min-width: 0; width: 100%; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 8px; font: inherit; }
-      #${controlsId} .library-filter input[type='search']:focus-visible, #${controlsId} .library-filter select:focus-visible, #${controlsId} .library-filter input[type='checkbox']:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
-      #${controlsId} .library-result { min-height: 1.4em; margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 68%, transparent); font-size: 11px; }
-      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #${controlsId} .card { position: relative; min-width: 0; padding: 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 10px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 44%, transparent); }
+      #${controlsId} .panel-region-body { display: grid; gap: 16px; padding: 16px var(--panel-inset) 20px; }
+      #${controlsId} .settings-group, #${controlsId} .preset-section { display: grid; gap: 8px; min-width: 0; }
+      #${controlsId} .settings-group + .settings-group, #${controlsId} .preset-section, #${controlsId} .preset-section > .settings-group { border-top: 1px solid var(--codex-wallpaper-line-strong); padding-top: 14px; }
+      #${controlsId} .panel-region-body h3 { margin: 0 0 2px; font-size: 14px; font-weight: 650; }
+      #${controlsId} .panel-file { position: relative; display: grid; align-items: center; box-sizing: border-box; text-align: center; }
+      #${controlsId} .panel-file input { position: absolute; width: 1px; height: 1px; margin: 0; clip-path: inset(50%); }
+      #${controlsId} .panel [data-panel-region='library'] .panel-region-body { gap: 10px; }
+      #${controlsId} .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) 96px max-content; gap: 7px; }
+      #${controlsId} .library-filter { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+      #${controlsId} .current-wallpaper { display: grid; gap: 8px; overflow: hidden; border-radius: 12px; padding: 8px; background: var(--panel-selected); }
+      #${controlsId} .current-wallpaper :is(img, canvas) { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 6px; background: var(--panel-control); }
+      #${controlsId} .current-wallpaper :is(img, canvas)[hidden], #${controlsId} .current-wallpaper small[hidden] { display: none; }
+      #${controlsId} .current-wallpaper:has(img[data-cover]:not([hidden])) { grid-template-columns: 64px minmax(0, 1fr); align-items: center; }
+      #${controlsId} .current-wallpaper-description, #${controlsId} .wallpaper-picture-heading { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+      #${controlsId} [data-current-wallpaper-title] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #${controlsId} .current-wallpaper-description { flex-wrap: wrap; row-gap: 2px; }
+      #${controlsId} .current-wallpaper-description span { flex: 0 0 auto; }
+      #${controlsId} .current-wallpaper-description strong { flex: 1 1 10rem; font-size: 14px; }
+      #${controlsId} .current-wallpaper-description small { flex: 0 0 100%; color: var(--panel-muted); font-size: 12px; }
+      #${controlsId} .current-wallpaper.has-preview { position: relative; isolation: isolate; height: 144px; box-sizing: border-box; align-content: end; padding: 10px 12px; color: #f5f8ff; }
+      #${controlsId} .current-wallpaper.has-preview :is(img, canvas) { position: absolute; inset: 0; z-index: -2; height: 100%; aspect-ratio: auto; border-radius: 0; }
+      #${controlsId} .current-wallpaper.has-preview::before { content: ""; position: absolute; inset: auto 0 0; height: 42px; z-index: -1; background: linear-gradient(transparent, #091424df); }
+      #${controlsId} .current-wallpaper.has-preview .current-wallpaper-description span { position: absolute; top: 9px; left: 9px; padding: 3px 7px; border-radius: 6px; background: #192941; color: #e1edff; font-size: 12px; font-weight: 600; }
+      #${controlsId} .current-wallpaper.has-preview .current-wallpaper-description strong { font-size: 15px; }
+      #${controlsId} .wallpaper-picture-heading { justify-content: space-between; }
+      #${controlsId} .wallpaper-picture-heading span:first-child { flex: 0 0 auto; }
+      #${controlsId} .wallpaper-picture-heading [data-current-wallpaper-title] { color: var(--panel-muted); font-size: 12px; font-weight: 500; }
+      #${controlsId} .panel :is(input[type='search'], input[type='text'], select) { box-sizing: border-box; min-width: 0; width: 100%; min-height: 34px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; padding: 6px 10px; font: inherit; }
+      #${controlsId} .panel select { appearance: auto; }
+      #${controlsId} .panel input::placeholder { color: var(--panel-muted); }
+      #${controlsId} .library-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+      #${controlsId} .runtime-status { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+      #${controlsId} .runtime-status[hidden] { display: none; }
+      #${controlsId} .library-result, #${controlsId} .playlist-summary, #${controlsId} .playback-capability, #${controlsId} .settings-status { margin: 0; color: var(--panel-muted); font-size: 12px; overflow-wrap: anywhere; }
+      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      #${controlsId} .card { position: relative; min-width: 0; padding: 0 0 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 12px; background: var(--panel-control); }
       #${controlsId} .card[hidden] { display: none; }
       #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .card-current { position: absolute; top: 11px; right: 11px; padding: 2px 5px; border-radius: 999px; background: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 82%, transparent); color: var(--app-color-text-foreground, white); font-size: 9px; font-weight: 650; }
+      #${controlsId} .card-current { position: absolute; top: 8px; right: 8px; padding: 2px 6px; border-radius: 6px; background: var(--panel-glass); color: inherit; font-size: 12px; font-weight: 650; }
       #${controlsId} .card-current[hidden] { display: none; }
-      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
+      #${controlsId} .thumb { aspect-ratio: 1.95; display: grid; place-items: center; overflow: hidden; border-radius: 11px 11px 0 0; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 12px; }
       #${controlsId} .thumb img, #${controlsId} .thumb video { width: 100%; height: 100%; object-fit: cover; }
-      #${controlsId} .card strong { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #${controlsId} .card small { display: block; margin-top: 2px; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); }
-      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-      #${controlsId} .card-actions button { padding: 4px 6px; font-size: 10px; }
-      #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 7px; }
-      #${controlsId} .range { display: grid; grid-template-columns: 64px minmax(0, 1fr) 62px; align-items: center; gap: 7px; }
+      #${controlsId} .card strong { display: block; margin: 6px 8px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+      #${controlsId} .card small { display: block; margin: 2px 8px 0; color: var(--panel-muted); font-size: 12px; overflow-wrap: anywhere; }
+      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 3px; margin: 6px 7px 0; }
+      #${controlsId} .panel .card-actions button { min-block-size: 28px; padding: 3px 7px; font-size: 12px; }
+      #${controlsId} .panel [data-entry-action='use'], #${controlsId} .panel [data-preset-save] { background: var(--panel-selected); font-weight: 650; }
+      #${controlsId} .panel :is([data-entry-action='use'], [data-preset-save]):hover { background: color-mix(in srgb, var(--panel-selected) 90%, currentColor); }
+      #${controlsId} .panel .card-actions .card-icon { position: relative; display: grid; place-items: center; width: 29px; padding: 0; border-color: transparent; background: transparent; color: var(--panel-muted); }
+      #${controlsId} .panel .card-icon:hover, #${controlsId} .panel .card-icon[aria-pressed='true'] { background: var(--panel-selected); color: inherit; }
+      #${controlsId} .card-icon[aria-pressed='true'][data-entry-action='favorite'] svg { fill: currentColor; }
+      #${controlsId} .card-icon span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      #${controlsId} .card-actions [data-entry-action='use'] { margin-inline-end: auto; }
+      #${controlsId} .panel [data-remove-imported] { justify-self: start; }
+      #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 16px; }
+      #${controlsId} .range, #${controlsId} .profile-control { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); align-items: center; gap: 8px; }
+      #${controlsId} .range { grid-template-columns: 6.5em minmax(0, 1fr) 5.25em; }
+      #${controlsId} [data-panel-region='appearance'] :is(.panel-region-body, .settings-grid) { gap: 10px; }
+      #${controlsId} [data-panel-region='appearance'] :is(.settings-group, .preset-section) { gap: 5px; }
+      #${controlsId} [data-panel-region='appearance'] .range { grid-template-columns: 6.5em minmax(0, 1fr) 54px; }
+      #${controlsId} [data-panel-region='appearance'] .range-value :is(button,input) { min-height: 28px; background: var(--panel-control); }
       #${controlsId} .range-value { min-width: 0; }
-      #${controlsId} .range-value button, #${controlsId} .range-value input { width: 100%; min-width: 0; box-sizing: border-box; padding: 3px 2px; font: inherit; }
+      #${controlsId} .panel .range-value :is(button, input) { width: 100%; min-width: 0; min-height: 32px; box-sizing: border-box; padding: 3px 4px; font: inherit; text-align: center; }
       #${controlsId} .range-value input { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; }
       #${controlsId} .range output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
-      #${controlsId} .profile-control { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 7px; }
-      #${controlsId} .profile-control select { min-width: 0; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 6px 7px; font: inherit; }
-      #${controlsId} .setting-toggle { display: flex; align-items: center; gap: 7px; min-height: 28px; }
-      #${controlsId} .playback-capability { margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 64%, transparent); font-size: 11px; }
-      #${controlsId} .profile-control select:focus-visible, #${controlsId} .setting-toggle input:focus-visible { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
-      #${controlsId} .surface-override { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .setting-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+      #${controlsId} .setting-toggle input { order: 1; }
+      #${controlsId} .panel input[type='checkbox'] {
+        appearance: auto;
+        flex: none;
+        inline-size: 16px;
+        block-size: 16px;
+        margin: 0;
+        accent-color: var(--color-text-accent, rgb(51 156 255));
+      }
+      #${controlsId} .panel label:has(> input[type='checkbox']:enabled) { cursor: pointer; }
+      #${controlsId} .surface-overrides { margin-top: 3px; padding-top: 8px; border-top: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .surface-overrides h4 { margin: 0; font-size: 13px; font-weight: 650; }
+      #${controlsId} .surface-override { display: grid; gap: 2px; padding: 3px 0; border-bottom: 1px solid var(--codex-wallpaper-line); }
       #${controlsId} .surface-override:last-child { border-bottom: 0; }
       #${controlsId} .surface-override-controls { display: grid; grid-template-columns: minmax(0, 1fr) 42px auto; align-items: center; gap: 7px; }
+      #${controlsId} .panel input[type='range'] {
+        appearance: none;
+        min-width: 0;
+        width: 100%;
+        height: 28px;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      #${controlsId} .panel input[type='range']::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 4px;
+        background: color-mix(in srgb, currentColor 45%, transparent);
+      }
+      #${controlsId} [data-panel-region='appearance'] input[type='range']::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--panel-accent) var(--appearance-progress, 0%), color-mix(in srgb, currentColor 38%, transparent) var(--appearance-progress, 0%)); }
+      #${controlsId} .panel input[type='range']::-webkit-slider-thumb {
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        margin-top: -5px;
+        border-radius: 50%;
+        background: var(--panel-accent);
+      }
+      #${controlsId} .panel input[type='range']:disabled { opacity: .55; cursor: not-allowed; }
+      #${controlsId} .panel input[type='range']:disabled::-webkit-slider-thumb { background: currentColor; }
       #${controlsId} .surface-override-controls output { color: color-mix(in srgb, var(--app-color-text-foreground, white) 78%, transparent); font-variant-numeric: tabular-nums; }
-      #${controlsId} .surface-override-controls button { padding: 5px 7px; font-size: 10px; }
-      #${controlsId} .preset-editor, #${controlsId} .settings-transfer, #${controlsId} .preset-row, #${controlsId} .reset-groups { display: grid; gap: 6px; }
+      #${controlsId} .panel .surface-override-controls button { padding: 4px 8px; font-size: 12px; }
+      #${controlsId} .preset-editor, #${controlsId} .settings-transfer, #${controlsId} .preset-row, #${controlsId} .reset-groups { display: grid; gap: 8px; }
       #${controlsId} .preset-editor { grid-template-columns: minmax(0, 1fr) auto; }
-      #${controlsId} .preset-editor input, #${controlsId} .preset-row input { min-width: 0; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: var(--app-color-text-foreground, white); padding: 7px 8px; font: inherit; }
-      #${controlsId} .preset-list { display: grid; gap: 6px; }
-      #${controlsId} .preset-row { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; padding: 6px; border: 1px solid var(--codex-wallpaper-line); border-radius: var(--codex-wallpaper-radius-sm); }
-      #${controlsId} .preset-row[data-active='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 10%, transparent); }
-      #${controlsId} .settings-transfer { grid-template-columns: 1fr 1fr; align-items: center; }
-      #${controlsId} .settings-import { display: grid; gap: 4px; font-size: 11px; }
-      #${controlsId} .settings-status { min-height: 1.4em; margin: 0; color: color-mix(in srgb, var(--app-color-text-foreground, white) 72%, transparent); font-size: 11px; }
-      #${controlsId} .reset-groups { grid-template-columns: 1fr 1fr; }
-      #${controlsId} .reset-groups button { font-size: 11px; }
-      #${controlsId} .reset { width: 100%; color: var(--color-text-danger, rgb(224 46 42)) !important; }
+      #${controlsId} .preset-list { display: grid; gap: 8px; }
+      #${controlsId} .preset-row { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+      #${controlsId} .settings-transfer, #${controlsId} .reset-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+      #${controlsId} .reset-groups button { border-color: transparent; background: transparent; color: var(--panel-muted); }
+      #${controlsId} .settings-status:empty { display: none; }
+      #${controlsId} .preset-list:empty { display: none; }
+      #${controlsId} .panel .reset { justify-self: start; margin-top: 4px; color: var(--color-text-danger, #f07474); }
+      html[data-theme='light'] #${controlsId} .panel .reset { color: var(--color-text-danger, #ab2424); }
       @media (max-width: 520px) {
         #${controlsId} .panel, html:has([data-composer-surface-variant]) #${controlsId} .panel {
-          box-sizing: border-box;
-          width: min(340px, calc(100vw - 16px));
-          max-height: min(82vh, calc(100dvh - 64px));
+          --panel-inset: 14px;
+          width: min(448px, calc(100% - 16px));
+          height: min(82vh, calc(100dvh - 64px));
           position-anchor: auto;
           position-area: none;
           inset: auto 8px 52px auto;
           place-self: auto;
         }
-        #${controlsId} .library-filters { grid-template-columns: 1fr; }
-        #${controlsId} .library-filter:last-child { grid-column: auto; }
+      }
+      @media (max-width: 400px) {
+        #${controlsId} .panel-tabs { gap: 4px; }
+        #${controlsId} .panel-tabs button { font-size: 12px; }
         #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
+        #${controlsId} .library-filters { grid-template-columns: minmax(0, 1fr) 94px; }
+        #${controlsId} .library-filters .import-row { grid-column: 1 / -1; justify-self: end; }
       }
       :root {
         --codex-wallpaper-surface-base: ${surface};
@@ -154,22 +254,37 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(232 232 237));
         --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(247 247 249));
       }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${frame} !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
-        &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${frame} !important; position: relative; z-index: 1;
       }
-      body [data-app-shell-main-surface] { background-color: ${canvas} !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
-      body [data-app-shell-page-sidebar], body [data-app-shell-titlebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-sidebar-opacity), transparent) !important; }
-      body [data-app-shell-pane-content-viewport], body [data-app-shell-trailing-sidebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-right-opacity), transparent) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-workspace] > [data-app-shell-surface-backing] { background-color: transparent !important; }
+      body [data-app-shell-main-surface] { background-color: ${canvas} !important; --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-main-surface]:has([data-composer-surface-variant]):not(:has(${chatLayout})) { anchor-name: --codex-wallpaper-chat; }
+      body [data-app-shell-page-sidebar] { background-color: ${top} !important; }
+      body :is([data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${right} !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
       body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
         background-color: transparent !important;
         box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
+      body :is([data-app-navigation-rail], [data-slate-sidebar-content]) { backdrop-filter: var(--codex-wallpaper-project-sidebar-blur); }
       body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
-        background-color: ${surfaceColor(surface, "top")} !important;
-        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
+      }
+      ${menuFrame} { --codex-wallpaper-top-inset: var(--app-shell-titlebar-height, 0px); }
+      /* Paint the menu and the gap below it as one continuous surface. */
+      ${menuFrame}::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        block-size: calc(${topHeight} + 24px);
+        background-image: linear-gradient(${top} ${topHeight}, transparent);
+        pointer-events: none;
+      }
+      /* Fill from the native rounded edge while leaving the chat contents in place. */
+      ${menuFrame} [data-app-shell-main-surface][class~='mt-(--app-shell-titlebar-height)'] {
+        margin-block-start: 0;
+        padding-block-start: ${topInset};
       }
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
@@ -177,45 +292,117 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-browser-sidebar-webview] { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; opacity: 1 !important; }
       body [data-browser-sidebar-webview] > webview { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; }
       body [data-app-shell-frame] { background-color: ${frame} !important; }
-      body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) {
-        & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: ${surfaceColor("var(--codex-wallpaper-settings-canvas-base)", "settings-canvas")} !important; }
-        & main[data-app-shell-main-surface] :where([class~='rounded-2xl'][class~='border-default']) {
-          background-color: ${surfaceColor("var(--codex-wallpaper-settings-card-base)", "settings-card")} !important;
-          border-color: var(--codex-wallpaper-line-strong) !important;
-          border-radius: var(--codex-wallpaper-radius) !important;
-          --color-border: var(--codex-wallpaper-line);
-        }
-        & :where([class~='bg-background-secondary-soft-alpha']) {
-          background-color: var(--codex-wallpaper-settings-control) !important;
-          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
-        }
-        & :where([class~='bg-background-secondary-soft-alpha']):focus-within {
-          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 0 0 2px color-mix(in srgb, var(--color-text-accent, rgb(51 156 255)) 20%, transparent);
-        }
-        & nav button[data-settings-panel-slug] {
-          border-radius: var(--codex-wallpaper-radius-sm) !important;
-        }
-        & nav button[data-settings-panel-slug][aria-current='page'] {
-          background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, transparent) !important;
-          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
-        }
-        & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']) {
-          background-color: var(--codex-wallpaper-settings-control) !important;
-          border-color: var(--codex-wallpaper-line-strong) !important;
-          border-radius: var(--codex-wallpaper-radius-sm) !important;
-        }
-        & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']):is(:hover, [data-state='open']) {
-          background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 9%, var(--codex-wallpaper-settings-control)) !important;
-        }
-        & main[data-app-shell-main-surface] :where([class~='bg-segmented-selected']) {
-          background-color: var(--codex-wallpaper-settings-control) !important;
-        }
-        & :where(button, [role='combobox']):focus-visible {
-          outline: 2px solid var(--color-text-accent, rgb(51 156 255));
-          outline-offset: 2px;
-        }
-        & main[data-app-shell-main-surface] [role='switch'] > [data-state] {
-          box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong);
+      /* Paint the workspace regions separately, including when the right pane opens inside main. */
+      ${workspaceFrame} {
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+      ${workspaceFrame} ${workspace} > [data-app-shell-surface-backing] {
+        background-image: none !important;
+      }
+      ${workspaceFrame} ${workspace} > [data-app-shell-left-panel-appearance] {
+        background-color: ${surfaceColor("var(--codex-wallpaper-surface-base)", "left")} !important;
+      }
+      ${workspaceFrame}[data-app-shell-application-menu-bar='true']::before {
+        block-size: ${topHeight};
+        background-color: ${top};
+        background-image: none;
+      }
+      ${workspaceFrame} [data-app-shell-titlebar] { background-color: ${top} !important; }
+      ${rightTitlebar} {
+        anchor-name: --codex-wallpaper-split-titlebar;
+        background-color: transparent !important;
+      }
+      /* Align the two titlebar fills to the same boundary as the panes. */
+      ${splitTitlePaint}::before,
+      ${splitTitlePaint}::after {
+        content: "";
+        position: fixed;
+        top: anchor(--codex-wallpaper-split-titlebar top, 100%);
+        bottom: anchor(--codex-wallpaper-split-titlebar bottom, 0px);
+        z-index: 1;
+      }
+      ${splitTitlePaint}::before {
+        left: anchor(--codex-wallpaper-split-titlebar left, 0px);
+        right: anchor(--codex-wallpaper-right-pane left, 0px);
+        background-color: ${top};
+      }
+      ${splitTitlePaint}::after {
+        left: anchor(--codex-wallpaper-right-pane left, 100%);
+        right: anchor(--codex-wallpaper-right-pane right, 0px);
+        background-color: ${right};
+      }
+      ${workspaceFrame} [data-app-shell-main-surface]:has(${chatLayout}) {
+        background-color: transparent !important;
+        /* A transparent native border leaves a strip between the two painted areas. */
+        border-inline-start-width: 0 !important;
+      }
+      ${workspaceFrame} [data-app-shell-main-surface] ${chatLayout} {
+        background-color: ${canvas} !important;
+        anchor-name: --codex-wallpaper-chat;
+      }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) {
+        background-color: ${right} !important;
+      }
+      ${workspaceFrame} ${rightBody} { anchor-name: --codex-wallpaper-right-pane; }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) [data-app-shell-tabs] {
+        --app-shell-panel-background: transparent;
+      }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) [data-app-shell-pane-content-viewport] {
+        background-color: transparent !important;
+        backdrop-filter: none;
+      }
+      ${workspaceFrame} ${rightBody} :is(file-tree-container, diffs-container) {
+        --color-surface: transparent !important;
+        background-color: transparent !important;
+      }
+      ${workspaceFrame} ${rightBody} file-tree-container { --trees-bg-override: transparent !important; }
+      ${workspaceFrame} ${rightBody} :is([class~='bg-surface'][class*='--diffs-editor-selection-bg'], [data-testid='diff-preview-scroll'], [data-thread-find-target='review']) {
+        background-color: transparent !important;
+      }
+      /* Resolve the settings route once before matching its descendant rules. */
+      body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) { --codex-wallpaper-native-settings: active; }
+      @container style(--codex-wallpaper-native-settings: active) {
+        body [data-app-shell-feature-navigation='true'] {
+          & main[data-app-shell-main-surface] :where([class~='electron:bg-surface']) { background-color: ${surfaceColor("var(--codex-wallpaper-settings-canvas-base)", "settings-canvas")} !important; }
+          & main[data-app-shell-main-surface] :where([class~='rounded-2xl'][class~='border-default']) {
+            background-color: ${surfaceColor("var(--codex-wallpaper-settings-card-base)", "settings-card")} !important;
+            border-color: var(--codex-wallpaper-line-strong) !important;
+            border-radius: var(--codex-wallpaper-radius) !important;
+            --color-border: var(--codex-wallpaper-line);
+          }
+          & :where([class~='bg-background-secondary-soft-alpha']) {
+            background-color: var(--codex-wallpaper-settings-control) !important;
+            box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
+          }
+          & :where([class~='bg-background-secondary-soft-alpha']):focus-within {
+            box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong), 0 0 0 2px color-mix(in srgb, var(--color-text-accent, rgb(51 156 255)) 20%, transparent);
+          }
+          & nav button[data-settings-panel-slug] {
+            border-radius: var(--codex-wallpaper-radius-sm) !important;
+          }
+          & nav button[data-settings-panel-slug][aria-current='page'] {
+            background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, transparent) !important;
+            box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line);
+          }
+          & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']) {
+            background-color: var(--codex-wallpaper-settings-control) !important;
+            border-color: var(--codex-wallpaper-line-strong) !important;
+            border-radius: var(--codex-wallpaper-radius-sm) !important;
+          }
+          & main[data-app-shell-main-surface] :where([class~='bg-background-neutral-soft-alpha'], [class~='bg-text/5']):is(:hover, [data-state='open']) {
+            background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 9%, var(--codex-wallpaper-settings-control)) !important;
+          }
+          & main[data-app-shell-main-surface] :where([class~='bg-segmented-selected']) {
+            background-color: var(--codex-wallpaper-settings-control) !important;
+          }
+          & :where(button, [role='combobox']):focus-visible {
+            outline: 2px solid var(--color-text-accent, rgb(51 156 255));
+            outline-offset: 2px;
+          }
+          & main[data-app-shell-main-surface] [role='switch'] > [data-state] {
+            box-shadow: inset 0 0 0 1px var(--codex-wallpaper-line-strong);
+          }
         }
       }
       body [data-app-shell-main-surface] :where([data-testid='webmcp-tool-scroll'], [data-summary-panel-variant], pre) { background-color: var(--codex-wallpaper-raised) !important; }
@@ -226,6 +413,11 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
       body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
       body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(${canvas}, transparent) !important; }
+      /* Fade the scrolling content without painting over the wallpaper. */
+      body [data-app-shell-main-content-layout] ${scrollFade} { background-image: none !important; }
+      body [data-app-shell-main-content-layout] :has(> ${scrollFade}) [data-app-action-timeline-scroll] {
+        mask-image: linear-gradient(transparent, black var(--app-shell-content-fade-height, 40px));
+      }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
@@ -236,11 +428,17 @@ function createRuntimeStyles(rootId, controlsId) {
       }
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
       body :where([role='dialog'], [role='menu']) { background-color: ${panelColor} !important; }
+      body [role='dialog'].settings-dialog:has([data-settings-nav-scroll-container]) {
+        & .settings-dialog-sidebar, & [data-settings-panel] .settings-dialog-content {
+          background-color: transparent !important;
+        }
+      }
       body [data-radix-popper-content-wrapper] { background-color: transparent !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover:where(:not([aria-disabled='true'], [data-disabled], :disabled)), :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled) { opacity: .48; cursor: not-allowed; }
+      body [data-codex-wallpaper-usage-action] { cursor: pointer; }
     `;
 }
 
@@ -257,17 +455,29 @@ export function candidateIdentity() {
   };
 }
 
-export function runtimeSource(payload) {
+export function runtimeSource(
+  payload,
+  hostReady = false,
+  waitForMainInterface = false,
+  desktopStartup = false
+) {
   const css = createRuntimeStyles(
     "codex-wallpaper-p1",
     "codex-wallpaper-p1-controls"
   );
   return `(${createCodexWallpaperRuntime.toString()})(${JSON.stringify(
     payload
-  )}, ${JSON.stringify(css)}, ${JSON.stringify(candidateIdentity())})`;
+  )}, ${JSON.stringify(css)}, ${JSON.stringify(candidateIdentity())}, ${JSON.stringify(hostReady)}, ${JSON.stringify(waitForMainInterface)}, ${JSON.stringify(desktopStartup)})`;
 }
 
-export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+function createCodexWallpaperRuntime(
+  payload,
+  runtimeCss,
+  identity,
+  initialHostReady = false,
+  waitForMainInterface = false,
+  desktopStartup = false
+) {
   const rootId = "codex-wallpaper-p1";
   const controlsId = "codex-wallpaper-p1-controls";
   const styleId = "codex-wallpaper-p1-style";
@@ -294,9 +504,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       fitMode: "cover",
       surfaceOpacity: 72,
       interfaceBlur: 0,
+      chatBlur: 0,
+      rightBlur: 0,
+      projectSidebarBlur: 0,
       interfaceBorders: true,
       surfaceOverrides: {
         chat: null,
+        left: null,
         sidebar: null,
         right: null,
         settings: null,
@@ -326,6 +540,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       max: 100,
     },
     interfaceBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    chatBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    rightBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    projectSidebarBlur: { group: "appearance", type: "number", min: 0, max: 24 },
     interfaceBorders: { group: "appearance", type: "boolean" },
     surfaceOverrides: { group: "appearance", type: "surfaceOverrides" },
     fps: { group: "playback", type: "number", min: 1, max: 30 },
@@ -345,18 +562,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     pauseWhenHidden: { group: "playback", type: "boolean" },
   };
   const settingKeys = new Set(Object.keys(settingDefinitions));
-  const surfaceScopes = new Set(["chat", "sidebar", "right", "settings"]);
-
-  function normalizePerformanceProfile(settings) {
-    const profile = performanceProfiles[settings.performanceProfile];
-    if (
-      profile &&
-      (Number(settings.fps) !== profile.fps ||
-        Boolean(settings.pauseWhenHidden) !== profile.pauseWhenHidden)
-    )
-      settings.performanceProfile = "custom";
-    return settings;
-  }
+  const surfaceScopes = new Set(Object.keys(defaults.settings.surfaceOverrides));
 
   function cloneSettings(source = defaults.settings) {
     const next = structuredClone(defaults.settings);
@@ -373,7 +579,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         ? structuredClone(source.surfaceOverrides[scope])
         : defaults.settings.surfaceOverrides[scope];
     }
-    return normalizePerformanceProfile(next);
+    const profile = performanceProfiles[next.performanceProfile];
+    if (
+      profile &&
+      (Number(next.fps) !== profile.fps ||
+        Boolean(next.pauseWhenHidden) !== profile.pauseWhenHidden)
+    )
+      next.performanceProfile = "custom";
+    return next;
   }
 
   function validateSettingsInput(input) {
@@ -467,11 +680,34 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   let config = readConfig();
   let sourcePayload = payload || { library: [] };
-  let hostReady = false;
+  let startupVideo = sourcePayload.startupVideo;
+  let hostReady = initialHostReady;
+  let mainInterfaceShown = !waitForMainInterface;
+  let cancelMainInterfaceWait = null;
+  let startupImport = null;
+  let startupAssetError = null;
+  let startupInterfaceAt = null;
+  let startupFrameAt = null;
+  let resolveStartupPresentation = null;
+  let importedLibraryLoaded = false;
+  let rotationImportsLoading = false;
   let root = null;
+  let removeUsageMenuInteraction;
+  let removeRightFileTreeClipping;
   let panel = null;
+  let panelReturnFocus = null;
   let layer = null;
   let media = null;
+  let mediaSelection = null;
+  let presentedMedia = null;
+  let committedSelection = null;
+  let previewKey = null;
+  let previewPicture = null;
+  let previewImageData = null;
+  let scenePreview = null;
+  let previewResizeTimer = null;
+  let startupMotion = null;
+  let startupMotionToken = 0;
   let dim = null;
   let status = null;
   let playback = null;
@@ -481,13 +717,16 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   let pendingRender = null;
   let imported = [];
   let database = null;
+  let openingDatabase = null;
   const runtimeAssets = new Map();
-  const pendingAssetRequests = new Set();
+  const assetRequestTokens = new Map();
   const pendingPreviewRequests = new Set();
   const failedPreviewIds = new Set();
   const importedPreviewUrls = new Map();
   const assetTransfers = new Map();
+  const assetFileTransfers = new Map();
   const channel = new BroadcastChannel("codex-wallpaper-p1");
+  const runtimeEvents = new AbortController();
   const previewObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
@@ -495,9 +734,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       requestPreview(entry.target.dataset.previewId);
     }
   });
+  let wallpaperPreviewVisible = false;
+  let wallpaperPreviewVideo = null;
+  let wallpaperPreviewFrame = null;
+  const wallpaperPreviewObserver = new IntersectionObserver(([entry]) => {
+    wallpaperPreviewVisible = entry.isIntersecting;
+    syncWallpaperPreviewPlayback();
+  });
   let measuredFps = 0;
-  let frameCount = 0;
-  let frameWindowStartedAt = performance.now();
   let configSaveTimer = null;
   const pendingConfigFields = new Set();
   const libraryFilters = {
@@ -514,6 +758,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const rotationChanged = pendingConfigFields.delete("rotationMinutes");
     pendingConfigFields.clear();
     localStorage.setItem(configKey, JSON.stringify(config));
+    publishStartupPreview();
     if (rotationChanged) scheduleRotation();
   }
 
@@ -563,7 +808,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   function openDatabase() {
     if (database) return Promise.resolve(database);
-    return new Promise((resolve, reject) => {
+    if (openingDatabase) return openingDatabase;
+    const opening = new Promise((resolve, reject) => {
       const request = indexedDB.open(dbName, 1);
       request.onupgradeneeded = () => {
         const db = request.result;
@@ -571,11 +817,22 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
           db.createObjectStore(dbStore, { keyPath: "id" });
       };
       request.onsuccess = () => {
+        if (openingDatabase !== opening || runtimeEvents.signal.aborted) {
+          request.result.close();
+          reject(new Error("Wallpaper database read cancelled"));
+          return;
+        }
+        openingDatabase = null;
         database = request.result;
         resolve(database);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        if (openingDatabase === opening) openingDatabase = null;
+        reject(request.error);
+      };
     });
+    openingDatabase = opening;
+    return opening;
   }
 
   function requestResult(request) {
@@ -590,9 +847,18 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const values = await requestResult(
       db.transaction(dbStore, "readonly").objectStore(dbStore).getAll()
     );
+    if (database !== db) return;
     imported = values
       .filter((item) => item?.blob)
       .sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
+    importedLibraryLoaded = true;
+  }
+
+  async function readImported(id) {
+    const db = await openDatabase();
+    return requestResult(
+      db.transaction(dbStore, "readonly").objectStore(dbStore).get(id)
+    );
   }
 
   function mediaType(blob) {
@@ -601,24 +867,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return null;
   }
 
+  function importedEntry(item) {
+    return {
+      kind: "imported",
+      id: item.id,
+      title: item.title,
+      type: mediaType(item.blob),
+      playable: true,
+      fallback: false,
+      previewDataUrl: importedPreviewUrls.get(item.id) || null,
+      assetDataUrl: null,
+      thumbnailKind: mediaType(item.blob),
+      reason: null,
+    };
+  }
+
+  function workshopEntry(item) {
+    return { ...item, kind: "workshop" };
+  }
+
   function libraryEntries() {
     return [
-      ...imported.map((item) => ({
-        kind: "imported",
-        id: item.id,
-        title: item.title,
-        type: mediaType(item.blob),
-        playable: true,
-        fallback: false,
-        previewDataUrl: importedPreviewUrls.get(item.id) || null,
-        assetDataUrl: null,
-        thumbnailKind: mediaType(item.blob),
-        reason: null,
-      })),
-      ...(sourcePayload.library || []).map((item) => ({
-        ...item,
-        kind: "workshop",
-      })),
+      ...imported.map(importedEntry),
+      ...(sourcePayload.library || []).map(workshopEntry),
     ];
   }
 
@@ -659,13 +930,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   function findEntry(active) {
     const entry = libraryEntries().find(
-      (entry) => entry.kind === active.kind && entry.id === active.id
+      (item) => item.kind === active.kind && item.id === active.id
     );
-    if (!entry) return null;
-    return {
-      ...entry,
-      ...(runtimeAssets.get(`${entry.kind}:${entry.id}`) || {}),
-    };
+    return entry
+      ? { ...entry, ...(runtimeAssets.get(entryKey(entry)) || {}) }
+      : null;
   }
 
   function entryKey(entry) {
@@ -673,15 +942,24 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function setStatus(message) {
-    if (status) status.textContent = message;
+    if (!status) return;
+    status.textContent = message;
+    const title = panel?.querySelector(".current-wallpaper strong")?.textContent;
+    status.hidden = Boolean(
+      title && (message === title || message.startsWith(`${title} · `))
+    );
   }
 
   function releasePlayback(target) {
     if (!target) return;
-    target.cancelled = true;
     if (target.raf) cancelAnimationFrame(target.raf);
-    target.video?.pause();
-    target.video?.remove();
+    if (target.video) {
+      const { video } = target;
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.remove();
+    }
     target.scene?.destroy();
   }
 
@@ -698,6 +976,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     importedPreviewUrls.clear();
   }
 
+  function cancelAssetFileTransfer(token) {
+    const transfer = assetFileTransfers.get(String(token));
+    if (!transfer) return false;
+    assetFileTransfers.delete(String(token));
+    transfer.input.remove();
+    transfer.resolve(null);
+    return true;
+  }
+
   function cancelPendingRender() {
     const pending = pendingRender;
     pendingRender = null;
@@ -707,8 +994,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function revokePlayback() {
     cancelPendingRender();
     measuredFps = 0;
-    frameCount = 0;
-    frameWindowStartedAt = performance.now();
+    stopWallpaperPreviewPlayback();
     releasePlayback(playback);
     releaseObjectUrl(currentObjectUrl);
     playback = null;
@@ -722,6 +1008,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (next.parentNode !== layer) layer.insertBefore(next, dim);
     next.classList.remove("staged");
     media = next;
+    mediaSelection = entryKey(config.active);
     playback = nextPlayback;
     currentObjectUrl = objectUrl;
     previousMedia?.remove();
@@ -732,8 +1019,270 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     syncMediaCapabilities();
     if (loadingEntryKey) {
       loadingEntryKey = null;
-      syncCardStates();
+      syncCardState(config.active);
     }
+    syncCurrentWallpaper();
+    if (desktopStartup) {
+      committedSelection = JSON.stringify(config.active);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (media !== next || !config.enabled ||
+            committedSelection !== JSON.stringify(config.active)) return;
+        presentedMedia = next;
+        startupFrameAt = Date.now();
+        settleStartupPresentation();
+        setTimeout(() => {
+          if (config.enabled && media === next && !runtimeEvents.signal.aborted)
+            publishStartupPreview();
+        }, 0);
+      }));
+    }
+  }
+
+  function makeStartupPoster(picture) {
+    const canvas = document.createElement("canvas");
+    const width =
+      picture?.videoWidth ?? picture?.naturalWidth ?? picture?.width ?? 1280;
+    const height =
+      picture?.videoHeight ?? picture?.naturalHeight ?? picture?.height ?? 800;
+    const scale = Math.min(1, 2560 / Math.max(width, height));
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    const context = canvas.getContext("2d");
+    if (picture) {
+      if (picture instanceof HTMLCanvasElement) {
+        context.fillStyle = "#16161b";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      context.drawImage(picture, 0, 0, canvas.width, canvas.height);
+    } else {
+      const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#1b2ab5");
+      gradient.addColorStop(0.48, "#5d32b8");
+      gradient.addColorStop(1, "#d44c87");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      for (const [x, y, radius, color] of [[0.18, 0.2, 0.36, "#57d7ff"], [0.82, 0.78, 0.38, "#ff9ac6"]]) {
+        const shine = context.createRadialGradient(x * canvas.width, y * canvas.height, 0, x * canvas.width, y * canvas.height, radius * canvas.width);
+        shine.addColorStop(0, color);
+        shine.addColorStop(1, "transparent");
+        context.fillStyle = shine;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    const poster = canvas.toDataURL("image/jpeg", 0.9);
+    return poster.length <= 1_700_000 ? poster : canvas.toDataURL("image/jpeg", 0.78);
+  }
+
+  function startupScenePoster(scene, fit) {
+    const canvas = scene.canvas;
+    if (
+      !(canvas instanceof HTMLCanvasElement) ||
+      !media.contains(canvas) ||
+      !canvas.clientHeight
+    )
+      return undefined;
+    const aspect = Math.round(100 * canvas.clientWidth / canvas.clientHeight);
+    if (
+      scenePreview?.scene === scene &&
+      scenePreview.fit === fit &&
+      scenePreview.aspect === aspect
+    )
+      return scenePreview.poster;
+    // WebWallGL 3.0.0 exposes its editor through this runtime link. Its capture
+    // copies the frame before WebGL clears the buffer, without resizing the scene.
+    const editor = globalThis[Symbol.for("webwallgl.runtime-link")]
+      ?.get(scene)?.sceneCtl?.editor;
+    if (typeof editor?.captureFrame !== "function") return undefined;
+
+    const capture = { scene, fit, aspect, poster: undefined };
+    scenePreview = capture;
+    void (async () => {
+      try {
+        const frame = await editor.captureFrame();
+        if (scenePreview !== capture || playback?.scene !== scene || !config.enabled)
+          return;
+        if (Math.abs(100 * frame.width / frame.height - aspect) > 1) return;
+        capture.poster = makeStartupPoster(frame);
+        publishStartupPreview();
+      } catch {
+        // The author preview remains available when a scene cannot be captured.
+      }
+    })();
+    return undefined;
+  }
+
+  function cancelStartupMotion() {
+    const work = startupMotion;
+    startupMotion = null;
+    if (!work) return;
+    clearTimeout(work.timer);
+    work.stop?.();
+  }
+
+  function planStartupMotion(element, active, fitMode, aspect) {
+    if (
+      element &&
+      startupMotion?.element === element &&
+      startupMotion.fitMode === fitMode &&
+      startupMotion.aspect === aspect
+    )
+      return;
+    cancelStartupMotion();
+    if (
+      document.visibilityState !== "visible" ||
+      typeof element?.captureStream !== "function" ||
+      !globalThis.MediaRecorder?.isTypeSupported("video/webm;codecs=vp8")
+    )
+      return;
+    const work = { element, fitMode, aspect, token: ++startupMotionToken };
+    startupMotion = work;
+    work.timer = setTimeout(() => {
+      globalThis.__codexWallpaperHostRequest(
+        JSON.stringify({
+          type: "startup-motion-needed",
+          kind: active.kind,
+          id: active.id,
+          fitMode,
+          aspect,
+          token: work.token,
+        })
+      );
+    }, 2200);
+  }
+
+  function startupMotionDecision(token, needed) {
+    const work = startupMotion;
+    if (work?.token !== token || !needed || work.stop) return;
+    let stream;
+    try {
+      const { element } = work;
+      const width = element.videoWidth ?? element.width;
+      const height = element.videoHeight ?? element.height;
+      stream =
+        element instanceof HTMLCanvasElement
+          ? element.captureStream(24)
+          : element.captureStream();
+      const tracks = stream.getVideoTracks();
+      if (!tracks.length)
+        throw new Error("Wallpaper does not expose a video track");
+      const recorder = new MediaRecorder(new MediaStream(tracks), {
+        mimeType: "video/webm;codecs=vp8",
+        videoBitsPerSecond: 10_000_000,
+      });
+      const stopTracks = () =>
+        stream.getTracks().forEach((track) => track.stop());
+      const stopRecorder = () => {
+        clearTimeout(work.timer);
+        if (recorder.state !== "inactive") recorder.stop();
+        stopTracks();
+      };
+      work.stop = stopRecorder;
+      const parts = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) parts.push(event.data);
+      };
+      recorder.onerror = () => {
+        if (startupMotion === work) cancelStartupMotion();
+      };
+      recorder.onstop = () => {
+        stopTracks();
+        if (startupMotion !== work || !parts.length) return;
+        const clip = new Blob(parts, { type: "video/webm" });
+        if (clip.size > 6_000_000 || clip.size < 256) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (startupMotion !== work || !work.element.isConnected) return;
+          const webm = String(reader.result).split(",", 2)[1];
+          const size = 192 * 1024;
+          for (
+            let offset = 0, index = 0;
+            offset < webm?.length;
+            offset += size, index++
+          ) {
+            globalThis.__codexWallpaperHostRequest(
+              JSON.stringify({
+                type: "startup-motion-chunk",
+                token,
+                index,
+                width,
+                height,
+                last: offset + size >= webm.length,
+                data: webm.slice(offset, offset + size),
+              })
+            );
+          }
+        };
+        reader.readAsDataURL(clip);
+      };
+      recorder.start();
+      work.timer = setTimeout(stopRecorder, 3600);
+    } catch {
+      stream?.getTracks().forEach((track) => track.stop());
+    }
+  }
+
+  function publishStartupPreview() {
+    if (
+      !desktopStartup ||
+      typeof globalThis.__codexWallpaperHostRequest !== "function"
+    )
+      return;
+    const { enabled, active, settings } = config;
+    const { dim, opacity, fitMode } = settings;
+    const selection = JSON.stringify(active);
+    const presented =
+      enabled && media === presentedMedia && committedSelection === selection;
+    const scene = presented ? playback?.scene : null;
+    const scenePoster = scene ? startupScenePoster(scene, fitMode) : undefined;
+    if (!scene) scenePreview = null;
+    const picture =
+      presented && activeMediaType() !== "scene"
+        ? media?.querySelector("img, video")
+        : null;
+    const video =
+      picture instanceof HTMLVideoElement
+        ? { width: picture.videoWidth, height: picture.videoHeight }
+        : undefined;
+    const aspect = scenePoster ? scenePreview.aspect : undefined;
+    const motionElement = scenePoster
+      ? scene.canvas
+      : video && active.kind === "imported"
+        ? picture
+        : null;
+    planStartupMotion(motionElement, active, fitMode, aspect);
+    const pictureKey = scenePoster ?? picture;
+    const key = JSON.stringify(
+      enabled ? [selection, dim, opacity, fitMode] : [false]
+    );
+    if (previewKey === key && (!pictureKey || pictureKey === previewPicture))
+      return;
+    if (pictureKey !== previewPicture) previewImageData = null;
+    previewKey = key;
+    previewPicture = pictureKey;
+    let poster =
+      scenePoster ??
+      (picture || active.kind === "builtin" ? previewImageData : undefined);
+    try {
+      if (!poster && enabled && (picture || active.kind === "builtin"))
+        previewImageData = poster = makeStartupPoster(picture);
+    } catch {
+      // Unsupported media can still use its local workshop preview.
+    }
+    globalThis.__codexWallpaperHostRequest(
+      JSON.stringify({
+        type: "startup-preview",
+        enabled,
+        kind: active.kind,
+        id: active.id,
+        poster,
+        source: scenePoster ? "scene-frame" : "media",
+        dim,
+        opacity,
+        fitMode,
+        video,
+        aspect,
+      })
+    );
   }
 
   function stageMedia() {
@@ -744,13 +1293,24 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function trackPending(cancel, resume = null) {
-    const pending = { cancel, resume };
+    const pending = { cancelled: false, settled: false, resume };
+    pending.cancel = () => {
+      if (pending.cancelled) return;
+      pending.cancelled = true;
+      cancel();
+    };
     pendingRender = pending;
     return pending;
   }
 
   function finishPending(pending) {
     if (pendingRender === pending) pendingRender = null;
+  }
+
+  function isCurrentStage(generation, pending) {
+    if (!pending.cancelled && generation === activeGeneration) return true;
+    pending.cancel();
+    return false;
   }
 
   function stopRotation() {
@@ -767,6 +1327,12 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return config.settings.muted
       ? 0
       : Math.max(0, Math.min(1, Number(config.settings.volume) / 100));
+  }
+
+  function shouldPauseHidden() {
+    return (
+      config.settings.pauseWhenHidden && document.visibilityState === "hidden"
+    );
   }
 
   function performanceSummary() {
@@ -822,7 +1388,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   function bindInterfaceAppearance(rules) {
     const token =
-      /var\(--codex-wallpaper-((?:surface|chat|sidebar|top|right|settings(?:-canvas|-card)?)-opacity|interface-blur)\)/g;
+      /var\(--codex-wallpaper-((?:surface|chat|left|sidebar|right|settings(?:-canvas|-card|-glass)?)-opacity|(?:settings|chat|right|project-sidebar)-blur)\)/g;
     for (const rule of rules) {
       for (const property of rule.style || []) {
         const template = rule.style.getPropertyValue(property);
@@ -842,22 +1408,28 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   function applyInterfaceAppearance() {
     const settingsOpacity = surfaceOpacityValue("settings");
-    const blur = Math.max(
-      0,
-      Math.min(24, Number(config.settings.interfaceBlur) || 0)
-    );
+    const blurFilter = (value) => {
+      const pixels = Math.max(0, Math.min(24, Number(value) || 0));
+      return pixels > 0 ? `blur(${pixels}px)` : "none";
+    };
     // Updating inherited variables on html invalidates unrelated Codex styles
     // during a drag. Update the original surface declarations instead.
     const values = {
       "surface-opacity": `${Math.max(20, Math.min(100, Number(config.settings.surfaceOpacity) || 72))}%`,
       "chat-opacity": `${surfaceOpacityValue("chat")}%`,
+      "left-opacity": `${surfaceOpacityValue("left")}%`,
       "sidebar-opacity": `${surfaceOpacityValue("sidebar")}%`,
-      "top-opacity": `${hasSurfaceOverride("sidebar") ? surfaceOpacityValue("sidebar") : 0}%`,
       "right-opacity": `${surfaceOpacityValue("right")}%`,
       "settings-opacity": `${settingsOpacity}%`,
+      "settings-glass-opacity": `${
+        hasSurfaceOverride("settings") ? settingsOpacity : 68 + settingsOpacity * 0.32
+      }%`,
       "settings-canvas-opacity": `${Math.round(settingsOpacity * 0.68)}%`,
       "settings-card-opacity": `${Math.round(settingsOpacity * 0.45)}%`,
-      "interface-blur": blur > 0 ? `blur(${blur}px)` : "none",
+      "settings-blur": blurFilter(config.settings.interfaceBlur),
+      "chat-blur": blurFilter(config.settings.chatBlur),
+      "right-blur": blurFilter(config.settings.rightBlur),
+      "project-sidebar-blur": blurFilter(config.settings.projectSidebarBlur),
     };
     for (const apply of interfaceRules) apply(values);
   }
@@ -876,7 +1448,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function applyVisualSettings(key) {
     if (
       !key ||
-      ["surfaceOpacity", "surfaceOverrides", "interfaceBlur"].includes(key)
+      ["surfaceOpacity", "surfaceOverrides", "interfaceBlur", "chatBlur", "rightBlur", "projectSidebarBlur"].includes(key)
     )
       applyInterfaceAppearance();
     if (!key || key === "interfaceBorders") applyInterfaceBorders();
@@ -910,10 +1482,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function applyHiddenPolicy() {
     scheduleRotation();
     if (!playback) return;
-    if (
-      config.settings.pauseWhenHidden &&
-      document.visibilityState === "hidden"
-    ) {
+    if (shouldPauseHidden()) {
       playback.video?.pause();
       playback.pause?.();
       if (playback.raf) cancelAnimationFrame(playback.raf);
@@ -921,7 +1490,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     }
     playback.video?.play().catch(() => {});
     playback.resume?.();
-    playback.start?.();
   }
 
   function applyCurrentSettings() {
@@ -960,25 +1528,17 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       const key = select.dataset.settingSelect;
       select.value = config.settings[key];
     }
-    for (const override of panel.querySelectorAll("[data-surface-override]")) {
-      const scope = override.dataset.surfaceOverride;
-      const enabled = hasSurfaceOverride(scope);
-      override.checked = enabled;
-      const input = panel.querySelector(
-        `[data-surface-override-value="${scope}"]`
-      );
-      const restore = panel.querySelector(`[data-restore-surface="${scope}"]`);
-      if (input) {
-        input.disabled = !enabled;
-        input.value = String(surfaceOpacityValue(scope));
-        const output = input
-          .closest(".surface-override-controls")
-          ?.querySelector("output");
-        if (output) setControlText(output, input.value);
-      }
-      if (restore) restore.disabled = !enabled;
-    }
+    syncSurfaceOverrideControls();
     syncPerformanceControls();
+  }
+
+  function syncSurfaceOverrideControls() {
+    for (const input of panel.querySelectorAll("[data-surface-override-value]")) {
+      const scope = input.dataset.surfaceOverrideValue;
+      const value = String(surfaceOpacityValue(scope));
+      if (input.value !== value) input.value = value;
+      setControlText(input.parentElement.querySelector("output"), value);
+    }
   }
 
   function syncPerformanceControls() {
@@ -1019,18 +1579,19 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     hint.textContent = ["video", "scene"].includes(type)
       ? "静音和音量仅在原生播放时可用。"
       : "当前素材不适用静音和音量。";
+    const capability = panel.querySelector("[data-playback-capability]");
     const fps = panel.querySelector("[data-setting='fps']");
     if (fps) {
       fps.disabled = !playback?.setFps;
       fps.closest(".range").querySelector(".range-value button").disabled =
         fps.disabled;
-      setControlText(
-        panel.querySelector("[data-playback-capability]"),
-        fps.disabled
-          ? "帧率上限仅在 Scene 原生渲染时可用。"
-          : playbackCapabilityText()
-      );
     }
+    setControlText(
+      capability,
+      fps?.disabled
+        ? "帧率上限仅在 Scene 原生渲染时可用。"
+        : playbackCapabilityText()
+    );
   }
 
   function syncPauseControl(
@@ -1083,24 +1644,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (use) use.setAttribute("aria-pressed", String(selected));
     if (current) current.hidden = !selected;
     if (favoriteButton) {
-      favoriteButton.textContent = favorite ? "★" : "☆";
       favoriteButton.setAttribute("aria-pressed", String(favorite));
     }
     if (queueButton) {
-      queueButton.textContent = queued ? "移除轮播" : "加入轮播";
+      const label = queued ? "移除轮播" : "加入轮播";
+      setControlText(queueButton.querySelector("span"), label);
+      queueButton.title = label;
       queueButton.setAttribute("aria-pressed", String(queued));
     }
     if (status) {
-      const entry = libraryEntries().find(
-        (candidate) => candidate.kind === key.kind && candidate.id === key.id
-      );
-      if (entry) status.textContent = entryStatusText(entry);
+      const entry = findEntry(key);
+      if (entry) setControlText(status, entryStatusText(entry));
     }
   }
 
-  function syncCardStates() {
-    if (!panel) return;
-    for (const item of panel.querySelectorAll(".card")) updateCardState(item);
+  function cardFor(key) {
+    return panel?.querySelector(
+      `.card[data-entry-kind="${CSS.escape(key.kind)}"][data-entry-id="${CSS.escape(key.id)}"]`
+    );
+  }
+
+  function syncCardState(key) {
+    const item = cardFor(key);
+    if (item) updateCardState(item);
   }
 
   function applyLibraryFilters() {
@@ -1145,14 +1711,14 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       panel.querySelector("[data-panel-region='library']").hidden
     )
       return;
-    const panelRect = panel.getBoundingClientRect();
+    const contentRect = panel.querySelector(".panel-content").getBoundingClientRect();
     for (const item of panel.querySelectorAll(".card:not([hidden])")) {
       const visual = item.querySelector(".thumb[data-preview-id]");
       if (!visual) continue;
       const visualRect = visual.getBoundingClientRect();
       if (
-        visualRect.bottom >= panelRect.top &&
-        visualRect.top <= panelRect.bottom
+        visualRect.bottom >= contentRect.top &&
+        visualRect.top <= contentRect.bottom
       )
         requestPreview(visual.dataset.previewId);
     }
@@ -1171,7 +1737,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     for (const key of change.appearance) applyVisualSettings(key);
     applyPlaybackSettings(change);
     if (change.favorites || change.playlist) {
-      syncCardStates();
+      for (const item of panel?.querySelectorAll(".card") || [])
+        updateCardState(item);
       if (change.favorites) applyLibraryFilters();
     }
     if (change.playlist) syncPlaylistSummary();
@@ -1183,38 +1750,33 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   async function applyConfigChange(change) {
     if (!config.enabled) {
-      if (root) await disable(false);
-      return state();
+      publishStartupPreview();
+      return root || cancelMainInterfaceWait ? disable(false) : state();
     }
     if (!root) {
-      mount();
-      await loadImported();
-      await applyActive();
-      return state();
-    }
-    if (change.enabled || change.identity) {
-      await applyActive();
-      return state();
+      publishStartupPreview();
+      return restoreActive();
     }
     syncConfigUi(change);
+    publishStartupPreview();
+    if (change.enabled || change.identity) {
+      await applyActive();
+    }
     return state();
-  }
-
-  function hasCurrentFrame() {
-    return Boolean(
-      media &&
-      (media.classList.contains("builtin") ||
-        media.querySelector("img, video, canvas, iframe, .scene-host.ready"))
-    );
   }
 
   function recoverFailedMedia(message, previewUrl = null) {
     if (loadingEntryKey) {
       failedEntryKeys.add(loadingEntryKey);
       loadingEntryKey = null;
-      syncCardStates();
+      syncCardState(config.active);
     }
-    if (hasCurrentFrame()) {
+    syncCurrentWallpaper();
+    if (
+      media &&
+      (media.classList.contains("builtin") ||
+        media.querySelector("img, video, canvas, iframe, .scene-host.ready"))
+    ) {
       setStatus(`${message}，已保留当前画面`);
       return;
     }
@@ -1227,9 +1789,10 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
 
   async function configureHost() {
     hostReady = true;
-    pendingAssetRequests.clear();
+    assetRequestTokens.clear();
     pendingPreviewRequests.clear();
     if (root) await applyActive();
+    else if (config.enabled && !mainInterfaceShown) await restoreActive();
     return state();
   }
 
@@ -1246,35 +1809,25 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const image = document.createElement("img");
     image.alt = "";
     next.append(image);
-    let cancelled = false;
-    let settled = false;
     const pending = trackPending(() => {
-      if (cancelled) return;
-      cancelled = true;
       image.onerror = null;
       next.remove();
       releaseObjectUrl(objectUrl, currentObjectUrl);
     });
     const fail = () => {
-      if (settled) return;
-      settled = true;
+      if (pending.settled) return;
+      pending.settled = true;
       finishPending(pending);
-      if (cancelled || generation !== activeGeneration) {
-        pending.cancel();
-        return;
-      }
+      if (!isCurrentStage(generation, pending)) return;
       next.remove();
       releaseObjectUrl(objectUrl, currentObjectUrl);
       recoverFailedMedia("素材加载失败");
     };
     const commit = () => {
-      if (settled) return;
-      settled = true;
+      if (pending.settled) return;
+      pending.settled = true;
       finishPending(pending);
-      if (cancelled || generation !== activeGeneration) {
-        pending.cancel();
-        return;
-      }
+      if (!isCurrentStage(generation, pending)) return;
       commitMedia(next, null, objectUrl);
       if (message) setStatus(message);
     };
@@ -1295,18 +1848,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     video.muted = volume === 0;
     video.volume = volume;
     next.append(video);
-    let cancelled = false;
-    let settled = false;
     let frameRequest = 0;
     let resume = null;
     const current = {
-      cancelled: false,
       video,
     };
     const pending = trackPending(
       () => {
-        if (cancelled) return;
-        cancelled = true;
         video.onerror = null;
         video.onloadedmetadata = null;
         if (frameRequest) video.cancelVideoFrameCallback?.(frameRequest);
@@ -1317,56 +1865,67 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       () => resume?.()
     );
     const fail = () => {
-      if (settled) return;
-      settled = true;
+      if (pending.settled) return;
+      pending.settled = true;
       finishPending(pending);
-      if (cancelled || generation !== activeGeneration) {
-        pending.cancel();
-        return;
-      }
+      if (!isCurrentStage(generation, pending)) return;
       pending.cancel();
       recoverFailedMedia("视频加载失败", previewUrl);
     };
     const drawFirstFrame = () => {
-      if (settled) return;
-      if (cancelled || generation !== activeGeneration) {
-        pending.cancel();
+      if (pending.settled) return;
+      if (!isCurrentStage(generation, pending)) return;
+      if (video.seeking || !video.videoWidth || !video.videoHeight || video.readyState < 2)
         return;
-      }
-      if (!video.videoWidth || !video.videoHeight || video.readyState < 2)
-        return;
-      settled = true;
+      pending.settled = true;
       finishPending(pending);
-      current.cancelled = false;
+      if (frameRequest) video.cancelVideoFrameCallback?.(frameRequest);
+      video.onloadedmetadata = null;
       commitMedia(next, current, objectUrl);
-      if (
-        config.settings.pauseWhenHidden &&
-        document.visibilityState === "hidden"
-      )
-        video.pause();
+      if (shouldPauseHidden()) video.pause();
       if (message) setStatus(message);
     };
     const waitForPresentedFrame = () => {
-      if (frameRequest) return;
+      if (
+        pending.settled ||
+        pending.cancelled ||
+        generation !== activeGeneration ||
+        frameRequest
+      )
+        return;
       if (typeof video.requestVideoFrameCallback === "function") {
         frameRequest = video.requestVideoFrameCallback(() => {
           frameRequest = 0;
           drawFirstFrame();
+          // Chromium can present before the element reports HAVE_CURRENT_DATA.
+          waitForPresentedFrame();
         });
       } else {
         video.addEventListener("loadeddata", drawFirstFrame, { once: true });
       }
     };
     const drawLoadedFrame = () => {
-      if (
-        config.settings.pauseWhenHidden &&
-        document.visibilityState === "hidden"
-      )
-        drawFirstFrame();
+      if (shouldPauseHidden()) drawFirstFrame();
       else requestAnimationFrame(drawFirstFrame);
     };
+    const drawLoadedFrameOrSeek = () => {
+      if (video.readyState >= 2) {
+        drawLoadedFrame();
+        return;
+      }
+      video.addEventListener("loadeddata", drawLoadedFrame, { once: true });
+      video.addEventListener("seeked", drawLoadedFrame, { once: true });
+      try {
+        video.currentTime = 0.001;
+      } catch {}
+    };
     resume = () => {
-      if (settled || cancelled || generation !== activeGeneration) return;
+      if (
+        pending.settled ||
+        pending.cancelled ||
+        generation !== activeGeneration
+      )
+        return;
       if (video.readyState >= 2) drawLoadedFrame();
       video
         .play()
@@ -1374,52 +1933,42 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         .catch(() => {});
     };
     video.onloadedmetadata = () => {
-      if (cancelled || generation !== activeGeneration) {
-        pending.cancel();
-        return;
+      if (!isCurrentStage(generation, pending)) return;
+      if (
+        startupVideo &&
+        config.active.kind === "workshop" &&
+        config.active.id === startupVideo.id &&
+        Number.isFinite(video.duration) &&
+        video.duration > 0
+      ) {
+        const elapsed = (Date.now() - startupVideo.started) / 1000;
+        startupVideo = null;
+        if (elapsed > 0 && elapsed < 35) {
+          try {
+            video.currentTime = elapsed % video.duration;
+          } catch {}
+        }
       }
       waitForPresentedFrame();
     };
-    video.onerror = () => {
-      fail();
-    };
+    video.onerror = fail;
     video
       .play()
       .then(() => {
-        if (cancelled || generation !== activeGeneration) {
-          pending.cancel();
-          return;
-        }
-        if (
-          config.settings.pauseWhenHidden &&
-          document.visibilityState === "hidden"
-        ) {
+        if (!isCurrentStage(generation, pending)) return;
+        if (shouldPauseHidden()) {
           video.pause();
-          if (video.readyState >= 2) drawLoadedFrame();
-          else {
-            video.addEventListener("loadeddata", drawLoadedFrame, {
-              once: true,
-            });
-            video.addEventListener("seeked", drawLoadedFrame, {
-              once: true,
-            });
-            try {
-              video.currentTime = 0.001;
-            } catch {}
-          }
+          drawLoadedFrameOrSeek();
         }
       })
       .catch(() => {
-        if (video.readyState >= 2) drawLoadedFrame();
-        else {
-          video.addEventListener("loadeddata", drawLoadedFrame, {
-            once: true,
-          });
-          video.addEventListener("seeked", drawLoadedFrame, { once: true });
-          try {
-            video.currentTime = 0.001;
-          } catch {}
-        }
+        if (
+          pending.settled ||
+          pending.cancelled ||
+          generation !== activeGeneration
+        )
+          return;
+        drawLoadedFrameOrSeek();
       });
   }
 
@@ -1431,12 +1980,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return bytes;
   }
 
-  function bytesFromDataUrl(url) {
-    return bytesFromBase64(String(url).split(",", 2)[1] || "");
-  }
-
   async function sceneBytes(assetUrl) {
-    if (assetUrl.startsWith("data:")) return bytesFromDataUrl(assetUrl);
+    if (assetUrl.startsWith("data:"))
+      return bytesFromBase64(String(assetUrl).split(",", 2)[1] || "");
     const response = await fetch(assetUrl);
     if (!response.ok) throw new Error(`Scene asset ${response.status}`);
     return new Uint8Array(await response.arrayBuffer());
@@ -1445,7 +1991,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function showScene(entry, assetUrl, previewUrl) {
     const generation = activeGeneration;
     const engine = globalThis.WebWallGL;
+    const objectUrl = assetUrl.startsWith("blob:") ? assetUrl : null;
     if (!engine?.createScene || !engine?.bytesSource) {
+      releaseObjectUrl(objectUrl, currentObjectUrl);
       if (previewUrl)
         showImage(previewUrl, `${entry.title} · Scene 渲染器不可用，预览降级`);
       else recoverFailedMedia(`${entry.title} · Scene 渲染器不可用`);
@@ -1460,10 +2008,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       volume: effectiveVolume(),
       fit: config.settings.fitMode === "contain" ? "contain" : "cover",
     });
-    let cancelled = false;
-    let settled = false;
     const current = {
-      cancelled: false,
       scene: instance,
       supportsFit: typeof instance.setFit === "function",
       pause: () => instance.pause(),
@@ -1473,14 +2018,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       setFit: (fit) => instance.setFit?.(fit),
     };
     const pending = trackPending(() => {
-      if (cancelled) return;
-      cancelled = true;
       releasePlayback(current);
       next.remove();
+      releaseObjectUrl(objectUrl, currentObjectUrl);
     });
     const fail = () => {
-      if (settled) return;
-      settled = true;
+      if (pending.settled) return;
+      pending.settled = true;
       finishPending(pending);
       pending.cancel();
       if (generation === activeGeneration)
@@ -1488,7 +2032,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     };
     sceneBytes(assetUrl)
       .then((bytes) => {
-        if (cancelled || generation !== activeGeneration) throw null;
+        if (pending.cancelled || generation !== activeGeneration) throw null;
         return instance.load(
           engine.bytesSource(
             bytes,
@@ -1504,20 +2048,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
           )
       )
       .then(() => {
-        if (settled) return;
-        if (cancelled || generation !== activeGeneration) {
-          pending.cancel();
-          return;
-        }
-        settled = true;
+        if (pending.settled) return;
+        if (!isCurrentStage(generation, pending)) return;
+        pending.settled = true;
         finishPending(pending);
         host.classList.add("ready");
-        commitMedia(next, current);
-        if (
-          config.settings.pauseWhenHidden &&
-          document.visibilityState === "hidden"
-        )
-          instance.pause();
+        commitMedia(next, current, objectUrl);
+        if (shouldPauseHidden()) instance.pause();
         setStatus(`${entry.title} · Scene`);
       })
       .catch(fail);
@@ -1529,23 +2066,16 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const frame = document.createElement("iframe");
     frame.setAttribute("sandbox", "allow-scripts");
     frame.setAttribute("referrerpolicy", "no-referrer");
-    let cancelled = false;
-    let settled = false;
     const pending = trackPending(() => {
-      if (cancelled) return;
-      cancelled = true;
       frame.onload = null;
       next.remove();
     });
     frame.onload = () => {
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
-          if (settled) return;
-          if (cancelled || generation !== activeGeneration) {
-            pending.cancel();
-            return;
-          }
-          settled = true;
+          if (pending.settled) return;
+          if (!isCurrentStage(generation, pending)) return;
+          pending.settled = true;
           finishPending(pending);
           commitMedia(next);
           setStatus(`${entry.title} · Web 离线沙箱`);
@@ -1556,47 +2086,72 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     frame.srcdoc = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; script-src 'none'">${entry.webHtml}`;
   }
 
+  function discardInactiveAssetRequests(active) {
+    for (const id of assetRequestTokens.keys()) {
+      if (isActiveWorkshop(id)) continue;
+      assetRequestTokens.delete(id);
+      assetTransfers.delete(id);
+    }
+    for (const [token, transfer] of assetFileTransfers) {
+      if (active.kind !== "workshop" || active.id !== transfer.entry.id)
+        cancelAssetFileTransfer(token);
+    }
+  }
+
+  function requestWorkshopAsset(entry) {
+    if (assetRequestTokens.has(entry.id) ||
+        typeof globalThis.__codexWallpaperHostRequest !== "function") return;
+    const requestToken = crypto.randomUUID();
+    assetRequestTokens.set(entry.id, requestToken);
+    globalThis.__codexWallpaperHostRequest(JSON.stringify({
+      type: "load-asset",
+      id: entry.id,
+      request: requestToken,
+    }));
+  }
+
   async function applyActive() {
     if (!root) return;
     const generation = ++activeGeneration;
     cancelPendingRender();
     stopRotation();
     const active = config.active || defaults.active;
-    for (const id of pendingAssetRequests) {
-      if (active.kind === "workshop" && active.id === id) continue;
-      pendingAssetRequests.delete(id);
-      assetTransfers.delete(id);
-    }
+    discardInactiveAssetRequests(active);
     const entry = findEntry(active);
+    syncCurrentWallpaper(entry);
     loadingEntryKey = entry ? entryKey(entry) : null;
     if (entry) {
       failedEntryKeys.delete(loadingEntryKey);
       setStatus(`正在加载：${entry.title}`);
-      syncCardStates();
     }
+    const previousCard = panel?.querySelector('.card[data-selected="true"]');
+    const selectedCard = cardFor(active);
+    if (previousCard && previousCard !== selectedCard)
+      updateCardState(previousCard);
+    if (selectedCard) updateCardState(selectedCard);
     if (active.kind === "builtin") {
       showGradient("内置渐变");
+    } else if (active.kind === "imported") {
+      const prepared = startupImport;
+      startupImport = null;
+      const item = prepared?.id === active.id
+        ? await prepared.result
+        : await readImported(active.id);
+      if (generation !== activeGeneration) return state();
+      if (!item?.blob) {
+        recoverFailedMedia("已跳过缺失的素材");
+      } else {
+        if (!entry) imported.unshift(item);
+        const url = URL.createObjectURL(item.blob);
+        if (mediaType(item.blob) === "video") {
+          showVideo(url, `${item.title} · 视频`, url);
+        } else {
+          showImage(url, `${item.title} · 图片`, url);
+        }
+      }
     } else {
       if (!entry) {
         setStatus("已跳过缺失的壁纸，已保留当前画面");
-      } else if (entry.kind === "imported") {
-        const db = await openDatabase();
-        if (generation !== activeGeneration) return state();
-        const item = await requestResult(
-          db.transaction(dbStore, "readonly").objectStore(dbStore).get(entry.id)
-        );
-        if (generation !== activeGeneration) return state();
-        if (!item?.blob) {
-          recoverFailedMedia("已跳过缺失的素材");
-        } else {
-          const url = URL.createObjectURL(item.blob);
-          const kind = mediaType(item.blob);
-          if (kind === "video") {
-            showVideo(url, `${entry.title} · 视频`, url);
-          } else {
-            showImage(url, `${entry.title} · 图片`, url);
-          }
-        }
       } else {
         const assetUrl = entry.assetUrl || entry.assetDataUrl;
         const previewUrl = entry.previewDataUrl;
@@ -1605,26 +2160,22 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
             showImage(previewUrl, `${entry.title} · Web 预览降级`);
           else recoverFailedMedia(`${entry.title} · Web 离线文件不可用`);
           scheduleRotation();
-          renderPanel();
+          renderPanel(false);
           return;
         }
         if (!assetUrl && !entry.webHtml) {
-          if (!pendingAssetRequests.has(entry.id)) {
-            pendingAssetRequests.add(entry.id);
-            if (typeof globalThis.__codexWallpaperHostRequest === "function") {
-              globalThis.__codexWallpaperHostRequest(
-                JSON.stringify({ type: "load-asset", id: entry.id })
-              );
-            }
+          if (startupAssetError?.id === entry.id) {
+            const { message } = startupAssetError;
+            startupAssetError = null;
+            recoverFailedMedia(`素材加载失败：${message}`, previewUrl);
+          } else {
+            requestWorkshopAsset(entry);
           }
           scheduleRotation();
-          renderPanel();
           return;
         }
         const url = assetUrl || previewUrl;
-        if (!url && !entry.webHtml) {
-          setStatus(`${entry.title} · 无可用画面，已保留当前画面`);
-        } else if (entry.type === "scene" && assetUrl) {
+        if (entry.type === "scene" && assetUrl) {
           showScene(entry, assetUrl, previewUrl);
         } else if (entry.type === "web" && entry.webHtml) {
           showWeb(entry);
@@ -1647,7 +2198,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       }
     }
     scheduleRotation();
-    renderPanel();
+    renderPanel(false);
   }
 
   function playlistEntries() {
@@ -1671,13 +2222,20 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function scheduleRotation() {
     stopRotation();
     const minutes = Number(config.settings.rotationMinutes);
+    if (config.enabled && minutes > 0 && !importedLibraryLoaded &&
+        config.playlist.some((entry) => entry.kind === "imported")) {
+      if (!rotationImportsLoading) {
+        rotationImportsLoading = true;
+        void loadImported()
+          .then(() => { if (root && importedLibraryLoaded) scheduleRotation(); })
+          .catch(() => {})
+          .finally(() => { rotationImportsLoading = false; });
+      }
+      return;
+    }
     const entries = config.enabled && minutes > 0 ? playlistEntries() : [];
     syncPauseControl(entries.length >= 2);
-    if (
-      entries.length < 2 ||
-      (config.settings.pauseWhenHidden && document.visibilityState === "hidden")
-    )
-      return;
+    if (entries.length < 2 || shouldPauseHidden()) return;
     rotationTimer = setInterval(
       () => {
         const current = entries.findIndex(
@@ -1713,10 +2271,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (index >= 0) list.splice(index, 1);
     else list.push({ kind: entry.kind, id: entry.id });
     saveConfig();
-    const item = panel?.querySelector(
-      `.card[data-entry-kind="${entry.kind}"][data-entry-id="${entry.id}"]`
-    );
-    if (item) updateCardState(item);
+    syncCardState(entry);
     if (listName === "favorites") applyLibraryFilters();
     if (listName === "playlist") {
       syncPlaylistSummary();
@@ -1785,6 +2340,152 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     previewObserver.observe(visual);
   }
 
+  function currentWallpaper() {
+    const banner = document.createElement("div");
+    banner.className = "current-wallpaper";
+    const canvas = document.createElement("canvas");
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.hidden = true;
+    canvas.setAttribute("aria-hidden", "true");
+    const image = document.createElement("img");
+    image.alt = "";
+    image.hidden = true;
+    image.onerror = () => {
+      image.hidden = true;
+    };
+    const description = document.createElement("div");
+    description.className = "current-wallpaper-description";
+    const title = document.createElement("strong");
+    title.dataset.currentWallpaperTitle = "";
+    const label = document.createElement("span");
+    label.textContent = "当前壁纸";
+    const fallback = document.createElement("small");
+    fallback.textContent = "仅显示封面";
+    fallback.hidden = true;
+    description.append(label, title, fallback);
+    banner.append(canvas, image, description);
+    wallpaperPreviewObserver.observe(canvas);
+    return banner;
+  }
+
+  function stopWallpaperPreviewPlayback() {
+    if (wallpaperPreviewFrame !== null)
+      wallpaperPreviewVideo.cancelVideoFrameCallback(wallpaperPreviewFrame);
+    wallpaperPreviewFrame = null;
+    wallpaperPreviewVideo = null;
+  }
+
+  function syncWallpaperPreviewPlayback() {
+    const canvas = panel?.querySelector(".current-wallpaper canvas");
+    const video =
+      wallpaperPreviewVisible &&
+      document.visibilityState === "visible" &&
+      panel?.classList.contains("open") &&
+      !panel.querySelector("[data-panel-region='library']").hidden &&
+      canvas && !canvas.hidden
+        ? playback?.video
+        : null;
+    if (video === wallpaperPreviewVideo) return;
+    stopWallpaperPreviewPlayback();
+    if (!video) return;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) return;
+    wallpaperPreviewVideo = video;
+    const maxFps = 30;
+    const frameInterval = 1000 / maxFps;
+    const frameTimes = [];
+    let nextFrameAt = performance.now();
+
+    function drawFrame() {
+      const { videoWidth: width, videoHeight: height } = video;
+      if (!width || !height || video.readyState < 2) return;
+      const box = canvas.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      const sourceAspect = width / height;
+      const previewAspect = Math.max(
+        sourceAspect,
+        Math.min(box.width / box.height, sourceAspect * 1.5)
+      );
+      // Keep the full width and crop at most one third of the height.
+      const croppedHeight = Math.round(width / previewAspect);
+      const cropTop = Math.round((height - croppedHeight) * 0.26);
+      const scale = Math.min(
+        1,
+        (box.width * devicePixelRatio) / width,
+        (box.height * devicePixelRatio) / croppedHeight,
+        1920 / Math.max(width, croppedHeight),
+        1080 / Math.min(width, croppedHeight)
+      );
+      const targetWidth = Math.max(1, Math.round(width * scale));
+      const targetHeight = Math.max(1, Math.round(croppedHeight * scale));
+      const now = performance.now();
+      // Leave a millisecond of headroom for timer rounding at the window boundary.
+      if (frameTimes.length === maxFps) {
+        if (now - frameTimes[0] < 1001) return;
+        frameTimes.shift();
+      }
+      frameTimes.push(now);
+      if (canvas.width !== targetWidth) canvas.width = targetWidth;
+      if (canvas.height !== targetHeight) canvas.height = targetHeight;
+      context.drawImage(
+        video, 0, cropTop, width, croppedHeight,
+        0, 0, targetWidth, targetHeight
+      );
+      nextFrameAt = Math.max(nextFrameAt + frameInterval, now + frameInterval / 2);
+    }
+
+    function onVideoFrame() {
+      if (wallpaperPreviewVideo !== video) return;
+      if (performance.now() >= nextFrameAt) drawFrame();
+      wallpaperPreviewFrame = video.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    drawFrame();
+    wallpaperPreviewFrame = video.requestVideoFrameCallback(onVideoFrame);
+  }
+
+  function syncCurrentWallpaper(entry) {
+    if (!panel?.classList.contains("open")) return;
+    if (entry === undefined) entry = findEntry(config.active);
+    const title = entry?.title ||
+      (config.active.kind === "builtin" ? "内置渐变" : "当前素材不可用");
+    for (const heading of panel.querySelectorAll("[data-current-wallpaper-title]")) {
+      setControlText(heading, title);
+      heading.title = title;
+    }
+    const banner = panel.querySelector(".current-wallpaper");
+    const canvas = banner.querySelector("canvas");
+    const image = banner.querySelector("img");
+    const matchingMedia = mediaSelection === entryKey(config.active);
+    const video = matchingMedia && playback?.video?.requestVideoFrameCallback
+      ? playback.video
+      : null;
+    const originalImage = matchingMedia && entry?.type === "image"
+      ? media?.querySelector("img")?.currentSrc
+      : null;
+    const cover = entry?.thumbnailKind === "video" ? null : entry?.previewDataUrl;
+    const preview = originalImage || cover;
+    banner.classList.toggle("has-preview", Boolean(video || originalImage));
+    canvas.hidden = !video;
+    if (!video && canvas.width) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    image.hidden = Boolean(video || !preview);
+    image.toggleAttribute("data-cover", !originalImage);
+    if (!image.hidden && image.getAttribute("src") !== preview) image.src = preview;
+    if (image.hidden) image.removeAttribute("src");
+    banner.querySelector("small").hidden = Boolean(
+      image.hidden || entry?.type !== "video" || !failedEntryKeys.has(entryKey(entry))
+    );
+    syncWallpaperPreviewPlayback();
+    if (status?.textContent) setStatus(status.textContent);
+    if (entry && !video && !preview && entry.thumbnailKind !== "video" &&
+        !panel.querySelector("[data-panel-region='library']").hidden)
+      requestPreview(entry.id);
+  }
+
   function card(entry) {
     const item = document.createElement("article");
     item.className = "card";
@@ -1804,6 +2505,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     current.hidden = !selected;
     const title = document.createElement("strong");
     title.textContent = entry.title;
+    title.title = entry.title;
     const meta = document.createElement("small");
     meta.dataset.cardStatus = "";
     meta.textContent = entryStatusText(entry);
@@ -1816,19 +2518,29 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     use.onclick = () => {
       config.active = { kind: entry.kind, id: entry.id };
       saveConfig();
-      requestPreview(entry.id);
+      if (entry.type !== "video") requestPreview(entry.id);
       return applyActive();
     };
     const favorite = document.createElement("button");
-    favorite.textContent = isFavorite(entry) ? "★" : "☆";
+    favorite.className = "card-icon";
+    favorite.innerHTML =
+      '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m12 3 2.6 5.5 6.1.8-4.5 4.3 1.1 6.1-5.3-3-5.3 3 1.1-6.1-4.5-4.3 6.1-.8Z"/></svg>';
     favorite.dataset.entryAction = "favorite";
     favorite.title = "收藏";
+    favorite.setAttribute("aria-label", "收藏");
     favorite.setAttribute("aria-pressed", String(isFavorite(entry)));
     favorite.onclick = () => toggleKey("favorites", entry);
     const queue = document.createElement("button");
-    queue.textContent = inPlaylist(entry) ? "移除轮播" : "加入轮播";
+    queue.className = "card-icon";
+    queue.innerHTML =
+      '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11V8a2 2 0 0 1 2-2h12m-3-3 3 3-3 3M20 13v3a2 2 0 0 1-2 2H6m3-3-3 3 3 3"/></svg>';
+    const queueLabel = document.createElement("span");
+    const queued = inPlaylist(entry);
+    queueLabel.textContent = queued ? "移除轮播" : "加入轮播";
+    queue.title = queueLabel.textContent;
+    queue.append(queueLabel);
     queue.dataset.entryAction = "queue";
-    queue.setAttribute("aria-pressed", String(inPlaylist(entry)));
+    queue.setAttribute("aria-pressed", String(queued));
     queue.onclick = () => toggleKey("playlist", entry);
     actions.append(use, favorite, queue);
     item.append(current, visual, title, meta, actions);
@@ -1842,6 +2554,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   ) {
     const value = String(setting);
     if (input.value !== value) input.value = value;
+    if (editor.closest("[data-panel-region='appearance']")) {
+      const progress = `${((Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min))) * 100}%`;
+      if (input.style.getPropertyValue("--appearance-progress") !== progress)
+        input.style.setProperty("--appearance-progress", progress);
+    }
     setControlText(editor.querySelector("output"), value);
     const number = editor.querySelector("input");
     if (document.activeElement !== number) number.value = value;
@@ -2028,15 +2745,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   function surfaceOverrideControl(label, scope) {
     const row = document.createElement("div");
     row.className = "surface-override";
-    const top = document.createElement("label");
-    top.className = "setting-toggle";
-    const override = document.createElement("input");
-    override.type = "checkbox";
-    override.dataset.surfaceOverride = scope;
-    override.checked = hasSurfaceOverride(scope);
-    const text = document.createElement("span");
-    text.textContent = label;
-    top.append(override, text);
+    const title = document.createElement("label");
+    title.textContent = label;
 
     const controls = document.createElement("div");
     controls.className = "surface-override-controls";
@@ -2046,7 +2756,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     input.max = "100";
     input.step = "1";
     input.dataset.surfaceOverrideValue = scope;
-    input.disabled = !override.checked;
+    input.id = `codex-wallpaper-surface-${scope}`;
+    title.htmlFor = input.id;
+    input.setAttribute("aria-label", `${label}强度`);
     input.value = String(surfaceOpacityValue(scope));
     const output = document.createElement("output");
     output.dataset.unit = "%";
@@ -2054,25 +2766,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const restore = document.createElement("button");
     restore.type = "button";
     restore.dataset.restoreSurface = scope;
-    restore.textContent = "恢复继承";
-    restore.disabled = !override.checked;
+    restore.textContent = "恢复默认";
+    restore.setAttribute("aria-label", `${label}：恢复默认`);
 
-    const sync = () => {
-      const enabled = override.checked;
-      input.disabled = !enabled;
-      restore.disabled = !enabled;
-      input.value = String(surfaceOpacityValue(scope));
-      setControlText(output, input.value);
-    };
-    override.onchange = () => {
-      markSettingsChanged();
-      config.settings.surfaceOverrides[scope] = override.checked
-        ? surfaceOpacityValue(scope)
-        : null;
-      applyInterfaceAppearance();
-      saveConfig();
-      sync();
-    };
     input.oninput = () => {
       markSettingsChanged();
       config.settings.surfaceOverrides[scope] = Number(input.value);
@@ -2083,15 +2779,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
     restore.onclick = () => {
+      if (!hasSurfaceOverride(scope)) return;
       markSettingsChanged();
-      override.checked = false;
       config.settings.surfaceOverrides[scope] = null;
       applyInterfaceAppearance();
       saveConfig();
-      sync();
+      syncSurfaceOverrideControls();
     };
     controls.append(input, output, restore);
-    row.append(top, controls);
+    row.append(title, controls);
     return row;
   }
 
@@ -2262,79 +2958,125 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     setSettingsStatus("已移除导入素材");
   }
 
-  function renderPanel() {
+  function settingsGroup(title, ...controls) {
+    const group = document.createElement("section");
+    group.className = "settings-group";
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    group.append(heading, ...controls);
+    return group;
+  }
+
+  function renderPanel(renderCards = true) {
     if (!panel) return;
     const list = panel.querySelector(".wallpaper-list");
     const playlist = panel.querySelector(".playlist-summary");
     const playbackSettings = panel.querySelector("[data-playback-settings]");
     const appearanceSettings = panel.querySelector(".settings-grid");
     if (!list || !playlist || !playbackSettings || !appearanceSettings) return;
-    previewObserver.disconnect();
-    list.replaceChildren(...libraryEntries().map(card));
-    applyLibraryFilters();
-    const queued = playlistEntries();
-    playlist.textContent = queued.length
-      ? `轮播：${queued.map((entry) => entry.title).join(" · ")}`
-      : "轮播列表为空";
-    const performance = document.createElement("p");
-    performance.className = "playlist-summary";
-    performance.dataset.performanceSummary = "";
-    performance.textContent = performanceSummary();
-    const tradeoff = document.createElement("p");
-    tradeoff.className = "playback-capability";
-    tradeoff.dataset.performanceTradeoff = "";
-    tradeoff.textContent = performanceTradeoff();
-    const capability = document.createElement("p");
-    capability.className = "playback-capability";
-    capability.dataset.playbackCapability = "";
-    capability.textContent = playbackCapabilityText();
-    const audioCapability = document.createElement("p");
-    audioCapability.className = "playback-capability";
-    audioCapability.dataset.audioCapability = "";
-    playbackSettings.replaceChildren(
-      playbackProfileControl(),
-      performance,
-      tradeoff,
-      capability,
-      settingToggle("静音", "muted"),
-      range("音量", "volume", 0, 100, "%"),
-      audioCapability,
-      ...(activeMediaType() === "scene"
-        ? [range("Scene 上限", "fps", 1, 30, " FPS")]
-        : []),
-      settingToggle("不可见时暂停", "pauseWhenHidden"),
-      range("轮播间隔", "rotationMinutes", 0, 120, " 分钟")
-    );
+    if (renderCards) {
+      previewObserver.disconnect();
+      list.replaceChildren(...libraryEntries().map(card));
+      applyLibraryFilters();
+    }
+    syncPlaylistSummary();
     const type = activeMediaType();
-    const advanced = document.createElement("details");
-    const advancedTitle = document.createElement("summary");
-    advancedTitle.textContent = "分区读底覆盖";
-    advanced.append(
-      advancedTitle,
-      surfaceOverrideControl("聊天区覆盖", "chat"),
-      surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
-      surfaceOverrideControl("右侧面板覆盖", "right"),
-      surfaceOverrideControl("设置面板覆盖", "settings")
-    );
-    appearanceSettings.replaceChildren(
-      range("暗化", "dim", 0, 70, "%"),
-      range("模糊", "blur", 0, 24, "px"),
-      range("不透明度", "opacity", 20, 100, "%"),
-      ...(["image", "video", "scene", "web"].includes(type)
-        ? [
-            settingSelect("画面适配", "fitMode", [
-              ["cover", "保持比例填充"],
-              ["contain", "完整显示"],
-            ]),
-          ]
-        : []),
-      range("界面读底", "surfaceOpacity", 20, 100, "%"),
-      range("界面雾化", "interfaceBlur", 0, 24, "px"),
-      settingToggle("细边框", "interfaceBorders"),
-      advanced
-    );
+    const controlKind = ["image", "video", "web"].includes(type)
+      ? "standard"
+      : type === "scene"
+        ? "scene"
+        : "base";
+    if (panel.dataset.controlKind !== controlKind) {
+      panel.dataset.controlKind = controlKind;
+      const performance = document.createElement("p");
+      performance.className = "playback-capability";
+      performance.dataset.performanceSummary = "";
+      performance.textContent = performanceSummary();
+      const tradeoff = document.createElement("p");
+      tradeoff.className = "playback-capability";
+      tradeoff.dataset.performanceTradeoff = "";
+      tradeoff.textContent = performanceTradeoff();
+      const capability = document.createElement("p");
+      capability.className = "playback-capability";
+      capability.dataset.playbackCapability = "";
+      capability.textContent = playbackCapabilityText();
+      const audioCapability = document.createElement("p");
+      audioCapability.className = "playback-capability";
+      audioCapability.dataset.audioCapability = "";
+      playbackSettings.replaceChildren(
+        settingsGroup(
+          "性能",
+          playbackProfileControl(),
+          ...(type === "scene"
+            ? [range("Scene 上限", "fps", 1, 30, " FPS")]
+            : []),
+          settingToggle("不可见时暂停", "pauseWhenHidden"),
+          performance,
+          tradeoff,
+          capability
+        ),
+        settingsGroup(
+          "音频",
+          settingToggle("静音", "muted"),
+          range("音量", "volume", 0, 100, "%"),
+          audioCapability
+        ),
+        settingsGroup(
+          "轮播",
+          range("轮播间隔", "rotationMinutes", 0, 120, " 分钟"),
+          playlist
+        )
+      );
+      const surfaces = document.createElement("section");
+      surfaces.className = "surface-overrides";
+      const surfacesTitle = document.createElement("h4");
+      surfacesTitle.textContent = "分区读底覆盖";
+      surfaces.append(
+        surfacesTitle,
+        surfaceOverrideControl("聊天区覆盖", "chat"),
+        surfaceOverrideControl("左侧面板覆盖", "left"),
+        surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
+        surfaceOverrideControl("右侧面板覆盖", "right"),
+        surfaceOverrideControl("设置面板覆盖", "settings")
+      );
+      const picture = settingsGroup(
+        "壁纸画面",
+        range("暗化", "dim", 0, 70, "%"),
+        range("模糊", "blur", 0, 24, "px"),
+        range("不透明度", "opacity", 20, 100, "%"),
+        ...(controlKind !== "base"
+          ? [
+              settingSelect("画面适配", "fitMode", [
+                ["cover", "保持比例填充"],
+                ["contain", "完整显示"],
+              ]),
+            ]
+          : [])
+      );
+      const heading = picture.firstElementChild;
+      const headingLabel = document.createElement("span");
+      headingLabel.textContent = heading.textContent;
+      const wallpaperName = document.createElement("span");
+      wallpaperName.dataset.currentWallpaperTitle = "";
+      heading.className = "wallpaper-picture-heading";
+      heading.replaceChildren(headingLabel, wallpaperName);
+      appearanceSettings.replaceChildren(
+        picture,
+        settingsGroup(
+          "界面效果",
+          range("设置栏雾化", "interfaceBlur", 0, 24, "px"),
+          range("聊天界面雾化", "chatBlur", 0, 24, "px"),
+          range("右侧面板雾化", "rightBlur", 0, 24, "px"),
+          range("项目栏雾化", "projectSidebarBlur", 0, 24, "px"),
+          settingToggle("细边框", "interfaceBorders"),
+          surfaces
+        )
+      );
+      renderPresetList();
+    }
+    syncCurrentWallpaper();
+    syncSettingControls();
     syncMediaCapabilities();
-    renderPresetList();
   }
 
   async function importFiles(files) {
@@ -2368,37 +3110,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     renderPanel();
   }
 
-  async function deleteImported(id) {
-    const previewUrl = importedPreviewUrls.get(id);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    importedPreviewUrls.delete(id);
-    const db = await openDatabase();
-    const transaction = db.transaction(dbStore, "readwrite");
-    transaction.objectStore(dbStore).delete(id);
-    await new Promise((resolve, reject) => {
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-    });
-    await loadImported();
-    if (config.active.kind === "imported" && config.active.id === id) {
-      config.active = defaults.active;
-      saveConfig();
-      await applyActive();
-    }
-    renderPanel();
-  }
-
   async function resetAll() {
-    revokePlayback();
-    activeGeneration += 1;
-    stopRotation();
-    pendingAssetRequests.clear();
-    pendingPreviewRequests.clear();
-    clearImportedPreviews();
-    assetTransfers.clear();
-    previewObserver.disconnect();
-    database?.close();
-    database = null;
+    cancelRuntimeWork();
     channel.postMessage({ type: "prepare-reset" });
     await new Promise((resolve) => setTimeout(resolve, 250));
     if (database) database.close();
@@ -2421,26 +3134,183 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       await applyActive();
       return state();
     }
-    removeAdapterNodes();
-    root = null;
-    panel = null;
-    layer = null;
-    media = null;
-    dim = null;
-    status = null;
+    removeMountedRuntime();
     imported = [];
-    if (typeof globalThis.__codexWallpaperHostRequest === "function") {
-      globalThis.__codexWallpaperHostRequest(JSON.stringify({ type: "stop" }));
-    }
-    const resetConfig = structuredClone(defaults);
-    resetConfig.enabled = false;
-    config = resetConfig;
+    config = { ...structuredClone(defaults), enabled: false };
     saveConfig();
     installHotkey();
     return state();
   }
 
+  function bindUsageMenuInteraction() {
+    const events = new AbortController();
+    const marker = "data-codex-wallpaper-usage-action";
+    const usageLabels = new Set([
+      "5-hour limit", "Weekly limit", "Credits", "5 小时用量上限", "每周限额", "额度",
+    ]);
+    let currentMenu;
+    let usageRows = [];
+    let manageUsage;
+
+    function restoreRows() {
+      for (const row of usageRows) {
+        row.removeAttribute(marker);
+        row.setAttribute("aria-disabled", "true");
+      }
+      usageRows = [];
+    }
+
+    function useMenu(menu) {
+      const trigger = document.getElementById(menu.getAttribute("aria-labelledby"));
+      if (
+        !trigger?.matches('button[aria-haspopup="menu"]') ||
+        trigger.getAttribute("aria-controls") !== menu.id ||
+        !/^(用量|Usage)$/.test(trigger.getAttribute("aria-label"))
+      ) return false;
+
+      const items = [...menu.querySelectorAll('[role="menuitem"][data-radix-collection-item]')];
+      const action = items.find((item) =>
+        !item.matches('[aria-disabled="true"], [data-disabled]') &&
+        /^(管理用量|Manage usage)$/i.test(item.textContent.trim())
+      );
+      if (!action) return false;
+
+      restoreRows();
+      currentMenu = menu;
+      manageUsage = action;
+      usageRows = items.filter((item) =>
+        item.matches('[aria-disabled="true"]:not([data-disabled])') &&
+        usageLabels.has(item.querySelector('[data-menu-row-content] > :first-child')?.textContent.trim())
+      );
+      for (const row of usageRows) {
+        // Keep the host's row and its reset-time tooltip in place.
+        row.removeAttribute("aria-disabled");
+        row.setAttribute(marker, "");
+      }
+      return true;
+    }
+
+    function handleMenuEvent(event) {
+      if (!(event.target instanceof Element)) return;
+      const menu = event.target.closest('[role="menu"][data-radix-menu-content][data-state="open"]');
+      if (!menu || (menu !== currentMenu && !useMenu(menu))) return;
+      const activates = event.type === "click" ||
+        (event.type === "keydown" && !event.repeat &&
+          (event.key === "Enter" || event.key === " "));
+      if (
+        !activates ||
+        !usageRows.includes(event.target.closest(`[${marker}]`)) ||
+        !manageUsage.isConnected ||
+        !menu.contains(manageUsage)
+      ) return;
+      event.preventDefault();
+      event.stopPropagation();
+      manageUsage.click();
+    }
+
+    for (const type of ["focusin", "pointerover", "click", "keydown"]) {
+      document.addEventListener(type, handleMenuEvent, { capture: true, signal: events.signal });
+    }
+    return () => {
+      events.abort();
+      restoreRows();
+    };
+  }
+
+  function clipFileTreeUnderPinnedRows(shadow) {
+    const events = new AbortController();
+    let frame = null;
+    let list = null;
+    let restoreClip = null;
+    let pinnedRows = null;
+
+    function update() {
+      frame = null;
+      const scroll = shadow.querySelector("[data-file-tree-virtualized-scroll]");
+      const currentList = scroll?.querySelector("[data-file-tree-virtualized-list]");
+      const currentPinned = scroll?.querySelector("[data-file-tree-sticky-overlay-content]");
+      if (currentList !== list) {
+        restoreClip?.();
+        list = currentList;
+        restoreClip = null;
+        if (list) {
+          const style = list.style;
+          const value = style.getPropertyValue("clip-path");
+          const priority = style.getPropertyPriority("clip-path");
+          restoreClip = () => style.setProperty("clip-path", value, priority);
+        }
+      }
+      if (currentPinned !== pinnedRows) {
+        resizeObserver.disconnect();
+        pinnedRows = currentPinned;
+        if (pinnedRows) resizeObserver.observe(pinnedRows);
+      }
+      // The pinned rows sit over the scrolling list and share its panel background.
+      const height = pinnedRows?.offsetHeight;
+      if (list && height) {
+        const clip = `inset(${scroll.scrollTop + height}px 0px 0px)`;
+        if (list.style.clipPath !== clip) list.style.clipPath = clip;
+      } else {
+        restoreClip?.();
+      }
+    }
+
+    function schedule() {
+      if (frame === null) frame = requestAnimationFrame(update);
+    }
+
+    const resizeObserver = new ResizeObserver(schedule);
+    const observer = new MutationObserver(schedule);
+    observer.observe(shadow, { childList: true, subtree: true });
+    shadow.addEventListener("scroll", schedule, { capture: true, signal: events.signal });
+    update();
+    return () => {
+      events.abort();
+      observer.disconnect();
+      resizeObserver.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
+      restoreClip?.();
+    };
+  }
+
+  function bindRightFileTreeClipping() {
+    const selector = "[data-app-shell-frame] [data-app-shell-main-surface] [data-app-shell-focus-area='right-panel'] [data-app-shell-pane-content-viewport] file-tree-container";
+    const attached = new Map();
+    function sync() {
+      const trees = new Set(document.querySelectorAll(selector));
+      for (const [tree, cleanup] of attached) {
+        if (trees.has(tree)) continue;
+        cleanup();
+        attached.delete(tree);
+      }
+      for (const tree of trees) {
+        if (!attached.has(tree) && tree.shadowRoot) {
+          attached.set(tree, clipFileTreeUnderPinnedRows(tree.shadowRoot));
+        }
+      }
+    }
+
+    const containsTree = (node) =>
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node.matches("file-tree-container") || node.querySelector("file-tree-container"));
+    const observer = new MutationObserver((records) => {
+      if (records.some(({ addedNodes, removedNodes }) =>
+        Array.from(addedNodes).some(containsTree) || Array.from(removedNodes).some(containsTree)
+      )) sync();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+    return () => {
+      observer.disconnect();
+      for (const cleanup of attached.values()) cleanup();
+    };
+  }
+
   function removeAdapterNodes() {
+    removeUsageMenuInteraction?.();
+    removeUsageMenuInteraction = undefined;
+    removeRightFileTreeClipping?.();
+    removeRightFileTreeClipping = undefined;
     interfaceRules = [];
     document.documentElement.style.removeProperty("--codex-wallpaper-line");
     document.documentElement.style.removeProperty(
@@ -2450,6 +3320,45 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       `#${rootId}, #${controlsId}, #${styleId}`
     ))
       node.remove();
+  }
+
+  function cancelRuntimeWork() {
+    cancelStartupMotion();
+    revokePlayback();
+    activeGeneration += 1;
+    stopRotation();
+    assetRequestTokens.clear();
+    pendingPreviewRequests.clear();
+    clearImportedPreviews();
+    assetTransfers.clear();
+    startupImport = null;
+    startupAssetError = null;
+    for (const token of assetFileTransfers.keys())
+      cancelAssetFileTransfer(token);
+    for (const asset of runtimeAssets.values()) {
+      if (asset.assetUrl?.startsWith("blob:")) releaseObjectUrl(asset.assetUrl);
+    }
+    previewObserver.disconnect();
+    database?.close();
+    database = null;
+    openingDatabase = null;
+    importedLibraryLoaded = false;
+  }
+
+  function removeMountedRuntime() {
+    restorePanelFocus();
+    wallpaperPreviewObserver.disconnect();
+    wallpaperPreviewVisible = false;
+    removeAdapterNodes();
+    root = null;
+    panel = null;
+    layer = null;
+    media = null;
+    mediaSelection = null;
+    presentedMedia = null;
+    committedSelection = null;
+    dim = null;
+    status = null;
   }
 
   function receivePreview(entry) {
@@ -2466,31 +3375,25 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       (candidate) => candidate.id === entry.id
     );
     const previewEntry = item
-      ? { ...item, kind: "workshop" }
+      ? workshopEntry(item)
       : importedItem
         ? {
-            kind: "imported",
-            id: importedItem.id,
-            title: importedItem.title,
-            type: mediaType(importedItem.blob),
-            playable: true,
+            ...importedEntry(importedItem),
             previewDataUrl: entry.previewDataUrl,
-            assetDataUrl: null,
             thumbnailKind: entry.thumbnailKind,
           }
         : null;
-    const previewCard = panel
-      ? [...panel.querySelectorAll(".card")].find(
-          (candidate) =>
-            candidate.dataset.entryKind === previewEntry?.kind &&
-            candidate.dataset.entryId === entry.id
-        )
+    const visual = previewEntry
+      ? cardFor(previewEntry)?.querySelector(".thumb")
       : null;
-    const visual = previewCard?.querySelector(".thumb");
-    if (visual && previewEntry) {
+    if (visual) {
       previewObserver.unobserve(visual);
       renderThumb(previewEntry, visual);
     }
+    if (previewEntry && entry.id === config.active.id && previewEntry.kind === config.active.kind)
+      syncCurrentWallpaper(previewEntry);
+    if (isActiveWorkshop(entry.id) && item?.type === "web" && !item.webHtml)
+      return applyActive();
     return state();
   }
 
@@ -2500,75 +3403,240 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     return state();
   }
 
-  function beginAssetTransfer(entry) {
-    if (
-      !config.enabled ||
-      config.active.kind !== "workshop" ||
-      config.active.id !== entry.id
-    )
-      return false;
+  function isActiveWorkshop(id) {
+    return config.active.kind === "workshop" && config.active.id === String(id);
+  }
+
+  function hasAssetRequestToken(id, requestToken) {
+    return (
+      !requestToken ||
+      assetRequestTokens.get(String(id)) === String(requestToken)
+    );
+  }
+
+  function isCurrentAssetRequest(id, requestToken) {
+    return (
+      config.enabled &&
+      isActiveWorkshop(id) &&
+      hasAssetRequestToken(id, requestToken)
+    );
+  }
+
+  function rememberWorkshopAsset(id, asset) {
+    const key = String(id);
+    assetRequestTokens.delete(key);
+    failedEntryKeys.delete(`workshop:${key}`);
+    if (loadingEntryKey === `workshop:${key}`) loadingEntryKey = null;
+    runtimeAssets.set(`workshop:${key}`, { ...asset, kind: "workshop" });
+  }
+
+  function completeRuntimeAsset(id, metadata, url, requestToken = null) {
+    if (!isCurrentAssetRequest(id, requestToken)) return null;
+    rememberWorkshopAsset(id, {
+      ...metadata,
+      playable: true,
+      assetDataUrl: null,
+      assetUrl: url,
+    });
+    return applyActive();
+  }
+
+  function beginAssetTransfer(entry, requestToken = null) {
+    if (!isCurrentAssetRequest(entry.id, requestToken)) return false;
+    if (entry.fileFallbackReason)
+      console.info(
+        "Codex Wallpaper File fallback",
+        entry.id,
+        entry.fileFallbackReason
+      );
     assetTransfers.set(entry.id, {
       entry,
       parts: [],
       received: 0,
+      requestToken,
     });
     return state();
   }
 
-  function appendAssetTransferChunk(id, encoded) {
+  function appendAssetTransferChunk(id, encoded, requestToken = null) {
     const transfer = assetTransfers.get(id);
     if (!transfer) return false;
+    if (
+      requestToken &&
+      transfer.requestToken &&
+      String(requestToken) !== String(transfer.requestToken)
+    )
+      return false;
     const bytes = bytesFromBase64(encoded);
     transfer.parts.push(bytes);
     transfer.received += bytes.byteLength;
     return state();
   }
 
-  async function finishAssetTransfer(id) {
+  async function finishAssetTransfer(id, requestToken = null) {
     const transfer = assetTransfers.get(id);
     if (!transfer) return false;
+    if (
+      (requestToken &&
+        transfer.requestToken &&
+        String(requestToken) !== String(transfer.requestToken)) ||
+      (transfer.requestToken &&
+        !isCurrentAssetRequest(id, transfer.requestToken))
+    ) {
+      assetTransfers.delete(id);
+      return false;
+    }
     assetTransfers.delete(id);
-    pendingAssetRequests.delete(id);
     const { mime, size, ...metadata } = transfer.entry;
     if (transfer.received !== size)
       throw new Error("Asset transfer size mismatch");
     const url = URL.createObjectURL(new Blob(transfer.parts, { type: mime }));
-    if (
-      config.enabled &&
-      config.active.kind === "workshop" &&
-      config.active.id === id
-    ) {
-      failedEntryKeys.delete(`workshop:${id}`);
-      if (loadingEntryKey === `workshop:${id}`) loadingEntryKey = null;
-      runtimeAssets.set(`workshop:${id}`, {
-        ...metadata,
-        kind: "workshop",
-        playable: true,
-        assetDataUrl: null,
-        assetUrl: url,
-      });
-      return applyActive();
-    }
+    const completed = completeRuntimeAsset(
+      id,
+      metadata,
+      url,
+      transfer.requestToken
+    );
+    if (completed) return completed;
     URL.revokeObjectURL(url);
-    renderPanel();
     return state();
+  }
+
+  function beginAssetFileTransfer(entry, layout = null, requestToken = null) {
+    if ((!root && !cancelMainInterfaceWait) ||
+        !isCurrentAssetRequest(entry.id, requestToken)) return null;
+    const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.hidden = true;
+    input.dataset.codexWallpaperFile = token;
+    let resolveFile;
+    const file = new Promise((resolve) => {
+      resolveFile = resolve;
+    });
+    input.onchange = () => {
+      resolveFile(input.files?.[0] ?? null);
+    };
+    (root || document.documentElement).append(input);
+    assetFileTransfers.set(token, {
+      file,
+      resolve: resolveFile,
+      input,
+      entry,
+      layout,
+      requestToken,
+    });
+    return token;
+  }
+
+  async function finishAssetFileTransfer(token, requestToken = null) {
+    const key = String(token);
+    const transfer = assetFileTransfers.get(key);
+    if (!transfer) return false;
+    const file = await transfer.file;
+    if (assetFileTransfers.get(key) !== transfer) return false;
+    if (
+      (requestToken &&
+        transfer.requestToken &&
+        String(requestToken) !== String(transfer.requestToken)) ||
+      (transfer.requestToken &&
+        !isCurrentAssetRequest(transfer.entry.id, transfer.requestToken))
+    ) {
+      assetFileTransfers.delete(key);
+      transfer.input.remove();
+      return false;
+    }
+    if (!file) {
+      cancelAssetFileTransfer(key);
+      return null;
+    }
+    const { mime, size, ...metadata } = transfer.entry;
+    if (file.size !== size) throw new Error("File transfer size mismatch");
+    let url;
+    if (transfer.layout?.layout === "virtual") {
+      const parts = transfer.layout.segments.map((segment) =>
+        segment.type === "inline"
+          ? new Uint8Array(bytesFromBase64(segment.data))
+          : file.slice(segment.offset, segment.offset + segment.length)
+      );
+      url = URL.createObjectURL(new Blob(parts, { type: mime }));
+    } else {
+      url = URL.createObjectURL(new Blob([file], { type: mime }));
+    }
+    assetFileTransfers.delete(key);
+    transfer.input.remove();
+    const completed = completeRuntimeAsset(
+      transfer.entry.id,
+      metadata,
+      url,
+      transfer.requestToken
+    );
+    if (completed) return completed;
+    URL.revokeObjectURL(url);
+    return false;
+  }
+
+  function restorePanelFocus() {
+    if (panel?.contains(document.activeElement) && panelReturnFocus?.isConnected)
+      panelReturnFocus.focus({ preventScroll: true });
+    panelReturnFocus = null;
+  }
+
+  function closePanel() {
+    flushConfigSave();
+    restorePanelFocus();
+    panel.classList.remove("open");
+    stopWallpaperPreviewPlayback();
+    const canvas = panel.querySelector(".current-wallpaper canvas");
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+
+  async function togglePanel() {
+    if (panel.classList.contains("open")) {
+      closePanel();
+      return;
+    }
+    const opened = panel;
+    panelReturnFocus = document.activeElement;
+    opened.classList.add("open");
+    opened.focus({ preventScroll: true });
+    syncCurrentWallpaper();
+    if (!opened.querySelector(".wallpaper-list .card")) {
+      // Keep the local library off the first-frame path.
+      if (waitForMainInterface) {
+        try {
+          await loadImported();
+        } catch {
+          if (panel === opened) setStatus("无法读取导入的壁纸");
+        }
+      }
+      if (panel !== opened || !opened.classList.contains("open")) return;
+      renderPanel();
+    }
+    requestAnimationFrame(requestVisiblePreviews);
   }
 
   function buildPanel() {
     panel = document.createElement("aside");
+    panel.tabIndex = -1;
     panel.className = "panel";
     panel.dataset.codexWallpaperPanel = "";
     panel.setAttribute("aria-label", "Codex 壁纸设置");
+    const content = document.createElement("div");
+    content.className = "panel-content";
     const header = document.createElement("header");
-    const heading = document.createElement("strong");
+    const heading = document.createElement("h2");
     heading.textContent = "壁纸设置";
     const close = document.createElement("button");
-    close.textContent = "×";
+    close.type = "button";
+    close.className = "panel-close";
+    close.innerHTML =
+      '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8m0-8-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
     close.title = "关闭";
-    close.onclick = () => {
-      flushConfigSave();
-      panel.classList.remove("open");
-    };
+    close.setAttribute("aria-label", "关闭壁纸设置");
+    close.setAttribute("aria-keyshortcuts", "Alt+Shift+S");
+    close.onclick = closePanel;
     header.append(heading, close);
 
     const library = document.createElement("section");
@@ -2580,20 +3648,13 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     filters.className = "library-filters";
     filters.setAttribute("role", "search");
     filters.setAttribute("aria-label", "查找壁纸");
-    const searchLabel = document.createElement("label");
-    searchLabel.className = "library-filter";
-    const searchText = document.createElement("span");
-    searchText.textContent = "标题";
     const search = document.createElement("input");
     search.type = "search";
     search.placeholder = "搜索壁纸";
+    search.setAttribute("aria-label", "标题");
     search.dataset.librarySearch = "";
-    searchLabel.append(searchText, search);
-    const typeLabel = document.createElement("label");
-    typeLabel.className = "library-filter";
-    const typeText = document.createElement("span");
-    typeText.textContent = "类型";
     const type = document.createElement("select");
+    type.setAttribute("aria-label", "类型");
     type.dataset.libraryType = "";
     for (const [value, label] of [
       ["all", "全部类型"],
@@ -2607,7 +3668,6 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       option.textContent = label;
       type.append(option);
     }
-    typeLabel.append(typeText, type);
     const favoritesLabel = document.createElement("label");
     favoritesLabel.className = "library-filter";
     const favorites = document.createElement("input");
@@ -2616,25 +3676,28 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     const favoritesText = document.createElement("span");
     favoritesText.textContent = "只看收藏";
     favoritesLabel.append(favorites, favoritesText);
-    filters.append(searchLabel, typeLabel, favoritesLabel);
-
     const importRow = document.createElement("label");
-    importRow.className = "import-row";
-    importRow.textContent = "导入图片或视频";
+    importRow.className = "import-row panel-file";
+    importRow.textContent = "导入素材";
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "image/*,video/*";
     fileInput.multiple = true;
     fileInput.onchange = () => importFiles(fileInput.files);
     importRow.append(fileInput);
+    filters.append(search, type, importRow);
 
+    const librarySummary = document.createElement("div");
+    librarySummary.className = "library-summary";
     status = document.createElement("p");
     status.className = "runtime-status";
+    status.hidden = true;
     status.setAttribute("aria-live", "polite");
     const result = document.createElement("p");
     result.className = "library-result";
     result.dataset.libraryResult = "";
     result.setAttribute("aria-live", "polite");
+    librarySummary.append(result, favoritesLabel);
     const list = document.createElement("div");
     list.className = "wallpaper-list";
     list.setAttribute("aria-label", "壁纸素材");
@@ -2642,15 +3705,15 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       libraryFilters.query = search.value;
       libraryFilters.type = type.value;
       libraryFilters.favoritesOnly = favorites.checked;
-      const scrollTop = panel.scrollTop;
+      const scrollTop = content.scrollTop;
       applyLibraryFilters();
-      panel.scrollTop = scrollTop;
+      content.scrollTop = scrollTop;
     };
     search.oninput = applyFilters;
     type.onchange = applyFilters;
     favorites.onchange = applyFilters;
-    panel.addEventListener("scroll", requestVisiblePreviews, { passive: true });
-    libraryBody.append(filters, importRow, status, result, list);
+    content.addEventListener("scroll", requestVisiblePreviews, { passive: true });
+    libraryBody.append(currentWallpaper(), filters, status, librarySummary, list);
     library.append(libraryBody);
 
     const playback = document.createElement("section");
@@ -2680,11 +3743,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     recovery.className = "preset-section";
     recovery.dataset.presetSection = "";
     const recoveryTitle = document.createElement("h3");
-    recoveryTitle.textContent = "预设与恢复";
+    recoveryTitle.textContent = "预设";
     const resetHelp = document.createElement("p");
     resetHelp.className = "playlist-summary";
     resetHelp.textContent =
-      "预设保存画面与播放参数；导入导出只包含设置，不包含素材或个人数据。";
+      "保存画面与播放参数。导入导出仅包含设置。";
     const presetEditor = document.createElement("div");
     presetEditor.className = "preset-editor";
     const presetName = document.createElement("input");
@@ -2727,7 +3790,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     exportButton.textContent = "导出设置";
     exportButton.onclick = exportSettings;
     const importLabel = document.createElement("label");
-    importLabel.className = "settings-import";
+    importLabel.className = "panel-file";
     importLabel.textContent = "导入设置";
     const importInput = document.createElement("input");
     importInput.type = "file";
@@ -2739,7 +3802,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       importInput.value = "";
     };
     importLabel.append(importInput);
-    transfer.append(exportButton, importLabel);
+    transfer.append(importLabel, exportButton);
     const settingsStatus = document.createElement("p");
     settingsStatus.className = "settings-status";
     settingsStatus.dataset.settingsStatus = "";
@@ -2789,8 +3852,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       presetList,
       transfer,
       settingsStatus,
-      resetGroups,
-      reset
+      settingsGroup("恢复设置", resetGroups, reset)
     );
     appearanceBody.append(recovery);
 
@@ -2813,7 +3875,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
         tabs.children[position].setAttribute("aria-selected", String(selected));
         tabs.children[position].tabIndex = selected ? 0 : -1;
       }
-      panel.scrollTop = 0;
+      content.scrollTop = 0;
+      syncCurrentWallpaper();
       if (index === 0) requestAnimationFrame(requestVisiblePreviews);
     };
     for (const [index, [page, label]] of pages.entries()) {
@@ -2844,7 +3907,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       tabs.append(tab);
     }
     navigation.append(header, tabs);
-    panel.append(navigation, ...pages.map(([page]) => page));
+    content.append(...pages.map(([page]) => page));
+    panel.append(navigation, content);
     selectPage(0);
     return panel;
   }
@@ -2868,61 +3932,175 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     dim = document.createElement("div");
     dim.className = "dim";
     layer.append(media, dim);
-    const toolbar = document.createElement("div");
-    toolbar.className = "toolbar";
-    const settings = document.createElement("button");
-    settings.dataset.codexWallpaperSettings = "";
-    settings.textContent = "壁纸设置";
-    settings.onclick = () => {
-      if (panel.classList.contains("open")) flushConfigSave();
-      if (panel.classList.toggle("open"))
-        requestAnimationFrame(requestVisiblePreviews);
-    };
-    const toggle = document.createElement("button");
-    toggle.dataset.codexWallpaperToggle = "";
-    toggle.textContent = "停用壁纸";
-    toggle.onclick = () => disable();
-    toolbar.append(settings, toggle);
-    controls.append(toolbar, buildPanel());
+    controls.append(buildPanel());
     document.documentElement.append(style, root, controls);
     root.append(layer);
     bindInterfaceAppearance(style.sheet.cssRules);
     applyInterfaceAppearance();
     applyInterfaceBorders();
+    removeUsageMenuInteraction = bindUsageMenuInteraction();
+    removeRightFileTreeClipping = bindRightFileTreeClipping();
   }
 
-  async function enable() {
-    config.enabled = true;
-    saveConfig();
+  function watchMainInterface() {
+    const contentSelector =
+      "[data-app-shell-active-page='true'] [data-app-shell-main-surface] [data-composer-surface-variant], " +
+      "[data-app-shell-frame] [data-settings-nav-scroll-container]";
+    const events = new AbortController();
+    let frame = null;
+    let previousContent = null;
+
+    function check() {
+      frame = null;
+      const content =
+        document.visibilityState === "visible" &&
+        Array.from(document.querySelectorAll(contentSelector)).find((node) => {
+          if (
+            node.closest("[inert]") ||
+            getComputedStyle(node).pointerEvents === "none" ||
+            !node.checkVisibility({
+              opacityProperty: true,
+              visibilityProperty: true,
+              contentVisibilityAuto: true,
+            })
+          )
+            return false;
+          const rect = node.getBoundingClientRect();
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.right > 0 &&
+            rect.bottom > 0 &&
+            rect.left < innerWidth &&
+            rect.top < innerHeight
+          );
+        });
+      if (!content) {
+        previousContent = null;
+        return;
+      }
+      // Leave a rendering opportunity for the unmodified interface before mounting.
+      if (content !== previousContent) {
+        previousContent = content;
+        queueCheck();
+        return;
+      }
+      cancelMainInterfaceWait();
+      mainInterfaceShown = true;
+      startupInterfaceAt = Date.now();
+      const restoration = restoreActive();
+      const mounted = root;
+      restoration.catch((error) => {
+        if (root === mounted) disable(false);
+        console.error("Codex wallpaper restoration failed", error);
+      });
+    }
+
+    function queueCheck() {
+      if (frame === null) frame = requestAnimationFrame(check);
+    }
+
+    const observer = new MutationObserver(queueCheck);
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        "class",
+        "style",
+        "hidden",
+        "inert",
+        "data-app-shell-active-page",
+        "data-app-shell-main-surface",
+        "data-composer-surface-variant",
+        "data-app-shell-frame",
+        "data-settings-nav-scroll-container",
+      ],
+    });
+    for (const type of ["visibilitychange", "transitionend", "animationend"]) {
+      document.addEventListener(type, queueCheck, { signal: events.signal });
+    }
+    addEventListener("resize", queueCheck, { signal: events.signal });
+    cancelMainInterfaceWait = () => {
+      observer.disconnect();
+      events.abort();
+      if (frame !== null) cancelAnimationFrame(frame);
+      cancelMainInterfaceWait = null;
+    };
+    queueCheck();
+  }
+
+  async function restoreActive() {
+    if (!mainInterfaceShown) {
+      if (!cancelMainInterfaceWait) watchMainInterface();
+      const active = config.active;
+      discardInactiveAssetRequests(active);
+      if (startupImport?.id !== active.id) startupImport = null;
+      if (startupAssetError?.id !== active.id) startupAssetError = null;
+      for (const asset of runtimeAssets.values()) {
+        if (asset.assetUrl?.startsWith("blob:") && !isActiveWorkshop(asset.id))
+          releaseObjectUrl(asset.assetUrl);
+      }
+      if (active.kind === "imported" && !startupImport) {
+        startupImport = { id: active.id, result: readImported(active.id).catch(() => null) };
+      } else if (active.kind === "workshop" && hostReady) {
+        const entry = findEntry(active);
+        if (entry && entry.type !== "web" && !entry.assetUrl &&
+            !entry.assetDataUrl && !entry.webHtml && !startupAssetError)
+          requestWorkshopAsset(entry);
+      }
+      return state();
+    }
     mount();
-    await loadImported();
+    if (!waitForMainInterface) await loadImported();
     await applyActive();
     return state();
   }
 
+  function startupPresentation() {
+    if (!config.enabled) return "disabled";
+    return mainInterfaceShown && presentedMedia && media === presentedMedia &&
+      committedSelection === JSON.stringify(config.active) &&
+      document.visibilityState === "visible"
+      ? "visible"
+      : "waiting";
+  }
+
+  function startupPresentationTiming(status) {
+    return { status, interfaceAt: startupInterfaceAt, frameAt: startupFrameAt };
+  }
+
+  function settleStartupPresentation() {
+    const status = startupPresentation();
+    if (status === "waiting" || !resolveStartupPresentation) return;
+    resolveStartupPresentation(startupPresentationTiming(status));
+    resolveStartupPresentation = null;
+  }
+
+  async function enable(persist = true) {
+    config.enabled = true;
+    if (persist) saveConfig();
+    return restoreActive();
+  }
+
   async function disable(persist = true) {
-    if (persist) flushConfigSave();
     config.enabled = false;
     if (persist) saveConfig();
-    revokePlayback();
-    activeGeneration += 1;
-    stopRotation();
-    pendingAssetRequests.clear();
-    pendingPreviewRequests.clear();
-    clearImportedPreviews();
-    assetTransfers.clear();
-    previewObserver.disconnect();
-    database?.close();
-    database = null;
-    removeAdapterNodes();
-    root = null;
-    panel = null;
-    layer = null;
-    media = null;
-    dim = null;
-    status = null;
+    cancelMainInterfaceWait?.();
+    cancelRuntimeWork();
+    removeMountedRuntime();
     installHotkey();
+    settleStartupPresentation();
     return state();
+  }
+
+  async function discardStartup() {
+    runtimeEvents.abort();
+    clearTimeout(configSaveTimer);
+    channel.close();
+    await disable(false);
+    delete globalThis.__codexWallpaperHotkey;
+    delete globalThis.__codexWallpaperApi;
   }
 
   function state() {
@@ -2936,6 +4114,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
       activeKind: config.active.kind,
       activeId: config.active.id,
       libraryCount: sourcePayload.library?.length || 0,
+      libraryRevalidationFailed: Boolean(
+        sourcePayload.libraryRevalidationFailed
+      ),
       importedCount: imported.length,
       playerCount: document.querySelectorAll(
         `#${rootId} [data-codex-wallpaper-layer] video, #${rootId} [data-codex-wallpaper-layer] canvas, #${rootId} [data-codex-wallpaper-layer] iframe`
@@ -2949,7 +4130,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
   }
 
   function syncVisibility() {
+    syncWallpaperPreviewPlayback();
     if (document.visibilityState === "hidden") {
+      cancelStartupMotion();
       flushConfigSave();
       if (!config.settings.pauseWhenHidden) return;
       applyHiddenPolicy();
@@ -2958,108 +4141,167 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
     if (config.settings.pauseWhenHidden) scheduleRotation();
     playback?.video?.play().catch(() => {});
     playback?.resume?.();
-    playback?.start?.();
     pendingRender?.resume?.();
+    settleStartupPresentation();
+    publishStartupPreview();
   }
 
   function installHotkey() {
     if (globalThis.__codexWallpaperHotkey) return;
     globalThis.__codexWallpaperHotkey = (event) => {
-      if (!event.altKey || !event.shiftKey || event.code !== "KeyW") return;
-      config.enabled ? disable() : enable();
+      if (
+        !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey ||
+        event.isComposing || event.defaultPrevented
+      ) return;
+      const settings = event.code === "KeyS" && panel?.isConnected;
+      if (!settings && event.code !== "KeyW") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.repeat) return;
+      if (settings) void togglePanel();
+      else if (config.enabled) void disable();
+      else void enable();
     };
-    addEventListener("keydown", globalThis.__codexWallpaperHotkey);
+    addEventListener("keydown", globalThis.__codexWallpaperHotkey, {
+      capture: true,
+      signal: runtimeEvents.signal,
+    });
   }
 
   async function refresh(nextPayload) {
     sourcePayload = nextPayload || sourcePayload;
     config = readConfig();
-    if (!config.enabled) {
-      if (root) await disable();
-      return state();
-    }
-    if (!root) mount();
-    await loadImported();
-    await applyActive();
-    return state();
+    publishStartupPreview();
+    if (!config.enabled)
+      return root || cancelMainInterfaceWait ? disable(false) : state();
+    return restoreActive();
   }
 
   if (globalThis.__codexWallpaperApi)
     return globalThis.__codexWallpaperApi.refresh(payload);
 
   installHotkey();
-  addEventListener("storage", (event) => {
-    if (event.key !== configKey && event.key !== null) return;
-    if (configSaveTimer || pendingConfigFields.size > 0) {
-      const previous = config;
-      const remote = readConfig();
-      for (const field of pendingConfigFields) {
-        const overrideScope = field.startsWith("surfaceOverrides.")
-          ? field.slice("surfaceOverrides.".length)
-          : null;
-        if (overrideScope)
-          remote.settings.surfaceOverrides[overrideScope] =
-            config.settings.surfaceOverrides[overrideScope];
-        else remote.settings[field] = config.settings[field];
+  addEventListener(
+    "storage",
+    (event) => {
+      if (event.key !== configKey && event.key !== null) return;
+      if (configSaveTimer || pendingConfigFields.size > 0) {
+        const previous = config;
+        const remote = readConfig();
+        for (const field of pendingConfigFields) {
+          const overrideScope = field.startsWith("surfaceOverrides.")
+            ? field.slice("surfaceOverrides.".length)
+            : null;
+          if (overrideScope)
+            remote.settings.surfaceOverrides[overrideScope] =
+              config.settings.surfaceOverrides[overrideScope];
+          else remote.settings[field] = config.settings[field];
+        }
+        remote.activePresetId = config.activePresetId;
+        config = remote;
+        saveConfig();
+        applyConfigChange(configChanges(previous, config));
+        return;
       }
-      remote.activePresetId = config.activePresetId;
-      config = remote;
-      saveConfig();
+      const previous = config;
+      config = readConfig();
       applyConfigChange(configChanges(previous, config));
-      return;
-    }
-    const previous = config;
-    config = readConfig();
-    applyConfigChange(configChanges(previous, config));
+    },
+    { signal: runtimeEvents.signal }
+  );
+  channel.addEventListener(
+    "message",
+    (event) => {
+      if (event.data?.type === "prepare-reset") {
+        disable();
+      }
+    },
+    { signal: runtimeEvents.signal }
+  );
+  addEventListener(
+    "pagehide",
+    () => {
+      clearTimeout(previewResizeTimer);
+      flushConfigSave();
+      cancelStartupMotion();
+      revokePlayback();
+      stopRotation();
+    },
+    { signal: runtimeEvents.signal }
+  );
+  document.addEventListener("visibilitychange", syncVisibility, {
+    signal: runtimeEvents.signal,
   });
-  channel.addEventListener("message", (event) => {
-    if (event.data?.type === "prepare-reset") {
-      disable();
-    }
-  });
-  addEventListener("pagehide", () => {
-    flushConfigSave();
-    revokePlayback();
-    stopRotation();
-  });
-  document.addEventListener("visibilitychange", syncVisibility);
+  if (desktopStartup) {
+    addEventListener(
+      "resize",
+      () => {
+        if (!config.enabled || !playback?.scene) return;
+        clearTimeout(previewResizeTimer);
+        previewResizeTimer = setTimeout(() => publishStartupPreview(), 350);
+      },
+      { signal: runtimeEvents.signal }
+    );
+  }
   globalThis.__codexWallpaperApi = {
     identity: () => structuredClone(identity),
     refresh,
     enable,
     disable,
+    discardStartup,
     state,
+    startupMotionDecision,
+    startupPresentation,
+    async waitForStartupPresentation() {
+      const status = startupPresentation();
+      if (status !== "waiting") return startupPresentationTiming(status);
+      const { promise, resolve } = Promise.withResolvers();
+      resolveStartupPresentation = resolve;
+      const timer = setTimeout(() => resolve(startupPresentationTiming("timeout")), 25_000);
+      try {
+        return await promise;
+      } finally {
+        clearTimeout(timer);
+        if (resolveStartupPresentation === resolve) resolveStartupPresentation = null;
+      }
+    },
     configureHost,
     receivePreview,
     receivePreviewError,
     beginAssetTransfer,
+    beginAssetFileTransfer,
     appendAssetTransferChunk,
     finishAssetTransfer,
-    receiveAsset(entry) {
-      pendingAssetRequests.delete(entry.id);
-      failedEntryKeys.delete(`workshop:${entry.id}`);
-      if (loadingEntryKey === `workshop:${entry.id}`) loadingEntryKey = null;
-      runtimeAssets.set(`workshop:${entry.id}`, {
-        ...entry,
-        kind: "workshop",
-      });
-      if (config.active.kind === "workshop" && config.active.id === entry.id)
-        return applyActive();
-      renderPanel();
+    finishAssetFileTransfer,
+    cancelAssetFileTransfer,
+    receiveAsset(entry, requestToken = null) {
+      if (!hasAssetRequestToken(entry.id, requestToken)) return state();
+      rememberWorkshopAsset(entry.id, entry);
+      if (isActiveWorkshop(entry.id)) return applyActive();
+      syncCardState({ kind: "workshop", id: entry.id });
+      syncPlaylistSummary();
       return state();
     },
-    receiveAssetError(id, message) {
-      pendingAssetRequests.delete(id);
+    receiveAssetError(id, message, requestToken = null) {
+      if (!hasAssetRequestToken(id, requestToken)) return state();
+      assetRequestTokens.delete(id);
       assetTransfers.delete(id);
-      if (loadingEntryKey === `workshop:${id}`) loadingEntryKey = null;
       failedEntryKeys.add(`workshop:${id}`);
-      renderPanel();
-      if (config.active.kind === "workshop" && config.active.id === id)
-        setStatus(`素材加载失败：${message}`);
+      if (isActiveWorkshop(id)) {
+        if (!root) {
+          startupAssetError = { id, message };
+          return state();
+        }
+        const entry = findEntry({ kind: "workshop", id: String(id) });
+        recoverFailedMedia(`素材加载失败：${message}`, entry?.previewDataUrl);
+      } else {
+        syncCardState({ kind: "workshop", id });
+      }
       return state();
     },
   };
 
+  publishStartupPreview();
   if (!config.enabled) return state();
-  return enable();
+  return enable(!initialHostReady);
 }

@@ -1,0 +1,125 @@
+{
+  "startedAt": "2026-11-19T11:29:31.518Z",
+  "identity": {
+    "runtimeHash": "35e13dad6ee1d3419975505eb541780779b4a3fb3b60b4bc9ca12ccfb81cd4e0",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "assets": {
+    "3272086010": {
+      "title": "《鸣潮》今昔",
+      "size": 143485659,
+      "type": "video",
+      "mime": "video/mp4",
+      "playable": true,
+      "layout": "original",
+      "segments": 1
+    },
+    "3403349435": {
+      "title": "吊桥-义妹生活/绫濑沙季",
+      "size": 564467901,
+      "type": "video",
+      "mime": "video/mp4",
+      "playable": true,
+      "layout": "original",
+      "segments": 1
+    },
+    "3809295036": {
+      "title": "deepseek创越次元",
+      "size": 29845774,
+      "type": "video",
+      "mime": "video/mp4",
+      "playable": true,
+      "layout": "virtual",
+      "segments": 3
+    },
+    "3813100090": {
+      "title": "DeepSeek娘4k超分60帧壁纸",
+      "size": 16951683,
+      "type": "video",
+      "mime": "video/mp4",
+      "playable": true,
+      "layout": "original",
+      "segments": 1
+    }
+  },
+  "samples": {
+    "3809295036": {
+      "title": "deepseek创越次元",
+      "requested": 1,
+      "activeAfter": 37,
+      "committedAfter": 90,
+      "elapsed": null,
+      "dynamic": {
+        "valid": false,
+        "reason": "callback-timeout",
+        "readyState": 4,
+        "paused": true,
+        "width": 3840,
+        "height": 2160,
+        "count": 0,
+        "wallMilliseconds": 3726.0999999940395
+      },
+      "state": {
+        "activeId": "3809295036",
+        "cardStatus": "video · 原生播放",
+        "selected": "true",
+        "currentTag": "video",
+        "video": {
+          "readyState": 4,
+          "paused": true,
+          "width": 3840,
+          "height": 2160,
+          "error": null,
+          "src": "blob"
+        },
+        "runtimeStatus": "deepseek创越次元 · 视频",
+        "fileInputs": 0
+      }
+    },
+    "3813100090": {
+      "title": "DeepSeek娘4k超分60帧壁纸",
+      "requested": 1,
+      "activeAfter": 40,
+      "committedAfter": 95,
+      "elapsed": null,
+      "dynamic": {
+        "valid": false,
+        "reason": "callback-timeout",
+        "readyState": 4,
+        "paused": true,
+        "width": 3840,
+        "height": 2160,
+        "count": 0,
+        "wallMilliseconds": 4506.5
+      },
+      "state": {
+        "activeId": "3813100090",
+        "cardStatus": "video · 原生播放",
+        "selected": "true",
+        "currentTag": "video",
+        "video": {
+          "readyState": 4,
+          "paused": true,
+          "width": 3840,
+          "height": 2160,
+          "error": null,
+          "src": "blob"
+        },
+        "runtimeStatus": "DeepSeek娘4k超分60帧壁纸 · 视频",
+        "fileInputs": 0
+      }
+    }
+  },
+  "transfer": null,
+  "restored": {
+    "configExact": true,
+    "runtime": {
+      "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+      "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+    },
+    "activeId": "3354366708",
+    "panelOpen": false,
+    "host": true
+  },
+  "finishedAt": "2026-11-19T11:29:43.213Z"
+}

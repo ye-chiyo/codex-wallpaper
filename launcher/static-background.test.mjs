@@ -1,20 +1,34 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { once } from "node:events";
+import { existsSync } from "node:fs";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  truncate,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
+import { once } from "node:events";
+import { createInterface } from "node:readline";
 import test from "node:test";
-import { candidateIdentity } from "./client-runtime.mjs";
+import { setTimeout as delay } from "node:timers/promises";
+import { candidateIdentity, runtimeSource } from "./client-runtime.mjs";
 import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
 import { callMainPage, openMainPageSession } from "./read-only-probe.mjs";
+import { attachWallpaperHost, sessionEvaluate } from "./wallpaper-host.mjs";
 
 const edge =
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const rootId = "codex-wallpaper-p1";
 const controlRootId = "codex-wallpaper-p1-controls";
+const toggleSettings =
+  'dispatchEvent(new KeyboardEvent("keydown", { altKey: true, shiftKey: true, code: "KeyS" }))';
 const tinyMp4 =
   "AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAN0bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAp90cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAPoAAAQAAABAAAAAAIXbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAKABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABwm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAYJzdGJsAAAAvnN0c2QAAAAAAAAAAQAAAK5hdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFExhdmM2My4xLjEwMiBsaWJ4MjY0AAAAAAAAAAAAAAAAGP//AAAANGF2Y0MBZAAK/+EAF2dkAAqs2V7ARAAAAwAEAAADACg8SJZYAQAGaOvjyyLA/fj4AAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAABegAAAAAAAAABhzdHRzAAAAAAAAAAEAAAAFAAAIAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAOGN0dHMAAAAAAAAABQAAAAEAABAAAAAAAQAAKAAAAAABAAAQAAAAAAEAAAAAAAAAAQAACAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAUAAAABAAAAKHN0c3oAAAAAAAAAAAAAAAUAAALEAAAADAAAAAwAAAAMAAAADAAAABRzdGNvAAAAAAAAAAEAAAOkAAAAYXVkdGEAAABZbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAsaWxzdAAAACSpdG9vAAAAHGRhdGEAAAABAAAAAExhdmY2My4xLjEwMgAAAAhmcmVlAAAC/G1kYXQAAAKtBgX//6ncRem95tlIt5Ys2CDZI+7veDI2NCAtIGNvcmUgMTY1IHIzMjIzIDA0ODBjYjAgLSBILjI2NC9NUEVHLTQgQVZDIGNvZGVjIC0gQ29weWxlZnQgMjAwMy0yMDI1IC0gaHR0cDovL3d3dy52aWRlb2xhbi5vcmcveDI2NC5odG1sIC0gb3B0aW9uczogY2FiYWM9MSByZWY9MyBkZWJsb2NrPTE6MDowIGFuYWx5c2U9MHgzOjB4MTEzIG1lPWhleCBzdWJtZT03IHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0xIDh4OGRjdD0xIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MiBrZXlpbnQ9MjUwIGtleWludF9taW49NSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAAA9liIQAEv/+963fgU3DKz0AAAAIQZokbEP//uAAAAAIQZ5CeIIfq4EAAAAIAZ5hdEP/s4AAAAAIAZ5jakP/s4E=";
 
@@ -55,35 +69,98 @@ function takeWebSocketText(buffer) {
   return { opcode, text: payload.toString(), rest: buffer.subarray(total) };
 }
 
-async function startExactCdpFixture(t, evaluate = null) {
-  const id = "0123456789abcdef0123456789abcdef";
+function firstJsonArgument(expression) {
+  const start = expression.indexOf("(") + 1;
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let index = start; index < expression.length; index += 1) {
+    const character = expression[index];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') quoted = false;
+      continue;
+    }
+    if (character === '"') quoted = true;
+    else if (character === "{") depth += 1;
+    else if (character === "}" && --depth === 0)
+      return JSON.parse(expression.slice(start, index + 1));
+  }
+  throw new Error("Missing JSON argument");
+}
+
+async function startCdpFixture(
+  t,
+  {
+    evaluate = null,
+    origin = "app://-",
+    origins = null,
+    suspend = null,
+    objectId = "file-input",
+    switching = false,
+  } = {}
+) {
+  const oldId = "0123456789abcdef0123456789abcdef";
+  const newId = "fedcba9876543210fedcba9876543210";
   const requests = [];
   const sockets = new Set();
+  let pageSocket = null;
   let hostSocket = null;
+  let discoveries = 0;
+  let sessions = 0;
+  let switched = false;
+  let replacementId = null;
+  let hostConnections = 0;
+  let originIndex = 0;
+  const delivered = Promise.withResolvers();
   function requestHost(type, id) {
-    hostSocket?.write(
-      encodeWebSocketText(
-        JSON.stringify({
-          method: "Runtime.bindingCalled",
-          params: {
-            name: "__codexWallpaperHostRequest",
-            payload: JSON.stringify({ type, id }),
-          },
-        })
-      )
+    return (
+      hostSocket?.write(
+        encodeWebSocketText(
+          JSON.stringify({
+            method: "Runtime.bindingCalled",
+            params: {
+              name: "__codexWallpaperHostRequest",
+              payload: JSON.stringify({ type, id }),
+            },
+          })
+        )
+      ) ?? false
     );
   }
-  const server = createServer((request, response) => {
+  const server = createServer(async (request, response) => {
     assert.equal(request.url, "/json/list");
+    discoveries += 1;
+    const lock = join(
+      tmpdir(),
+      `codex-wallpaper-host-${server.address().port}.lock`
+    );
+    const targetId =
+      replacementId ??
+      (switching
+        ? !switched
+          ? oldId
+          : (await access(lock).then(
+                () => false,
+                () => true
+              ))
+            ? newId
+            : null
+        : oldId);
     response.end(
-      JSON.stringify([
-        {
-          id,
-          type: "page",
-          url: "app://-/index.html",
-          webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${id}`,
-        },
-      ])
+      JSON.stringify(
+        targetId
+          ? [
+              {
+                id: targetId,
+                type: "page",
+                url: "app://-/index.html",
+                webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${targetId}`,
+              },
+            ]
+          : []
+      )
     );
   });
   server.on("connection", (socket) => {
@@ -91,6 +168,9 @@ async function startExactCdpFixture(t, evaluate = null) {
     socket.on("close", () => sockets.delete(socket));
   });
   server.on("upgrade", (request, socket) => {
+    pageSocket = socket;
+    sessions += 1;
+    const targetId = request.url.split("/").at(-1);
     const accept = createHash("sha1")
       .update(
         request.headers["sec-websocket-key"] +
@@ -108,22 +188,66 @@ async function startExactCdpFixture(t, evaluate = null) {
         incoming = frame.rest;
         const command = JSON.parse(frame.text);
         requests.push(command);
-        let result = {};
-        if (command.method === "Runtime.evaluate") {
-          const value = evaluate
-            ? evaluate(command.params.expression, requestHost)
-            : command.params.expression ===
-                "globalThis.__codexWallpaperApi.configureHost()"
-              ? { state: "enabled", hostReady: true }
-              : { state: "disabled", backgroundLayers: 0 };
-          result = { result: { value } };
+        if (suspend?.(command)) {
+          frame = takeWebSocketText(incoming);
+          continue;
         }
-        if (command.method === "Runtime.addBinding") hostSocket = socket;
+        if (
+          switching &&
+          targetId === oldId &&
+          command.method === "Runtime.enable"
+        ) {
+          switched = true;
+          socket.destroy();
+          return;
+        }
+        let result = {};
+        if (command.method === "Page.getFrameTree") {
+          result = {
+            frameTree: {
+              frame: {
+                url: "app://-/index.html",
+                securityOrigin: origins?.[originIndex++] ?? origin,
+              },
+            },
+          };
+        }
+        if (command.method === "Runtime.evaluate") {
+          if (command.params.returnByValue === false) {
+            try {
+              new Function(`return (${command.params.expression})`);
+              result = { result: objectId ? { objectId } : {} };
+            } catch (error) {
+              result = {
+                exceptionDetails: {
+                  exception: { description: String(error?.message || error) },
+                },
+              };
+            }
+          } else {
+            const value = evaluate
+              ? evaluate(command.params.expression, requestHost, delivered)
+              : command.params.expression.startsWith(
+                    "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+                  )
+                ? false
+                : command.params.expression ===
+                    "globalThis.__codexWallpaperApi.configureHost()"
+                  ? { state: "enabled", hostReady: true }
+                  : { state: "disabled", backgroundLayers: 0 };
+            result = { result: { value } };
+          }
+        }
+        if (command.method === "Runtime.addBinding") {
+          hostSocket = socket;
+          hostConnections += 1;
+        }
         socket.write(
           encodeWebSocketText(JSON.stringify({ id: command.id, result }))
         );
         frame = takeWebSocketText(incoming);
       }
+      if (frame?.opcode === 8) socket.end(Buffer.from([0x88, 0]));
     });
   });
   server.listen(0, "127.0.0.1");
@@ -136,11 +260,563 @@ async function startExactCdpFixture(t, evaluate = null) {
     port: server.address().port,
     requests,
     requestHost,
+    delivered,
+    get discoveries() {
+      return discoveries;
+    },
+    get sessions() {
+      return sessions;
+    },
+    get hostConnected() {
+      return Boolean(hostSocket);
+    },
+    get hostConnections() {
+      return hostConnections;
+    },
+    get switched() {
+      return switched;
+    },
+    replaceTarget(id) {
+      replacementId = id;
+      pageSocket.destroy();
+    },
     stopHost() {
       requestHost("stop");
     },
   };
 }
+
+function startExactCdpFixture(t, evaluate = null, options = {}) {
+  return startCdpFixture(t, { ...options, evaluate });
+}
+
+function startSwitchingCdpFixture(t, { evaluate }) {
+  return startCdpFixture(t, { evaluate, switching: true });
+}
+
+async function waitForCondition(check, timeout, message) {
+  const deadline = performance.now() + timeout;
+  while (performance.now() < deadline) {
+    if (await check()) return;
+    await delay(25);
+  }
+  assert.fail(message);
+}
+
+function supervisorExited(pid) {
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (error) {
+    if (error.code !== "ESRCH") throw error;
+    return true;
+  }
+}
+
+test(
+  "supervisor verifies the main frame before installing a host or runtime",
+  { timeout: 8000 },
+  async (t) => {
+    const cdp = await startExactCdpFixture(t, null, { origin: "app://other" });
+    const child = spawn(
+      process.execPath,
+      [
+        "--no-use-env-proxy",
+        "launcher/startup-supervisor.mjs",
+        String(cdp.port),
+      ],
+      {
+        stdio: ["pipe", "pipe", "ignore"],
+        windowsHide: true,
+      }
+    );
+    t.after(() => child.kill());
+    let output = "";
+    child.stdout.setEncoding("utf8").on("data", (line) => {
+      output += line;
+    });
+    const [code] = await once(child, "close");
+    assert.equal(code, 1);
+    assert.equal(JSON.parse(output).error, "main-frame-unverified");
+    const methods = cdp.requests.map(({ method }) => method);
+    assert.equal(methods.length, 5);
+    assert.ok(methods.every((method) => method === "Page.getFrameTree"));
+  }
+);
+
+test(
+  "closing the startup handoff releases the host lock even while CDP initialization is stalled",
+  { timeout: 8000 },
+  async (t) => {
+    let initializing;
+    const initializingHost = new Promise((resolve) => {
+      initializing = resolve;
+    });
+    const cdp = await startExactCdpFixture(t, null, {
+      suspend({ method }) {
+        if (method !== "Runtime.enable") return false;
+        initializing();
+        return true;
+      },
+    });
+    const child = spawn(
+      process.execPath,
+      [
+        "--no-use-env-proxy",
+        "launcher/startup-supervisor.mjs",
+        String(cdp.port),
+      ],
+      {
+        stdio: ["pipe", "pipe", "ignore"],
+        windowsHide: true,
+      }
+    );
+    t.after(() => child.kill());
+    const output = createInterface({ input: child.stdout });
+    const done = once(child, "close");
+    const [line] = await once(output, "line");
+    const verified = JSON.parse(line);
+    assert.equal(verified.state, "verified");
+    child.stdin.write(`attach ${verified.verification}\n`);
+    await initializingHost;
+    child.stdin.end();
+    await done;
+    await assert.rejects(
+      access(join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`)),
+      { code: "ENOENT" }
+    );
+    assert.ok(!cdp.hostConnected);
+  }
+);
+
+test(
+  "startup recovers after the verified target disconnects and delivers the first workshop asset",
+  { timeout: 25000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(join(tmpdir(), "codex-wallpaper-switch-"));
+    const videoId = "9999999999997";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Target switch fixture",
+        file: "clip.mp4",
+      })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    const identity = candidateIdentity();
+    let savedEnabled = true;
+    let assetRequests = 0;
+    let completedTransfers = 0;
+    const cdp = await startSwitchingCdpFixture(t, {
+      videoId,
+      evaluate(expression, requestHost, delivered) {
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+          )
+        )
+          return "file-1";
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
+          )
+        ) {
+          completedTransfers += 1;
+          delivered.resolve();
+          return true;
+        }
+        if (expression.includes("globalThis.__codexWallpaperStartupPid")) {
+          if (savedEnabled) {
+            assetRequests += 1;
+            requestHost("load-asset", videoId);
+          }
+          return {
+            state: savedEnabled ? "enabled" : "disabled",
+            hostReady: true,
+            identity,
+          };
+        }
+        return { state: "enabled", hostReady: true, identity };
+      },
+    });
+    const receipt = await runStartupHandoff(t, cdp, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(receipt.TargetVerificationCount, 2);
+    assert.equal(receipt.TargetVerified, true);
+    assert.equal(receipt.HostReady, true);
+    assert.deepEqual(receipt.Wallpaper.identity, identity);
+    assert.equal(cdp.switched, true);
+    assert.equal(cdp.hostConnections, 1);
+    let deadline;
+    const delivered = await Promise.race([
+      cdp.delivered.promise.then(() => true),
+      new Promise((resolve) => {
+        deadline = setTimeout(() => resolve(false), 5000);
+      }),
+    ]);
+    clearTimeout(deadline);
+    assert.ok(
+      delivered,
+      JSON.stringify({
+        commands: cdp.requests.map((command) => command.method),
+      })
+    );
+    assert.deepEqual(
+      cdp.requests
+        .filter((command) => command.method === "DOM.setFileInputFiles")
+        .map((command) => command.params),
+      [{ files: [join(project, "clip.mp4")], objectId: "file-input" }]
+    );
+
+    cdp.replaceTarget("11111111111111111111111111111111");
+    await waitForCondition(
+      () => completedTransfers === 2,
+      8000,
+      "The replacement target never received its saved workshop video"
+    );
+    assert.equal(cdp.hostConnections, 2);
+    const lock = join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`);
+    assert.equal(
+      Number(await readFile(lock, "utf8")),
+      receipt.Wallpaper.hostPid
+    );
+
+    savedEnabled = false;
+    cdp.replaceTarget("22222222222222222222222222222222");
+    await waitForCondition(
+      () =>
+        cdp.requests.filter(
+          ({ method, params }) =>
+            method === "Runtime.evaluate" &&
+            params.expression.includes("globalThis.__codexWallpaperStartupPid")
+        ).length === 3,
+      8000,
+      "The disabled replacement target never acknowledged the runtime"
+    );
+    assert.equal(cdp.hostConnections, 3);
+    assert.equal(assetRequests, 2);
+    cdp.stopHost();
+    await waitForCondition(
+      () => supervisorExited(receipt.Wallpaper.hostPid),
+      4000,
+      "An explicit stop must end the supervisor"
+    );
+    assert.equal(cdp.hostConnections, 3);
+    await assert.rejects(access(lock), { code: "ENOENT" });
+  }
+);
+
+test(
+  "supervisor rejects post-startup replacement when the listener owner does not match",
+  { timeout: 15000 },
+  async (t) => {
+    const identity = candidateIdentity();
+    const cdp = await startExactCdpFixture(t, () => ({
+      state: "enabled",
+      hostReady: true,
+      identity,
+    }));
+    // The fixture owns the listener, while the reported identity belongs to its parent.
+    const receipt = await runStartupHandoff(t, cdp, {
+      listenerOwner: process.ppid,
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    const start = cdp.requests.length;
+    cdp.replaceTarget("33333333333333333333333333333333");
+    await waitForCondition(
+      () => supervisorExited(receipt.Wallpaper.hostPid),
+      8000,
+      "The supervisor must exit when the replacement listener is not owned by Codex"
+    );
+    assert.deepEqual(
+      cdp.requests.slice(start).map(({ method }) => method),
+      ["Page.getFrameTree"]
+    );
+    assert.equal(cdp.hostConnections, 1);
+  }
+);
+
+test(
+  "a delayed attach approval cannot be consumed by a replacement startup target",
+  { timeout: 15000 },
+  async (t) => {
+    const folder = await mkdtemp(join(tmpdir(), "codex-wallpaper-handoff-"));
+    t.after(() => rm(folder, { recursive: true, force: true }));
+    const started = join(folder, "first-check");
+    const released = join(folder, "allow-first-approval");
+    const literal = (path) => `'${path.replaceAll("'", "''")}'`;
+    const identity = candidateIdentity();
+    const cdp = await startExactCdpFixture(t, () => ({
+      state: "enabled",
+      hostReady: true,
+      identity,
+    }));
+    const handoff = runStartupHandoff(t, cdp, {
+      recheck: `
+        if ($script:wallpaperRecheckCount -eq 1) {
+          [IO.File]::WriteAllText(${literal(started)}, '')
+          while (-not [IO.File]::Exists(${literal(released)})) { Start-Sleep -Milliseconds 20 }
+        } else {
+          Start-Sleep -Milliseconds 750
+        }
+      `,
+    });
+    void handoff.catch(() => {});
+    await waitForCondition(
+      () => existsSync(started),
+      4000,
+      "The launcher never began checking the old target"
+    );
+    cdp.replaceTarget("44444444444444444444444444444444");
+    await waitForCondition(
+      () =>
+        cdp.requests.filter(({ method }) => method === "Page.getFrameTree")
+          .length === 2,
+      1000,
+      "The supervisor never verified the replacement target"
+    );
+    await writeFile(released, "");
+    const receipt = await handoff;
+    assert.equal(receipt.TargetVerificationCount, 2);
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.ok(
+      cdp.requestHost("stop"),
+      "The launcher acknowledged a host that had already disconnected"
+    );
+    await waitForCondition(
+      () => supervisorExited(receipt.Wallpaper.hostPid),
+      3000,
+      "The final host did not handle stop"
+    );
+  }
+);
+
+test(
+  "startup retries a transient unverified main frame before attaching",
+  { timeout: 15000 },
+  async (t) => {
+    const identity = candidateIdentity();
+    const cdp = await startExactCdpFixture(
+      t,
+      () => ({ state: "disabled", hostReady: true, identity }),
+      { origins: ["app://other", "app://-"] }
+    );
+    const receipt = await runStartupHandoff(t, cdp);
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(receipt.TargetVerificationCount, 1);
+    assert.equal(receipt.HostReady, true);
+    assert.deepEqual(receipt.Wallpaper.identity, identity);
+    assert.equal(cdp.hostConnections, 1);
+    assert.ok(cdp.discoveries >= 2);
+    assert.ok(cdp.sessions >= 2);
+  }
+);
+
+test(
+  "startup rechecks a replacement verified target and fails closed when the recheck rejects",
+  { timeout: 10000 },
+  async (t) => {
+    const cdp = await startSwitchingCdpFixture(t, {
+      videoId: "unused",
+      evaluate() {
+        return { state: "enabled", hostReady: true };
+      },
+    });
+    const receipt = await runStartupHandoff(t, cdp, {
+      recheck:
+        "if ($script:wallpaperRecheckCount -gt 1) { 'listener-changed' } else { '' }",
+    });
+    assert.equal(receipt.Outcome, "listener-changed");
+    assert.equal(receipt.TargetVerificationCount, 2);
+    assert.equal(receipt.TargetRecheckCount, 2);
+    assert.equal(receipt.Wallpaper, undefined);
+    assert.equal(cdp.hostConnections, 0);
+    await assert.rejects(
+      access(join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`)),
+      { code: "ENOENT" }
+    );
+  }
+);
+
+async function runStartupHandoff(
+  t,
+  cdp,
+  {
+    rejection = "",
+    recheck = null,
+    env = process.env,
+    listenerOwner = process.pid,
+    previewFolder = null,
+  } = {}
+) {
+  const psLiteral = (value) => `'${value.replaceAll("'", "''")}'`;
+  const recheckCode = recheck ?? psLiteral(rejection);
+  const command = `
+    $ErrorActionPreference = 'Stop'
+    $launcher = (Resolve-Path 'launcher/Start-CodexWallpaper.ps1').Path
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($launcher, [ref]$null, [ref]$null)
+    foreach ($name in @('Start-WallpaperSupervisor', 'Test-LoopbackOwner')) {
+      $definition = $ast.Find({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq $name}, $true)
+      . ([scriptblock]::Create($definition.Extent.Text))
+    }
+    $receipt = [ordered]@{}
+    $receipt.MainPid = ${listenerOwner}
+    $receipt.MainCreated = (Get-CimInstance Win32_Process -Filter 'ProcessId=${listenerOwner}').CreationDate.ToString('o')
+    $script:wallpaperRecheckCount = 0
+    $stateFolder = ${previewFolder ? psLiteral(previewFolder) : "$null"}
+    Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"}
+    $receipt.TargetRecheckCount = $script:wallpaperRecheckCount
+    $receipt | ConvertTo-Json -Depth 6 -Compress
+  `;
+  const child = spawn(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-EncodedCommand",
+      Buffer.from(command, "utf16le").toString("base64"),
+    ],
+    {
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    }
+  );
+  t.after(() => child.kill());
+  let error = "";
+  child.stderr.setEncoding("utf8").on("data", (chunk) => {
+    error += chunk;
+  });
+  const output = createInterface({ input: child.stdout });
+  const options = { signal: AbortSignal.timeout(5000) };
+  const signals = [];
+  try {
+    const [[code], receipt] = await Promise.all([
+      once(child, "exit", options),
+      new Promise((resolve) => {
+        output.on("line", (line) => {
+          if (line.startsWith("CodexWallpaper:")) signals.push(line);
+          else resolve(line);
+        });
+      }).then(JSON.parse),
+    ]);
+    assert.equal(code, 0, error);
+    if (previewFolder) receipt.DesktopSignals = signals;
+    return receipt;
+  } catch (cause) {
+    throw new Error(
+      `PowerShell handoff failed. ${error} CDP: ${cdp.requests.map(({ method }) => method)}`,
+      { cause }
+    );
+  } finally {
+    output.close();
+    child.stdout.destroy();
+    child.stderr.destroy();
+  }
+}
+
+test(
+  "PowerShell rejects a changed listener before injection",
+  { timeout: 8000 },
+  async (t) => {
+    const cdp = await startExactCdpFixture(t);
+    const receipt = await runStartupHandoff(t, cdp, {
+      rejection: "listener-changed",
+    });
+    assert.equal(receipt.Outcome, "listener-changed");
+    assert.deepEqual(
+      cdp.requests.map(({ method }) => method),
+      ["Page.getFrameTree"]
+    );
+  }
+);
+
+test(
+  "startup rolls back a mounted candidate that does not acknowledge the host",
+  { timeout: 8000 },
+  async (t) => {
+    const cdp = await startExactCdpFixture(t, () => ({
+      state: "enabled",
+      hostReady: false,
+      identity: candidateIdentity(),
+    }));
+    const receipt = await runStartupHandoff(t, cdp);
+    assert.equal(receipt.Outcome, "wallpaper-injection-failed");
+    assert.equal(receipt.SupervisorError, "runtime-not-ready");
+    assert.equal(receipt.Wallpaper, undefined);
+    await assert.rejects(
+      access(join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`)),
+      { code: "ENOENT" }
+    );
+  }
+);
+
+test(
+  "startup reattaches the host to an existing matching runtime",
+  { timeout: 8000 },
+  async (t) => {
+    const identity = candidateIdentity();
+    let reconfigured = false;
+    const cdp = await startExactCdpFixture(t, (expression) => {
+      if (expression.includes("await existing.configureHost()"))
+        reconfigured = true;
+      return { state: "enabled", hostReady: true, identity };
+    });
+    const receipt = await runStartupHandoff(t, cdp);
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(receipt.HostReady, true);
+    assert.equal(reconfigured, true);
+    assert.equal(cdp.hostConnections, 1);
+    assert.deepEqual(receipt.Wallpaper.identity, identity);
+  }
+);
+
+test("the desktop handoff waits for a presented wallpaper after verifying the host", { timeout: 8000 }, async (t) => {
+  const previewFolder = await mkdtemp(join(tmpdir(), "codex-wallpaper-presentation-"));
+  t.after(() => rm(previewFolder, { recursive: true, force: true }));
+  let sampled = 0;
+  const interfaceAt = Date.now();
+  const frameAt = interfaceAt + 100;
+  const cdp = await startExactCdpFixture(t, (expression) => {
+    if (expression === "globalThis.__codexWallpaperApi?.waitForStartupPresentation()") {
+      sampled += 1;
+      return { status: "visible", interfaceAt, frameAt };
+    }
+    return { state: "enabled", hostReady: true, identity: candidateIdentity() };
+  });
+  const receipt = await runStartupHandoff(t, cdp, {
+    previewFolder, env: { ...process.env, CODEX_WALLPAPER_DESKTOP_HANDSHAKE: "1" },
+  });
+  assert.equal(receipt.Outcome, "wallpaper-ready");
+  assert.equal(receipt.StartupPreview, "visible");
+  assert.ok(receipt.StartupPreviewHandoffMs >= receipt.HostReadyMs);
+  assert.equal(receipt.StartupPreviewInterfaceAt, interfaceAt);
+  assert.equal(receipt.StartupPreviewFirstFrameAt, frameAt);
+  assert.deepEqual(receipt.DesktopSignals, ["CodexWallpaper:presented"]);
+  assert.equal(sampled, 1);
+});
 
 async function startHtmlFixture(html) {
   const server = createServer((_request, response) => {
@@ -348,9 +1024,24 @@ async function startChromeFixture() {
         }
         [data-app-navigation-rail] { grid-column: 1; grid-row: 1; }
         [data-slate-sidebar-content] { grid-column: 2; grid-row: 1; }
-        [data-app-shell-main-surface] {
+        [data-app-shell-workspace] {
           grid-column: 3;
           grid-row: 1;
+          position: relative;
+          display: flex;
+          min-width: 0;
+        }
+        .bg-surface { background-color: var(--app-color-background-surface); }
+        [data-app-shell-surface-backing] { position: absolute; inset: 0; pointer-events: none; }
+        [data-app-shell-surface-backing]::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          box-shadow: inset 0 0 0 1px rgb(100 100 100);
+        }
+        [data-app-shell-main-surface] {
+          position: relative;
+          flex: 1;
           min-width: 0;
           background: var(--app-color-background-surface);
         }
@@ -388,9 +1079,12 @@ async function startChromeFixture() {
           </div>
           <nav data-app-navigation-rail><button id="home-action" class="muted-chrome">Home</button></nav>
           <div data-slate-sidebar-content><button id="project-action" class="muted-chrome">Project</button></div>
-          <main data-app-shell-main-surface>
-            <div class="content">Chat canvas</div>
-          </main>
+          <div data-app-shell-workspace>
+            <div class="bg-surface" data-app-shell-surface-backing aria-hidden="true"></div>
+            <main data-app-shell-main-surface>
+              <div class="content">Chat canvas</div>
+            </main>
+          </div>
           <header data-app-shell-titlebar>
             <button id="chat-title">Current chat</button>
           </header>
@@ -429,6 +1123,17 @@ async function waitForPage(port, options) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error("Edge did not load the fixture page");
+}
+
+async function startRuntimeFixture(t, payload, fixture = null) {
+  const page = await startBrowserFixture(t, fixture);
+  const options = {
+    page: page.fixture.url,
+    origin: new URL(page.fixture.url).origin,
+    payload,
+  };
+  await waitForPage(page.port, options);
+  return { ...page, options };
 }
 
 async function startBrowserFixture(t, fixture = null) {
@@ -492,14 +1197,270 @@ async function clickAtElementCenter(port, options, selector) {
   return target.receivesClick;
 }
 
+async function pressWallpaperShortcut(port, options, key) {
+  const virtualKey = key.charCodeAt(0);
+  for (const type of ["rawKeyDown", "keyUp"]) {
+    await callMainPage(
+      port,
+      "Input.dispatchKeyEvent",
+      {
+        type,
+        key,
+        code: `Key${key}`,
+        windowsVirtualKeyCode: virtualKey,
+        nativeVirtualKeyCode: virtualKey,
+        modifiers: 9,
+      },
+      options.page,
+      true
+    );
+  }
+}
+
+test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
+  const { fixture, port } = await startBrowserFixture(t);
+  const options = { page: fixture.url };
+  await waitForPage(port, options);
+  const key = "codex-wallpaper-p1-config";
+  const saved = JSON.stringify({
+    enabled: true,
+    active: { kind: "workshop", id: "startup-video" },
+  });
+  const session = await openMainPageSession(port, options.page, true);
+  t.after(() => session.close());
+  async function evaluate(expression) {
+    const response = await session.send("Runtime.evaluate", {
+      expression,
+      awaitPromise: true,
+      returnByValue: true,
+    });
+    assert.equal(response.exceptionDetails, undefined);
+    return response.result.value;
+  }
+  await session.send("Runtime.enable");
+  await session.send("Runtime.addBinding", {
+    name: "__codexWallpaperHostRequest",
+  });
+  const requests = [];
+  session.on("Runtime.bindingCalled", ({ payload }) =>
+    requests.push(JSON.parse(payload))
+  );
+  await evaluate(
+    `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(saved)})`
+  );
+  const state = await evaluate(
+    runtimeSource(
+      {
+        version: 1,
+        library: [
+          { id: "startup-video", type: "video", title: "Startup video" },
+        ],
+      },
+      true
+    )
+  );
+  assert.equal(state.hostReady, true);
+  assert.deepEqual(
+    requests.map(({ request, ...rest }) => rest),
+    [{ type: "load-asset", id: "startup-video" }]
+  );
+  assert.deepEqual(
+    await evaluate("globalThis.__codexWallpaperApi.identity()"),
+    candidateIdentity()
+  );
+  const cancelled = await evaluate(`(async () => {
+    const api = globalThis.__codexWallpaperApi;
+    const token = api.beginAssetFileTransfer({ id: "startup-video", type: "video" });
+    const pending = api.finishAssetFileTransfer(token);
+    await api.discardStartup();
+    return Promise.race([pending, new Promise(resolve => setTimeout(() => resolve("still pending"), 200))]);
+  })()`);
+  assert.equal(cancelled, false);
+  assert.deepEqual(
+    await evaluate(`[
+    Boolean(document.getElementById(${JSON.stringify(rootId)})),
+    typeof globalThis.__codexWallpaperApi, typeof globalThis.__codexWallpaperHotkey,
+    localStorage.getItem(${JSON.stringify(key)})
+  ]`),
+    [false, "undefined", "undefined", saved]
+  );
+});
+
+test("dedicated startup reveals wallpaper and controls after the active Codex interface paints", async (t) => {
+  const html = await startHtmlFixture(`<!doctype html><html><body>
+    <div id="splash">Loading</div>
+    <div data-app-shell-active-page="true" style="opacity:0">
+      <main data-app-shell-main-surface style="min-height:100px"></main>
+    </div>
+  </body></html>`);
+  const { fixture, port } = await startBrowserFixture(t, html);
+  const options = { page: fixture.url };
+  const evaluate = (expression) => evaluateInPage(port, expression, options);
+  await waitForPage(port, options);
+  await evaluate(`globalThis.startupRequests = [];
+    globalThis.__codexWallpaperHostRequest = (request) => startupRequests.push(JSON.parse(request));
+    globalThis.libraryReads = 0;
+    const getAll = IDBObjectStore.prototype.getAll;
+    IDBObjectStore.prototype.getAll = function (...args) {
+      libraryReads += 1;
+      return getAll.apply(this, args);
+    };
+    globalThis.assetRequests = () => startupRequests.filter(request => request.type === 'load-asset');`);
+
+  const key = "codex-wallpaper-p1-config";
+  const selected = { kind: "workshop", id: "last-image" };
+  const image =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  const source = runtimeSource(
+    {
+      library: [
+        { id: selected.id, title: "Saved image", type: "image" },
+      ],
+    },
+    true,
+    true,
+    true
+  );
+  const layers = `[
+    document.querySelectorAll('#${rootId} [data-codex-wallpaper-layer]').length,
+    document.querySelectorAll('#${controlRootId} [data-codex-wallpaper-panel]').length,
+    globalThis.__codexWallpaperApi.state().styles
+  ]`;
+  const afterPaint = (value) => `new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve(${value})))))`;
+  const saveEnabled = `localStorage.setItem('${key}', ${JSON.stringify(
+    JSON.stringify({ enabled: true, active: selected })
+  )})`;
+  await evaluate(saveEnabled);
+  const startup = await evaluate(source);
+  assert.equal(startup.hostReady, true);
+  assert.equal(startup.activeId, selected.id);
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "waiting");
+  assert.equal(await evaluate("assetRequests().length"), 1);
+  assert.equal(await evaluate("assetRequests().at(-1).id"), selected.id);
+
+  await evaluate(`document.querySelector('main').innerHTML =
+    '<div data-composer-surface-variant>Message composer</div>'`);
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate(`(() => {
+    globalThis.cancelledFile = globalThis.__codexWallpaperApi.beginAssetFileTransfer(
+      { id: ${JSON.stringify(selected.id)} }, null, assetRequests().at(-1).request
+    );
+    return document.querySelector('input[data-codex-wallpaper-file]')?.hidden;
+  })()`), true);
+
+  // A cross-window stop while startup waits must cancel the pending mount.
+  await evaluate(`(() => {
+    const config = JSON.parse(localStorage.getItem('${key}'));
+    localStorage.setItem('${key}', JSON.stringify({ ...config, enabled: false }));
+    dispatchEvent(new StorageEvent('storage', { key: '${key}' }));
+    document.querySelector('[data-app-shell-active-page]').style.opacity = '1';
+  })()`);
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate("document.querySelectorAll('input[data-codex-wallpaper-file]').length"), 0);
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.finishAssetFileTransfer(cancelledFile)"), false);
+  await evaluate("globalThis.__codexWallpaperApi.discardStartup()");
+  assert.equal((await evaluate(source)).state, "disabled");
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "disabled");
+  assert.equal(await evaluate("startupRequests.at(-1).enabled"), false);
+
+  await evaluate(`(async () => {
+    await globalThis.__codexWallpaperApi.discardStartup();
+    document.querySelector('[data-app-shell-active-page]').style.opacity = '0';
+    ${saveEnabled};
+  })()`);
+  assert.equal((await evaluate(source)).state, "enabled");
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate("assetRequests().length"), 2);
+  await evaluate(`(async () => {
+    globalThis.presentation = null;
+    void globalThis.__codexWallpaperApi.waitForStartupPresentation().then(value => { presentation = value; });
+    const blob = await fetch(${JSON.stringify(image)}).then(response => response.blob());
+    const request = assetRequests().at(-1).request;
+    const token = globalThis.__codexWallpaperApi.beginAssetFileTransfer(
+      { id: ${JSON.stringify(selected.id)}, title: 'Saved image', type: 'image', mime: blob.type, size: blob.size },
+      null, request
+    );
+    const input = document.querySelector('input[data-codex-wallpaper-file]');
+    const data = new DataTransfer();
+    data.items.add(new File([blob], 'saved.gif', {type: blob.type}));
+    input.files = data.files;
+    input.dispatchEvent(new Event('change'));
+    await globalThis.__codexWallpaperApi.finishAssetFileTransfer(token, request);
+  })()`);
+  await evaluate(`(() => {
+    const active = document.querySelector('[data-app-shell-active-page]');
+    active.inert = true;
+    active.style.opacity = '1';
+  })()`);
+  assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
+  assert.equal(await evaluate("presentation"), null);
+  // Confirm that the first visible composer frame still has the native appearance.
+  const firstVisibleFrame = await evaluate(`new Promise(resolve => {
+    document.querySelector('#splash').remove();
+    document.querySelector('[data-app-shell-active-page]').inert = false;
+    requestAnimationFrame(() => resolve(${layers}));
+  })`);
+  assert.deepEqual(firstVisibleFrame, [0, 0, 0]);
+  await waitForCondition(
+    async () => (await evaluate(layers)).every((count) => count === 1),
+    3000,
+    "wallpaper and settings panel were not mounted after the composer"
+  );
+  await waitForCondition(
+    () => evaluate(`document.querySelector('#${rootId} img')?.src.startsWith('blob:') &&
+      presentation?.status === 'visible'`),
+    3000,
+    "saved wallpaper did not restore"
+  );
+  assert.deepEqual(await evaluate("[presentation.frameAt >= presentation.interfaceAt, assetRequests().length, libraryReads]"),
+    [true, 2, 0]);
+  await waitForCondition(
+    () => evaluate("startupRequests.at(-1).poster?.startsWith('data:image/jpeg;base64,')"),
+    3000,
+    "wallpaper poster was not published after presentation"
+  );
+  await evaluate(source);
+  assert.deepEqual(await evaluate(layers), [1, 1, 1]);
+  await evaluate(toggleSettings);
+  await waitForCondition(() => evaluate("libraryReads === 1"), 3000, "opening the panel did not load local imports");
+
+  await evaluate(`(async () => {
+    await globalThis.__codexWallpaperApi.discardStartup();
+    document.querySelector('[data-app-shell-active-page]').inert = true;
+    const create = indexedDB.open('codex-wallpaper-media', 1);
+    const db = await new Promise(resolve => { create.onsuccess = () => resolve(create.result); });
+    const blob = await fetch(${JSON.stringify(image)}).then(response => response.blob());
+    const transaction = db.transaction('media', 'readwrite');
+    transaction.objectStore('media').put({id:'saved-import', title:'Saved import', blob, createdAt:1});
+    await new Promise(resolve => { transaction.oncomplete = resolve; });
+    db.close();
+    const get = IDBObjectStore.prototype.get;
+    globalThis.importReads = [];
+    IDBObjectStore.prototype.get = function (key) {
+      importReads.push(key);
+      return get.call(this, key);
+    };
+    localStorage.setItem('${key}', JSON.stringify({ enabled: true, active: {kind:'imported',id:'saved-import'} }));
+  })()`);
+  assert.equal((await evaluate(source)).activeId, "saved-import");
+  await waitForCondition(() => evaluate("importReads.length === 1"), 3000, "the selected import was not prepared");
+  assert.deepEqual(await evaluate(layers), [0, 0, 0]);
+  assert.deepEqual(await evaluate("importReads"), ["saved-import"]);
+  await evaluate("document.querySelector('[data-app-shell-active-page]').inert = false");
+  await waitForCondition(() => evaluate("globalThis.__codexWallpaperApi.startupPresentation() === 'visible'"), 3000, "the selected import was not presented");
+  assert.deepEqual(await evaluate("[importReads.length, libraryReads, assetRequests().length]"), [1, 1, 2]);
+});
+
 test("window chrome keeps wallpaper sharp and native titlebar interactive", async (t) => {
   const fixture = await startChromeFixture();
-  const { port } = await startBrowserFixture(t, fixture);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: { version: 1, library: [] },
-  };
+  const { port, options } = await startRuntimeFixture(
+    t,
+    { version: 1, library: [] },
+    fixture
+  );
   const readTitlebar = `(() => {
     const bar = document.querySelector("[data-app-shell-titlebar]");
     const style = getComputedStyle(bar);
@@ -507,9 +1468,20 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
       getComputedStyle(bar.firstElementChild).getPropertyValue("-webkit-app-region"),
       bar.getBoundingClientRect().toJSON()];
   })()`;
-  await waitForPage(port, options);
+  const readBacking = `(() => {
+    const backing = document.querySelector("[data-app-shell-surface-backing]");
+    return {
+      background: getComputedStyle(backing).backgroundColor,
+      outline: getComputedStyle(backing, "::after").boxShadow
+    };
+  })()`;
   const nativeTitlebar = await evaluateInPage(port, readTitlebar, options);
+  const nativeBacking = await evaluateInPage(port, readBacking, options);
   await applyStaticBackground(port, options);
+  assert.deepEqual(await evaluateInPage(port, readBacking, options), {
+    ...nativeBacking,
+    background: "rgba(0, 0, 0, 0)"
+  });
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -582,7 +1554,588 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     ),
     "shared tint stays translucent and sharp"
   );
+
+  await evaluateInPage(
+    port,
+    `document.documentElement.dataset.theme = "dark"`,
+    options
+  );
+  await pressWallpaperShortcut(port, options, "W");
+  assert.deepEqual(await evaluateInPage(port, readBacking, options), nativeBacking);
 });
+
+test("changing selection cancels a pending File and accepts a new transfer when reselected", async (t) => {
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-file-video",
+        title: "Fixture File Video",
+        type: "video",
+        playable: false,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: null,
+        webHtml: null,
+        reason: "on-demand",
+      },
+      {
+        id: "fixture-switch-image",
+        title: "Fixture Switch Image",
+        type: "image",
+        playable: true,
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+        enabled: true, active: {kind:"workshop",id:"fixture-file-video"},
+        favorites: [], playlist: [], settings: {fps: 30, volume: 0}
+      }));
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const token = api.beginAssetFileTransfer({
+        id: "fixture-file-video",
+        title: "Fixture File Video",
+        type: "video",
+        playable: false,
+        previewDataUrl: null,
+        webHtml: null,
+        reason: "on-demand",
+        mime: "video/mp4",
+        size: ${Buffer.from(tinyMp4, "base64").length}
+      }, null);
+      if (!token) throw new Error("File transfer token was rejected");
+      const input = document.querySelector(
+        \`input[data-codex-wallpaper-file="\${token}"]\`
+      );
+      const oldFinish = api.finishAssetFileTransfer(token);
+      ${toggleSettings};
+      const imageCard = document.querySelector("[data-entry-id=fixture-switch-image]");
+      const videoCard = document.querySelector("[data-entry-id=fixture-file-video]");
+      imageCard.querySelector("[data-entry-action=use]").click();
+      videoCard.querySelector("[data-entry-action=use]").click();
+      const cancelResult = await Promise.race([
+        oldFinish,
+        new Promise((resolve) => setTimeout(resolve, 300, null)),
+      ]);
+      const token2 = api.beginAssetFileTransfer({
+        id: "fixture-file-video",
+        title: "Fixture File Video",
+        type: "video",
+        playable: false,
+        previewDataUrl: null,
+        webHtml: null,
+        reason: "on-demand",
+        mime: "video/mp4",
+        size: ${Buffer.from(tinyMp4, "base64").length}
+      }, null);
+      const activeInput = document.querySelector(
+        \`input[data-codex-wallpaper-file="\${token2}"]\`
+      );
+      const file = new File(
+        [Uint8Array.from(atob(${JSON.stringify(tinyMp4)}), (char) => char.charCodeAt(0))],
+        "Fixture File.mp4",
+        { type: "video/mp4" }
+      );
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      activeInput.files = transfer.files;
+      activeInput.dispatchEvent(new Event("change", { bubbles: true }));
+      await api.finishAssetFileTransfer(token2);
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const video = document.querySelector("#${rootId} .media:not(.staged) video");
+        if (video?.readyState >= 2 && video.src.startsWith("blob:")) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const video = document.querySelector("#${rootId} .media:not(.staged) video");
+      return {
+        hadInput: Boolean(input),
+        canceledInputGone: !document.contains(input),
+        canceledFinish: cancelResult === false,
+        blobVideo: video?.src.startsWith("blob:") ?? false,
+        cardStatus: videoCard.querySelector("[data-card-status]").textContent,
+        playerCount: api.state().playerCount,
+        staged: document.querySelectorAll("#${rootId} .media.staged").length
+      };
+    })()`,
+    options
+  );
+  assert.deepEqual(result, {
+    hadInput: true,
+    canceledInputGone: true,
+    canceledFinish: true,
+    blobVideo: true,
+    cardStatus: "video · 原生播放",
+    playerCount: 1,
+    staged: 0,
+  });
+});
+
+test("same-id reselection isolates late File and failure results from the current request", async (t) => {
+  const preview =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-request-video",
+        title: "Request Video",
+        type: "video",
+        playable: false,
+        fallback: true,
+        previewDataUrl: preview,
+        reason: "on-demand",
+      },
+      {
+        id: "fixture-request-image",
+        title: "Request Image",
+        type: "image",
+        playable: true,
+        assetDataUrl: preview,
+      },
+      {
+        id: "fixture-request-final",
+        title: "Request Final",
+        type: "image",
+        playable: true,
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%2322c55e'/%3E%3C/svg%3E",
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      globalThis.__fixtureAssetRequests = [];
+      globalThis.__codexWallpaperHostRequest = (raw) => {
+        const request = JSON.parse(raw);
+        if (request.type === "load-asset")
+          globalThis.__fixtureAssetRequests.push(request);
+      };
+      localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-request-video" },
+        favorites: [],
+        playlist: [],
+        settings: { fps: 30, volume: 0 }
+      }));
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const root = document.getElementById("${rootId}");
+      const controls = document.getElementById("${controlRootId}");
+      const action = (id) =>
+        controls.querySelector(
+          \`.card[data-entry-id="\${id}"] [data-entry-action="use"]\`
+        );
+      const requestToken = () => globalThis.__fixtureAssetRequests.at(-1)?.request;
+      const entry = {
+        id: "fixture-request-video",
+        title: "Request Video",
+        type: "video",
+        mime: "video/mp4",
+        size: ${Buffer.from(tinyMp4, "base64").length}
+      };
+      const attachFile = async (token) => {
+        const input = document.querySelector(
+          \`input[data-codex-wallpaper-file="\${token}"]\`
+        );
+        const transfer = new DataTransfer();
+        transfer.items.add(
+          new File(
+            [Uint8Array.from(atob(${JSON.stringify(tinyMp4)}), (char) => char.charCodeAt(0))],
+            "Request Video.mp4",
+            { type: "video/mp4" }
+          )
+        );
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return input;
+      };
+      ${toggleSettings};
+      const firstRequest = requestToken();
+      const firstToken = api.beginAssetFileTransfer(entry, null, firstRequest);
+      const firstInput = await attachFile(firstToken);
+      action("fixture-request-image").click();
+      action("fixture-request-video").click();
+      const secondRequest = requestToken();
+      const staleFileResult = await api.finishAssetFileTransfer(firstToken);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const afterStaleFile = {
+        staleFileResult,
+        inputGone: !document.contains(firstInput),
+        activeVideo: Boolean(root.querySelector(".media:not(.staged) video")),
+        status: controls.querySelector(".runtime-status")?.textContent
+      };
+      action("fixture-request-image").click();
+      action("fixture-request-video").click();
+      const thirdRequest = requestToken();
+      api.receiveAssetError(
+        "fixture-request-video",
+        "stale failure",
+        secondRequest
+      );
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      const afterStaleFailure = {
+        status: controls.querySelector(".runtime-status")?.textContent,
+        cardStatus: controls
+          .querySelector(
+            '.card[data-entry-id="fixture-request-video"] [data-card-status]'
+          )?.textContent
+      };
+      const currentToken = api.beginAssetFileTransfer(entry, null, thirdRequest);
+      await attachFile(currentToken);
+      await api.finishAssetFileTransfer(currentToken, thirdRequest);
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const video = root.querySelector(".media:not(.staged) video");
+        if (video?.readyState >= 2 && video.src.startsWith("blob:")) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const videoDelivered = Boolean(
+        root.querySelector(".media:not(.staged) video")?.src.startsWith("blob:")
+      );
+      action("fixture-request-image").click();
+      action("fixture-request-final").click();
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const image = root.querySelector(".media:not(.staged) img");
+        if (image?.complete && image.naturalWidth > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      api.receiveAsset(
+        {
+          id: "fixture-request-video",
+          title: "Request Video",
+          type: "video",
+          playable: true,
+          assetDataUrl: null
+        },
+        thirdRequest
+      );
+      api.receiveAssetError(
+        "fixture-request-video",
+        "late after C",
+        thirdRequest
+      );
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      return {
+        firstRequest,
+        secondRequest,
+        thirdRequest,
+        distinctRequests:
+          firstRequest && secondRequest && thirdRequest &&
+          firstRequest !== secondRequest && secondRequest !== thirdRequest,
+        afterStaleFile,
+        afterStaleFailure,
+        currentVideo: videoDelivered,
+        afterAtoBtoC: {
+          activeId: api.state().activeId,
+          finalShown: root
+            .querySelector(".media:not(.staged) img")
+            ?.src.includes("22c55e")
+        },
+        staged: root.querySelectorAll(".media.staged").length,
+        temporaryInputs: root.querySelectorAll("input[type='file']").length
+      };
+    })()`,
+    options
+  );
+  assert.equal(result.distinctRequests, true);
+  assert.deepEqual(result.afterStaleFile, {
+    staleFileResult: false,
+    inputGone: true,
+    activeVideo: false,
+    status: "正在加载：Request Video",
+  });
+  assert.deepEqual(result.afterStaleFailure, {
+    status: "正在加载：Request Video",
+    cardStatus: "video · 加载中",
+  });
+  assert.deepEqual(
+    {
+      currentVideo: result.currentVideo,
+      activeId: result.afterAtoBtoC.activeId,
+      finalShown: result.afterAtoBtoC.finalShown,
+      staged: result.staged,
+      temporaryInputs: result.temporaryInputs,
+    },
+    {
+      currentVideo: true,
+      activeId: "fixture-request-final",
+      finalShown: true,
+      staged: 0,
+      temporaryInputs: 0,
+    }
+  );
+});
+
+test("video card waits for an actual click before requesting the asset", async (t) => {
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "click-video",
+        title: "Click Video",
+        type: "video",
+        playable: false,
+      },
+    ],
+  });
+  await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        ${toggleSettings};
+        const card = document.querySelector("[data-entry-id=click-video]");
+        const use = card.querySelector("[data-entry-action=use]");
+        const requests = [];
+        globalThis.__codexWallpaperHostRequest = (raw) => requests.push(JSON.parse(raw));
+        card.dispatchEvent(new MouseEvent("mouseenter"));
+        use.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        use.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        const beforeClick = {
+          requests: requests.splice(0).filter((request) => request.type !== "load-preview"),
+          playerCount: globalThis.__codexWallpaperApi.state().playerCount,
+          fileInputs: document.querySelectorAll("#${rootId} input[type=file]").length,
+        };
+        use.click();
+        return {
+          beforeClick,
+          requests: requests
+            .filter((request) => request.type !== "load-preview")
+            .map(({ request, ...rest }) => rest),
+          selected: use.getAttribute("aria-pressed"),
+          status: card.querySelector("[data-card-status]").textContent,
+        };
+      })()`,
+      options
+    ),
+    {
+      beforeClick: { requests: [], playerCount: 0, fileInputs: 0 },
+      requests: [{ type: "load-asset", id: "click-video" }],
+      selected: "true",
+      status: "video · 加载中",
+    }
+  );
+});
+
+test("real CDP file input delivers a video without a Base64 page transfer", async (t) => {
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "cdp-file-video",
+        title: "CDP File Video",
+        type: "video",
+        playable: false,
+        fallback: true,
+        previewDataUrl: null,
+        assetDataUrl: null,
+        webHtml: null,
+        reason: "on-demand",
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `(() => {
+      localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+        enabled: true, active: {kind:"workshop",id:"cdp-file-video"},
+        favorites: [], playlist: [], settings: {fps: 30, volume: 0}
+      }));
+    })()`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  const path = join(tmpdir(), "codex-wallpaper-cdp-file.mp4");
+  await writeFile(path, Buffer.from(tinyMp4, "base64"));
+  t.after(() => rm(path, { force: true }));
+  const session = await openMainPageSession(port, options.page, true);
+  t.after(() => session.close());
+  const size = Buffer.from(tinyMp4, "base64").length;
+  const token = (
+    await session.send("Runtime.evaluate", {
+      expression: `globalThis.__codexWallpaperApi.beginAssetFileTransfer(${JSON.stringify(
+        {
+          id: "cdp-file-video",
+          title: "CDP File Video",
+          type: "video",
+          playable: false,
+          fallback: true,
+          previewDataUrl: null,
+          assetDataUrl: null,
+          webHtml: null,
+          reason: "on-demand",
+          mime: "video/mp4",
+          size,
+        }
+      )}, null)`,
+      returnByValue: true,
+      awaitPromise: true,
+    })
+  ).result.value;
+  const document = await session.send("DOM.getDocument");
+  const input = await session.send("DOM.querySelector", {
+    nodeId: document.result?.rootId ?? document.root.nodeId,
+    selector: `input[data-codex-wallpaper-file="${token}"]`,
+  });
+  await session.send("DOM.setFileInputFiles", {
+    files: [path],
+    nodeId: input.nodeId,
+  });
+  await session.send("Runtime.evaluate", {
+    expression: `globalThis.__codexWallpaperApi.finishAssetFileTransfer(${JSON.stringify(
+      String(token)
+    )})`,
+    returnByValue: true,
+    awaitPromise: true,
+  });
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const video = document.querySelector("#${rootId} .media:not(.staged) video");
+        if (video?.readyState >= 2 && video.src.startsWith("blob:")) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      const video = document.querySelector("#${rootId} .media:not(.staged) video");
+      return {
+        blobVideo: video?.src.startsWith("blob:") ?? false,
+        playerCount: api.state().playerCount,
+        staged: document.querySelectorAll("#${rootId} .media.staged").length,
+        temporaryInputs: document.querySelectorAll(
+          "input[type='file'][hidden]"
+        ).length,
+      };
+    })()`,
+    options
+  );
+  assert.deepEqual(result, {
+    blobVideo: true,
+    playerCount: 1,
+    staged: 0,
+    temporaryInputs: 0,
+  });
+});
+
+test(
+  "CDP file input uses the original File when the MP4 layout is rejected",
+  { timeout: 15000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-layout-fallback-")
+    );
+    const videoId = "9999999999996";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Rejected layout fixture",
+        file: "clip.mp4",
+      })
+    );
+    const malformed = Buffer.alloc(24);
+    malformed.writeUInt32BE(8, 0);
+    malformed.write("ftyp", 4, "latin1");
+    malformed.writeUInt32BE(1, 8);
+    malformed.write("mdat", 12, "latin1");
+    malformed.writeBigUInt64BE(8n, 16);
+    await writeFile(join(project, "clip.mp4"), malformed);
+    const calls = [];
+    const identity = candidateIdentity();
+    const finished = Promise.withResolvers();
+    const fixture = await startExactCdpFixture(t, (expression) => {
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+        )
+      ) {
+        calls.push(
+          expression.endsWith(", null)") ? "file-layout-null" : "file"
+        );
+        return "file-1";
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+        )
+      )
+        calls.push("base64");
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
+        )
+      ) {
+        calls.push("finish");
+        finished.resolve();
+        return true;
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi?.receiveAssetError("
+        )
+      )
+        finished.reject(new Error(expression));
+      return { state: "enabled", hostReady: true, identity };
+    });
+    const receipt = await runStartupHandoff(t, fixture, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(fixture.requestHost("load-asset", videoId), true);
+    const outcome = await Promise.race([
+      finished.promise.then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 5000)),
+    ]);
+    assert.equal(outcome, true, JSON.stringify({ calls }));
+    assert.deepEqual(calls, ["file-layout-null", "finish"]);
+    assert.deepEqual(
+      fixture.requests
+        .filter((command) => command.method === "DOM.setFileInputFiles")
+        .map((command) => command.params),
+      [{ files: [join(project, "clip.mp4")], objectId: "file-input" }]
+    );
+    fixture.stopHost();
+  }
+);
 
 test("persisted-disabled CLI starts the real host before a later enable", async (t) => {
   const fixture = await startExactCdpFixture(t);
@@ -636,7 +2189,205 @@ test("persisted-disabled CLI starts the real host before a later enable", async 
 });
 
 test(
-  "host delivers a requested replacement after a discarded transfer",
+  "complete reset keeps the real host ready for reenable and workshop File delivery",
+  { timeout: 20000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-reset-host-")
+    );
+    const videoId = "9999999999995";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Reset Host Video",
+        file: "clip.mp4",
+      })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    const previousRoot = process.env.DSH_WE_STEAM_ROOT;
+    process.env.DSH_WE_STEAM_ROOT = steamRoot;
+    t.after(() => {
+      if (previousRoot === undefined) delete process.env.DSH_WE_STEAM_ROOT;
+      else process.env.DSH_WE_STEAM_ROOT = previousRoot;
+    });
+    const payload = {
+      version: 1,
+      library: [
+        {
+          id: videoId,
+          title: "Reset Host Video",
+          type: "video",
+          playable: false,
+          fallback: true,
+          previewDataUrl:
+            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+          assetDataUrl: null,
+          reason: "on-demand",
+        },
+      ],
+    };
+    const { fixture, port, options } = await startRuntimeFixture(t, payload);
+    await evaluateInPage(
+      port,
+      `localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+        enabled: false,
+        active: { kind: "workshop", id: ${JSON.stringify(videoId)} },
+        favorites: [],
+        playlist: [],
+        settings: { fps: 30, volume: 0 }
+      }))`,
+      options
+    );
+    const session = await openMainPageSession(port, options.page, true);
+    const host = await attachWallpaperHost({
+      port,
+      session,
+      page: options.page,
+      source: runtimeSource(payload, true),
+    });
+    assert.ok(host);
+    t.after(async () => {
+      await host.stop();
+      session.close();
+    });
+    const lock = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
+    const waitForVideo = () =>
+      evaluateInPage(
+        port,
+        `(async () => {
+          for (let attempt = 0; attempt < 120; attempt += 1) {
+            const video = document.querySelector(
+              "#${rootId} .media:not(.staged) video"
+            );
+            if (video?.readyState >= 2 && video.src.startsWith("blob:"))
+              return true;
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          return false;
+        })()`,
+        options
+      );
+
+    assert.equal(
+      (await applyStaticBackground(port, options)).state,
+      "disabled"
+    );
+    await sessionEvaluate(
+      session,
+      "globalThis.__codexWallpaperApi.configureHost()"
+    );
+    const pressAltShiftW = () =>
+      evaluateInPage(
+        port,
+        `dispatchEvent(new KeyboardEvent("keydown", {
+          key: "W",
+          code: "KeyW",
+          altKey: true,
+          shiftKey: true,
+          bubbles: true
+        }))`,
+        options
+      );
+    await pressAltShiftW();
+    await evaluateInPage(
+      port,
+      `(async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (document.getElementById("${rootId}")) return true;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return false;
+      })()`,
+      options
+    );
+    await evaluateInPage(
+      port,
+      `(() => {
+        ${toggleSettings};
+        document
+          .querySelector(
+            \`.card[data-entry-id="${videoId}"] [data-entry-action="use"]\`
+          )
+          .click();
+      })()`,
+      options
+    );
+    assert.equal(await waitForVideo(), true);
+    await access(lock);
+
+    await evaluateInPage(
+      port,
+      `(() => {
+        ${toggleSettings};
+        const reset = document.querySelector("#${controlRootId} button.reset");
+        reset.click();
+        reset.click();
+      })()`,
+      options
+    );
+    await evaluateInPage(
+      port,
+      `(async () => {
+        for (let attempt = 0; attempt < 160; attempt += 1) {
+          if (!document.getElementById("${rootId}")) return true;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return false;
+      })()`,
+      options
+    );
+    await access(lock);
+    await pressAltShiftW();
+    await evaluateInPage(
+      port,
+      `(async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (document.getElementById("${rootId}")) return true;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return false;
+      })()`,
+      options
+    );
+    await evaluateInPage(
+      port,
+      `(() => {
+        ${toggleSettings};
+        document
+          .querySelector(
+            \`.card[data-entry-id="${videoId}"] [data-entry-action="use"]\`
+          )
+          .click();
+      })()`,
+      options
+    );
+    assert.equal(await waitForVideo(), true);
+    await access(lock);
+  }
+);
+
+test(
+  "one supervisor retries discarded fallback and File transfers after PowerShell exits",
   { timeout: 15000 },
   async (t) => {
     const steamRoot = await mkdtemp(
@@ -672,14 +2423,25 @@ test(
     );
     await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
     const calls = [];
+    let fileAttempts = 0;
+    const identity = candidateIdentity();
     const finished = Promise.withResolvers();
     const fixture = await startExactCdpFixture(t, (expression, requestHost) => {
       if (
         expression.startsWith(
-          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
         )
       )
-        calls.push("begin");
+        return ++fileAttempts === 1 ? false : `file-${fileAttempts}`;
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+        )
+      ) {
+        const transfer = firstJsonArgument(expression);
+        calls.push(transfer.fileFallbackReason);
+        return true;
+      }
       if (
         expression.startsWith(
           "globalThis.__codexWallpaperApi.appendAssetTransferChunk("
@@ -691,61 +2453,362 @@ test(
           requestHost("load-asset", videoId);
           return false;
         }
+        return true;
       }
       if (
         expression.startsWith(
-          "globalThis.__codexWallpaperApi.finishAssetTransfer("
+          "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
         )
       ) {
-        calls.push("finish");
+        if (fileAttempts === 2) {
+          requestHost("load-asset", videoId);
+          return false;
+        }
         finished.resolve();
+        return true;
       }
       if (
         expression.startsWith(
           "globalThis.__codexWallpaperApi?.receiveAssetError("
         )
       )
-        finished.reject(new Error("Host rejected the test wallpaper"));
-      return true;
+        finished.reject(
+          new Error(`Host rejected the test wallpaper: ${expression}`)
+        );
+      return { state: "enabled", hostReady: true, identity };
     });
-    const child = spawn(
-      process.execPath,
-      [
-        "--no-use-env-proxy",
-        "launcher/wallpaper-host.mjs",
-        String(fixture.port),
-      ],
-      {
-        env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
-        stdio: ["ignore", "pipe", "ignore"],
-      }
+    const receipt = await runStartupHandoff(t, fixture, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.deepEqual(receipt.Wallpaper.identity, identity);
+    assert.equal(fixture.discoveries, 1);
+    assert.equal(fixture.sessions, 1);
+    const requestSent = fixture.requestHost("load-asset", videoId);
+    let deadline;
+    const outcome = await Promise.race([
+      finished.promise.then(() => ({ finished: true })),
+      new Promise((resolve) => {
+        deadline = setTimeout(() => resolve({ finished: false }), 5000);
+      }),
+    ]);
+    clearTimeout(deadline);
+    assert.ok(
+      outcome.finished,
+      JSON.stringify({
+        calls,
+        hostConnected: fixture.hostConnected,
+        requestSent,
+        commands: fixture.requests.map((command) => command.method),
+      })
     );
-    const exited = once(child, "exit");
-    t.after(async () => {
-      fixture.stopHost();
-      if (child.exitCode === null) child.kill();
-      await exited;
+    assert.deepEqual(calls, ["file-input-unavailable", "chunk"]);
+    assert.deepEqual(
+      fixture.requests
+        .filter((command) => command.method === "DOM.setFileInputFiles")
+        .map((command) => command.params),
+      [
+        { files: [join(project, "clip.mp4")], objectId: "file-input" },
+        { files: [join(project, "clip.mp4")], objectId: "file-input" },
+      ]
+    );
+    fixture.stopHost();
+    const lock = join(tmpdir(), `codex-wallpaper-host-${fixture.port}.lock`);
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      if (
+        await access(lock).then(
+          () => false,
+          () => true
+        )
+      )
+        break;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    await assert.rejects(access(lock), { code: "ENOENT" });
+  }
+);
+
+test(
+  "large video uses its preview when File is unavailable without starting Base64",
+  { timeout: 15000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-oversized-")
+    );
+    const videoId = "9999999999998";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Oversized fixture",
+        file: "clip.mp4",
+        preview: "preview.png",
+      })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    await truncate(join(project, "clip.mp4"), 512 * 1024 * 1024 + 1);
+    await writeFile(join(project, "preview.png"), Buffer.from([0x89, 0x50]));
+    const calls = [];
+    const identity = candidateIdentity();
+    const finished = Promise.withResolvers();
+    const fixture = await startExactCdpFixture(t, (expression) => {
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+        )
+      ) {
+        calls.push("file-transfer");
+        return false;
+      }
+      if (
+        expression.startsWith("globalThis.__codexWallpaperApi.receivePreview(")
+      ) {
+        calls.push("preview");
+        return { state: "enabled", hostReady: true };
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+        )
+      )
+        calls.push("base64");
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi?.receiveAssetError("
+        )
+      ) {
+        calls.push("error");
+        finished.resolve();
+        return { state: "enabled", hostReady: true };
+      }
+      return { state: "enabled", hostReady: true, identity };
     });
-    await once(child.stdout, "data");
-    fixture.requestHost("load-asset", videoId);
-    await finished.promise;
-    assert.deepEqual(calls, ["begin", "chunk", "begin", "chunk", "finish"]);
+    const receipt = await runStartupHandoff(t, fixture, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(fixture.requestHost("load-asset", videoId), true);
+    const outcome = await Promise.race([
+      finished.promise.then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 3000)),
+    ]);
+    assert.equal(outcome, true, JSON.stringify({ calls }));
+    assert.deepEqual(calls, ["file-transfer", "preview", "error"]);
+    fixture.stopHost();
+  }
+);
+
+test(
+  "video above 512 MiB is delivered through File without Base64",
+  { timeout: 15000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-large-file-")
+    );
+    const videoId = "9999999999997";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "video",
+        title: "Large File fixture",
+        file: "clip.mp4",
+      })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    await truncate(join(project, "clip.mp4"), 512 * 1024 * 1024 + 1);
+    const calls = [];
+    const identity = candidateIdentity();
+    const finished = Promise.withResolvers();
+    const fixture = await startExactCdpFixture(t, (expression) => {
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+        )
+      ) {
+        calls.push("file");
+        return `file-${videoId}`;
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetTransfer("
+        )
+      )
+        calls.push("base64");
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
+        )
+      ) {
+        calls.push("finish");
+        finished.resolve();
+        return true;
+      }
+      return { state: "enabled", hostReady: true, identity };
+    });
+    const receipt = await runStartupHandoff(t, fixture, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(fixture.requestHost("load-asset", videoId), true);
+    const outcome = await Promise.race([
+      finished.promise.then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 3000)),
+    ]);
+    assert.equal(outcome, true, JSON.stringify({ calls }));
+    assert.deepEqual(calls, ["file", "finish"]);
+    assert.deepEqual(
+      fixture.requests
+        .filter((command) => command.method === "DOM.setFileInputFiles")
+        .map((command) => command.params),
+      [{ files: [join(project, "clip.mp4")], objectId: "file-input" }]
+    );
+    assert.equal(
+      fixture.requests.some(
+        (command) => command.method === "Runtime.releaseObject"
+      ),
+      true
+    );
+    fixture.stopHost();
+  }
+);
+
+test(
+  "missing File input object falls back for a small video",
+  { timeout: 15000 },
+  async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-missing-object-")
+    );
+    const videoId = "9999999999996";
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      videoId
+    );
+    t.after(() => rm(steamRoot, { recursive: true, force: true }));
+    await mkdir(distribution, { recursive: true });
+    await mkdir(project, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({ type: "video", file: "clip.mp4" })
+    );
+    await writeFile(join(project, "clip.mp4"), Buffer.from(tinyMp4, "base64"));
+    const calls = [];
+    const identity = candidateIdentity();
+    const finished = Promise.withResolvers();
+    const fixture = await startExactCdpFixture(
+      t,
+      (expression) => {
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+          )
+        )
+          return `file-${videoId}`;
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.beginAssetTransfer("
+          )
+        ) {
+          const transfer = firstJsonArgument(expression);
+          calls.push(transfer.fileFallbackReason);
+          return true;
+        }
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.appendAssetTransferChunk("
+          )
+        )
+          return true;
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.finishAssetTransfer("
+          )
+        ) {
+          finished.resolve();
+          return true;
+        }
+        return { state: "enabled", hostReady: true, identity };
+      },
+      { objectId: null }
+    );
+    const receipt = await runStartupHandoff(t, fixture, {
+      env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(fixture.requestHost("load-asset", videoId), true);
+    const outcome = await Promise.race([
+      finished.promise.then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 3000)),
+    ]);
+    assert.equal(outcome, true, JSON.stringify({ calls }));
+    assert.deepEqual(calls, ["file-input-failed"]);
+    assert.equal(
+      fixture.requests.some(
+        (command) => command.method === "DOM.setFileInputFiles"
+      ),
+      false
+    );
+    fixture.stopHost();
   }
 );
 
 test("reenabling during a video transfer discards the old stream and accepts its replacement", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        { id: "fixture-video", title: "Transfer fixture", type: "video" },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      { id: "fixture-video", title: "Transfer fixture", type: "video" },
+    ],
+  });
   await evaluateInPage(
     port,
     `(() => {
@@ -796,28 +2859,22 @@ test("reenabling during a video transfer discards the old stream and accepts its
 });
 
 test("failed first video shows its preview instead of a blank background", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-broken-video",
-          title: "Fixture Broken Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
-          assetDataUrl: "data:video/mp4;base64,AA==",
-          reason: "video-preview-fallback",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-broken-video",
+        title: "Fixture Broken Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
+        assetDataUrl: "data:video/mp4;base64,AA==",
+        reason: "video-preview-fallback",
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -872,29 +2929,88 @@ test("failed first video shows its preview instead of a blank background", async
   );
 });
 
+test("oversized video host failure commits its preview instead of a blank background", async (t) => {
+  const preview =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-oversized-video",
+        title: "Fixture Oversized Video",
+        type: "video",
+        playable: false,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        reason: "asset-too-large",
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-oversized-video" },
+        favorites: [],
+        playlist: [],
+        settings: { fps: 30, volume: 0 }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const api = globalThis.__codexWallpaperApi;
+        const id = "fixture-oversized-video";
+        api.receivePreview({ id, previewDataUrl: ${JSON.stringify(preview)}, fallback: true });
+        await api.receiveAssetError(id, "Video exceeds the 1 GiB File playback limit");
+        const root = document.getElementById("${rootId}");
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = root.querySelector(".media:not(.staged) img");
+          if (image?.complete && image.naturalWidth > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const media = root.querySelector(".media:not(.staged)");
+        return {
+          previewShown: media?.querySelector("img")?.src.includes("5d32b8"),
+          mediaCount: root.querySelectorAll(".media:not(.staged)").length,
+          status: document.querySelector("#${controlRootId} .runtime-status")?.textContent,
+        };
+      })()`,
+      options
+    ),
+    {
+      previewShown: true,
+      mediaCount: 1,
+      status:
+        "素材加载失败：Video exceeds the 1 GiB File playback limit，已使用预览",
+    }
+  );
+});
+
 test("disable cancels a staged video before its first frame can commit", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-video",
-          title: "Fixture Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
-          reason: null,
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-video",
+        title: "Fixture Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `(() => {
@@ -967,29 +3083,23 @@ test("disable cancels a staged video before its first frame can commit", async (
 });
 
 test("continuous slider input previews immediately and persists the settled value once", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          reason: null,
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -1024,7 +3134,7 @@ test("continuous slider input previews immediately and persists the settled valu
           if (image?.complete && image.naturalWidth > 0) break;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
-        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        ${toggleSettings};
         controls.querySelector("[data-panel-page='appearance']")?.click();
         const opacity = [...controls.querySelectorAll(".range")].find(
           (range) => range.querySelector("span")?.textContent === "不透明度"
@@ -1061,7 +3171,7 @@ test("continuous slider input previews immediately and persists the settled valu
         ).settings.opacity;
         controls.querySelector("[data-panel-page='appearance']")?.click();
         controls.querySelector("[data-codex-wallpaper-panel] header button").click();
-        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        ${toggleSettings};
         const reopenedOpacity = [...controls.querySelectorAll(".range")]
           .find(
             (range) => range.querySelector("span")?.textContent === "不透明度"
@@ -1158,8 +3268,23 @@ test("continuous slider input previews immediately and persists the settled valu
         number.dispatchEvent(new Event("input", { bubbles: true }));
         const exactPreview = root.querySelector("[data-codex-wallpaper-layer]").style.opacity;
         controls.querySelector("[data-codex-wallpaper-panel] header button").click();
-        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        ${toggleSettings};
         const exactSaved = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).settings.opacity;
+        const sameImage = root.querySelector(".media:not(.staged) img") === image;
+        const exactReopened = opacityOutput.textContent;
+        let disableWrites = 0;
+        const originalDisableSetItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+          if (key === "codex-wallpaper-p1-config") disableWrites += 1;
+          return originalDisableSetItem.call(this, key, value);
+        };
+        opacity.value = "55";
+        opacity.dispatchEvent(new Event("input", { bubbles: true }));
+        await globalThis.__codexWallpaperApi.disable();
+        const disabledConfig = JSON.parse(
+          localStorage.getItem("codex-wallpaper-p1-config")
+        );
+        Storage.prototype.setItem = originalDisableSetItem;
         return {
           previewBeforeSettle,
           visibleOpacityAfterPreview,
@@ -1186,8 +3311,11 @@ test("continuous slider input previews immediately and persists the settled valu
           exactInputFocused,
           exactPreview,
           exactSaved,
-          exactReopened: opacityOutput.textContent,
-          sameImage: root.querySelector(".media:not(.staged) img") === image
+          exactReopened,
+          disableWrites,
+          disabledValue: disabledConfig.settings.opacity,
+          disabledEnabled: disabledConfig.enabled,
+          sameImage
         };
       })()`,
       options
@@ -1219,46 +3347,43 @@ test("continuous slider input previews immediately and persists the settled valu
       exactPreview: "0.645",
       exactSaved: 64.5,
       exactReopened: "64.5%",
+      disableWrites: 1,
+      disabledValue: 55,
+      disabledEnabled: false,
       sameImage: true,
     }
   );
 });
 
 test("cross-window settings update in place without rebuilding cards or media", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-video",
-          title: "Fixture Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
-          reason: null,
-        },
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          reason: null,
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-video",
+        title: "Fixture Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+        reason: null,
+      },
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `(() => {
@@ -1311,8 +3436,9 @@ test("cross-window settings update in place without rebuilding cards or media", 
           if (root.querySelector(".media:not(.staged) video")) break;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
-        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        ${toggleSettings};
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+        const content = panel.querySelector(".panel-content");
         panel.querySelector("[data-panel-page='playback']").click();
         const settings = controls.querySelector(".settings-grid");
         const cards = [...controls.querySelectorAll(".card")];
@@ -1321,7 +3447,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
           (range) => range.querySelector("span")?.textContent === "音量"
         ).querySelector("input");
         volume.focus();
-        panel.scrollTop = 60;
+        content.scrollTop = 60;
         let cardAdds = 0;
         let mediaMutations = 0;
         const cardObserver = new MutationObserver((records) => {
@@ -1385,7 +3511,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
           videoVolume: video?.volume,
           videoMuted: video?.muted,
           panelOpen: panel.classList.contains("open"),
-          panelScrollTop: panel.scrollTop,
+          contentScrollTop: content.scrollTop,
           volumeFocused: document.activeElement === volume,
           settingsSame:
             settings === controls.querySelector(".settings-grid"),
@@ -1425,7 +3551,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
       videoVolume: 0.4,
       videoMuted: false,
       panelOpen: true,
-      panelScrollTop: 60,
+      contentScrollTop: 60,
       volumeFocused: true,
       settingsSame: true,
       favoritePressed: "true",
@@ -1439,41 +3565,35 @@ test("cross-window settings update in place without rebuilding cards or media", 
 });
 
 test("cross-window asset identity change still reloads the wallpaper", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          reason: null,
-        },
-        {
-          id: "fixture-image-next",
-          title: "Fixture Image Next",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
-          reason: null,
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        reason: null,
+      },
+      {
+        id: "fixture-image-next",
+        title: "Fixture Image Next",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23123456'/%3E%3C/svg%3E",
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -1507,6 +3627,12 @@ test("cross-window asset identity change still reloads the wallpaper", async (t)
           if (image?.src.includes("5d32b8") && image.complete) break;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
+        const controls = document.getElementById("${controlRootId}");
+        ${toggleSettings};
+        const appearance = controls.querySelector(".settings-grid");
+        const appearanceControl = appearance.firstElementChild;
+        const playback = controls.querySelector("[data-playback-settings]");
+        const playbackControl = playback.firstElementChild;
         const oldImage = root.querySelector(".media:not(.staged) img");
         const previous = localStorage.getItem("codex-wallpaper-p1-config");
         const next = JSON.stringify({
@@ -1531,6 +3657,14 @@ test("cross-window asset identity change still reloads the wallpaper", async (t)
         return {
           imageReplaced: oldImage !== nextImage,
           nextImageVisible: nextImage?.src.includes("123456") ?? false,
+          appearanceSame:
+            appearance === controls.querySelector(".settings-grid") &&
+            appearanceControl ===
+              controls.querySelector(".settings-grid").firstElementChild,
+          playbackSame:
+            playback === controls.querySelector("[data-playback-settings]") &&
+            playbackControl ===
+              controls.querySelector("[data-playback-settings]").firstElementChild,
           staged: root.querySelectorAll(".media.staged").length,
           active: globalThis.__codexWallpaperApi.state().activeId
         };
@@ -1540,6 +3674,8 @@ test("cross-window asset identity change still reloads the wallpaper", async (t)
     {
       imageReplaced: true,
       nextImageVisible: true,
+      appearanceSame: true,
+      playbackSame: true,
       staged: 0,
       active: "fixture-image-next",
     }
@@ -1547,39 +3683,33 @@ test("cross-window asset identity change still reloads the wallpaper", async (t)
 });
 
 test("opening and closing the mounted panel does not rebuild wallpaper cards", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          reason: null,
-        },
-        {
-          id: "fixture-lazy",
-          title: "Fixture Lazy",
-          type: "image",
-          playable: false,
-          fallback: true,
-          previewDataUrl: null,
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        reason: null,
+      },
+      {
+        id: "fixture-lazy",
+        title: "Fixture Lazy",
+        type: "image",
+        playable: false,
+        fallback: true,
+        previewDataUrl: null,
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+    ],
+  });
   await applyStaticBackground(port, options);
   assert.deepEqual(
     await evaluateInPage(
@@ -1592,9 +3722,12 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         const controls = document.getElementById("${controlRootId}");
-        const button = controls.querySelector("[data-codex-wallpaper-settings]");
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
         const list = panel.querySelector(".wallpaper-list");
+        const beforeOpenCards = list.querySelectorAll(".card").length;
+        ${toggleSettings};
+        const opened = panel.classList.contains("open");
+        const firstOpenCards = list.querySelectorAll(".card").length;
         const cards = [...list.querySelectorAll(".card")];
         let addedCards = 0;
         const observer = new MutationObserver((records) => {
@@ -1607,15 +3740,15 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
           );
         });
         observer.observe(list, { childList: true });
-        button.click();
-        const opened = panel.classList.contains("open");
-        button.click();
+        ${toggleSettings};
         const closed = !panel.classList.contains("open");
-        button.click();
+        ${toggleSettings};
         const reopened = panel.classList.contains("open");
         await new Promise((resolve) => setTimeout(resolve, 20));
         observer.disconnect();
         return {
+          beforeOpenCards,
+          firstOpenCards,
           opened,
           closed,
           reopened,
@@ -1629,6 +3762,8 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
       options
     ),
     {
+      beforeOpenCards: 0,
+      firstOpenCards: 2,
       opened: true,
       closed: true,
       reopened: true,
@@ -1639,32 +3774,26 @@ test("opening and closing the mounted panel does not rebuild wallpaper cards", a
 });
 
 test("rotation requests an item without a preview and respects background pause", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
   const image =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='red'/%3E%3C/svg%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "still",
-          title: "Still",
-          type: "image",
-          playable: true,
-          assetDataUrl: image,
-        },
-        {
-          id: "on-demand",
-          title: "On demand",
-          type: "video",
-          reason: "asset-not-loaded",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "still",
+        title: "Still",
+        type: "image",
+        playable: true,
+        assetDataUrl: image,
+      },
+      {
+        id: "on-demand",
+        title: "On demand",
+        type: "video",
+        reason: "asset-not-loaded",
+      },
+    ],
+  });
   await applyStaticBackground(port, options);
   const result = await evaluateInPage(
     port,
@@ -1692,7 +3821,7 @@ test("rotation requests an item without a preview and respects background pause"
       configurable: true,
       get: () => visibility,
     });
-    select("[data-codex-wallpaper-settings]").click();
+    ${toggleSettings};
     action("still", "use").click();
     action("still", "queue").click();
     action("on-demand", "queue").click();
@@ -1717,7 +3846,7 @@ test("rotation requests an item without a preview and respects background pause"
       saved,
       summary,
       stoppedWhileHidden,
-      request,
+      request: { type: request.type, id: request.id },
       startedTransfer: opened !== false,
       discardedChunk: runtime.appendAssetTransferChunk("on-demand", "AA==") === false,
       discardedEnd: (await runtime.finishAssetTransfer("on-demand")) === false,
@@ -1739,90 +3868,84 @@ test("rotation requests an item without a preview and respects background pause"
 });
 
 test("wallpaper library shell combines filters without reloading the current media", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
   const preview =
     "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: preview,
-          reason: null,
-        },
-        {
-          id: "fixture-video",
-          title: "Fixture Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: null,
-          reason: null,
-        },
-        {
-          id: "fixture-scene",
-          title: "Fixture Scene",
-          type: "scene",
-          playable: true,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: "data:application/octet-stream;base64,AA==",
-          reason: "scene-native",
-        },
-        {
-          id: "fixture-web-fallback",
-          title: "Fixture Web Fallback",
-          type: "web",
-          playable: false,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: null,
-          webHtml: null,
-          reason: "web-preview-fallback",
-        },
-        {
-          id: "fixture-on-demand",
-          title: "Fixture On Demand",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-        {
-          id: "fixture-on-demand-next",
-          title: "Fixture On Demand Next",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl: preview,
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-        {
-          id: "fixture-lazy",
-          title: "Fixture Lazy",
-          type: "image",
-          playable: false,
-          fallback: true,
-          previewDataUrl: null,
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: preview,
+        reason: null,
+      },
+      {
+        id: "fixture-video",
+        title: "Fixture Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        reason: null,
+      },
+      {
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: "data:application/octet-stream;base64,AA==",
+        reason: "scene-native",
+      },
+      {
+        id: "fixture-web-fallback",
+        title: "Fixture Web Fallback",
+        type: "web",
+        playable: false,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        webHtml: null,
+        reason: "web-preview-fallback",
+      },
+      {
+        id: "fixture-on-demand",
+        title: "Fixture On Demand",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+      {
+        id: "fixture-on-demand-next",
+        title: "Fixture On Demand Next",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+      {
+        id: "fixture-lazy",
+        title: "Fixture Lazy",
+        type: "image",
+        playable: false,
+        fallback: true,
+        previewDataUrl: null,
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -1855,7 +3978,7 @@ test("wallpaper library shell combines filters without reloading the current med
       globalThis.__codexWallpaperHostRequest = (raw) => {
         hostRequests.push(JSON.parse(raw));
       };
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       panel.style.maxHeight = "220px";
       const media = root.querySelector("[data-codex-wallpaper-layer] .media");
@@ -2045,15 +4168,16 @@ test("wallpaper library shell combines filters without reloading the current med
         search.tabIndex >= 0 &&
         type.tabIndex >= 0 &&
         favorites.tabIndex >= 0;
-      panel.scrollTop = panel.scrollHeight;
+      const content = panel.querySelector(".panel-content");
+      content.scrollTop = content.scrollHeight;
       const scrollable =
-        getComputedStyle(panel).overflowY === "auto" &&
-        panel.scrollHeight > panel.clientHeight &&
-        panel.scrollTop > 0;
+        getComputedStyle(content).overflowY === "auto" &&
+        content.scrollHeight > content.clientHeight &&
+        content.scrollTop > 0;
 
       const close = panel.querySelector("header button");
       close.click();
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const reopenedImageCard = panel.querySelector(
         ".card[data-entry-id='fixture-image']"
       );
@@ -2122,62 +4246,116 @@ test("wallpaper library shell combines filters without reloading the current med
   });
 });
 
+test("late Web preview commits when that Web item is already current", async (t) => {
+  const preview =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
+  const { port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-web-late",
+        title: "Fixture Web Late",
+        type: "web",
+        playable: false,
+        fallback: true,
+        previewDataUrl: null,
+        assetDataUrl: null,
+        webHtml: null,
+        reason: "web-preview-fallback",
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+      enabled: true,
+      active: { kind: "workshop", id: "fixture-web-late" },
+      favorites: [],
+      playlist: [],
+      settings: { fps: 30, volume: 0 }
+    }))`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(async () => {
+        await globalThis.__codexWallpaperApi.receivePreview({
+          id: "fixture-web-late",
+          previewDataUrl: ${JSON.stringify(preview)},
+          fallback: true
+        });
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const image = document.querySelector(
+            "#${rootId} .media:not(.staged) img"
+          );
+          if (image?.complete && image.naturalWidth > 0)
+            return {
+              activeId: globalThis.__codexWallpaperApi.state().activeId,
+              image: image.src === ${JSON.stringify(preview)},
+              staged: document.querySelectorAll("#${rootId} .media.staged").length
+            };
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return null;
+      })()`,
+      options
+    ),
+    { activeId: "fixture-web-late", image: true, staged: 0 }
+  );
+});
+
 test("playback profiles and capability controls apply without replacing media", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
   const image =
     "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: image,
-          reason: null,
-        },
-        {
-          id: "fixture-video",
-          title: "Fixture Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
-          reason: null,
-        },
-        {
-          id: "fixture-scene",
-          title: "Fixture Scene",
-          type: "scene",
-          playable: true,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: "data:application/octet-stream;base64,AA==",
-          reason: "scene-native",
-        },
-        {
-          id: "fixture-web",
-          title: "Fixture Web",
-          type: "web",
-          playable: false,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: null,
-          webHtml:
-            "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
-          reason: "web-offline",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: image,
+        reason: null,
+      },
+      {
+        id: "fixture-video",
+        title: "Fixture Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+        reason: null,
+      },
+      {
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: "data:application/octet-stream;base64,AA==",
+        reason: "scene-native",
+      },
+      {
+        id: "fixture-web",
+        title: "Fixture Web",
+        type: "web",
+        playable: false,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: null,
+        webHtml:
+          "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
+        reason: "web-offline",
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -2243,7 +4421,7 @@ test("playback profiles and capability controls apply without replacing media", 
     `(async () => {
       const root = document.getElementById("${rootId}");
       const controls = document.getElementById("${controlRootId}");
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       panel.querySelector("[data-panel-page='playback']").click();
 
@@ -2435,7 +4613,7 @@ test("playback profiles and capability controls apply without replacing media", 
       };
 
       panel.querySelector("header button").click();
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const saved = JSON.parse(
         localStorage.getItem("codex-wallpaper-p1-config")
       ).settings;
@@ -2542,30 +4720,97 @@ test("playback profiles and capability controls apply without replacing media", 
   });
 });
 
+test("Codex form resets leave wallpaper settings controls visible and operable", async (t) => {
+  const { port, options } = await startRuntimeFixture(t, { version: 1, library: [] });
+  const evaluate = (expression) => evaluateInPage(port, expression, options);
+  const click = async (selector) => {
+    await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`);
+    assert.equal(await clickAtElementCenter(port, options, selector), true, selector);
+  };
+  await evaluate(`(() => {
+    const style = document.createElement("style");
+    style.textContent = \`
+      input[type=checkbox] { appearance: none; border: 0; padding: 0; margin: 0 }
+      input[type=range], select { appearance: none }
+      [data-composer-surface-variant] { position: fixed; right: 140px; bottom: 20px; width: 440px; height: 72px; box-sizing: border-box }
+    \`;
+    document.head.append(style);
+  })()`);
+  await applyStaticBackground(port, options);
+  await pressWallpaperShortcut(port, options, "S");
+  assert.equal(
+    await evaluate('getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'),
+    "auto"
+  );
+  await click("[data-panel-page=appearance]");
+  const preference = "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
+  const border = "[data-setting=interfaceBorders]";
+  const scopes = ["chat", "left", "sidebar", "right", "settings"];
+  const affordance = await evaluate(`(() => {
+    const box = document.querySelector('${border}');
+    return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
+  })()`);
+  assert.notEqual(affordance.appearance, "none", border);
+  assert.ok(affordance.width >= 16 && affordance.height >= 16, border);
+  assert.equal(await evaluate(
+    'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
+  ), true);
+  assert.equal(await evaluate(
+    'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
+  ), true);
+
+  const initialBorders = await evaluate(`document.querySelector('${border}').checked`);
+  await click(border);
+  assert.equal(await evaluate(`${preference}.interfaceBorders`), !initialBorders);
+  await click(border);
+  assert.equal(await evaluate(`${preference}.interfaceBorders`), initialBorders);
+
+  for (const scope of scopes) {
+    const slider = `[data-surface-override-value=${scope}]`;
+    const restore = `[data-restore-surface=${scope}]`;
+    const state = () => evaluate(`[
+      document.querySelector('${slider}').disabled,
+      document.querySelector('${restore}').disabled
+    ]`);
+    assert.deepEqual(await state(), [false, false]);
+    assert.equal(await evaluate(`document.querySelector('${restore}').textContent`), "恢复默认");
+    const inherited = await evaluate(`document.querySelector('${slider}').value`);
+    await click(slider);
+    for (const type of ["rawKeyDown", "keyUp"]) {
+      await callMainPage(port, "Input.dispatchKeyEvent",
+        { type, key: "End", code: "End", windowsVirtualKeyCode: 35 }, options.page, true);
+    }
+    assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), 100);
+    assert.equal(await evaluate(`document.querySelector('${slider}').nextElementSibling.textContent`), "100%");
+    assert.deepEqual(await state(), [false, false]);
+    for (let repeat = 0; repeat < 2; repeat += 1) {
+      await click(restore);
+      assert.deepEqual(await state(), [false, false]);
+      assert.equal(await evaluate(`document.querySelector('${slider}').value`), inherited);
+      assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), null);
+      assert.equal(await evaluate(`document.activeElement === document.querySelector('${restore}')`), true);
+    }
+  }
+});
+
 test("appearance controls update wallpaper and surface layers without reloading media", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
   const image =
     "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: image,
-          reason: null,
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: image,
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -2579,6 +4824,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
           dim: 18,
           blur: 0,
           opacity: 100,
+          surfaceOpacity: 55,
           fps: 30,
           volume: 0,
           rotationMinutes: 0
@@ -2594,7 +4840,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     `(async () => {
       const controls = document.getElementById("${controlRootId}");
       const root = document.getElementById("${rootId}");
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       panel.querySelector("[data-panel-page='appearance']").click();
       const media = root.querySelector(".media:not(.staged)");
@@ -2608,8 +4854,12 @@ test("appearance controls update wallpaper and surface layers without reloading 
       const settingsCanvas = settingsHost.querySelector(
         "[class~='electron:bg-surface']"
       );
-      const alphaOf = (value) =>
-        Number(value.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1] ?? 0);
+      const alphaOf = (value) => {
+        const alpha = value.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1];
+        if (alpha !== undefined) return Number(alpha);
+        if (value.startsWith("rgba(")) return Number(value.slice(5, -1).split(",").at(-1));
+        return 1;
+      };
       const setRange = (name, value) => {
         const input = panel.querySelector(\`[data-setting="\${name}"]\`);
         input.value = value;
@@ -2630,18 +4880,153 @@ test("appearance controls update wallpaper and surface layers without reloading 
       };
 
       const rootStyleBeforePreview = document.documentElement.getAttribute("style");
-      setRange("surfaceOpacity", "55");
       const surfaceAlpha = (selector) =>
         alphaOf(getComputedStyle(document.querySelector(selector)).backgroundColor);
       const globalSurface = surfaceAlpha("body [data-app-shell-frame]");
       const inheritedChat = surfaceAlpha("[data-app-shell-main-surface]");
       const inheritedSidebar = surfaceAlpha("[data-app-shell-page-sidebar]");
+      const frame = document.querySelector("[data-app-shell-frame]");
+      frame.dataset.appShellResponsiveSidebar = "false";
+      frame.dataset.appShellApplicationMenuBar = "true";
+      frame.style.setProperty("--app-shell-sidebar-docked-background", "rgb(24 24 28 / .5)");
+      frame.style.setProperty("--app-shell-application-menu-height", "36px");
+      frame.style.setProperty("--app-shell-titlebar-height", "8px");
+      frame.style.backgroundImage = "linear-gradient(var(--app-shell-sidebar-docked-background), var(--app-shell-sidebar-docked-background))";
+      const dockedRow = document.createElement("div");
+      dockedRow.dataset.appShellWorkspaceRow = "";
+      dockedRow.innerHTML = '<div data-app-shell-workspace><div data-app-shell-left-panel-appearance></div><div data-app-shell-surface-backing style="position:absolute;inset:0;border-start-start-radius:12px"></div></div>';
+      frame.append(dockedRow);
+      const chat = frame.querySelector("[data-app-shell-main-surface]");
+      chat.classList.add("mt-(--app-shell-titlebar-height)");
+      chat.style.borderInlineStart = "1px solid transparent";
+      const layout = document.createElement("div");
+      layout.dataset.appShellMainContentLayout = "thread-edge-scroll";
+      layout.dataset.appShellWorkspaceLayout = "split";
+      layout.style.minHeight = "180px";
+      const right = document.createElement("div");
+      right.dataset.appShellFocusArea = "right-panel";
+      right.style.cssText = "position:absolute; inset:0 0 0 auto; width:180px";
+      right.innerHTML = '<div data-app-shell-tabs><div style="background-color: var(--app-shell-panel-background, rgb(24 24 28))"><div data-app-shell-pane-content-viewport><diffs-container style="background-color:rgb(17 17 17)"></diffs-container><file-tree-container style="background-color:rgb(24 24 28)"></file-tree-container></div></div></div>';
+      const fullView = document.createElement("button");
+      fullView.textContent = "Enter full view";
+      fullView.dataset.appShellWorkspaceLayoutToggle = "right-panel";
+      titlebar.append(fullView);
+      const tree = right.querySelector("file-tree-container");
+      tree.style.display = "block";
+      const treeShadow = tree.attachShadow({ mode: "open" });
+      treeShadow.innerHTML = '<div data-file-tree-virtualized-scroll style="height:80px;overflow:auto"><div style="height:0"><div data-file-tree-sticky-overlay-content style="height:28px"></div></div><div data-file-tree-virtualized-list style="height:200px"></div></div>';
+      const scrollChrome = document.createElement("div");
+      scrollChrome.innerHTML = '<div aria-hidden="true" class="bg-[image:var(--app-shell-content-fade,transparent)]" style="background-image:linear-gradient(black,transparent)"></div><div><div data-app-action-timeline-scroll></div></div>';
+      layout.append(scrollChrome);
+      chat.append(titlebar, layout, right);
+      const treeScroll = treeShadow.querySelector("[data-file-tree-virtualized-scroll]");
+      const treeList = treeShadow.querySelector("[data-file-tree-virtualized-list]");
+      const treeClipTop = () => parseFloat(treeList.style.clipPath.slice(6));
+      const nextPaint = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await nextPaint();
+      const initialTreeClip = treeClipTop();
+      treeScroll.scrollTop = 15;
+      await nextPaint();
+      const scrolledTreeClip = treeClipTop();
+      const backingElement = dockedRow.querySelector("[data-app-shell-surface-backing]");
+      const wallpaperLayer = root.querySelector("[data-codex-wallpaper-layer]");
+      const chatAlpha = () => alphaOf(getComputedStyle(layout).backgroundColor);
+      const setSurface = (scope, value) => {
+        const input = panel.querySelector('[data-surface-override-value=' + scope + ']');
+        input.value = value;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      const scopes = ["chat", "left", "sidebar", "right", "settings"];
+      const restoreSurface = (scope) => panel.querySelector('[data-restore-surface=' + scope + ']').click();
+      const zoneState = () => [
+        chatAlpha(),
+        surfaceAlpha("[data-app-shell-left-panel-appearance]"),
+        alphaOf(getComputedStyle(frame, "::before").backgroundColor),
+        alphaOf(getComputedStyle(wallpaperLayer, "::before").backgroundColor),
+        alphaOf(getComputedStyle(right).backgroundColor),
+        alphaOf(getComputedStyle(wallpaperLayer, "::after").backgroundColor),
+        alphaOf(getComputedStyle(panel).backgroundColor)
+      ];
+      for (const scope of scopes) setSurface(scope, "0");
+      const allClear = {
+        zones: zoneState(),
+        frameColor: alphaOf(getComputedStyle(frame).backgroundColor),
+        frameImage: getComputedStyle(frame).backgroundImage,
+        backingColor: alphaOf(getComputedStyle(backingElement).backgroundColor),
+        backingImage: getComputedStyle(backingElement).backgroundImage,
+        main: alphaOf(getComputedStyle(chat).backgroundColor),
+        header: alphaOf(getComputedStyle(titlebar).backgroundColor),
+        rightInner: alphaOf(getComputedStyle(right.firstElementChild.firstElementChild).backgroundColor),
+        rightComponents: [...right.querySelectorAll("diffs-container, file-tree-container")].map((element) => [
+          alphaOf(getComputedStyle(element).backgroundColor),
+          getComputedStyle(element).getPropertyValue("--color-surface")
+        ]),
+        panelFilter: getComputedStyle(panel).backdropFilter
+      };
+      const oneAtATime = scopes.map((scope) => {
+        setSurface(scope, "40");
+        const state = zoneState();
+        setSurface(scope, "0");
+        return state;
+      });
+      for (const scope of scopes) restoreSurface(scope);
+      const defaults = zoneState();
+      const leftRange = panel.querySelector("[data-surface-override-value='left']");
+      const leftDefault = leftRange.value;
+      const leftState = () => ({
+        left: surfaceAlpha("[data-app-shell-left-panel-appearance]"),
+        frame: surfaceAlpha("[data-app-shell-frame]"),
+        chat: chatAlpha()
+      });
+      leftRange.value = "42";
+      leftRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const customLeft = leftState();
+      leftRange.value = "0";
+      leftRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const clearLeft = leftState();
+      panel.querySelector("[data-restore-surface='left']").click();
+      const restoredLeft = leftState();
+      const dimLayer = wallpaperLayer.querySelector(".dim");
       setRange("interfaceBlur", "8");
+      const blurState = () => [
+        getComputedStyle(panel).backdropFilter,
+        getComputedStyle(root, "::after").backdropFilter,
+        getComputedStyle(dimLayer, "::after").backdropFilter,
+        getComputedStyle(right).backdropFilter,
+      ];
+      const settingsOnlyBlur = blurState();
+      setRange("chatBlur", "12");
+      setRange("interfaceBlur", "0");
+      const chatOnlyBlur = blurState();
+      const chatBox = layout.getBoundingClientRect();
+      const blurStyle = getComputedStyle(root, "::after");
+      const chatBlurMatchesLayout = ["left", "top", "width", "height"].every(
+        (property) => Math.abs(parseFloat(blurStyle[property]) - chatBox[property]) < 1
+      );
+      setRange("chatBlur", "0");
+      const rightOnlyBlur = ["0", "12", "24"].map((value) => {
+        setRange("rightBlur", value);
+        return blurState();
+      });
+      const rightBox = right.getBoundingClientRect();
+      const rightBlurStyle = getComputedStyle(dimLayer, "::after");
+      const titleTop = titlebar.getBoundingClientRect().top;
+      const rightBlurMatchesLayout = [
+        ["left", rightBox.left],
+        ["top", titleTop],
+        ["width", rightBox.width],
+        ["height", rightBox.bottom - titleTop]
+      ].every(([property, value]) => Math.abs(parseFloat(rightBlurStyle[property]) - value) < 1);
+      setRange("rightBlur", "12");
+      setRange("chatBlur", "12");
+      setRange("interfaceBlur", "8");
+      const projectSidebar = document.querySelector("[data-slate-sidebar-content]");
+      const projectBlurBefore = getComputedStyle(projectSidebar).backdropFilter;
+      setRange("projectSidebarBlur", "14");
+      const projectBlur = getComputedStyle(projectSidebar).backdropFilter;
+      const railBlur = getComputedStyle(document.querySelector("[data-app-navigation-rail]")).backdropFilter;
       const previewKeepsRootStyle =
         document.documentElement.getAttribute("style") === rootStyleBeforePreview;
-      const blur = getComputedStyle(
-        document.querySelector("[data-app-shell-main-surface]")
-      ).backdropFilter;
       const borders = panel.querySelector(
         "[data-setting-toggle='interfaceBorders']"
       );
@@ -2651,33 +5036,32 @@ test("appearance controls update wallpaper and surface layers without reloading 
           "--codex-wallpaper-line"
         ) === "transparent";
 
-      const titlebarBefore = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
-      const sidebarOverride = panel.querySelector(
-        "[data-surface-override='sidebar']"
-      );
-      sidebarOverride.click();
+      const topPaintValue = () => getComputedStyle(frame, "::before").backgroundColor;
+      const header = getComputedStyle(titlebar);
+      const topPaint = getComputedStyle(frame, "::before");
+      const backing = getComputedStyle(dockedRow.querySelector("[data-app-shell-surface-backing]"));
+      const seamlessTop = {
+        headerTint: alphaOf(getComputedStyle(wallpaperLayer, "::before").backgroundColor) === alphaOf(topPaint.backgroundColor) && header.boxShadow === "none" && header.borderRadius === "0px",
+        nativeCorner: backing.insetBlockStart === "0px" && backing.borderStartStartRadius === "12px",
+        chatCoversInset: getComputedStyle(chat).paddingBlockStart === "8px",
+        sharedTint: topPaint.pointerEvents === "none" && parseFloat(topPaint.height) === 44,
+        fadesContent: getComputedStyle(scrollChrome.firstElementChild).backgroundImage === "none" &&
+          getComputedStyle(scrollChrome.querySelector("[data-app-action-timeline-scroll]")).maskImage !== "none"
+      };
+      const flushChatEdge = Math.abs(layout.getBoundingClientRect().left - chat.getBoundingClientRect().left) < 0.1;
+      const defaultTopPaint = topPaintValue();
       const sidebarRange = panel.querySelector(
         "[data-surface-override-value='sidebar']"
       );
       sidebarRange.value = "40";
       sidebarRange.dispatchEvent(new Event("input", { bubbles: true }));
-      const titlebarOverridden = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
+      const customTopPaint = topPaintValue();
       panel.querySelector("[data-restore-surface='sidebar']").click();
-      const titlebarRestored = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
+      const restoredTopPaint = topPaintValue();
 
       const settingsCanvasBefore = alphaOf(
         getComputedStyle(settingsCanvas).backgroundColor
       );
-      const settingsOverride = panel.querySelector(
-        "[data-surface-override='settings']"
-      );
-      settingsOverride.click();
       const settingsRange = panel.querySelector(
         "[data-surface-override-value='settings']"
       );
@@ -2688,56 +5072,51 @@ test("appearance controls update wallpaper and surface layers without reloading 
       );
       panel.querySelector("[data-restore-surface='settings']").click();
 
-      const chatOverride = panel.querySelector(
-        "[data-surface-override='chat']"
-      );
-      chatOverride.click();
       const chatRange = panel.querySelector(
         "[data-surface-override-value='chat']"
       );
+      const inheritedValue = chatRange.value;
+      const restoreChat = panel.querySelector("[data-restore-surface='chat']");
       chatRange.value = "30";
       chatRange.dispatchEvent(new Event("input", { bubbles: true }));
       const override = {
-        enabled: chatOverride.checked,
+        inheritedValue,
         rangeEnabled: !chatRange.disabled,
-        value: surfaceAlpha("[data-app-shell-main-surface]")
+        value: chatAlpha()
       };
-      panel.querySelector("[data-restore-surface='chat']").click();
+      restoreChat.click();
       const restored = {
-        enabled: chatOverride.checked,
-        value: surfaceAlpha("[data-app-shell-main-surface]")
+        rangeEnabled: !chatRange.disabled,
+        value: chatAlpha()
       };
 
       document.documentElement.dataset.theme = "light";
-      const lightBackground = getComputedStyle(
-        document.querySelector("[data-app-shell-main-surface]")
-      ).backgroundColor;
+      const lightBackground = getComputedStyle(layout).backgroundColor;
       const lightAlpha = Number(
         lightBackground.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1]
       );
       document.documentElement.dataset.theme = "dark";
 
       panel.querySelector("header button").click();
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const reopened = {
         fit: panel.querySelector("[data-setting='fitMode']").value,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
-        blur: panel.querySelector("[data-setting='interfaceBlur']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
+        settingsBlur: panel.querySelector("[data-setting='interfaceBlur']").value,
+        chatBlur: panel.querySelector("[data-setting='chatBlur']").value,
+        rightBlur: panel.querySelector("[data-setting='rightBlur']").value,
+        projectBlur: panel.querySelector("[data-setting='projectSidebarBlur']").value,
         borders: panel.querySelector(
           "[data-setting-toggle='interfaceBorders']"
         ).checked,
-        overrideEnabled: panel.querySelector(
-          "[data-surface-override='chat']"
-        ).checked,
+        restoreAvailable: !panel.querySelector(
+          "[data-restore-surface='chat']"
+        ).disabled,
         mediaSame: root.querySelector(".media:not(.staged)") === media
       };
 
       const previous = localStorage.getItem("codex-wallpaper-p1-config");
-      const pendingChatOverride = panel.querySelector(
-        "[data-surface-override='chat']"
-      );
-      pendingChatOverride.click();
       const pendingChatRange = panel.querySelector(
         "[data-surface-override-value='chat']"
       );
@@ -2750,6 +5129,8 @@ test("appearance controls update wallpaper and surface layers without reloading 
           fitMode: "contain",
           surfaceOpacity: 60,
           interfaceBlur: 4,
+          chatBlur: 16,
+          rightBlur: 20,
           interfaceBorders: true,
           surfaceOverrides: { chat: null, sidebar: null, right: null, settings: 70 }
         }
@@ -2767,10 +5148,11 @@ test("appearance controls update wallpaper and surface layers without reloading 
       await new Promise((resolve) => setTimeout(resolve, 30));
       const crossWindow = {
         mediaSame: root.querySelector(".media:not(.staged)") === syncedMedia,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
         fit: panel.querySelector("[data-setting='fitMode']").value,
-        chatOverride: surfaceAlpha("[data-app-shell-main-surface]"),
+        chatOverride: chatAlpha(),
+        projectBlur: getComputedStyle(projectSidebar).backdropFilter,
         settingsOverride: alphaOf(getComputedStyle(panel).backgroundColor)
       };
 
@@ -2788,13 +5170,30 @@ test("appearance controls update wallpaper and surface layers without reloading 
         globalSurface,
         inheritedChat,
         inheritedSidebar,
-        blur,
+        leftDefault,
+        customLeft,
+        clearLeft,
+        restoredLeft,
+        allClear,
+        oneAtATime,
+        pinnedTreeClips: [initialTreeClip, scrolledTreeClip],
+        defaults,
+        settingsOnlyBlur,
+        chatOnlyBlur,
+        chatBlurMatchesLayout,
+        rightOnlyBlur,
+        rightBlurMatchesLayout,
+        syncedBlur: blurState(),
+        projectBlurBefore,
+        projectBlur,
+        railBlur,
         previewKeepsRootStyle,
         bordersOff,
+        seamlessTop,
+        flushChatEdge,
         top: {
-          before: titlebarBefore,
-          overridden: titlebarOverridden,
-          restored: titlebarRestored
+          changes: customTopPaint !== defaultTopPaint,
+          restores: restoredTopPaint === defaultTopPaint
         },
         settingsSurface: {
           changes: settingsCanvasAfter !== settingsCanvasBefore,
@@ -2824,41 +5223,80 @@ test("appearance controls update wallpaper and surface layers without reloading 
     globalSurface: 0.55,
     inheritedChat: 0.14,
     inheritedSidebar: 0.55,
-    blur: "blur(8px)",
+    leftDefault: "55",
+    customLeft: { left: 0.42, frame: 0, chat: 0.14 },
+    clearLeft: { left: 0, frame: 0, chat: 0.14 },
+    restoredLeft: { left: 0.55, frame: 0, chat: 0.14 },
+    allClear: {
+      zones: [0, 0, 0, 0, 0, 0, 0],
+      frameColor: 0,
+      frameImage: "none",
+      backingColor: 0,
+      backingImage: "none",
+      main: 0,
+      header: 0,
+      rightInner: 0,
+      rightComponents: [[0, "transparent"], [0, "transparent"]],
+      panelFilter: "none",
+    },
+    oneAtATime: [
+      [0.4, 0, 0, 0, 0, 0, 0],
+      [0, 0.4, 0, 0, 0, 0, 0],
+      [0, 0, 0.4, 0.4, 0, 0, 0],
+      [0, 0, 0, 0, 0.4, 0.4, 0],
+      [0, 0, 0, 0, 0, 0, 0.4],
+    ],
+    pinnedTreeClips: [28, 43],
+    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0.9104],
+    settingsOnlyBlur: ["blur(8px)", "none", "none", "none"],
+    chatOnlyBlur: ["none", "blur(12px)", "none", "none"],
+    chatBlurMatchesLayout: true,
+    rightOnlyBlur: [
+      ["none", "none", "none", "none"],
+      ["none", "none", "blur(12px)", "none"],
+      ["none", "none", "blur(24px)", "none"],
+    ],
+    rightBlurMatchesLayout: true,
+    syncedBlur: ["blur(4px)", "blur(16px)", "blur(20px)", "none"],
+    projectBlurBefore: "none",
+    projectBlur: "blur(14px)",
+    railBlur: "blur(14px)",
     previewKeepsRootStyle: true,
     bordersOff: true,
-    top: {
-      before: 0,
-      overridden: 0.4,
-      restored: 0,
-    },
+    seamlessTop: { headerTint: true, nativeCorner: true, chatCoversInset: true, sharedTint: true, fadesContent: true },
+    flushChatEdge: true,
+    top: { changes: true, restores: true },
     settingsSurface: {
       changes: true,
       effective: true,
     },
     override: {
-      enabled: true,
+      inheritedValue: "14",
       rangeEnabled: true,
       value: 0.3,
     },
     restored: {
-      enabled: false,
+      rangeEnabled: true,
       value: 0.14,
     },
     lightSurfaceTranslucent: true,
     reopened: {
       fit: "contain",
-      surface: "55",
-      blur: "8",
+      sidebarReadability: "55",
+      settingsBlur: "8",
+      chatBlur: "12",
+      rightBlur: "12",
+      projectBlur: "14",
       borders: false,
-      overrideEnabled: false,
+      restoreAvailable: true,
       mediaSame: true,
     },
     crossWindow: {
       mediaSame: true,
-      surface: "60",
+      sidebarReadability: "60",
       fit: "contain",
       chatOverride: 0.44,
+      projectBlur: "blur(14px)",
       settingsOverride: 0.7,
     },
   });
@@ -2867,9 +5305,13 @@ test("appearance controls update wallpaper and surface layers without reloading 
     port,
     `(async () => {
       await globalThis.__codexWallpaperApi.disable();
+      const mainAfterDisable = document.querySelector("[data-app-shell-main-surface]");
+      const treeList = mainAfterDisable.querySelector("file-tree-container").shadowRoot.querySelector("[data-file-tree-virtualized-list]");
       const cleared =
         !document.getElementById("${rootId}-style") &&
-        getComputedStyle(document.querySelector("[data-app-shell-main-surface]")).backdropFilter === "none";
+        getComputedStyle(mainAfterDisable).backdropFilter === "none" &&
+        getComputedStyle(mainAfterDisable).borderInlineStartWidth === "1px" &&
+        treeList.style.clipPath === "";
       await globalThis.__codexWallpaperApi.enable();
       const root = document.getElementById("${rootId}");
       for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -2878,14 +5320,16 @@ test("appearance controls update wallpaper and surface layers without reloading 
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
       const controls = document.getElementById("${controlRootId}");
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       return {
         cleared,
         state: globalThis.__codexWallpaperApi.state().state,
         fit: getComputedStyle(root.querySelector(".media img")).objectFit,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
+        chatBlur: panel.querySelector("[data-setting='chatBlur']").value,
+        rightBlur: panel.querySelector("[data-setting='rightBlur']").value,
         settingsOverride: Number(getComputedStyle(panel).backgroundColor.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1])
       };
     })()`,
@@ -2895,35 +5339,31 @@ test("appearance controls update wallpaper and surface layers without reloading 
     cleared: true,
     state: "enabled",
     fit: "contain",
-    surface: "60",
+    sidebarReadability: "60",
+    chatBlur: "16",
+    rightBlur: "20",
     settingsOverride: 0.7,
   });
 });
 
 test("scene fit uses the installed renderer without replacing the active scene", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
   const image =
     "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-scene",
-          title: "Fixture Scene",
-          type: "scene",
-          playable: true,
-          fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: "data:application/octet-stream;base64,AA==",
-          reason: "scene-native",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: "data:application/octet-stream;base64,AA==",
+        reason: "scene-native",
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -2983,7 +5423,7 @@ test("scene fit uses the installed renderer without replacing the active scene",
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
       const media = root.querySelector(".media:not(.staged)");
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       panel.querySelector("[data-panel-page='appearance']").click();
       const fit = panel.querySelector("[data-setting='fitMode']");
@@ -3022,30 +5462,377 @@ test("scene fit uses the installed renderer without replacing the active scene",
   });
 });
 
-test("settings presets import export migration and scoped resets form a complete loop", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
+test("desktop startup publishes a scene frame at the fitted viewport ratio and clears it when disabled", async (t) => {
+  const id = "123456";
+  const { port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [{
+      id, title: "Startup scene fixture", type: "scene", playable: true,
+      assetDataUrl: "data:application/octet-stream;base64,AA==",
+    }],
+  });
+  await evaluateInPage(port, `
+    localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
+      enabled: true, active: { kind: "workshop", id: "${id}" },
+      settings: { dim: 18, opacity: 100, fitMode: "cover" },
+    }));
+    globalThis.previewRequests = [];
+    globalThis.__codexWallpaperHostRequest = raw => previewRequests.push(JSON.parse(raw));
+    const links = globalThis[Symbol.for("webwallgl.runtime-link")] = new WeakMap();
+    globalThis.WebWallGL = {
+      bytesSource: () => ({}),
+      createScene(host) {
+        const canvas = globalThis.sceneCanvas = document.createElement("canvas");
+        canvas.style.cssText = "width: 800px; height: 500px";
+        host.append(canvas);
+        const scene = {
+          canvas, load: async () => {}, pause() {}, resume() {}, destroy() {},
+          setFit(fit) { this.fit = fit; },
+        };
+        links.set(scene, { sceneCtl: { editor: { async captureFrame() {
+          const frame = document.createElement("canvas");
+          frame.width = canvas.clientWidth;
+          frame.height = canvas.clientHeight;
+          const ctx = frame.getContext("2d");
+          ctx.fillStyle = scene.fit === "contain" ? "#20b0e0" : "#e06020";
+          ctx.fillRect(0, 0, frame.width, frame.height);
+          if (globalThis.holdCapture) await new Promise(resolve => globalThis.releaseCapture = resolve);
+          return frame;
+        } } } });
+        return scene;
+      },
+    };
+  `, options);
+  await evaluateInPage(port, runtimeSource(options.payload, false, false, true), options);
+
+  const result = await evaluateInPage(port, `(async () => {
+    const wait = async (check) => {
+      for (let attempt = 0; attempt < 120; attempt++) {
+        const result = check();
+        if (result) return result;
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      throw new Error("Startup scene fixture timed out: " + JSON.stringify(
+        previewRequests.map(({ poster, ...request }) => ({ ...request, poster: !!poster }))));
+    };
+    const sceneRequests = () => previewRequests.filter(request => request.source === "scene-frame");
+    const inspect = async (request) => {
+      const image = new Image();
+      image.src = request.poster;
+      await image.decode();
+      const sample = document.createElement("canvas");
+      const ctx = sample.getContext("2d");
+      ctx.drawImage(image, 0, 0);
+      const [red, , blue] = ctx.getImageData(20, 20, 1, 1).data;
+      return [image.width, image.height, request.fitMode, request.dim, blue > red];
+    };
+    const first = await inspect(await wait(() => sceneRequests()[0]));
+    sceneCanvas.style.height = "450px";
+    dispatchEvent(new Event("resize"));
+    const resized = await inspect(await wait(() => sceneRequests()[1]));
+    const controls = document.getElementById("${controlRootId}");
+    ${toggleSettings};
+    controls.querySelector("[data-panel-page='appearance']").click();
+    const fit = controls.querySelector("[data-setting='fitMode']");
+    fit.value = "contain";
+    fit.dispatchEvent(new Event("change", { bubbles: true }));
+    const fitted = await inspect(await wait(() => sceneRequests()[2]));
+    globalThis.holdCapture = true;
+    sceneCanvas.style.height = "400px";
+    dispatchEvent(new Event("resize"));
+    await wait(() => globalThis.releaseCapture);
+    await globalThis.__codexWallpaperApi.disable();
+    releaseCapture();
+    await new Promise(resolve => setTimeout(resolve, 25));
+    return { first, resized, fitted, frameCount: sceneRequests().length,
+      enabled: previewRequests.at(-1).enabled };
+  })()`, options);
+  assert.deepEqual(result, {
+    first: [800, 500, "cover", 18, false],
+    resized: [800, 450, "cover", 18, false],
+    fitted: [800, 450, "contain", 18, true],
+    frameCount: 3,
+    enabled: false,
+  });
+});
+
+test("scene Blob URLs and renderers are released on switch, cancel, failure, disable and reset", async (t) => {
+  const preview =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
   const image =
     "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        previewDataUrl: preview,
+        assetDataUrl: null,
+        reason: "on-demand",
+      },
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        assetDataUrl: image,
+      },
+    ],
+  });
+  await evaluateInPage(
+    port,
+    `localStorage.setItem(
+      "codex-wallpaper-p1-config",
+      JSON.stringify({
+        enabled: true,
+        active: { kind: "workshop", id: "fixture-image" },
+        favorites: [],
+        playlist: [],
+        settings: { fps: 30, volume: 0 }
+      })
+    )`,
+    options
+  );
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      let root = document.getElementById("${rootId}");
+      let controls = document.getElementById("${controlRootId}");
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const waitFor = async (read, attempts = 80) => {
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          const value = read();
+          if (value) return value;
+          await wait(25);
+        }
+        return null;
+      };
+      globalThis.__sceneRuns = [];
+      globalThis.__revokedSceneUrls = [];
+      const originalRevoke = URL.revokeObjectURL;
+      URL.revokeObjectURL = (url) => {
+        globalThis.__revokedSceneUrls.push(url);
+        originalRevoke.call(URL, url);
+      };
+      globalThis.WebWallGL = {
+        bytesSource: () => ({}),
+        createScene: (host) => {
+          const canvas = document.createElement("canvas");
+          canvas.dataset.sceneCanvas = "";
+          host.append(canvas);
+          let resolveLoad;
+          let rejectLoad;
+          const promise = new Promise((resolve, reject) => {
+            resolveLoad = resolve;
+            rejectLoad = reject;
+          });
+          const run = {
+            destroyed: false,
+            resolve: resolveLoad,
+            reject: rejectLoad
+          };
+          globalThis.__sceneRuns.push(run);
+          return {
+            load: () => promise,
+            pause: () => {},
+            resume: () => {},
+            setFps: () => {},
+            setVolume: () => {},
+            setFit: () => {},
+            destroy: () => {
+              run.destroyed = true;
+            }
+          };
+        }
+      };
+      const select = (id) =>
+        controls.querySelector(
+          \`.card[data-entry-id="\${id}"] [data-entry-action="use"]\`
+        ).click();
+      const deliverScene = async () => {
+        const url = URL.createObjectURL(
+          new Blob(["scene fixture"], { type: "application/octet-stream" })
+        );
+        await api.receiveAsset({
+          id: "fixture-scene",
+          title: "Fixture Scene",
+          type: "scene",
           playable: true,
           fallback: true,
-          previewDataUrl: image,
-          assetDataUrl: image,
-          reason: null,
-        },
-      ],
+          previewDataUrl: ${JSON.stringify(preview)},
+          assetDataUrl: null,
+          assetUrl: url,
+          reason: "scene-native"
+        });
+        return url;
+      };
+      const selectScene = async () => {
+        select("fixture-scene");
+        await waitFor(() => api.state().activeId === "fixture-scene");
+      };
+
+      ${toggleSettings};
+      await selectScene();
+      const committedUrl = await deliverScene();
+      await waitFor(() => root.querySelector(".media.staged .scene-host"));
+      globalThis.__sceneRuns.at(-1).resolve();
+      await waitFor(
+        () => root.querySelector(".media:not(.staged) .scene-host.ready")
+      );
+      const committed = {
+        urlActive: !globalThis.__revokedSceneUrls.includes(committedUrl),
+        destroyed: globalThis.__sceneRuns.at(-1).destroyed
+      };
+      select("fixture-image");
+      await waitFor(() => root.querySelector(".media:not(.staged) img"));
+      const afterSwitch = {
+        urlRevoked: globalThis.__revokedSceneUrls.includes(committedUrl),
+        rendererDestroyed: globalThis.__sceneRuns[0].destroyed
+      };
+
+      await selectScene();
+      const cancelledUrl = URL.createObjectURL(
+        new Blob(["cancelled scene"], { type: "application/octet-stream" })
+      );
+      api.receiveAsset({
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        assetUrl: cancelledUrl
+      });
+      await waitFor(() => root.querySelector(".media.staged .scene-host"));
+      select("fixture-image");
+      await waitFor(() => root.querySelector(".media:not(.staged) img"));
+      const cancelledRun = globalThis.__sceneRuns.at(-1);
+      cancelledRun.resolve();
+      await wait(50);
+      const afterCancel = {
+        urlRevoked: globalThis.__revokedSceneUrls.includes(cancelledUrl),
+        rendererDestroyed: cancelledRun.destroyed,
+        staged: root.querySelectorAll(".media.staged").length,
+        sceneActive: Boolean(root.querySelector(".media:not(.staged) .scene-host"))
+      };
+
+      await selectScene();
+      const failedUrl = await deliverScene();
+      await waitFor(() => root.querySelector(".media.staged .scene-host"));
+      const failedRun = globalThis.__sceneRuns.at(-1);
+      failedRun.reject(new Error("fixture decode failure"));
+      await waitFor(() =>
+        controls.querySelector(".runtime-status")?.textContent.includes("加载失败")
+      );
+      const afterFailure = {
+        urlRevoked: globalThis.__revokedSceneUrls.includes(failedUrl),
+        rendererDestroyed: failedRun.destroyed,
+        imageRetained: Boolean(root.querySelector(".media:not(.staged) img")),
+        status: controls.querySelector(".runtime-status")?.textContent,
+        staged: root.querySelectorAll(".media.staged").length
+      };
+
+      await selectScene();
+      const disabledUrl = await deliverScene();
+      await waitFor(() => root.querySelector(".media.staged .scene-host"));
+      const disabledRun = globalThis.__sceneRuns.at(-1);
+      disabledRun.resolve();
+      await waitFor(
+        () => root.querySelector(".media:not(.staged) .scene-host.ready")
+      );
+      await api.disable();
+      const afterDisable = {
+        urlRevoked: globalThis.__revokedSceneUrls.includes(disabledUrl),
+        rendererDestroyed: disabledRun.destroyed,
+        rootRemoved: !document.getElementById("${rootId}")
+      };
+
+      await api.enable();
+      root = document.getElementById("${rootId}");
+      controls = document.getElementById("${controlRootId}");
+      const resetUrl = await deliverScene();
+      await waitFor(() => root.querySelector(".media.staged .scene-host"));
+      const resetRun = globalThis.__sceneRuns.at(-1);
+      resetRun.resolve();
+      await waitFor(
+        () => root.querySelector(".media:not(.staged) .scene-host.ready")
+      );
+      ${toggleSettings};
+      const reset = controls.querySelector("button.reset");
+      reset.click();
+      reset.click();
+      await waitFor(() => !document.getElementById("${rootId}"), 200);
+      const afterReset = {
+        urlRevoked: globalThis.__revokedSceneUrls.includes(resetUrl),
+        rendererDestroyed: resetRun.destroyed,
+        rootRemoved: !document.getElementById("${rootId}"),
+        enabled: api.state().state
+      };
+      URL.revokeObjectURL = originalRevoke;
+      return {
+        committed,
+        afterSwitch,
+        afterCancel,
+        afterFailure,
+        afterDisable,
+        afterReset
+      };
+    })()`,
+    options
+  );
+  assert.deepEqual(result, {
+    committed: { urlActive: true, destroyed: false },
+    afterSwitch: { urlRevoked: true, rendererDestroyed: true },
+    afterCancel: {
+      urlRevoked: true,
+      rendererDestroyed: true,
+      staged: 0,
+      sceneActive: false,
     },
-  };
-  await waitForPage(port, options);
+    afterFailure: {
+      urlRevoked: true,
+      rendererDestroyed: true,
+      imageRetained: true,
+      status: "Fixture Scene · Scene 加载失败，已保留当前画面",
+      staged: 0,
+    },
+    afterDisable: {
+      urlRevoked: true,
+      rendererDestroyed: true,
+      rootRemoved: true,
+    },
+    afterReset: {
+      urlRevoked: true,
+      rendererDestroyed: true,
+      rootRemoved: true,
+      enabled: "disabled",
+    },
+  });
+});
+
+test("settings presets import export migration and scoped resets form a complete loop", async (t) => {
+  const image =
+    "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl: image,
+        assetDataUrl: image,
+        reason: null,
+      },
+    ],
+  });
   await evaluateInPage(
     port,
     `localStorage.setItem(
@@ -3084,7 +5871,7 @@ test("settings presets import export migration and scoped resets form a complete
       const root = document.getElementById("${rootId}");
       const controls = document.getElementById("${controlRootId}");
       const media = root.querySelector(".media:not(.staged)");
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const panel = controls.querySelector("[data-codex-wallpaper-panel]");
       panel.querySelector("[data-panel-page='appearance']").click();
       const recovery = panel.querySelector("[data-preset-section]");
@@ -3096,14 +5883,20 @@ test("settings presets import export migration and scoped resets form a complete
           .getAttribute("aria-pressed"),
         playlist: panel.querySelector(".playlist-summary").textContent,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
-        surfaceOpacity:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
         profile: panel.querySelector("[data-playback-profile]").value
       };
 
       const dim = panel.querySelector("[data-setting='dim']");
       dim.value = "33";
       dim.dispatchEvent(new Event("input", { bubbles: true }));
+      const projectBlur = panel.querySelector("[data-setting='projectSidebarBlur']");
+      projectBlur.value = "11";
+      projectBlur.dispatchEvent(new Event("input", { bubbles: true }));
+      const rightBlur = panel.querySelector("[data-setting='rightBlur']");
+      rightBlur.value = "12";
+      rightBlur.dispatchEvent(new Event("input", { bubbles: true }));
       const volume = panel.querySelector("[data-setting='volume']");
       volume.value = "45";
       volume.dispatchEvent(new Event("input", { bubbles: true }));
@@ -3186,7 +5979,8 @@ test("settings presets import export migration and scoped resets form a complete
         activePresetId: null,
         settings: {
           ...JSON.parse(previous).settings,
-          dim: 41
+          dim: 41,
+          rightBlur: 2
         }
       });
       localStorage.setItem("codex-wallpaper-p1-config", next);
@@ -3228,6 +6022,8 @@ test("settings presets import export migration and scoped resets form a complete
       }
       const imported = {
         dim: panel.querySelector("[data-setting='dim']").value,
+        projectBlur: projectBlur.value,
+        rightBlur: rightBlur.value,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
         volume: panel.querySelector("[data-setting='volume']").value,
         activePresetId: JSON.parse(
@@ -3241,7 +6037,7 @@ test("settings presets import export migration and scoped resets form a complete
         status: recovery.querySelector("[data-settings-status]").textContent
       };
       panel.querySelector("header button").click();
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const importedReopened = {
         dim: panel.querySelector("[data-setting='dim']").value,
         fitMode:
@@ -3341,6 +6137,8 @@ test("settings presets import export migration and scoped resets form a complete
       recovery.querySelector("[data-reset-group='appearance']").click();
       const appearanceReset = {
         dim: panel.querySelector("[data-setting='dim']").value,
+        projectBlur: projectBlur.value,
+        rightBlur: rightBlur.value,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
         activeId: globalThis.__codexWallpaperApi.state().activeId,
         favorite: panel
@@ -3400,7 +6198,7 @@ test("settings presets import export migration and scoped resets form a complete
       };
 
       panel.querySelector("header button").click();
-      controls.querySelector("[data-codex-wallpaper-settings]").click();
+      ${toggleSettings};
       const reopened = {
         presetName: panel.querySelector("[data-preset-name='night']").value,
         presetCount: panel.querySelectorAll("[data-preset-id]").length
@@ -3433,12 +6231,14 @@ test("settings presets import export migration and scoped resets form a complete
     favorite: "true",
     playlist: "轮播：Fixture Image",
     fitMode: "cover",
-    surfaceOpacity: "72",
+    sidebarReadability: "72",
     profile: "custom",
   });
   assert.equal(result.savedPreset.id, "night");
   assert.equal(result.savedPreset.name, "Night");
   assert.equal(result.savedPreset.settings.dim, 33);
+  assert.equal(result.savedPreset.settings.projectSidebarBlur, 11);
+  assert.equal(result.savedPreset.settings.rightBlur, 12);
   assert.equal(result.savedPreset.settings.volume, 45);
   assert.deepEqual(result.customAfterEdit, {
     dim: 50,
@@ -3462,6 +6262,8 @@ test("settings presets import export migration and scoped resets form a complete
   assert.equal("legacyPath" in result.exported.settings, false);
   assert.equal("unknown" in result.exported.settings.surfaceOverrides, false);
   assert.equal(result.exported.settings.dim, 33);
+  assert.equal(result.exported.settings.projectSidebarBlur, 11);
+  assert.equal(result.exported.settings.rightBlur, 12);
   assert.deepEqual(result.crossWindow, {
     dim: "41",
     activePreset: "false",
@@ -3469,6 +6271,8 @@ test("settings presets import export migration and scoped resets form a complete
   });
   assert.deepEqual(result.imported, {
     dim: "33",
+    projectBlur: "11",
+    rightBlur: "12",
     fitMode: "cover",
     volume: "45",
     activePresetId: null,
@@ -3492,6 +6296,8 @@ test("settings presets import export migration and scoped resets form a complete
   });
   assert.deepEqual(result.appearanceReset, {
     dim: "18",
+    projectBlur: "0",
+    rightBlur: "0",
     fitMode: "cover",
     activeId: "fixture-image",
     favorite: "true",
@@ -3523,116 +6329,227 @@ test("settings presets import export migration and scoped resets form a complete
   });
 });
 
+test("usage rows retain their hover tooltip and open native usage settings while wallpaper is enabled", async (t) => {
+  const fixture = await startHtmlFixture(`<!doctype html><meta charset="utf-8">
+    <style>
+      [role="menuitem"] { padding: 8px; width: 220px; }
+      #weekly { position: relative; }
+      #reset-time { display: none; position: absolute; left: 100%; top: 0; white-space: nowrap; }
+      #weekly:hover #reset-time { display: inline; }
+    </style>
+    <button id="usage" aria-label="用量" aria-haspopup="menu" aria-controls="usage-menu">用量</button>
+    <div id="usage-menu" role="menu" data-radix-menu-content aria-labelledby="usage" tabindex="-1" hidden>
+      <div id="weekly" role="menuitem" data-radix-collection-item aria-disabled="true" tabindex="-1">
+        <div data-menu-row-content="true"><span>Weekly limit</span><span>52% left</span></div>
+        <span id="reset-time">Resets in 5d</span>
+      </div>
+      <div id="manage" role="menuitem" data-radix-collection-item tabindex="-1">管理用量</div>
+    </div>
+    <div role="menu"><div id="profile-summary" role="menuitem" aria-disabled="true">Profile / Plus</div></div>
+    <h1 id="usage-settings" hidden>使用情况</h1>
+    <script>
+      const trigger = document.querySelector('#usage');
+      const menu = document.querySelector('#usage-menu');
+      const settings = document.querySelector('#usage-settings');
+      trigger.onclick = () => {
+        menu.hidden = false;
+        menu.dataset.state = 'open';
+        settings.hidden = true;
+        menu.focus();
+      };
+      document.querySelector('#manage').onclick = () => {
+        menu.hidden = true;
+        menu.dataset.state = 'closed';
+        settings.hidden = false;
+      };
+    </script>`);
+  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
+  const read = (source) => evaluateInPage(port, source, options);
+  const settingsVisible = '!document.querySelector("#usage-settings").hidden';
+  await applyStaticBackground(port, options);
+  await clickAtElementCenter(port, options, "#usage");
+  assert.equal(await clickAtElementCenter(port, options, "#weekly"), true);
+  assert.equal(await read(settingsVisible), true);
+
+  await clickAtElementCenter(port, options, "#usage");
+  const point = await read(`(() => {
+    const { x, y, width, height } = document.querySelector('#weekly').getBoundingClientRect();
+    return { x: x + width / 2, y: y + height / 2 };
+  })()`);
+  await callMainPage(
+    port,
+    "Input.dispatchMouseEvent",
+    { type: "mouseMoved", buttons: 0, pointerType: "mouse", ...point },
+    options.page
+  );
+  assert.ok(await read('document.querySelector("#reset-time").getBoundingClientRect().width > 0'));
+  assert.notEqual(await read('getComputedStyle(document.querySelector("#weekly")).backgroundColor'), "rgba(0, 0, 0, 0)");
+
+  await read('document.querySelector("#weekly").focus()');
+  for (const type of ["keyDown", "keyUp"]) {
+    await callMainPage(
+      port,
+      "Input.dispatchKeyEvent",
+      { type, key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 },
+      options.page
+    );
+  }
+  assert.equal(await read(settingsVisible), true);
+
+  await clickAtElementCenter(port, options, "#usage");
+  await read("globalThis.__codexWallpaperApi.disable(false)");
+  assert.equal(await read('document.querySelector("#weekly").getAttribute("aria-disabled")'), "true");
+  await clickAtElementCenter(port, options, "#weekly");
+  assert.equal(await read(settingsVisible), false);
+  await clickAtElementCenter(port, options, "#manage");
+  assert.equal(await read(settingsVisible), true);
+  await read("globalThis.__codexWallpaperApi.enable(false)");
+  await clickAtElementCenter(port, options, "#usage");
+  await clickAtElementCenter(port, options, "#weekly");
+  assert.equal(await read(settingsVisible), true);
+  assert.equal(await read('document.querySelector("#profile-summary").getAttribute("aria-disabled")'), "true");
+});
+
+test("the native settings dialog uses one translucent backdrop for its two columns", async (t) => {
+  const { port, options } = await startRuntimeFixture(t);
+  await evaluateInPage(
+    port,
+    `(() => {
+      const dialog = document.createElement("div");
+      dialog.className = "settings-dialog";
+      dialog.setAttribute("role", "dialog");
+      dialog.innerHTML = \`
+        <div class="settings-dialog-sidebar" style="background-color: rgb(255 255 255 / .025); border-right: 1px solid rgb(48 48 48)">
+          <div data-settings-nav-scroll-container>Settings navigation</div>
+        </div>
+        <div data-settings-panel>
+          <div class="settings-dialog-content electron:bg-surface" style="background-color: rgb(35 35 35)">
+            <button style="background-color: rgb(62 62 62)">Open menu</button>
+          </div>
+        </div>
+      \`;
+      document.body.append(dialog);
+      const ordinary = document.createElement("div");
+      ordinary.setAttribute("role", "dialog");
+      ordinary.innerHTML = '<div class="electron:bg-surface" style="background-color: rgb(35 35 35)">Another dialog</div>';
+      document.body.append(ordinary);
+    })()`,
+    options
+  );
+  const colors = `(() => {
+    const dialog = document.querySelector(".settings-dialog");
+    const sidebar = dialog.querySelector(".settings-dialog-sidebar");
+    const content = dialog.querySelector(".settings-dialog-content");
+    return {
+      backdrop: getComputedStyle(dialog).backgroundColor,
+      sidebar: getComputedStyle(sidebar).backgroundColor,
+      content: getComputedStyle(content).backgroundColor,
+      divider: getComputedStyle(sidebar).borderRightWidth,
+      button: getComputedStyle(content.querySelector("button")).backgroundColor,
+      ordinary: getComputedStyle(document.querySelector("[role='dialog']:not(.settings-dialog) > div")).backgroundColor,
+    };
+  })()`;
+  const native = await evaluateInPage(port, colors, options);
+  await applyStaticBackground(port, { ...options, payload: { library: [] } });
+  const adapted = await evaluateInPage(port, colors, options);
+  assert.match(adapted.backdrop, /\/ 0\.[0-9]+\)/);
+  assert.deepEqual(adapted, {
+    ...native,
+    backdrop: adapted.backdrop,
+    sidebar: "rgba(0, 0, 0, 0)",
+    content: "rgba(0, 0, 0, 0)",
+  });
+  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  assert.deepEqual(await evaluateInPage(port, colors, options), native);
+});
+
 test("static background is single, removable and persists disabled", async (t) => {
-  const { fixture, port } = await startBrowserFixture(t);
-  const options = {
-    page: fixture.url,
-    origin: new URL(fixture.url).origin,
-    payload: {
-      version: 1,
-      library: [
-        {
-          id: "fixture-image",
-          title: "Fixture Image",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          assetDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
-          reason: null,
-        },
-        {
-          id: "fixture-video",
-          title: "Fixture Video",
-          type: "video",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
-          reason: "asset-too-large-or-missing",
-        },
-        {
-          id: "fixture-scene",
-          title: "Fixture Scene",
-          type: "scene",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: "data:application/octet-stream;base64,AA==",
-          reason: "scene-native",
-        },
-        {
-          id: "fixture-web",
-          title: "Fixture Web",
-          type: "web",
-          playable: false,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: null,
-          webHtml:
-            "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
-          reason: "web-offline",
-        },
-        {
-          id: "fixture-web-fallback",
-          title: "Fixture Web Fallback",
-          type: "web",
-          playable: false,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
-          assetDataUrl: null,
-          webHtml: null,
-          reason: "web-preview-fallback",
-        },
-        {
-          id: "fixture-on-demand",
-          title: "Fixture On Demand",
-          type: "image",
-          playable: true,
-          fallback: true,
-          previewDataUrl:
-            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-        {
-          id: "fixture-lazy",
-          title: "Fixture Lazy",
-          type: "image",
-          playable: false,
-          fallback: true,
-          previewDataUrl: null,
-          assetDataUrl: null,
-          reason: "asset-not-loaded",
-        },
-      ],
-    },
-  };
-  await waitForPage(port, options);
-  const pressAltShiftW = async () => {
-    for (const type of ["rawKeyDown", "keyUp"]) {
-      await callMainPage(
-        port,
-        "Input.dispatchKeyEvent",
-        {
-          type,
-          key: "W",
-          code: "KeyW",
-          windowsVirtualKeyCode: 87,
-          nativeVirtualKeyCode: 87,
-          modifiers: 9,
-        },
-        options.page,
-        true
-      );
-    }
-  };
+  const { fixture, port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [
+      {
+        id: "fixture-image",
+        title: "Fixture Image",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        assetDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E",
+        reason: null,
+      },
+      {
+        id: "fixture-video",
+        title: "Fixture Video",
+        type: "video",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: `data:video/mp4;base64,${tinyMp4}`,
+        reason: "asset-too-large-or-missing",
+      },
+      {
+        id: "fixture-scene",
+        title: "Fixture Scene",
+        type: "scene",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: "data:application/octet-stream;base64,AA==",
+        reason: "scene-native",
+      },
+      {
+        id: "fixture-web",
+        title: "Fixture Web",
+        type: "web",
+        playable: false,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: null,
+        webHtml:
+          "<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style>",
+        reason: "web-offline",
+      },
+      {
+        id: "fixture-web-fallback",
+        title: "Fixture Web Fallback",
+        type: "web",
+        playable: false,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
+        assetDataUrl: null,
+        webHtml: null,
+        reason: "web-preview-fallback",
+      },
+      {
+        id: "fixture-on-demand",
+        title: "Fixture On Demand",
+        type: "image",
+        playable: true,
+        fallback: true,
+        previewDataUrl:
+          "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23fb923c'/%3E%3C/svg%3E",
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+      {
+        id: "fixture-lazy",
+        title: "Fixture Lazy",
+        type: "image",
+        playable: false,
+        fallback: true,
+        previewDataUrl: null,
+        assetDataUrl: null,
+        reason: "asset-not-loaded",
+      },
+    ],
+  });
+  const pressAltShiftW = () => pressWallpaperShortcut(port, options, "W");
   const waitForWallpaperImage = () =>
     evaluateInPage(
       port,
@@ -3722,7 +6639,7 @@ test("static background is single, removable and persists disabled", async (t) =
   assert.deepEqual(
     await evaluateInPage(
       port,
-      `document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click(),
+      `${toggleSettings},
        (() => {
          const panel = document.querySelector("#${controlRootId} [data-codex-wallpaper-panel]");
          return {
@@ -3745,7 +6662,10 @@ test("static background is single, removable and persists disabled", async (t) =
           (item) => item.querySelector("strong")?.textContent === "Fixture Lazy"
         );
         const settings = panel.querySelector(".settings-grid").firstElementChild;
-        panel.scrollTop = 80;
+        const content = panel.querySelector(".panel-content");
+        const navigation = panel.querySelector(".panel-navigation");
+        const navigationTop = navigation.getBoundingClientRect().top;
+        content.scrollTop = 80;
         await globalThis.__codexWallpaperApi.receivePreview({
           id: "fixture-lazy",
           previewDataUrl:
@@ -3760,7 +6680,10 @@ test("static background is single, removable and persists disabled", async (t) =
           sameSettings: panel.querySelector(".settings-grid").firstElementChild === settings,
           previewAttached: Boolean(card.querySelector(".thumb img")),
           placeholderRemaining: Boolean(card.querySelector(".thumb[data-preview-id]")),
-          scrollTop: panel.scrollTop
+          scrollTop: content.scrollTop,
+          navigationFixed: navigation.getBoundingClientRect().top === navigationTop,
+          navigationBackground: getComputedStyle(navigation).backgroundColor,
+          contentBackground: getComputedStyle(content).backgroundColor
         };
       })()`,
       options
@@ -3771,6 +6694,9 @@ test("static background is single, removable and persists disabled", async (t) =
       previewAttached: true,
       placeholderRemaining: false,
       scrollTop: 80,
+      navigationFixed: true,
+      navigationBackground: "rgba(0, 0, 0, 0)",
+      contentBackground: "rgba(0, 0, 0, 0)",
     }
   );
   assert.deepEqual(
@@ -3855,7 +6781,10 @@ test("static background is single, removable and persists disabled", async (t) =
           HTMLVideoElement.prototype.requestVideoFrameCallback;
         let videoFrameCallback = null;
         HTMLVideoElement.prototype.requestVideoFrameCallback = (callback) => {
-          videoFrameCallback = () => callback(performance.now(), {});
+          videoFrameCallback = () => {
+            videoFrameCallback = null;
+            callback(performance.now(), {});
+          };
           return 1;
         };
         const videoCard = [...controls.querySelectorAll(".card")].find(
@@ -3884,6 +6813,14 @@ test("static background is single, removable and persists disabled", async (t) =
           drawLoopFrames += 1;
           return originalRequestAnimationFrame(callback);
         };
+        const staged = root.querySelector(".media.staged video");
+        Object.defineProperty(staged, "readyState", { configurable: true, value: 1 });
+        videoFrameCallback?.();
+        const afterEarlyFrame = {
+          oldFrameStillVisible: root.querySelector(".media img") === oldImage,
+          stillStaged: staged.isConnected && staged.closest(".media").classList.contains("staged")
+        };
+        delete staged.readyState;
         videoFrameCallback?.();
         await new Promise((resolve) => setTimeout(resolve, 120));
         window.requestAnimationFrame = originalRequestAnimationFrame;
@@ -3904,7 +6841,7 @@ test("static background is single, removable and persists disabled", async (t) =
         };
         HTMLVideoElement.prototype.requestVideoFrameCallback =
           originalFrameCallback;
-        return { beforeFrame, afterFrame };
+        return { beforeFrame, afterEarlyFrame, afterFrame };
       })()`,
       options
     ),
@@ -3913,6 +6850,10 @@ test("static background is single, removable and persists disabled", async (t) =
         callbackAvailable: true,
         oldFrameStillVisible: true,
         fullWindowPreview: false,
+      },
+      afterEarlyFrame: {
+        oldFrameStillVisible: true,
+        stillStaged: true,
       },
       afterFrame: {
         oldFrameReleased: true,
@@ -4288,7 +7229,7 @@ test("static background is single, removable and persists disabled", async (t) =
       })()`,
       options
     ),
-    "素材加载失败：fixture failure"
+    "素材加载失败：fixture failure，已保留当前画面"
   );
   assert.deepEqual(
     await evaluateInPage(
@@ -4344,7 +7285,13 @@ test("static background is single, removable and persists disabled", async (t) =
         sceneCard.querySelector(".card-actions button").click();
         await new Promise((resolve) => setTimeout(resolve, 20));
         globalThis.__sceneResolve();
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        const committedScene = ".media:not(.staged) [data-scene-canvas]";
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (root.querySelector(committedScene)) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        if (!root.querySelector(committedScene))
+          throw new Error("Timed out waiting for the scene to commit");
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "hidden"
@@ -4541,13 +7488,7 @@ test("static background is single, removable and persists disabled", async (t) =
         const background = root.querySelector("[data-codex-wallpaper-layer]");
         const media = root.querySelector(".media");
         const controls = document.getElementById("${controlRootId}");
-        const toolbar = controls.querySelector(".toolbar");
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
-        const toolbarRect = toolbar.getBoundingClientRect();
-        const toolbarHit = document.elementFromPoint(
-          toolbarRect.right - 8,
-          toolbarRect.bottom - 8
-        );
         const surface = document.querySelector("[data-app-shell-main-surface]");
         const frame = document.querySelector("[data-app-shell-frame]");
         const ordinaryStatus = document.querySelector("#ordinary-status");
@@ -4787,13 +7728,10 @@ test("static background is single, removable and persists disabled", async (t) =
               light === "rgb(232, 232, 237) / rgb(232, 232, 237)" &&
               dark === "rgb(12, 12, 16) / rgb(12, 12, 16)";
           })(),
-          wallpaperControlsUseSharedPalette:
-            getComputedStyle(toolbar).backgroundColor ===
-              getComputedStyle(dialog).backgroundColor &&
-            getComputedStyle(panel).backgroundColor ===
+          wallpaperControlsHaveSeparateGlassSurface:
+            getComputedStyle(panel).backgroundColor !==
               getComputedStyle(dialog).backgroundColor,
-          wallpaperControlsHaveNoExtraBlur:
-            getComputedStyle(toolbar).backdropFilter === "none" &&
+          wallpaperControlsRespectZeroInterfaceBlur:
             getComputedStyle(panel).backdropFilter === "none",
           menuPaintsOnlyVisibleContent:
             getComputedStyle(popper).backgroundColor ===
@@ -4831,7 +7769,9 @@ test("static background is single, removable and persists disabled", async (t) =
           wallpaperMediaVisible:
             getComputedStyle(media).backgroundImage.includes("gradient") &&
             getComputedStyle(media).opacity === "1",
-          toolbarIsAboveHost: toolbar.contains(toolbarHit),
+          cornerControlsAbsent: !controls.querySelector(
+            ".toolbar, [data-codex-wallpaper-settings], [data-codex-wallpaper-toggle]"
+          ),
           toolReceivesClick: hit === tool && toolToggleWorked,
           composerIdleShadow: getComputedStyle(composerSurface).boxShadow,
           messageIsSelectable: selection.toString().startsWith("Long assistant response"),
@@ -4863,8 +7803,8 @@ test("static background is single, removable and persists disabled", async (t) =
     wallpaperRemainsVisible: true,
     panelSurfacesHaveReadability: true,
     browserSurfaceIsOpaque: true,
-    wallpaperControlsUseSharedPalette: true,
-    wallpaperControlsHaveNoExtraBlur: true,
+    wallpaperControlsHaveSeparateGlassSurface: true,
+    wallpaperControlsRespectZeroInterfaceBlur: true,
     menuPaintsOnlyVisibleContent: true,
     dialogKeepsHostPosition: true,
     changesOpened: true,
@@ -4883,7 +7823,7 @@ test("static background is single, removable and persists disabled", async (t) =
     dialogHasFocus: true,
     backgroundIgnoresPointers: true,
     wallpaperMediaVisible: true,
-    toolbarIsAboveHost: true,
+    cornerControlsAbsent: true,
     toolReceivesClick: true,
     messageIsSelectable: true,
     pageScrolled: true,
@@ -4945,19 +7885,24 @@ test("static background is single, removable and persists disabled", async (t) =
       document.querySelector("[data-composer-surface-variant]").style.cssText =
         "position:fixed;z-index:10;right:108px;bottom:20px;width:736px;height:98px;box-sizing:border-box";
       document.querySelector("[data-app-shell-pane-content-viewport]").hidden = true;
-      document.querySelector("#${controlRootId} .toolbar").style.cssText =
-        "position-anchor:none;right:14px;left:auto;bottom:14px";
+      document.querySelector("[data-composer-surface-variant]").tabIndex = 0;
+      document.querySelector("[data-composer-surface-variant]").focus();
+      globalThis.nativeShortcutEvents = 0;
+      document.addEventListener("keydown", () => { nativeShortcutEvents += 1; });
+      document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {
+        bubbles: true, altKey: true, shiftKey: true, ctrlKey: true, code: "KeyS"
+      }));
     })()`,
     options
   );
-  const settingsButton = `#${controlRootId} [data-codex-wallpaper-settings]`;
-  await evaluateInPage(
-    port,
-    `(() => {
-      document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click();
-    })()`,
-    options
+  assert.deepEqual(
+    await evaluateInPage(port, `[
+      nativeShortcutEvents,
+      document.querySelector("#${controlRootId} .panel.open") !== null
+    ]`, options),
+    [1, false]
   );
+  await pressWallpaperShortcut(port, options, "S");
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -4965,31 +7910,38 @@ test("static background is single, removable and persists disabled", async (t) =
         const panel = document.querySelector("#${controlRootId} .panel.open");
         const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
         const p = panel.getBoundingClientRect();
-        return { visible: p.top >= 0 && p.right <= innerWidth, clear: p.bottom <= c.top - 3 };
+        const repeat = new KeyboardEvent("keydown", {
+          altKey: true, shiftKey: true, code: "KeyS",
+          bubbles: true, cancelable: true, repeat: true
+        });
+        panel.dispatchEvent(repeat);
+        return {
+          visible: p.top >= 0 && p.right <= innerWidth - 13,
+          clear: p.bottom <= c.top - 3,
+          panelHasFocus: document.activeElement === panel,
+          repeatWasConsumed: repeat.defaultPrevented,
+          repeatKeptPanelOpen: panel.classList.contains("open"),
+          nativeShortcutEvents
+        };
       })()`,
       options
     ),
-    { visible: true, clear: true }
+    {
+      visible: true,
+      clear: true,
+      panelHasFocus: true,
+      repeatWasConsumed: true,
+      repeatKeptPanelOpen: true,
+      nativeShortcutEvents: 1,
+    }
   );
-  await evaluateInPage(
-    port,
-    `(() => {
-      document.querySelector("#${controlRootId} [data-codex-wallpaper-settings]").click();
-    })()`,
-    options
-  );
-  assert.equal(
-    await evaluateInPage(
-      port,
-      `!document.querySelector("#${controlRootId} .panel").classList.contains("open")`,
-      options
-    ),
-    true
-  );
-  await evaluateInPage(
-    port,
-    `document.querySelector("#${controlRootId} .toolbar").removeAttribute("style")`,
-    options
+  await pressWallpaperShortcut(port, options, "S");
+  assert.deepEqual(
+    await evaluateInPage(port, `[
+      document.querySelector("#${controlRootId} .panel.open") !== null,
+      document.activeElement.matches("[data-composer-surface-variant]")
+    ]`, options),
+    [false, true]
   );
   await metrics.send("Emulation.setDeviceMetricsOverride", {
     width: 1290,
@@ -5053,28 +8005,7 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
-  await evaluateInPage(
-    port,
-    `(() => {
-      const button = document.querySelector(${JSON.stringify(settingsButton)});
-      globalThis.__t03SettingsClicks = 0;
-      button.addEventListener("click", () => {
-        globalThis.__t03SettingsClicks += 1;
-      });
-    })()`,
-    options
-  );
-  assert.equal(await clickAtElementCenter(port, options, settingsButton), true);
-  await evaluateInPage(
-    port,
-    `(() => {
-      const panel = document.querySelector("#${controlRootId} .panel");
-      panel.classList.remove("open");
-      globalThis.__t03SettingsClicks = 0;
-      document.querySelector(${JSON.stringify(settingsButton)}).click();
-    })()`,
-    options
-  );
+  await pressWallpaperShortcut(port, options, "S");
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -5083,16 +8014,53 @@ test("static background is single, removable and persists disabled", async (t) =
         const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
         const p = panel?.getBoundingClientRect();
         return {
-          clicks: globalThis.__t03SettingsClicks,
           visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
-          clear: Boolean(p && p.bottom < c.top)
+          clear: Boolean(p && p.bottom < c.top),
+          hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
+            p.right - 8,
+            p.top + 8
+          )))
         };
       })()`,
       options
     ),
-    { clicks: 1, visible: true, clear: true }
+    { visible: true, clear: true, hitTestable: true }
   );
-  await clickAtElementCenter(port, options, settingsButton);
+  await pressWallpaperShortcut(port, options, "S");
+  for (const [width, height] of [[1290, 900], [360, 700]]) {
+    await metrics.send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await pressWallpaperShortcut(port, options, "S");
+    const layouts = await evaluateInPage(
+      port,
+      `(() => {
+        const panel = document.querySelector("[data-codex-wallpaper-panel]");
+        return [...panel.querySelectorAll("[data-panel-page]")].map((tab) => {
+          tab.click();
+          const { left, top, right, bottom, width, height } = panel.getBoundingClientRect();
+          return {
+            left, top, width, height,
+            fitsWindow: left >= 0 && right <= document.documentElement.clientWidth &&
+              top >= 0 && bottom <= innerHeight && panel.scrollWidth === panel.clientWidth
+          };
+        });
+      })()`,
+      options
+    );
+    assert.equal(layouts.length, 3);
+    assert.ok(layouts[0].fitsWindow && layouts[0].width > 0 && layouts[0].height > 0);
+    assert.deepEqual(layouts, [layouts[0], layouts[0], layouts[0]]);
+    await evaluateInPage(
+      port,
+      'document.querySelector("[data-panel-page=library]").click()',
+      options
+    );
+    await pressWallpaperShortcut(port, options, "S");
+  }
   await evaluateInPage(
     port,
     `(() => {
@@ -5112,7 +8080,7 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `(async () => {
         const controls = document.getElementById("${controlRootId}");
-        controls.querySelector("[data-codex-wallpaper-settings]").click();
+        ${toggleSettings};
         const card = [...controls.querySelectorAll(".card")].find(
           (item) => item.querySelector("strong")?.textContent === "Fixture Image"
         );
@@ -5187,9 +8155,13 @@ test("static background is single, removable and persists disabled", async (t) =
         fitMode: "cover",
         surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
         interfaceBorders: true,
         surfaceOverrides: {
           chat: null,
+          left: null,
           sidebar: null,
           right: null,
           settings: null,
@@ -5261,9 +8233,6 @@ test("static background is single, removable and persists disabled", async (t) =
           main: getComputedStyle(
             document.querySelector("[data-app-shell-main-surface]")
           ).backgroundColor,
-          toolbar: getComputedStyle(
-            controls.querySelector(".toolbar")
-          ).backgroundColor,
           panel: getComputedStyle(
             controls.querySelector("[data-codex-wallpaper-panel]")
           ).backgroundColor
@@ -5280,11 +8249,7 @@ test("static background is single, removable and persists disabled", async (t) =
     `document.body.append(document.getElementById("${controlRootId}").cloneNode(true))`,
     options
   );
-  const toggleReceivesClick = await clickAtElementCenter(
-    port,
-    options,
-    `#${controlRootId} .toolbar [data-codex-wallpaper-toggle]`
-  );
+  await pressAltShiftW();
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -5293,7 +8258,6 @@ test("static background is single, removable and persists disabled", async (t) =
           localStorage.getItem("codex-wallpaper-p1-config")
         );
         return {
-          toggleReceivesClick: ${toggleReceivesClick},
           state: globalThis.__codexWallpaperApi.state(),
           savedEnabled: saved.enabled,
           savedActive: saved.active,
@@ -5306,7 +8270,6 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     ),
     {
-      toggleReceivesClick,
       state: {
         state: "disabled",
         backgroundLayers: 0,
@@ -5315,6 +8278,7 @@ test("static background is single, removable and persists disabled", async (t) =
         activeKind: "workshop",
         activeId: "fixture-image",
         libraryCount: 7,
+        libraryRevalidationFailed: false,
         importedCount: 0,
         playerCount: 0,
         visible: true,
@@ -5332,9 +8296,13 @@ test("static background is single, removable and persists disabled", async (t) =
         fitMode: "cover",
         surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
         interfaceBorders: true,
         surfaceOverrides: {
           chat: null,
+          left: null,
           sidebar: null,
           right: null,
           settings: null,
@@ -5391,6 +8359,7 @@ test("static background is single, removable and persists disabled", async (t) =
         activeKind: "workshop",
         activeId: "fixture-image",
         libraryCount: 7,
+        libraryRevalidationFailed: false,
         importedCount: 0,
         playerCount: 0,
         visible: true,
@@ -5409,8 +8378,10 @@ test("static background is single, removable and persists disabled", async (t) =
         dim: 42,
         blur: 6,
         opacity: 73,
-        surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
       },
       savedActive: { kind: "workshop", id: "fixture-image" },
       savedEnabled: true,
@@ -5422,11 +8393,11 @@ test("static background is single, removable and persists disabled", async (t) =
       port,
       `({
         state: globalThis.__codexWallpaperApi.state().state,
-        toolbar: document.querySelector("#${controlRootId} .toolbar") !== null
+        panel: document.querySelector("#${controlRootId} .panel") !== null
       })`,
       options
     ),
-    { state: "disabled", toolbar: false }
+    { state: "disabled", panel: false }
   );
   await pressAltShiftW();
   await waitForWallpaperImage();
@@ -5512,7 +8483,7 @@ test("static background is single, removable and persists disabled", async (t) =
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
         return {
-          request,
+          request: { type: request.type, id: request.id },
           nativeBeforeAsset,
           previewShown,
           assetShown: root
@@ -5535,6 +8506,7 @@ test("static background is single, removable and persists disabled", async (t) =
         activeKind: "workshop",
         activeId: "fixture-on-demand",
         libraryCount: 7,
+        libraryRevalidationFailed: false,
         importedCount: 0,
         playerCount: 0,
         visible: true,
@@ -5714,7 +8686,7 @@ test("static background is single, removable and persists disabled", async (t) =
   );
   const settingsResults = await evaluateInPage(
     port,
-    `(() => {
+    `(async () => {
       const readAlpha = (element) => {
         const value = getComputedStyle(element).backgroundColor;
         const match =
@@ -5744,6 +8716,16 @@ test("static background is single, removable and persists disabled", async (t) =
       const light = readMaterials("light");
       document.documentElement.dataset.theme =
         globalThis.__settingsOriginalTheme;
+      const navigation = viewport.closest("#settings-fixture")
+        .querySelector("[data-settings-nav-scroll-container]");
+      navigation.removeAttribute("data-settings-nav-scroll-container");
+      await new Promise(requestAnimationFrame);
+      const restoresOrdinarySurfaces = {
+        viewport: getComputedStyle(viewport).backgroundColor,
+        card: getComputedStyle(card).backgroundColor
+      };
+      navigation.setAttribute("data-settings-nav-scroll-container", "");
+      await new Promise(requestAnimationFrame);
       return {
         viewportTranslucent:
           readAlpha(viewport) > 0 && readAlpha(viewport) < 1,
@@ -5766,6 +8748,7 @@ test("static background is single, removable and persists disabled", async (t) =
           dark.search !== light.search,
         scopedToSettings:
           getComputedStyle(decoy).backgroundColor === "rgb(35, 35, 35)",
+        restoresOrdinarySurfaces,
         appearanceSelected:
           document
             .querySelector("#settings-appearance")
@@ -5800,6 +8783,10 @@ test("static background is single, removable and persists disabled", async (t) =
       switchHasMaterial: true,
       themesDiffer: true,
       scopedToSettings: true,
+      restoresOrdinarySurfaces: {
+        viewport: "rgb(24, 24, 28)",
+        card: "rgb(35, 35, 35)",
+      },
       appearanceSelected: true,
       menuOpened: true,
       switchToggled: true,

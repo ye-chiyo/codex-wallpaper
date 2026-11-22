@@ -1,0 +1,40 @@
+$ node --test --test-concurrency=1 launcher/read-only-probe.test.mjs launcher/static-background.test.mjs launcher/wallpaper-library.test.mjs launcher/wallpaper-host.test.mjs launcher/mp4-layout.test.mjs
+✔ tail-moov chunk offsets are adjusted without copying media bytes (8.7947ms)
+✔ front-moov file stays on the original single-slice layout (4.9132ms)
+✔ accepts only an unambiguous main page on the verified loopback port (1.4879ms)
+✔ exact page selection ignores auxiliary query-routed windows (0.2669ms)
+✔ sends only Page.getFrameTree and emits no transient URL data (48.8488ms)
+✔ preflight rejects a query-routed target before protocol access (6.3719ms)
+✔ preflight rejects a query-routed frame (8.4176ms)
+✔ preflight rejects a frame outside the Codex app origin (8.0472ms)
+✔ window chrome keeps wallpaper sharp and native titlebar interactive (1349.1014ms)
+✔ file transfer is released after cancellation and plays a staged file-backed video (1352.1249ms)
+✔ hovering one video card warms metadata once without playing it (1163.7163ms)
+✔ real CDP file input delivers a video without a Base64 page transfer (1171.5469ms)
+✔ persisted-disabled CLI starts the real host before a later enable (579.6149ms)
+✔ host delivers a requested replacement after a discarded transfer (302.0934ms)
+✔ reenabling during a video transfer discards the old stream and accepts its replacement (1410.622ms)
+✔ failed first video shows its preview instead of a blank background (1116.9052ms)
+✔ disable cancels a staged video before its first frame can commit (1255.0005ms)
+✔ continuous slider input previews immediately and persists the settled value once (1349.1802ms)
+✔ cross-window settings update in place without rebuilding cards or media (1330.2302ms)
+✔ cross-window asset identity change still reloads the wallpaper (1198.1356ms)
+✔ opening and closing the mounted panel does not rebuild wallpaper cards (3251.9471ms)
+✔ rotation requests an item without a preview and respects background pause (1268.0105ms)
+✔ wallpaper library shell combines filters without reloading the current media (1854.945ms)
+✔ playback profiles and capability controls apply without replacing media (1736.8994ms)
+✔ appearance controls update wallpaper and surface layers without reloading media (1275.5723ms)
+✔ scene fit uses the installed renderer without replacing the active scene (1235.1249ms)
+✔ settings presets import export migration and scoped resets form a complete loop (1634.0406ms)
+✔ static background is single, removable and persists disabled (3213.3838ms)
+✔ host fails closed and removes its lock without a reachable Codex port (135.5532ms)
+✔ host closes its socket and lock when Runtime initialization fails (128.8952ms)
+✔ scans local Wallpaper Engine projects without exposing paths (95.4322ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30060.3606

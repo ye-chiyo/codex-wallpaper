@@ -1,0 +1,513 @@
+{
+  "mode": "slider",
+  "startedAt": "2026-11-18T11:27:47.592Z",
+  "identity": {
+    "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+    "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+  },
+  "initialVisibility": "visible",
+  "groups": [
+    {
+      "paused": false,
+      "samples": [
+        {
+          "key": 1596548.6999999993,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 100.69999999925494,
+          "secondFrame": 103.80000000074506,
+          "endVisible": true,
+          "value": 71,
+          "paused": false
+        },
+        {
+          "key": 1596765.8999999985,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.10000000149011612,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 94.69999999925494,
+          "secondFrame": 98.30000000074506,
+          "endVisible": true,
+          "value": 72,
+          "paused": false
+        },
+        {
+          "key": 1596982.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.10000000149011612,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 93.60000000149012,
+          "secondFrame": 96.69999999925494,
+          "endVisible": true,
+          "value": 73,
+          "paused": false
+        },
+        {
+          "key": 1597183.5999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.20000000298023224,
+          "firstFrame": 91.90000000223517,
+          "secondFrame": 95.30000000074506,
+          "endVisible": true,
+          "value": 74,
+          "paused": false
+        },
+        {
+          "key": 1597384.8000000007,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.29999999701976776,
+          "afterChange": 0.29999999701976776,
+          "firstFrame": 92.89999999850988,
+          "secondFrame": 96.39999999850988,
+          "endVisible": true,
+          "value": 75,
+          "paused": false
+        },
+        {
+          "key": 1597598.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 89.80000000074506,
+          "secondFrame": 93,
+          "endVisible": true,
+          "value": 76,
+          "paused": false
+        },
+        {
+          "key": 1597798.8000000007,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 90,
+          "secondFrame": 92.69999999925494,
+          "endVisible": true,
+          "value": 77,
+          "paused": false
+        },
+        {
+          "key": 1597995.5999999978,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.10000000149011612,
+          "afterChange": 0.20000000298023224,
+          "firstFrame": 94,
+          "secondFrame": 97.20000000298023,
+          "endVisible": true,
+          "value": 78,
+          "paused": false
+        },
+        {
+          "key": 1598201.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.30000000074505806,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 94.60000000149012,
+          "secondFrame": 97.60000000149012,
+          "endVisible": true,
+          "value": 79,
+          "paused": false
+        },
+        {
+          "key": 1598408.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 93.40000000223517,
+          "secondFrame": 96.70000000298023,
+          "endVisible": true,
+          "value": 80,
+          "paused": false
+        }
+      ]
+    },
+    {
+      "paused": true,
+      "samples": [
+        {
+          "key": 1598969.3000000007,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 91.39999999850988,
+          "secondFrame": 95,
+          "endVisible": true,
+          "value": 71,
+          "paused": true
+        },
+        {
+          "key": 1599166.8000000007,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 92.19999999925494,
+          "secondFrame": 95.59999999776483,
+          "endVisible": true,
+          "value": 72,
+          "paused": true
+        },
+        {
+          "key": 1599369.8000000007,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.09999999776482582,
+          "afterChange": 0.09999999776482582,
+          "firstFrame": 92.5,
+          "secondFrame": 95.5,
+          "endVisible": true,
+          "value": 73,
+          "paused": true
+        },
+        {
+          "key": 1599571.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.30000000074505806,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 115.19999999925494,
+          "secondFrame": 118.19999999925494,
+          "endVisible": true,
+          "value": 74,
+          "paused": true
+        },
+        {
+          "key": 1599792.8000000007,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.09999999776482582,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 96.09999999776483,
+          "secondFrame": 99.29999999701977,
+          "endVisible": true,
+          "value": 75,
+          "paused": true
+        },
+        {
+          "key": 1599995.8000000007,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.09999999776482582,
+          "afterChange": 0.09999999776482582,
+          "firstFrame": 91.09999999776483,
+          "secondFrame": 94.69999999925494,
+          "endVisible": true,
+          "value": 76,
+          "paused": true
+        },
+        {
+          "key": 1600203.6999999993,
+          "visible": true,
+          "input": 0.19999999925494194,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 88.19999999925494,
+          "secondFrame": 91.19999999925494,
+          "endVisible": true,
+          "value": 77,
+          "paused": true
+        },
+        {
+          "key": 1600405.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 92.10000000149012,
+          "secondFrame": 95.10000000149012,
+          "endVisible": true,
+          "value": 78,
+          "paused": true
+        },
+        {
+          "key": 1600612.8000000007,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.09999999776482582,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 90.29999999701977,
+          "secondFrame": 93.59999999776483,
+          "endVisible": true,
+          "value": 79,
+          "paused": true
+        },
+        {
+          "key": 1600813.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.20000000298023224,
+          "firstFrame": 94.5,
+          "secondFrame": 97.80000000074506,
+          "endVisible": true,
+          "value": 80,
+          "paused": true
+        }
+      ]
+    },
+    {
+      "paused": true,
+      "samples": [
+        {
+          "key": 1601387.3999999985,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 88.5,
+          "secondFrame": 91.5,
+          "endVisible": true,
+          "value": 71,
+          "paused": true
+        },
+        {
+          "key": 1601593.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.20000000298023224,
+          "firstFrame": 96.20000000298023,
+          "secondFrame": 99.20000000298023,
+          "endVisible": true,
+          "value": 72,
+          "paused": true
+        },
+        {
+          "key": 1601796.8000000007,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 96.89999999850988,
+          "secondFrame": 100.39999999850988,
+          "endVisible": true,
+          "value": 73,
+          "paused": true
+        },
+        {
+          "key": 1602005,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 101.19999999925494,
+          "secondFrame": 104.09999999776483,
+          "endVisible": true,
+          "value": 74,
+          "paused": true
+        },
+        {
+          "key": 1602213.6999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 95,
+          "secondFrame": 97.69999999925494,
+          "endVisible": true,
+          "value": 75,
+          "paused": true
+        },
+        {
+          "key": 1602418.6999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 101.19999999925494,
+          "secondFrame": 104.5,
+          "endVisible": true,
+          "value": 76,
+          "paused": true
+        },
+        {
+          "key": 1602633.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.20000000298023224,
+          "firstFrame": 93.40000000223517,
+          "secondFrame": 96.70000000298023,
+          "endVisible": true,
+          "value": 77,
+          "paused": true
+        },
+        {
+          "key": 1602838.1999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 96.80000000074506,
+          "secondFrame": 99.80000000074506,
+          "endVisible": true,
+          "value": 78,
+          "paused": true
+        },
+        {
+          "key": 1603049.8999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 96,
+          "secondFrame": 99.10000000149012,
+          "endVisible": true,
+          "value": 79,
+          "paused": true
+        },
+        {
+          "key": 1603251.8999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 89.69999999925494,
+          "secondFrame": 92.19999999925494,
+          "endVisible": true,
+          "value": 80,
+          "paused": true
+        }
+      ]
+    },
+    {
+      "paused": false,
+      "samples": [
+        {
+          "key": 1603819.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.10000000149011612,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 97,
+          "secondFrame": 100.30000000074506,
+          "endVisible": true,
+          "value": 71,
+          "paused": false
+        },
+        {
+          "key": 1604024.3999999985,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.30000000074505806,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 93.40000000223517,
+          "secondFrame": 96.40000000223517,
+          "endVisible": true,
+          "value": 72,
+          "paused": false
+        },
+        {
+          "key": 1604224.6999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 90.69999999925494,
+          "secondFrame": 94.39999999850988,
+          "endVisible": true,
+          "value": 73,
+          "paused": false
+        },
+        {
+          "key": 1604422.5,
+          "visible": true,
+          "input": 0.09999999776482582,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 92.39999999850988,
+          "secondFrame": 95.19999999925494,
+          "endVisible": true,
+          "value": 74,
+          "paused": false
+        },
+        {
+          "key": 1604621.8000000007,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.09999999776482582,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 93.89999999850988,
+          "secondFrame": 96.89999999850988,
+          "endVisible": true,
+          "value": 75,
+          "paused": false
+        },
+        {
+          "key": 1604823.6999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 99.30000000074506,
+          "secondFrame": 102.19999999925494,
+          "endVisible": true,
+          "value": 76,
+          "paused": false
+        },
+        {
+          "key": 1605031.3999999985,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 91.19999999925494,
+          "secondFrame": 94.90000000223517,
+          "endVisible": true,
+          "value": 77,
+          "paused": false
+        },
+        {
+          "key": 1605233.1999999993,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.19999999925494194,
+          "afterChange": 0.19999999925494194,
+          "firstFrame": 98.19999999925494,
+          "secondFrame": 101.30000000074506,
+          "endVisible": true,
+          "value": 78,
+          "paused": false
+        },
+        {
+          "key": 1605448.0999999978,
+          "visible": true,
+          "input": 0.10000000149011612,
+          "afterInput": 0.20000000298023224,
+          "afterChange": 0.30000000074505806,
+          "firstFrame": 90.60000000149012,
+          "secondFrame": 94.40000000223517,
+          "endVisible": true,
+          "value": 79,
+          "paused": false
+        },
+        {
+          "key": 1605659.1999999993,
+          "visible": true,
+          "input": 0,
+          "afterInput": 0.10000000149011612,
+          "afterChange": 0.10000000149011612,
+          "firstFrame": 103.80000000074506,
+          "secondFrame": 106.80000000074506,
+          "endVisible": true,
+          "value": 80,
+          "paused": false
+        }
+      ]
+    }
+  ],
+  "restored": true,
+  "finishedAt": "2026-11-18T11:27:57.776Z"
+}

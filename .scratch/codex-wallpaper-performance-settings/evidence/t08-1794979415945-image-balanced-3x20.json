@@ -1,0 +1,7340 @@
+[
+  {
+    "run": 1,
+    "durationSeconds": 20,
+    "intervalCount": 21,
+    "mainRendererId": 11888,
+    "mainRendererCpuPercent": 8.75459079347661,
+    "processTimeDelta": 1.7549569999999903,
+    "taskDurationDelta": 0.948823,
+    "scriptDurationDelta": 0.025159,
+    "jsHeapStart": 810358976,
+    "jsHeapEnd": 790891420,
+    "jsHeapDelta": -19467556,
+    "nodesStart": 24521,
+    "nodesEnd": 25715,
+    "measuredFps": 0,
+    "state": {
+      "state": {
+        "state": "enabled",
+        "backgroundLayers": 1,
+        "controls": 332,
+        "styles": 1,
+        "activeKind": "workshop",
+        "activeId": "2817646508",
+        "libraryCount": 106,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "visibility": "visible",
+      "theme": "dark",
+      "viewport": {
+        "width": 1707,
+        "height": 1066,
+        "dpr": 1.5
+      },
+      "media": {
+        "className": "media",
+        "tags": [
+          {
+            "tag": "img",
+            "className": ""
+          }
+        ]
+      }
+    },
+    "samples": [
+      {
+        "elapsedMs": 0,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.265169,
+        "taskDuration": 0.000027,
+        "scriptDuration": 0,
+        "jsHeapUsed": 810358976,
+        "jsHeapTotal": 930492416,
+        "nodes": 24521,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.265437
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.510308
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.11392
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562441
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.265437
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276038
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.50116
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.11224
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253679
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19711
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.836945
+          }
+        ]
+      },
+      {
+        "elapsedMs": 1004,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.34992,
+        "taskDuration": 0.046784,
+        "scriptDuration": 0.000447,
+        "jsHeapUsed": 810373884,
+        "jsHeapTotal": 930492416,
+        "nodes": 24581,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.350156
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.560017
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.113986
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562441
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.350156
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276038
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.574074
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.112531
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253692
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19711
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837043
+          }
+        ]
+      },
+      {
+        "elapsedMs": 2008,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.43763,
+        "taskDuration": 0.094757,
+        "scriptDuration": 0.000789,
+        "jsHeapUsed": 810382104,
+        "jsHeapTotal": 930492416,
+        "nodes": 24639,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.437881
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.572643
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.11407
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.437881
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.65135
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.112548
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253692
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197332
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.83706
+          }
+        ]
+      },
+      {
+        "elapsedMs": 3008,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.522084,
+        "taskDuration": 0.140429,
+        "scriptDuration": 0.001091,
+        "jsHeapUsed": 810389624,
+        "jsHeapTotal": 930492416,
+        "nodes": 24697,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.522315
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.586278
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.114136
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.522315
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.724042
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.112548
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253692
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197377
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837115
+          }
+        ]
+      },
+      {
+        "elapsedMs": 4008,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.600161,
+        "taskDuration": 0.182507,
+        "scriptDuration": 0.001431,
+        "jsHeapUsed": 810397844,
+        "jsHeapTotal": 930492416,
+        "nodes": 24756,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.600429
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.601148
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.114193
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.600429
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.79371
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.113127
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253731
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197377
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837166
+          }
+        ]
+      },
+      {
+        "elapsedMs": 5013,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.688581,
+        "taskDuration": 0.233723,
+        "scriptDuration": 0.008587,
+        "jsHeapUsed": 812716776,
+        "jsHeapTotal": 930492416,
+        "nodes": 24815,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.688817
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.613763
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214354
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.116613
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.688817
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.864155
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.113985
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253731
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197377
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837166
+          }
+        ]
+      },
+      {
+        "elapsedMs": 6017,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.768663,
+        "taskDuration": 0.275686,
+        "scriptDuration": 0.009084,
+        "jsHeapUsed": 812734684,
+        "jsHeapTotal": 930492416,
+        "nodes": 24872,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.768955
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.626579
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.116613
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.768955
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 159.935558
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.114002
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253731
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197497
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837166
+          }
+        ]
+      },
+      {
+        "elapsedMs": 7029,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.855485,
+        "taskDuration": 0.324624,
+        "scriptDuration": 0.009642,
+        "jsHeapUsed": 812752900,
+        "jsHeapTotal": 930492416,
+        "nodes": 24937,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.855657
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.638533
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117182
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.116699
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.855657
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.007894
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.114002
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253731
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197497
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837223
+          }
+        ]
+      },
+      {
+        "elapsedMs": 8037,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 281.93451,
+        "taskDuration": 0.366519,
+        "scriptDuration": 0.010055,
+        "jsHeapUsed": 812764328,
+        "jsHeapTotal": 930492416,
+        "nodes": 24991,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 281.934753
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.650591
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.116756
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146512
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 281.934753
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.081115
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.114131
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.25378
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19757
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837223
+          }
+        ]
+      },
+      {
+        "elapsedMs": 9037,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.065706,
+        "taskDuration": 0.442283,
+        "scriptDuration": 0.01254,
+        "jsHeapUsed": 812986908,
+        "jsHeapTotal": 930492416,
+        "nodes": 25069,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.065945
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.663819
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.117072
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.065945
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.200705
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.114131
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.25378
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19757
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837223
+          }
+        ]
+      },
+      {
+        "elapsedMs": 10041,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.146141,
+        "taskDuration": 0.484906,
+        "scriptDuration": 0.012792,
+        "jsHeapUsed": 812994428,
+        "jsHeapTotal": 930492416,
+        "nodes": 25125,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.146387
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.764293
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119284
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.146387
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.275764
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.115508
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.25378
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197748
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837223
+          }
+        ]
+      },
+      {
+        "elapsedMs": 11051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.278795,
+        "taskDuration": 0.547864,
+        "scriptDuration": 0.021594,
+        "jsHeapUsed": 790511924,
+        "jsHeapTotal": 917676032,
+        "nodes": 25190,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.279042
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.781731
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119373
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562469
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.279042
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27605
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.35046
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.115816
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253793
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197748
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837302
+          }
+        ]
+      },
+      {
+        "elapsedMs": 12051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.361328,
+        "taskDuration": 0.590048,
+        "scriptDuration": 0.021886,
+        "jsHeapUsed": 790519444,
+        "jsHeapTotal": 917676032,
+        "nodes": 25244,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.36159
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.965178
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119553
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.36159
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.42664
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.115981
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253826
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197772
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837335
+          }
+        ]
+      },
+      {
+        "elapsedMs": 13051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.449452,
+        "taskDuration": 0.638975,
+        "scriptDuration": 0.022696,
+        "jsHeapUsed": 790644668,
+        "jsHeapTotal": 917676032,
+        "nodes": 25308,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.449727
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.98359
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119553
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.449727
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.497643
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.117485
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253826
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197772
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837335
+          }
+        ]
+      },
+      {
+        "elapsedMs": 14052,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.532772,
+        "taskDuration": 0.684509,
+        "scriptDuration": 0.023109,
+        "jsHeapUsed": 790666544,
+        "jsHeapTotal": 917676032,
+        "nodes": 25365,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.533434
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 152.999276
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119665
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.533434
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.570422
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.117636
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253826
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197886
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837335
+          }
+        ]
+      },
+      {
+        "elapsedMs": 15051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.619162,
+        "taskDuration": 0.73124,
+        "scriptDuration": 0.023448,
+        "jsHeapUsed": 790674764,
+        "jsHeapTotal": 917676032,
+        "nodes": 25429,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.619408
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.012095
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214368
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119768
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.619408
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.644994
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.11778
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253826
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197886
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837397
+          }
+        ]
+      },
+      {
+        "elapsedMs": 16051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.695288,
+        "taskDuration": 0.770619,
+        "scriptDuration": 0.023698,
+        "jsHeapUsed": 790682284,
+        "jsHeapTotal": 917676032,
+        "nodes": 25481,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.695533
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.026068
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214445
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119952
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.695533
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.716082
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.1179
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253858
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.197886
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837397
+          }
+        ]
+      },
+      {
+        "elapsedMs": 17051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.778453,
+        "taskDuration": 0.817159,
+        "scriptDuration": 0.024286,
+        "jsHeapUsed": 790868160,
+        "jsHeapTotal": 917676032,
+        "nodes": 25543,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.778703
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.047526
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117195
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.119952
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.778703
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.784045
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.117925
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253858
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199492
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837397
+          }
+        ]
+      },
+      {
+        "elapsedMs": 18050,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.853896,
+        "taskDuration": 0.854996,
+        "scriptDuration": 0.024539,
+        "jsHeapUsed": 790875680,
+        "jsHeapTotal": 917676032,
+        "nodes": 25594,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.854146
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.059895
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117214
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120054
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146531
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.854146
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.854158
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.117925
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253858
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199613
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837397
+          }
+        ]
+      },
+      {
+        "elapsedMs": 19051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 282.938552,
+        "taskDuration": 0.902028,
+        "scriptDuration": 0.0249,
+        "jsHeapUsed": 790883900,
+        "jsHeapTotal": 917676032,
+        "nodes": 25659,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 282.939216
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.07236
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117214
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120054
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 282.939216
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.927007
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.117925
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253858
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199613
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837426
+          }
+        ]
+      },
+      {
+        "elapsedMs": 20051,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.020126,
+        "taskDuration": 0.94885,
+        "scriptDuration": 0.025159,
+        "jsHeapUsed": 790891420,
+        "jsHeapTotal": 917676032,
+        "nodes": 25715,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.02082
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.164532
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120162
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.02082
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.996486
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.119269
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253893
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199613
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837426
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "durationSeconds": 20,
+    "intervalCount": 21,
+    "mainRendererId": 11888,
+    "mainRendererCpuPercent": 23.044054202162076,
+    "processTimeDelta": 4.625487999999962,
+    "taskDurationDelta": 3.0096930000000004,
+    "scriptDurationDelta": 0.10069299999999999,
+    "jsHeapStart": 790894128,
+    "jsHeapEnd": 773938900,
+    "jsHeapDelta": -16955228,
+    "nodesStart": 25715,
+    "nodesEnd": 9941,
+    "measuredFps": 0,
+    "state": {
+      "state": {
+        "state": "enabled",
+        "backgroundLayers": 1,
+        "controls": 332,
+        "styles": 1,
+        "activeKind": "workshop",
+        "activeId": "2817646508",
+        "libraryCount": 106,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "visibility": "visible",
+      "theme": "dark",
+      "viewport": {
+        "width": 1707,
+        "height": 1066,
+        "dpr": 1.5
+      },
+      "media": {
+        "className": "media",
+        "tags": [
+          {
+            "tag": "img",
+            "className": ""
+          }
+        ]
+      }
+    },
+    "samples": [
+      {
+        "elapsedMs": 0,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.02077,
+        "taskDuration": 0.949476,
+        "scriptDuration": 0.025159,
+        "jsHeapUsed": 790894128,
+        "jsHeapTotal": 917676032,
+        "nodes": 25715,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.021305
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.166424
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120162
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.021305
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 160.996486
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.119269
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253893
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199613
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837426
+          }
+        ]
+      },
+      {
+        "elapsedMs": 1006,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.099749,
+        "taskDuration": 0.992753,
+        "scriptDuration": 0.02583,
+        "jsHeapUsed": 791081128,
+        "jsHeapTotal": 917676032,
+        "nodes": 25777,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.100343
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.184424
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120162
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562501
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.100343
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276073
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.064306
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.119634
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253905
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199613
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837426
+          }
+        ]
+      },
+      {
+        "elapsedMs": 2007,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.169215,
+        "taskDuration": 1.028743,
+        "scriptDuration": 0.026077,
+        "jsHeapUsed": 791088648,
+        "jsHeapTotal": 917676032,
+        "nodes": 25828,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.16946
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.199263
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120283
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562516
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.16946
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.13097
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.119678
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.253905
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19972
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837442
+          }
+        ]
+      },
+      {
+        "elapsedMs": 3012,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.271761,
+        "taskDuration": 1.088517,
+        "scriptDuration": 0.035682,
+        "jsHeapUsed": 795684988,
+        "jsHeapTotal": 917938176,
+        "nodes": 25893,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.272011
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.2222
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120459
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.272011
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.203031
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.122384
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254006
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19972
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837471
+          }
+        ]
+      },
+      {
+        "elapsedMs": 4012,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.344469,
+        "taskDuration": 1.12686,
+        "scriptDuration": 0.036028,
+        "jsHeapUsed": 795772964,
+        "jsHeapTotal": 917938176,
+        "nodes": 25946,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.344719
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.244016
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120459
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.344719
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.269344
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.123869
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254032
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19972
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837471
+          }
+        ]
+      },
+      {
+        "elapsedMs": 5012,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.430795,
+        "taskDuration": 1.175393,
+        "scriptDuration": 0.036405,
+        "jsHeapUsed": 795781184,
+        "jsHeapTotal": 917938176,
+        "nodes": 26010,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.431039
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.255762
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214478
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.431039
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.337041
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.123869
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254032
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.19972
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837471
+          }
+        ]
+      },
+      {
+        "elapsedMs": 6016,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.5075,
+        "taskDuration": 1.216871,
+        "scriptDuration": 0.037336,
+        "jsHeapUsed": 795931004,
+        "jsHeapTotal": 917938176,
+        "nodes": 26065,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.507745
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.272926
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.507745
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.40454
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.12547
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254032
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.199841
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837471
+          }
+        ]
+      },
+      {
+        "elapsedMs": 7016,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.592213,
+        "taskDuration": 1.263498,
+        "scriptDuration": 0.03796,
+        "jsHeapUsed": 795961512,
+        "jsHeapTotal": 917938176,
+        "nodes": 26128,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.592459
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.287938
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117265
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.592459
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.4755
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.125492
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254032
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.219722
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837506
+          }
+        ]
+      },
+      {
+        "elapsedMs": 8016,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.667906,
+        "taskDuration": 1.301809,
+        "scriptDuration": 0.038291,
+        "jsHeapUsed": 795990156,
+        "jsHeapTotal": 917938176,
+        "nodes": 26179,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.668149
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.302281
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146543
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.668149
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.548589
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.127347
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254062
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220408
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837506
+          }
+        ]
+      },
+      {
+        "elapsedMs": 9020,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.754889,
+        "taskDuration": 1.350191,
+        "scriptDuration": 0.038629,
+        "jsHeapUsed": 795998376,
+        "jsHeapTotal": 917938176,
+        "nodes": 26245,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.755529
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.315802
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146562
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.755529
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.619542
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.127978
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254062
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220408
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837506
+          }
+        ]
+      },
+      {
+        "elapsedMs": 10020,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.833876,
+        "taskDuration": 1.390071,
+        "scriptDuration": 0.039114,
+        "jsHeapUsed": 796198564,
+        "jsHeapTotal": 917938176,
+        "nodes": 26297,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.834124
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.412277
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146562
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.834124
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.692981
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.128059
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254062
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220559
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837506
+          }
+        ]
+      },
+      {
+        "elapsedMs": 11028,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 283.915898,
+        "taskDuration": 1.434876,
+        "scriptDuration": 0.039611,
+        "jsHeapUsed": 796211852,
+        "jsHeapTotal": 917938176,
+        "nodes": 26361,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 283.916151
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.426802
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562591
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 283.916151
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276092
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.76408
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.12835
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254075
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220559
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837607
+          }
+        ]
+      },
+      {
+        "elapsedMs": 12041,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 284.699477,
+        "taskDuration": 2.11076,
+        "scriptDuration": 0.068685,
+        "jsHeapUsed": 803970248,
+        "jsHeapTotal": 918200320,
+        "nodes": 26973,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 284.696604
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 153.76637
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 284.696604
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 161.947188
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.128548
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254113
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220657
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837679
+          }
+        ]
+      },
+      {
+        "elapsedMs": 13045,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 286.481841,
+        "taskDuration": 3.100346,
+        "scriptDuration": 0.100996,
+        "jsHeapUsed": 767603264,
+        "jsHeapTotal": 866684928,
+        "nodes": 9249,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 286.441042
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.325658
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 286.441042
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.241567
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.12886
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254113
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220657
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837679
+          }
+        ]
+      },
+      {
+        "elapsedMs": 14049,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.233625,
+        "taskDuration": 3.741691,
+        "scriptDuration": 0.123862,
+        "jsHeapUsed": 773644376,
+        "jsHeapTotal": 866684928,
+        "nodes": 9800,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.233877
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.897727
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120475
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.233877
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.428657
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.129014
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254113
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220784
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837679
+          }
+        ]
+      },
+      {
+        "elapsedMs": 15049,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.273745,
+        "taskDuration": 3.750145,
+        "scriptDuration": 0.12414,
+        "jsHeapUsed": 773652608,
+        "jsHeapTotal": 866684928,
+        "nodes": 9800,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.273999
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.910249
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214493
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.273999
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.492493
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.129172
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254113
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220784
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837707
+          }
+        ]
+      },
+      {
+        "elapsedMs": 16053,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.301694,
+        "taskDuration": 3.752877,
+        "scriptDuration": 0.124197,
+        "jsHeapUsed": 773657068,
+        "jsHeapTotal": 866684928,
+        "nodes": 9800,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.301944
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.923026
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214521
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.301944
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.549873
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.129298
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254177
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220784
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837707
+          }
+        ]
+      },
+      {
+        "elapsedMs": 17053,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.376767,
+        "taskDuration": 3.785945,
+        "scriptDuration": 0.124514,
+        "jsHeapUsed": 773665104,
+        "jsHeapTotal": 866684928,
+        "nodes": 9829,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.375352
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.936394
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117277
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214521
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.375352
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.649661
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130325
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254177
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220784
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837707
+          }
+        ]
+      },
+      {
+        "elapsedMs": 18062,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.431182,
+        "taskDuration": 3.808169,
+        "scriptDuration": 0.124783,
+        "jsHeapUsed": 773685172,
+        "jsHeapTotal": 866684928,
+        "nodes": 9840,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.431873
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 154.950873
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214521
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146639
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.431873
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.71856
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130352
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254177
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220871
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837707
+          }
+        ]
+      },
+      {
+        "elapsedMs": 19066,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.612815,
+        "taskDuration": 3.954512,
+        "scriptDuration": 0.125813,
+        "jsHeapUsed": 773934440,
+        "jsHeapTotal": 866684928,
+        "nodes": 9941,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.613073
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.197769
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214521
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.613073
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.7917
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130352
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254177
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220871
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837752
+          }
+        ]
+      },
+      {
+        "elapsedMs": 20073,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.646258,
+        "taskDuration": 3.959169,
+        "scriptDuration": 0.125852,
+        "jsHeapUsed": 773938900,
+        "jsHeapTotal": 866684928,
+        "nodes": 9941,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.646938
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.338303
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.646938
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.856406
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130462
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254211
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220871
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837752
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "run": 3,
+    "durationSeconds": 20,
+    "intervalCount": 21,
+    "mainRendererId": 11888,
+    "mainRendererCpuPercent": 4.865723959370435,
+    "processTimeDelta": 0.9770679999999743,
+    "taskDurationDelta": 0.33026900000000037,
+    "scriptDurationDelta": 0.008428000000000019,
+    "jsHeapStart": 773941608,
+    "jsHeapEnd": 775342848,
+    "jsHeapDelta": 1401240,
+    "nodesStart": 9941,
+    "nodesEnd": 10141,
+    "measuredFps": 0,
+    "state": {
+      "state": {
+        "state": "enabled",
+        "backgroundLayers": 1,
+        "controls": 332,
+        "styles": 1,
+        "activeKind": "workshop",
+        "activeId": "2817646508",
+        "libraryCount": 106,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "visibility": "visible",
+      "theme": "dark",
+      "viewport": {
+        "width": 1707,
+        "height": 1066,
+        "dpr": 1.5
+      },
+      "media": {
+        "className": "media",
+        "tags": [
+          {
+            "tag": "img",
+            "className": ""
+          }
+        ]
+      }
+    },
+    "samples": [
+      {
+        "elapsedMs": 0,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.64729,
+        "taskDuration": 3.959791,
+        "scriptDuration": 0.125852,
+        "jsHeapUsed": 773941608,
+        "jsHeapTotal": 866684928,
+        "nodes": 9941,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.647394
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.340324
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.647394
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.856918
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130462
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254211
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220871
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837752
+          }
+        ]
+      },
+      {
+        "elapsedMs": 1002,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.726763,
+        "taskDuration": 3.992811,
+        "scriptDuration": 0.126391,
+        "jsHeapUsed": 773956500,
+        "jsHeapTotal": 866684928,
+        "nodes": 9971,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.727021
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.352972
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562606
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.727021
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276109
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 162.95624
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130744
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254223
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220871
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837752
+          }
+        ]
+      },
+      {
+        "elapsedMs": 2006,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.779719,
+        "taskDuration": 4.012383,
+        "scriptDuration": 0.126493,
+        "jsHeapUsed": 773961040,
+        "jsHeapTotal": 866684928,
+        "nodes": 9981,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.779972
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.538029
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.56262
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.779972
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.027989
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.130793
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254223
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220991
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837779
+          }
+        ]
+      },
+      {
+        "elapsedMs": 3006,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.818666,
+        "taskDuration": 4.022816,
+        "scriptDuration": 0.126617,
+        "jsHeapUsed": 773966200,
+        "jsHeapTotal": 866684928,
+        "nodes": 9981,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.81892
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.550271
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.56262
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.81892
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.090624
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.134061
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254223
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220991
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837817
+          }
+        ]
+      },
+      {
+        "elapsedMs": 4010,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.85026,
+        "taskDuration": 4.026023,
+        "scriptDuration": 0.126985,
+        "jsHeapUsed": 774021984,
+        "jsHeapTotal": 866684928,
+        "nodes": 9981,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.850522
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.563874
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120494
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.56262
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.850522
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.153898
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.134775
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254263
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220991
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837817
+          }
+        ]
+      },
+      {
+        "elapsedMs": 5018,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.925724,
+        "taskDuration": 4.059538,
+        "scriptDuration": 0.127445,
+        "jsHeapUsed": 774101012,
+        "jsHeapTotal": 866684928,
+        "nodes": 10009,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.925758
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.57822
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214586
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120508
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562675
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.925758
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.255429
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.134801
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254263
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.220991
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837817
+          }
+        ]
+      },
+      {
+        "elapsedMs": 6020,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 287.979185,
+        "taskDuration": 4.080834,
+        "scriptDuration": 0.127512,
+        "jsHeapUsed": 774105552,
+        "jsHeapTotal": 866684928,
+        "nodes": 10021,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 287.979438
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.589982
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214598
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120508
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562675
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 287.979438
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.322062
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.134801
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254263
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.221096
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837817
+          }
+        ]
+      },
+      {
+        "elapsedMs": 7026,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.018272,
+        "taskDuration": 4.090543,
+        "scriptDuration": 0.127637,
+        "jsHeapUsed": 774110712,
+        "jsHeapTotal": 866684928,
+        "nodes": 10021,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.018632
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.600874
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117304
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214598
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120508
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562675
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.018632
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.383723
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.134825
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254263
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.221096
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837846
+          }
+        ]
+      },
+      {
+        "elapsedMs": 8030,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.048214,
+        "taskDuration": 4.093451,
+        "scriptDuration": 0.127687,
+        "jsHeapUsed": 774115172,
+        "jsHeapTotal": 866684928,
+        "nodes": 10021,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.048697
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.612464
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117322
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214598
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120508
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562675
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146683
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.048697
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.44276
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.13498
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254299
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.221096
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837846
+          }
+        ]
+      },
+      {
+        "elapsedMs": 9031,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.124572,
+        "taskDuration": 4.127244,
+        "scriptDuration": 0.128115,
+        "jsHeapUsed": 774125120,
+        "jsHeapTotal": 866684928,
+        "nodes": 10051,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.124824
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.688961
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117322
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214598
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120508
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562675
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146696
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.124824
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276137
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.545793
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.13498
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254299
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.221096
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.837846
+          }
+        ]
+      },
+      {
+        "elapsedMs": 10040,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.176919,
+        "taskDuration": 4.147836,
+        "scriptDuration": 0.129632,
+        "jsHeapUsed": 774642344,
+        "jsHeapTotal": 866684928,
+        "nodes": 10061,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.177163
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.735963
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120828
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.56288
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.177163
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27645
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.610246
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.135836
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254495
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.221412
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838023
+          }
+        ]
+      },
+      {
+        "elapsedMs": 11039,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.21938,
+        "taskDuration": 4.159778,
+        "scriptDuration": 0.130112,
+        "jsHeapUsed": 774804664,
+        "jsHeapTotal": 866684928,
+        "nodes": 10061,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.219621
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.827056
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120828
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.56288
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.219621
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.27645
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.671012
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.136764
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254506
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.272965
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838061
+          }
+        ]
+      },
+      {
+        "elapsedMs": 12044,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.252604,
+        "taskDuration": 4.16552,
+        "scriptDuration": 0.132901,
+        "jsHeapUsed": 775269940,
+        "jsHeapTotal": 866684928,
+        "nodes": 10061,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.253237
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.845279
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120828
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.253237
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276466
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.731022
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.137121
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254784
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273152
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838075
+          }
+        ]
+      },
+      {
+        "elapsedMs": 13052,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.321529,
+        "taskDuration": 4.196593,
+        "scriptDuration": 0.133184,
+        "jsHeapUsed": 775277956,
+        "jsHeapTotal": 866684928,
+        "nodes": 10092,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.321769
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.857565
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120828
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.321769
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276466
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.822812
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.153621
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254834
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273152
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838075
+          }
+        ]
+      },
+      {
+        "elapsedMs": 14053,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.371848,
+        "taskDuration": 4.217309,
+        "scriptDuration": 0.133243,
+        "jsHeapUsed": 775282496,
+        "jsHeapTotal": 866684928,
+        "nodes": 10103,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.372512
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.869463
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120828
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.372512
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.88303
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.15378
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254834
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273445
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838075
+          }
+        ]
+      },
+      {
+        "elapsedMs": 15054,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.407625,
+        "taskDuration": 4.225904,
+        "scriptDuration": 0.133372,
+        "jsHeapUsed": 775287656,
+        "jsHeapTotal": 866684928,
+        "nodes": 10103,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.407673
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.879932
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214807
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.407673
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 163.944042
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.153952
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254834
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273513
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838106
+          }
+        ]
+      },
+      {
+        "elapsedMs": 16053,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.43539,
+        "taskDuration": 4.228494,
+        "scriptDuration": 0.133467,
+        "jsHeapUsed": 775292116,
+        "jsHeapTotal": 866684928,
+        "nodes": 10103,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.435644
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.891208
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214829
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.435644
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 164.000149
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.154729
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254974
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273513
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838106
+          }
+        ]
+      },
+      {
+        "elapsedMs": 17069,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.505709,
+        "taskDuration": 4.259888,
+        "scriptDuration": 0.134051,
+        "jsHeapUsed": 775328688,
+        "jsHeapTotal": 866684928,
+        "nodes": 10131,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.505963
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.903899
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117615
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214829
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.505963
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 164.097165
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.155258
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254974
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273513
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838106
+          }
+        ]
+      },
+      {
+        "elapsedMs": 18073,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.553655,
+        "taskDuration": 4.278393,
+        "scriptDuration": 0.134114,
+        "jsHeapUsed": 775333228,
+        "jsHeapTotal": 866684928,
+        "nodes": 10141,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.553904
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 155.91518
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117632
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214829
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146905
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.553904
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 164.159091
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.155276
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254974
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273701
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838106
+          }
+        ]
+      },
+      {
+        "elapsedMs": 19077,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.591417,
+        "taskDuration": 4.287317,
+        "scriptDuration": 0.13424,
+        "jsHeapUsed": 775338388,
+        "jsHeapTotal": 866684928,
+        "nodes": 10141,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.591672
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 156.004375
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117632
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214829
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146924
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.591672
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 164.221571
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.156678
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.254974
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273701
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838133
+          }
+        ]
+      },
+      {
+        "elapsedMs": 20084,
+        "state": {
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "theme": "dark",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          },
+          "media": {
+            "className": "media",
+            "tags": [
+              {
+                "tag": "img",
+                "className": ""
+              }
+            ]
+          }
+        },
+        "processTime": 288.624358,
+        "taskDuration": 4.29006,
+        "scriptDuration": 0.13428,
+        "jsHeapUsed": 775342848,
+        "jsHeapTotal": 866684928,
+        "nodes": 10141,
+        "mainRenderer": {
+          "id": 11888,
+          "cpuTime": 288.624626
+        },
+        "processCpu": [
+          {
+            "id": 31900,
+            "type": "browser",
+            "cpuTime": 156.017563
+          },
+          {
+            "id": 26284,
+            "type": "renderer",
+            "cpuTime": 0.117632
+          },
+          {
+            "id": 21100,
+            "type": "renderer",
+            "cpuTime": 0.214829
+          },
+          {
+            "id": 9728,
+            "type": "renderer",
+            "cpuTime": 6.120843
+          },
+          {
+            "id": 11380,
+            "type": "renderer",
+            "cpuTime": 0.562905
+          },
+          {
+            "id": 34424,
+            "type": "renderer",
+            "cpuTime": 0.146924
+          },
+          {
+            "id": 11888,
+            "type": "renderer",
+            "cpuTime": 288.624626
+          },
+          {
+            "id": 30452,
+            "type": "renderer",
+            "cpuTime": 0.276532
+          },
+          {
+            "id": 17156,
+            "type": "GPU",
+            "cpuTime": 164.284665
+          },
+          {
+            "id": 30200,
+            "type": "network.mojom.NetworkService",
+            "cpuTime": 2.156959
+          },
+          {
+            "id": 13548,
+            "type": "storage.mojom.StorageService",
+            "cpuTime": 0.25501
+          },
+          {
+            "id": 31732,
+            "type": "node.mojom.NodeService",
+            "cpuTime": 7.273701
+          },
+          {
+            "id": 20036,
+            "type": "audio.mojom.AudioService",
+            "cpuTime": 0.838133
+          }
+        ]
+      }
+    ]
+  }
+]

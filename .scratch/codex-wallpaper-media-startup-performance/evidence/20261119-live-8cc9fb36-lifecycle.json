@@ -1,0 +1,172 @@
+{
+  "startedAt": "2026-11-19T07:29:16.031Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": {
+    "beforeDisable": {
+      "targetId": "1791074903",
+      "wallMilliseconds": 87.20000000298023,
+      "state": {
+        "activeId": "1791074903",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "status": "正在加载：[ 明 日 方 舟 ]",
+      "fileInputs": 1,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "1791074903",
+        "downAt": 464813.10000000894,
+        "at": 464815.799999997,
+        "trusted": true
+      },
+      "selectedMilliseconds": 2.2000000029802322,
+      "feedbackMilliseconds": 73.90000000596046,
+      "committedMilliseconds": null,
+      "dynamic": null,
+      "native": {},
+      "warm": null,
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 0,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 464814.90000000596,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 464816.5,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 0.7000000029802322
+          }
+        },
+        {
+          "type": "selected",
+          "at": 464818,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 464889.700000003,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 464893.90000000596,
+          "detail": null
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "dispatchToCleanupMilliseconds": 181.40000000596046,
+    "totalMilliseconds": 342.40000000596046,
+    "afterThirtySeconds": {
+      "state": "disabled",
+      "root": false,
+      "players": 0,
+      "warm": 0,
+      "fileInputs": 0
+    }
+  },
+  "failureRetention": {
+    "previous": {
+      "tag": "img",
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "visible"
+    },
+    "after": {
+      "activeId": "missing-live-probe",
+      "mediaCount": 1,
+      "staged": 0,
+      "tag": "img",
+      "previousNodeRetained": true,
+      "status": "已跳过缺失的壁纸，已保留当前画面"
+    }
+  },
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016",
+    "panelOpen": false
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 106,
+    "openedCardCount": 106
+  },
+  "finishedAt": "2026-11-19T07:29:49.985Z"
+}

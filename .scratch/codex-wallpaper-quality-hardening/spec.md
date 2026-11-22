@@ -145,9 +145,7 @@ Codex 壁纸的统一候选版已经能在专用入口中显示，但还不能�
 
 ## Further Notes
 
-- 现有产品范围见 [原始规格](../codex-wallpaper-port/spec.md)。
-- 与聊天、输入区和变更页最相关的任务见 [02 聊天、工具卡片与输入区适配](../codex-wallpaper-port/issues/02-chat-tools-and-composer.md)。
-- 面板与弹窗适配见 [03 侧栏、面板、弹窗与设置](../codex-wallpaper-port/issues/03-panels-dialogs-and-settings.md)。
-- Scene、轮播和停用恢复分别见 [08](../codex-wallpaper-port/issues/08-wallpaper-engine-scene.md)、[10](../codex-wallpaper-port/issues/10-library-favorites-and-rotation.md)、[11](../codex-wallpaper-port/issues/11-appearance-audio-and-toggle.md)。
+- 当前运行时范围见 [运行时清理规格](../codex-wallpaper-runtime-cleanup/spec.md)。
+- 启动器、素材和使用边界见 [启动器说明](../../launcher/README.md)。
 - 统一真实候选边界见 [Codex 壁纸统一验收候选](../../docs/planning/codex-wallpaper-candidate.md)。
 - 当前未提交的输入框底衬修复只证明源码候选和计算样式结果；在统一回归、真实视觉检查和明确提交前，不记为已交付缺陷。

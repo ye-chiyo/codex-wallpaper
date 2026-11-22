@@ -1,0 +1,179 @@
+{
+  "startedAt": "2026-11-19T09:46:45.497Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "temporaryRuntime": true,
+  "style": [
+    {
+      "variant": "plain",
+      "elapsed": 94.5
+    },
+    {
+      "variant": "plain",
+      "elapsed": 74.90000000596046
+    },
+    {
+      "variant": [
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103
+      ],
+      "elapsed": 12.099999994039536
+    },
+    {
+      "variant": [
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103
+      ],
+      "elapsed": 11.100000008940697
+    },
+    {
+      "variant": [
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116
+      ],
+      "elapsed": 81.5
+    },
+    {
+      "variant": [
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116
+      ],
+      "elapsed": 75.5
+    },
+    {
+      "variant": [
+        117,
+        118,
+        119,
+        120,
+        121,
+        122
+      ],
+      "elapsed": 84.1000000089407
+    },
+    {
+      "variant": [
+        117,
+        118,
+        119,
+        120,
+        121,
+        122
+      ],
+      "elapsed": 74.5
+    },
+    {
+      "variant": [
+        96,
+        103,
+        113
+      ],
+      "elapsed": 13.399999991059303
+    },
+    {
+      "variant": [
+        96,
+        103,
+        113
+      ],
+      "elapsed": 11.299999997019768
+    },
+    {
+      "variant": [
+        105,
+        112
+      ],
+      "elapsed": 83.79999999701977
+    },
+    {
+      "variant": [
+        105,
+        112
+      ],
+      "elapsed": 75.90000000596046
+    },
+    {
+      "variant": "plain",
+      "elapsed": 85.29999999701977
+    },
+    {
+      "variant": "plain",
+      "elapsed": 77.30000001192093
+    }
+  ],
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T09:46:47.637Z"
+}

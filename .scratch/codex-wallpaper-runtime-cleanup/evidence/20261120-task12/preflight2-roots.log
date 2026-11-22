@@ -1,0 +1,3 @@
+Passed: a transient second candidate does not abort startup.
+Passed: sustained ambiguity still blocks the probe.
+Passed: reuse requires a matching successful-session marker and loopback ownership.

@@ -2,6 +2,10 @@
 
 Updated: 2026-11-18, Asia/Shanghai.
 
+2026-11-18 更新：三页设置候选 `ceec20f` 已接替下文的四区候选。最新指纹、冷启动和验收状态见 [三页候选交付与验收](20261118-three-page-candidate.md)。
+
+This runbook records preparation before the user's cold start. For the loaded instance, measured results and remaining gates, see [T08 live acceptance](20261118-t08-live-results.md).
+
 ## Current state
 
 - Candidate branch: `codex/wallpaper-performance-settings`.

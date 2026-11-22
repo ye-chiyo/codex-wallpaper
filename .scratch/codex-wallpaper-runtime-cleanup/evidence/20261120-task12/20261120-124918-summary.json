@@ -1,0 +1,25 @@
+{
+    "runId":  "20261120-124918",
+    "startedAt":  "2026-11-20T12:49:18.7013895+08:00",
+    "repositoryRoot":  "D:\\AI\\codex-wallpaper-hardening",
+    "startupReceipt":  "D:\\AI\\codex-wallpaper-hardening\\.scratch\\codex-wallpaper-runtime-cleanup\\evidence\\20261120-task12\\20261120-124918-startup-receipt.json",
+    "startup":  {
+                    "outcome":  "launch-or-check-error",
+                    "mainPid":  null,
+                    "mainCreated":  null,
+                    "port":  null,
+                    "targetAcknowledgedMs":  null,
+                    "targetReverifiedMs":  null,
+                    "hostReadyMs":  null,
+                    "wallpaperState":  null,
+                    "hostReady":  null,
+                    "runtimeHash":  null,
+                    "styleHash":  null
+                },
+    "steps":  [
+
+              ],
+    "result":  "failed",
+    "error":  "Dedicated startup failed: launch-or-check-error",
+    "finishedAt":  "2026-11-20T13:00:52.3918367+08:00"
+}

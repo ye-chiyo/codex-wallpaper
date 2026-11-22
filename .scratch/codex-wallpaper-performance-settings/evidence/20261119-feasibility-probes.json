@@ -1,0 +1,120 @@
+{
+  "startedAt": "2026-11-18T16:40:39.956Z",
+  "identity": {
+    "port": 62769,
+    "page": "app://-/index.html",
+    "frontMoovFile": "明日方舟最最最最终.mp4",
+    "tailMoovFile": "明日方舟X轻音少女.mp4"
+  },
+  "fileBackedPlayback": {
+    "passed": true,
+    "file": {
+      "name": "明日方舟最最最最终.mp4",
+      "size": 115500404,
+      "type": "video/mp4",
+      "lastModified": 1726155135403
+    },
+    "result": {
+      "sourceKind": "file",
+      "sourceBytes": 115500404,
+      "videoBytes": 115500404,
+      "duration": 60,
+      "readyState": 4,
+      "networkState": 1,
+      "paused": false,
+      "currentTime": 0.017633,
+      "videoWidth": 1920,
+      "videoHeight": 1080,
+      "events": {
+        "objectUrl": 0.8999999985098839,
+        "loadstart": 105.80000000447035,
+        "loadedmetadata": 122.60000000149012,
+        "loadeddata": 164.89999999850988,
+        "canplay": 164.89999999850988,
+        "playing": 164.89999999850988
+      },
+      "frameTimes": [
+        {
+          "pageMicroseconds": 3550424.4,
+          "mediaTime": 0,
+          "presentedFrames": 1,
+          "processingDuration": 0.0108
+        },
+        {
+          "pageMicroseconds": 3550470.3,
+          "mediaTime": 0.033333,
+          "presentedFrames": 2,
+          "processingDuration": 0.0104
+        }
+      ],
+      "documentVisible": true
+    }
+  },
+  "virtualMoovPlayback": {
+    "passed": true,
+    "file": {
+      "name": "明日方舟X轻音少女.mp4",
+      "size": 75689196,
+      "type": "video/mp4",
+      "lastModified": 1728567222322
+    },
+    "layout": {
+      "kind": "virtual",
+      "delta": 26660,
+      "patched": 1802,
+      "moovBytes": 26660,
+      "segmentCount": 4
+    },
+    "sizeMatches": true,
+    "result": {
+      "sourceKind": "virtual-moov",
+      "sourceBytes": 75689196,
+      "videoBytes": 75689196,
+      "duration": 30.033333,
+      "readyState": 4,
+      "networkState": 1,
+      "paused": false,
+      "currentTime": 0.018449,
+      "videoWidth": 1920,
+      "videoHeight": 1080,
+      "events": {
+        "objectUrl": 1.3000000044703484,
+        "loadstart": 109.40000000596046,
+        "loadedmetadata": 116.90000000596046,
+        "loadeddata": 138.80000000447035,
+        "canplay": 138.80000000447035,
+        "playing": 138.80000000447035
+      },
+      "frameTimes": [
+        {
+          "pageMicroseconds": 3550962,
+          "mediaTime": 0,
+          "presentedFrames": 1,
+          "processingDuration": 0.0043
+        },
+        {
+          "pageMicroseconds": 3551020.3,
+          "mediaTime": 0.033333,
+          "presentedFrames": 2,
+          "processingDuration": 0.005
+        }
+      ],
+      "documentVisible": true
+    }
+  },
+  "singleCdpSession": {
+    "passed": true,
+    "cdpConnectionsUsed": 1,
+    "verifyMilliseconds": 3.327400000000125,
+    "evaluateMilliseconds": 1.5680999999999585,
+    "totalMilliseconds": 4.895500000000084,
+    "pageState": {
+      "href": "app://-/index.html",
+      "origin": "app://-",
+      "readyState": "complete",
+      "visibility": "visible",
+      "hostReady": true
+    }
+  },
+  "finishedAt": "2026-11-18T16:40:41.063Z"
+}

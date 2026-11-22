@@ -1,0 +1,113 @@
+{
+  "stages": [
+    {
+      "type": "host-request",
+      "ms": 9.5,
+      "detail": "3272086010"
+    },
+    {
+      "type": "file-begin",
+      "ms": 35.5,
+      "detail": null
+    },
+    {
+      "type": "staged-created",
+      "ms": 3206.9,
+      "detail": {
+        "readyState": 0
+      }
+    },
+    {
+      "type": "staged-loadedmetadata",
+      "ms": 3275.9,
+      "detail": {
+        "readyState": 1,
+        "currentTime": 0,
+        "width": 4680,
+        "height": 2160,
+        "error": null
+      }
+    },
+    {
+      "type": "video-frame",
+      "ms": 3349.4,
+      "detail": {
+        "mediaTime": 0,
+        "staged": true,
+        "readyState": 1,
+        "width": 4680,
+        "height": 2160
+      }
+    },
+    {
+      "type": "staged-loadeddata",
+      "ms": 3368.3,
+      "detail": {
+        "readyState": 4,
+        "currentTime": 0.001542,
+        "width": 4680,
+        "height": 2160,
+        "error": null
+      }
+    },
+    {
+      "type": "staged-canplay",
+      "ms": 3368.3,
+      "detail": {
+        "readyState": 4,
+        "currentTime": 0.001609,
+        "width": 4680,
+        "height": 2160,
+        "error": null
+      }
+    },
+    {
+      "type": "staged-playing",
+      "ms": 3368.8,
+      "detail": {
+        "readyState": 4,
+        "currentTime": 0.002104,
+        "width": 4680,
+        "height": 2160,
+        "error": null
+      }
+    },
+    {
+      "type": "video-frame",
+      "ms": 3404,
+      "detail": {
+        "mediaTime": 0.016667,
+        "staged": true,
+        "readyState": 4,
+        "width": 4680,
+        "height": 2160
+      }
+    },
+    {
+      "type": "committed",
+      "ms": 3405.3,
+      "detail": null
+    }
+  ],
+  "after": {
+    "video": {
+      "readyState": 4,
+      "paused": false,
+      "width": 4680,
+      "height": 2160,
+      "currentTime": 0.364966,
+      "frames": 27,
+      "error": null
+    },
+    "status": "《鸣潮》今昔 · 视频",
+    "card": "video · 原生播放",
+    "staged": 0,
+    "visibility": "visible",
+    "focus": true
+  },
+  "committed": 3405.3,
+  "restored": {
+    "configExact": true,
+    "active": "3014214275"
+  }
+}

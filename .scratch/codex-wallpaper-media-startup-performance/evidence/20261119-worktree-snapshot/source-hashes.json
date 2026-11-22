@@ -1,0 +1,30 @@
+[
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\read-only-probe.mjs",
+    "Hash": "3CA26D8834D7F8EEFA48CADAC469318C75662C0E7B2FF63F8A2D91C12043E81B"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\client-runtime.mjs",
+    "Hash": "3B09B52CDE3F9135B17B02F681334BBBBA7D876AF94E38A45359A198FFA6332C"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\wallpaper-host.mjs",
+    "Hash": "76742BCC77B8BDBD60EA8973B813CCD2B01EEDE0F0CF28EFB2706E00C0B40227"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\startup-supervisor.mjs",
+    "Hash": "930621299AFDD5C325FE26B6D311032B45888F9DCA0EFBCEF9420C8E46382FA0"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\mp4-layout.mjs",
+    "Hash": "67A75EA7263D8A118939F5C2A82BB4EDA5FED6E254E759D567F181AB140A271A"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\wallpaper-library.mjs",
+    "Hash": "F968B743360CA895A9D25F6F21FC7A125701DEF2DFD43B28E7E653A60042FD30"
+  },
+  {
+    "Path": "D:\\AI\\codex-wallpaper-hardening\\launcher\\static-background.test.mjs",
+    "Hash": "58D1454A7E251AC5331626C45DD5D5B87292B15112FD08FC43FE38D227D07911"
+  }
+]

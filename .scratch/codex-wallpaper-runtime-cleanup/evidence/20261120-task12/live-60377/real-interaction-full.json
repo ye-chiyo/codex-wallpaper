@@ -1,0 +1,527 @@
+{
+  "startedAt": "2026-11-20T05:38:54.511Z",
+  "initialConfigHash": "b150f2f3cdaa867b876783e691fac7682901f298b41ddcda5d013472919d66c2",
+  "conditions": {
+    "visibilityState": "visible",
+    "focused": true,
+    "viewport": {
+      "width": 1706,
+      "height": 1066,
+      "dpr": 1.5
+    },
+    "theme": "dark",
+    "identity": {
+      "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+      "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+    }
+  },
+  "panelLatency": [
+    {
+      "action": "open",
+      "milliseconds": 29.900000005960464,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 7.699999988079071,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 42.900000005960464,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 10.099999994039536,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 38.5,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 8.800000011920929,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 35.69999998807907,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 9.900000005960464,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 37.900000005960464,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 9.5,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 29.5,
+      "valid": true
+    }
+  ],
+  "keyboardLatency": [
+    {
+      "milliseconds": 6,
+      "valid": true
+    },
+    {
+      "milliseconds": 5,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.9000000059604645,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.800000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.300000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.899999976158142,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.5999999940395355,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.100000023841858,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.199999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.299999982118607,
+      "valid": true
+    },
+    {
+      "milliseconds": 13,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.4000000059604645,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.199999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.199999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.4000000059604645,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.799999982118607,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.199999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.800000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.200000017881393,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.5999999940395355,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.9000000059604645,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.300000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.800000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.4000000059604645,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.800000011920929,
+      "valid": true
+    },
+    {
+      "milliseconds": 5.699999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.5,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.199999988079071,
+      "valid": true
+    },
+    {
+      "milliseconds": 4.200000017881393,
+      "valid": true
+    },
+    {
+      "milliseconds": 6.5999999940395355,
+      "valid": true
+    }
+  ],
+  "persistenceWrites": {
+    "writes": 1,
+    "finalValue": 89,
+    "persistedValue": 89,
+    "reopenedValue": 89
+  },
+  "failureRetention": {
+    "activeId": "1266437175",
+    "retainedMarker": true,
+    "mediaCount": 1,
+    "stagedCount": 0,
+    "status": "素材加载失败：T08 injected host failure，已保留当前画面"
+  },
+  "crossWindowUpdate": {
+    "mode": "native storage event from existing detached page",
+    "opacityApplied": 66,
+    "mediaSame": true,
+    "cardsSame": true,
+    "cardCountBefore": 106,
+    "cardCountAfter": 106,
+    "stagedCount": 0
+  },
+  "pacedMediaCycles": {
+    "cycles": 10,
+    "heapStart": 415552188,
+    "heapEnd": 415284592,
+    "heapDelta": -267596,
+    "endpoints": [
+      {
+        "index": 1,
+        "imageMilliseconds": 277,
+        "videoMilliseconds": 238,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 413895092
+      },
+      {
+        "index": 2,
+        "imageMilliseconds": 271,
+        "videoMilliseconds": 264,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 416195720
+      },
+      {
+        "index": 3,
+        "imageMilliseconds": 256,
+        "videoMilliseconds": 246,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 413354336
+      },
+      {
+        "index": 4,
+        "imageMilliseconds": 260,
+        "videoMilliseconds": 262,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 415623724
+      },
+      {
+        "index": 5,
+        "imageMilliseconds": 274,
+        "videoMilliseconds": 253,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 415455680
+      },
+      {
+        "index": 6,
+        "imageMilliseconds": 271,
+        "videoMilliseconds": 250,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 415087400
+      },
+      {
+        "index": 7,
+        "imageMilliseconds": 357,
+        "videoMilliseconds": 260,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 419946272
+      },
+      {
+        "index": 8,
+        "imageMilliseconds": 261,
+        "videoMilliseconds": 252,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 419760792
+      },
+      {
+        "index": 9,
+        "imageMilliseconds": 277,
+        "videoMilliseconds": 151,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 418026960
+      },
+      {
+        "index": 10,
+        "imageMilliseconds": 249,
+        "videoMilliseconds": 256,
+        "activeId": "3787353838",
+        "mediaCount": 1,
+        "stagedCount": 0,
+        "players": 1,
+        "heap": 415284592
+      }
+    ]
+  },
+  "secondaryPages": [
+    {
+      "route": "/avatar-overlay",
+      "adapterLoaded": false,
+      "playerCount": 0
+    },
+    {
+      "route": "/detached-window",
+      "adapterLoaded": false,
+      "playerCount": 0
+    }
+  ],
+  "sliderFocused": true,
+  "keyboardRange": {
+    "opacityBefore": 60,
+    "opacityAfter": 90
+  },
+  "pointerDrag": {
+    "samples": [
+      {
+        "value": 40,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.19999998807907104,
+        "firstFrameMs": 1.699999988079071,
+        "secondFrameMs": null
+      },
+      {
+        "value": 42,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 1.399999976158142,
+        "secondFrameMs": 4.299999982118607
+      },
+      {
+        "value": 44,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.3999999761581421,
+        "secondFrameMs": 4.299999982118607
+      },
+      {
+        "value": 46,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.29999998211860657,
+        "secondFrameMs": 3.699999988079071
+      },
+      {
+        "value": 48,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.3999999761581421,
+        "secondFrameMs": 3.5999999940395355
+      },
+      {
+        "value": 50,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.30000001192092896,
+        "secondFrameMs": 3.5
+      },
+      {
+        "value": 52,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.29999998211860657,
+        "secondFrameMs": 10.699999988079071
+      },
+      {
+        "value": 54,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.4000000059604645,
+        "secondFrameMs": 3.5999999940395355
+      },
+      {
+        "value": 56,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.19999998807907104,
+        "firstFrameMs": 0.3999999761581421,
+        "secondFrameMs": 3.699999988079071
+      },
+      {
+        "value": 58,
+        "labelMs": 0.20000001788139343,
+        "previewMs": 0.20000001788139343,
+        "firstFrameMs": 0.5,
+        "secondFrameMs": 11.300000011920929
+      },
+      {
+        "value": 60,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.4000000059604645,
+        "secondFrameMs": 4.0999999940395355
+      },
+      {
+        "value": 62,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.4000000059604645,
+        "secondFrameMs": 3.5
+      },
+      {
+        "value": 64,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.19999998807907104,
+        "firstFrameMs": 0.30000001192092896,
+        "secondFrameMs": 4.0999999940395355
+      },
+      {
+        "value": 66,
+        "labelMs": 0,
+        "previewMs": 0,
+        "firstFrameMs": 0.30000001192092896,
+        "secondFrameMs": 11.199999988079071
+      },
+      {
+        "value": 68,
+        "labelMs": 0.20000001788139343,
+        "previewMs": 0.20000001788139343,
+        "firstFrameMs": 0.5,
+        "secondFrameMs": 4.700000017881393
+      },
+      {
+        "value": 70,
+        "labelMs": 0.10000002384185791,
+        "previewMs": 0.10000002384185791,
+        "firstFrameMs": 0.4000000059604645,
+        "secondFrameMs": 4.9000000059604645
+      },
+      {
+        "value": 72,
+        "labelMs": 0.20000001788139343,
+        "previewMs": 0.30000001192092896,
+        "firstFrameMs": 0.5,
+        "secondFrameMs": 4.4000000059604645
+      },
+      {
+        "value": 74,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.5,
+        "secondFrameMs": 3.800000011920929
+      },
+      {
+        "value": 76,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.699999988079071,
+        "secondFrameMs": 4.9000000059604645
+      },
+      {
+        "value": 78,
+        "labelMs": 0.20000001788139343,
+        "previewMs": 0.20000001788139343,
+        "firstFrameMs": 1.800000011920929,
+        "secondFrameMs": 4
+      },
+      {
+        "value": 80,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.29999998211860657,
+        "secondFrameMs": 11.199999988079071
+      },
+      {
+        "value": 82,
+        "labelMs": 0.09999999403953552,
+        "previewMs": 0.09999999403953552,
+        "firstFrameMs": 0.30000001192092896,
+        "secondFrameMs": 10.200000017881393
+      },
+      {
+        "value": 84,
+        "labelMs": 0.10000002384185791,
+        "previewMs": 0.10000002384185791,
+        "firstFrameMs": 1.800000011920929,
+        "secondFrameMs": 4.200000017881393
+      },
+      {
+        "value": 86,
+        "labelMs": 0.10000002384185791,
+        "previewMs": 0.20000001788139343,
+        "firstFrameMs": 0.4000000059604645,
+        "secondFrameMs": 3.800000011920929
+      },
+      {
+        "value": 88,
+        "labelMs": 0.20000001788139343,
+        "previewMs": 0.20000001788139343,
+        "firstFrameMs": 0.5,
+        "secondFrameMs": 3.800000011920929
+      }
+    ],
+    "sameMedia": true,
+    "persistedValue": 88
+  },
+  "wallpaperCardsAdded": 0,
+  "completedAt": "2026-11-20T05:39:03.618Z"
+}

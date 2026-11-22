@@ -1,0 +1,54 @@
+{
+  "startedAt": "2026-11-19T09:43:42.294Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": null,
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": null,
+  "conditions": {
+    "viewport": [
+      720,
+      1068,
+      1.5
+    ],
+    "visibility": "hidden",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "error": "Main page must be visible for frame measurements",
+  "lastSample": {
+    "targetId": "",
+    "wallMilliseconds": 8529533.200000003,
+    "state": {
+      "activeId": "3312633016",
+      "state": "enabled",
+      "playerCount": 1
+    },
+    "status": "正在加载：[鸣潮]_传承__",
+    "fileInputs": 0,
+    "staged": 1,
+    "pendingMedia": null,
+    "selectedMilliseconds": null,
+    "feedbackMilliseconds": null,
+    "committedMilliseconds": null,
+    "events": [],
+    "media": {
+      "tag": null,
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "hidden"
+    }
+  },
+  "finishedAt": "2026-11-19T09:43:42.306Z"
+}

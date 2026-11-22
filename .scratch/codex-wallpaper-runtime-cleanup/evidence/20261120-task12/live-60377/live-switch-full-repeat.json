@@ -1,0 +1,6669 @@
+{
+  "startedAt": "2026-11-20T05:36:28.052Z",
+  "port": 60377,
+  "identity": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "b150f2f3cdaa867b876783e691fac7682901f298b41ddcda5d013472919d66c2",
+  "warm": null,
+  "switches": {
+    "frontCold": {
+      "click": {
+        "id": "1791074903",
+        "downAt": 2111777.5,
+        "at": 2111797.900000006,
+        "trusted": true
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 2111782.200000018,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2111801.400000006,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 3.5
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2111801.700000018,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2111825.200000018,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2111830.800000012,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2111877,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2111903.700000018,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2111971.900000006,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 2112067.599999994,
+          "detail": {
+            "at": 2112067.1,
+            "elapsed": 269.19999999413267,
+            "first": {
+              "at": 2112029.6,
+              "mediaTime": 0.033333,
+              "presentedFrames": 2
+            },
+            "second": {
+              "at": 2112067.1,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        }
+      ],
+      "selectedId": "1791074903",
+      "selectedMilliseconds": 3.800000011920929,
+      "feedbackMilliseconds": 27.19999998807907,
+      "committedMilliseconds": 174,
+      "dynamicMilliseconds": 269.19999999413267,
+      "dynamicValid": true,
+      "dynamic": {
+        "firstMediaTime": 0.033333,
+        "secondMediaTime": 0.066667,
+        "presentedFrames": 3,
+        "readyState": 4,
+        "paused": false,
+        "visible": true,
+        "width": 1920,
+        "height": 1080
+      },
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "transfer": {
+        "file": 2,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.146164,
+        "visibility": "visible"
+      }
+    },
+    "tailCold": {
+      "click": {
+        "id": "1986730797",
+        "downAt": 2112505.900000006,
+        "at": 2112509,
+        "trusted": true
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 2112507.700000018,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2112509.800000012,
+          "detail": {
+            "id": "1986730797",
+            "inputDelay": 0.800000011920929
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2112510.099999994,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2112533.400000006,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2112567.200000018,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2112570.700000018,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2112647,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 2112759.300000012,
+          "detail": {
+            "at": 2112758.8,
+            "elapsed": 249.79999999981374,
+            "first": {
+              "at": 2112725.432,
+              "mediaTime": 0.033333,
+              "presentedFrames": 2
+            },
+            "second": {
+              "at": 2112758.8,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        }
+      ],
+      "selectedId": "1986730797",
+      "selectedMilliseconds": 1.0999999940395355,
+      "feedbackMilliseconds": 24.400000005960464,
+      "committedMilliseconds": 137.90000000596046,
+      "dynamicMilliseconds": 249.79999999981374,
+      "dynamicValid": true,
+      "dynamic": {
+        "firstMediaTime": 0.033333,
+        "secondMediaTime": 0.066667,
+        "presentedFrames": 3,
+        "readyState": 4,
+        "paused": false,
+        "visible": true,
+        "width": 1920,
+        "height": 1080
+      },
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.153873,
+        "visibility": "visible"
+      }
+    }
+  },
+  "rapid": {
+    "abc": {
+      "targetId": "2817646508",
+      "wallMilliseconds": 322.80000001192093,
+      "state": {
+        "activeId": "2817646508",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "status": "轻音少女 · image",
+      "fileInputs": 0,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "2817646508",
+        "downAt": 2140434.900000006,
+        "at": 2140440.400000006,
+        "trusted": true
+      },
+      "selectedMilliseconds": 9,
+      "feedbackMilliseconds": 29.099999994039536,
+      "committedMilliseconds": 33.900000005960464,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 3,
+        "base64": 0,
+        "finished": 3,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 2139860.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2139863.200000018,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 1.5
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2139863.5,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2139886,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2139900.5,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2139924.900000006,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2140079.5,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 2140184.800000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140190.900000006,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 4.9000000059604645
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140191.099999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140214.099999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2140255.400000006,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2140282,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 2140314.200000018,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140318.599999994,
+          "detail": {
+            "id": "1986730797",
+            "inputDelay": 2.5999999940395355
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140319.300000012,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140345.700000018,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2140374.099999994,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2140398.700000018,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 2140438.800000012,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140447.900000006,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 7.5
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140449.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140469.5,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 2140474.300000012,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "aba": {
+      "targetId": "1791074903",
+      "wallMilliseconds": 286.69999998807907,
+      "state": {
+        "activeId": "1791074903",
+        "state": "enabled",
+        "playerCount": 1
+      },
+      "selected": "true",
+      "status": "[ 明 日 方 舟 ] · 视频",
+      "fileInputs": 0,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "1791074903",
+        "downAt": 2141002.099999994,
+        "at": 2141010.800000012,
+        "trusted": true
+      },
+      "selectedMilliseconds": 5,
+      "feedbackMilliseconds": 30.69999998807907,
+      "committedMilliseconds": 86.5,
+      "dynamic": null,
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "warm": null,
+      "transfer": {
+        "file": 4,
+        "base64": 0,
+        "finished": 2,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 2140510.800000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140514.599999994,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 2
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140515,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140538.300000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2140568.200000018,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2140594.800000012,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2140675.599999994,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 2140771.300000012,
+          "detail": {
+            "at": 2140770.8,
+            "elapsed": 258.2000000057742,
+            "first": {
+              "at": 2140737.5,
+              "mediaTime": 0.033333,
+              "presentedFrames": 2
+            },
+            "second": {
+              "at": 2140770.8,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 2140856.700000018,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140857.900000006,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 0.4000000059604645
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140858.599999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140875.700000018,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 2140923.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2140927.400000006,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 2
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2140928.300000012,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2140951.200000018,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2140973.099999994,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 2141008.400000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2141014.800000012,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 4
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2141015.800000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2141041.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2141056.800000012,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2141085.200000018,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2141097.400000006,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2141132.300000012,
+          "detail": null
+        }
+      ],
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.002551,
+        "visibility": "visible"
+      }
+    }
+  },
+  "disableDuringSwitch": {
+    "beforeDisable": {
+      "targetId": "1791074903",
+      "wallMilliseconds": 71,
+      "state": {
+        "activeId": "1791074903",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "status": "正在加载：[ 明 日 方 舟 ]",
+      "fileInputs": 1,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "1791074903",
+        "downAt": 2141509.5,
+        "at": 2141515.900000006,
+        "trusted": true
+      },
+      "selectedMilliseconds": 2,
+      "feedbackMilliseconds": 23.80000001192093,
+      "committedMilliseconds": null,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 3,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 2141165.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2141173,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 5.5999999940395355
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2141173.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2141199.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2141212.300000012,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2141243.599999994,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 2141267.900000006,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 2141414.599999994,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 2141514.300000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 2141517.599999994,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 1.699999988079071
+          }
+        },
+        {
+          "type": "selected",
+          "at": 2141517.900000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 2141539.800000012,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 2141575.099999994,
+          "detail": null
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "dispatchToCleanupMilliseconds": 142.30000001192093,
+    "totalMilliseconds": 235.40000000596046,
+    "afterThirtySeconds": {
+      "state": "disabled",
+      "root": false,
+      "players": 0,
+      "warm": 0,
+      "fileInputs": 0
+    }
+  },
+  "failureRetention": {
+    "previous": {
+      "tag": "img",
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "visible"
+    },
+    "after": {
+      "activeId": "missing-live-probe",
+      "mediaCount": 1,
+      "staged": 0,
+      "tag": "img",
+      "previousNodeRetained": true,
+      "status": "已跳过缺失的壁纸，已保留当前画面"
+    }
+  },
+  "restored": {
+    "configExact": true,
+    "activeId": "3230938311",
+    "panelOpen": false
+  },
+  "conditions": {
+    "viewport": [
+      1706,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 106,
+    "openedCardCount": 106,
+    "domElements": 3842
+  },
+  "warmSamples": {
+    "front": [
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 400.2000000178814,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2113155.700000018,
+          "at": 2113161.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.5,
+        "feedbackMilliseconds": 26.899999976158142,
+        "committedMilliseconds": 210.2999999821186,
+        "dynamic": {
+          "at": 2113462.9,
+          "elapsed": 301.1999999820255,
+          "first": {
+            "at": 2113429.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2113462.9,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2113160.200000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2113165.900000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.199999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2113166.200000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2113188.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2113219.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2113245.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2113372,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2113463.599999994,
+            "detail": {
+              "at": 2113462.9,
+              "elapsed": 301.1999999820255,
+              "first": {
+                "at": 2113429.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2113462.9,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.195968,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 338,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2114569.099999994,
+          "at": 2114574.900000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.5999999940395355,
+        "feedbackMilliseconds": 21.400000005960464,
+        "committedMilliseconds": 142.90000000596046,
+        "dynamic": {
+          "at": 2114812.9,
+          "elapsed": 237.9999999939464,
+          "first": {
+            "at": 2114783.8,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2114812.9,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2114573.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2114576.200000018,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 1.300000011920929
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2114576.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2114596.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2114620.200000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2114647.400000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2114717.800000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2114813.700000018,
+            "detail": {
+              "at": 2114812.9,
+              "elapsed": 237.9999999939464,
+              "first": {
+                "at": 2114783.8,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2114812.9,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.146074,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 356,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2115859.900000006,
+          "at": 2115866.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.5,
+        "feedbackMilliseconds": 37.099999994039536,
+        "committedMilliseconds": 193.09999999403954,
+        "dynamic": {
+          "at": 2116146.2,
+          "elapsed": 279.99999998230487,
+          "first": {
+            "at": 2116117.1,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2116146.2,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2115864.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2115870.400000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.199999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2115870.700000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2115903.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2115956.200000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2115986.5,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2116059.300000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2116146.700000018,
+            "detail": {
+              "at": 2116146.2,
+              "elapsed": 279.99999998230487,
+              "first": {
+                "at": 2116117.1,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2116146.2,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.111647,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 311.19999998807907,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2117215.200000018,
+          "at": 2117218.099999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1,
+        "feedbackMilliseconds": 21.80000001192093,
+        "committedMilliseconds": 145.40000000596046,
+        "dynamic": {
+          "at": 2117454.6,
+          "elapsed": 236.5000000060536,
+          "first": {
+            "at": 2117421.2,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2117454.6,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2117217,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2117218.900000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 0.800000011920929
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2117219.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2117239.900000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2117268.900000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2117291.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2117363.5,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2117455.300000012,
+            "detail": {
+              "at": 2117454.6,
+              "elapsed": 236.5000000060536,
+              "first": {
+                "at": 2117421.2,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2117454.6,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.116741,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 321,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2118472.400000006,
+          "at": 2118478.300000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.5999999940395355,
+        "feedbackMilliseconds": 20.799999982118607,
+        "committedMilliseconds": 153.5,
+        "dynamic": {
+          "at": 2118725.3,
+          "elapsed": 246.9999999878928,
+          "first": {
+            "at": 2118692.032,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2118725.3,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2118477,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2118479.5,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 1.199999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2118479.900000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2118499.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2118532,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2118560.099999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2118631.800000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2118725.900000006,
+            "detail": {
+              "at": 2118725.3,
+              "elapsed": 246.9999999878928,
+              "first": {
+                "at": 2118692.032,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2118725.3,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.118572,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 357.2999999821186,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2119735.200000018,
+          "at": 2119738.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 2.2999999821186066,
+        "feedbackMilliseconds": 25.69999998807907,
+        "committedMilliseconds": 162.19999998807907,
+        "dynamic": {
+          "at": 2119996.2,
+          "elapsed": 257.39999998826534,
+          "first": {
+            "at": 2119962.832,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2119996.2,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2119737.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2119740.900000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 2.0999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2119741.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2119764.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2119793.800000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2119820.900000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2119901,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2119996.5,
+            "detail": {
+              "at": 2119996.2,
+              "elapsed": 257.39999998826534,
+              "first": {
+                "at": 2119962.832,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2119996.2,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.145194,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 324.09999999403954,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2121055.800000012,
+          "at": 2121061.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5.199999988079071,
+        "feedbackMilliseconds": 25.099999994039536,
+        "committedMilliseconds": 156.5,
+        "dynamic": {
+          "at": 2121312.7,
+          "elapsed": 250.99999998230487,
+          "first": {
+            "at": 2121275.3,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2121312.7,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2121060.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2121066.599999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.899999976158142
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2121066.900000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2121086.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2121118.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2121145.800000012,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2121218.200000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2121313.300000012,
+            "detail": {
+              "at": 2121312.7,
+              "elapsed": 250.99999998230487,
+              "first": {
+                "at": 2121275.3,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2121312.7,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.117958,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 372.7999999821186,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2122384.599999994,
+          "at": 2122390.300000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.199999988079071,
+        "feedbackMilliseconds": 30.69999998807907,
+        "committedMilliseconds": 177.19999998807907,
+        "dynamic": {
+          "at": 2122662.8,
+          "elapsed": 272.4999999878928,
+          "first": {
+            "at": 2122629.532,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2122662.8,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2122389,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2122393.200000018,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 2.9000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2122393.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2122421,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2122468.200000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2122495.599999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2122567.5,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2122663.300000012,
+            "detail": {
+              "at": 2122662.8,
+              "elapsed": 272.4999999878928,
+              "first": {
+                "at": 2122629.532,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2122662.8,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.144512,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 401.40000000596046,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2123802.099999994,
+          "at": 2123806,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.2000000178813934,
+        "feedbackMilliseconds": 24.599999994039536,
+        "committedMilliseconds": 216.09999999403954,
+        "dynamic": {
+          "at": 2124112.8,
+          "elapsed": 306.79999999981374,
+          "first": {
+            "at": 2124079.432,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2124112.8,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2123804.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2123806.900000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 0.9000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2123807.200000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2123830.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2123860.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2123891.5,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2124022.099999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2124113.200000018,
+            "detail": {
+              "at": 2124112.8,
+              "elapsed": 306.79999999981374,
+              "first": {
+                "at": 2124079.432,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2124112.8,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.192185,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 398.59999999403954,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2125193.400000006,
+          "at": 2125199.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 6.0999999940395355,
+        "feedbackMilliseconds": 26.299999982118607,
+        "committedMilliseconds": 201.69999998807907,
+        "dynamic": {
+          "at": 2125496.1,
+          "elapsed": 296.2999999881722,
+          "first": {
+            "at": 2125462.7,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2125496.1,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2125198.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2125205.599999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 5.799999982118607
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2125205.900000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2125226.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2125249.5,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2125277.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2125401.5,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2125496.700000018,
+            "detail": {
+              "at": 2125496.1,
+              "elapsed": 296.2999999881722,
+              "first": {
+                "at": 2125462.7,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2125496.1,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.198968,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 432.5,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2126647.400000006,
+          "at": 2126653.099999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.200000017881393,
+        "feedbackMilliseconds": 26.700000017881393,
+        "committedMilliseconds": 235.5,
+        "dynamic": {
+          "at": 2126983.5,
+          "elapsed": 330.40000000596046,
+          "first": {
+            "at": 2126946.1,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2126983.5,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2126651.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2126657.099999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2126657.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2126679.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2126722.400000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2126752.5,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2126888.599999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2126984,
+            "detail": {
+              "at": 2126983.5,
+              "elapsed": 330.40000000596046,
+              "first": {
+                "at": 2126946.1,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2126983.5,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.20819,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 383.39999997615814,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2128072.400000006,
+          "at": 2128078.400000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.9000000059604645,
+        "feedbackMilliseconds": 30.19999998807907,
+        "committedMilliseconds": 222.59999999403954,
+        "dynamic": {
+          "at": 2128387.7,
+          "elapsed": 309.2999999942258,
+          "first": {
+            "at": 2128358.532,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2128387.7,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2128077.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2128083,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.5999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2128083.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2128108.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2128141.5,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2128168.800000012,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2128301,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2128388.300000012,
+            "detail": {
+              "at": 2128387.7,
+              "elapsed": 309.2999999942258,
+              "first": {
+                "at": 2128358.532,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2128387.7,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.166772,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 399.09999999403954,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2129401.5,
+          "at": 2129407.300000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.299999982118607,
+        "feedbackMilliseconds": 26.69999998807907,
+        "committedMilliseconds": 206.2999999821186,
+        "dynamic": {
+          "at": 2129704.3,
+          "elapsed": 296.9999999878928,
+          "first": {
+            "at": 2129675.2,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2129704.3,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2129406.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2129411.400000006,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.0999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2129411.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2129434,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2129464.599999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2129491.599999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2129613.599999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2129705.099999994,
+            "detail": {
+              "at": 2129704.3,
+              "elapsed": 296.9999999878928,
+              "first": {
+                "at": 2129675.2,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2129704.3,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.200878,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 408.80000001192093,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2130726.200000018,
+          "at": 2130732.300000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.699999988079071,
+        "feedbackMilliseconds": 25.799999982118607,
+        "committedMilliseconds": 214.69999998807907,
+        "dynamic": {
+          "at": 2131037.7,
+          "elapsed": 305.39999998826534,
+          "first": {
+            "at": 2131008.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2131037.7,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2130731,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2130736.700000018,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 4.4000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2130737,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2130758.200000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2130790.800000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2130821.099999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2130947,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2131038.300000012,
+            "detail": {
+              "at": 2131037.7,
+              "elapsed": 305.39999998826534,
+              "first": {
+                "at": 2131008.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2131037.7,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.198848,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 343.90000000596046,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2132143.400000006,
+          "at": 2132146.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.199999988079071,
+        "feedbackMilliseconds": 22,
+        "committedMilliseconds": 149.89999997615814,
+        "dynamic": {
+          "at": 2132387.6,
+          "elapsed": 240.89999998221174,
+          "first": {
+            "at": 2132358.432,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2132387.6,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2132145.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2132147.599999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 0.8999999761581421
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2132147.900000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2132168.700000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2132196,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2132218.599999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2132296.599999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2132388.300000012,
+            "detail": {
+              "at": 2132387.6,
+              "elapsed": 240.89999998221174,
+              "first": {
+                "at": 2132358.432,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2132387.6,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.146938,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 306.09999999403954,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2133513.900000006,
+          "at": 2133520.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5.699999988079071,
+        "feedbackMilliseconds": 27.19999998807907,
+        "committedMilliseconds": 130.5,
+        "dynamic": {
+          "at": 2133746,
+          "elapsed": 225.7999999821186,
+          "first": {
+            "at": 2133716.732,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2133746,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2133518.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2133525.599999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 5.399999976158142
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2133526,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2133547.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2133575.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2133579.099999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2133650.700000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2133747,
+            "detail": {
+              "at": 2133746,
+              "elapsed": 225.7999999821186,
+              "first": {
+                "at": 2133716.732,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2133746,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.123552,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 388.5,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2134751.599999994,
+          "at": 2134758.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 2.2999999821186066,
+        "feedbackMilliseconds": 22.299999982118607,
+        "committedMilliseconds": 197.09999999403954,
+        "dynamic": {
+          "at": 2135046,
+          "elapsed": 287.7999999821186,
+          "first": {
+            "at": 2135012.632,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "second": {
+            "at": 2135046,
+            "mediaTime": 0.1,
+            "presentedFrames": 4
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2134756.200000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2134760.200000018,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 2
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2134760.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2134780.5,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2134806.400000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2134830.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2134955.300000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2135046.400000006,
+            "detail": {
+              "at": 2135046,
+              "elapsed": 287.7999999821186,
+              "first": {
+                "at": 2135012.632,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "second": {
+                "at": 2135046,
+                "mediaTime": 0.1,
+                "presentedFrames": 4
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.196923,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 401,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2136074,
+          "at": 2136077.599999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.2000000178813934,
+        "feedbackMilliseconds": 21.100000023841858,
+        "committedMilliseconds": 202.5,
+        "dynamic": {
+          "at": 2136375.1,
+          "elapsed": 297.5000000060536,
+          "first": {
+            "at": 2136341.8,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2136375.1,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2136076.099999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2136078.5,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 0.9000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2136078.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2136098.700000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2136137.099999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2136166.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2136280.099999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2136375.5,
+            "detail": {
+              "at": 2136375.1,
+              "elapsed": 297.5000000060536,
+              "first": {
+                "at": 2136341.8,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2136375.1,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.146975,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 356.90000000596046,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2137401.700000018,
+          "at": 2137408.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 2.199999988079071,
+        "feedbackMilliseconds": 22.5,
+        "committedMilliseconds": 165.09999999403954,
+        "dynamic": {
+          "at": 2137666.7,
+          "elapsed": 258.49999998230487,
+          "first": {
+            "at": 2137633.3,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2137666.7,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2137406.800000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2137410.099999994,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 1.899999976158142
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2137410.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2137430.700000018,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2137464.099999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2137493.900000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2137573.300000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2137667.300000012,
+            "detail": {
+              "at": 2137666.7,
+              "elapsed": 258.49999998230487,
+              "first": {
+                "at": 2137633.3,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2137666.7,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.142935,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 393.59999999403954,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "[ 明 日 方 舟 ] · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1791074903",
+          "downAt": 2138810.800000012,
+          "at": 2138815,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.300000011920929,
+        "feedbackMilliseconds": 24,
+        "committedMilliseconds": 186,
+        "dynamic": {
+          "at": 2139100,
+          "elapsed": 285,
+          "first": {
+            "at": 2139066.7,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2139100,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2138813.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2138816,
+            "detail": {
+              "id": "1791074903",
+              "inputDelay": 1
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2138816.300000012,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2138839,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2138876.800000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2138907.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2139001,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2139100.599999994,
+            "detail": {
+              "at": 2139100,
+              "elapsed": 285,
+              "first": {
+                "at": 2139066.7,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2139100,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.152737,
+          "visibility": "visible"
+        },
+        "hover": null
+      }
+    ],
+    "tail": [
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 355,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2113885,
+          "at": 2113891.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.5999999940395355,
+        "feedbackMilliseconds": 23.399999976158142,
+        "committedMilliseconds": 158.39999997615814,
+        "dynamic": {
+          "at": 2114146.3,
+          "elapsed": 255.09999998193234,
+          "first": {
+            "at": 2114112.9,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2114146.3,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2113889.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2113894.599999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 3.399999976158142
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2113894.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2113914.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2113939.900000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2113965.099999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2114049.599999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2114147,
+            "detail": {
+              "at": 2114146.3,
+              "elapsed": 255.09999998193234,
+              "first": {
+                "at": 2114112.9,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2114146.3,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.149068,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 342.59999999403954,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2115206.800000012,
+          "at": 2115209.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.0999999940395355,
+        "feedbackMilliseconds": 26.19999998807907,
+        "committedMilliseconds": 149.69999998807907,
+        "dynamic": {
+          "at": 2115454.5,
+          "elapsed": 244.69999998807907,
+          "first": {
+            "at": 2115421.3,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2115454.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2115208.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2115210.599999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 0.7999999821186066
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2115210.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2115236,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2115262.300000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2115289.900000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2115359.5,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2115455,
+            "detail": {
+              "at": 2115454.5,
+              "elapsed": 244.69999998807907,
+              "first": {
+                "at": 2115421.3,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2115454.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.145563,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 356.59999999403954,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2116543.300000012,
+          "at": 2116549.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.4000000059604645,
+        "feedbackMilliseconds": 26.900000005960464,
+        "committedMilliseconds": 155.40000000596046,
+        "dynamic": {
+          "at": 2116804.5,
+          "elapsed": 254.69999998807907,
+          "first": {
+            "at": 2116767.1,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2116804.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2116548.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2116552.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 3.0999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2116553.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2116576.700000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2116607.599999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2116635.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2116705.200000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2116805.5,
+            "detail": {
+              "at": 2116804.5,
+              "elapsed": 254.69999998807907,
+              "first": {
+                "at": 2116767.1,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2116804.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.151758,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 337.90000000596046,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2117843,
+          "at": 2117847.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.299999982118607,
+        "feedbackMilliseconds": 28.099999994039536,
+        "committedMilliseconds": 162.09999999403954,
+        "dynamic": {
+          "at": 2118104.6,
+          "elapsed": 256.89999998221174,
+          "first": {
+            "at": 2118071.2,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2118104.6,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2117845.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2117851.700000018,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 4
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2117852,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2117875.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2117906.400000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2117932.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2118009.800000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2118105.099999994,
+            "detail": {
+              "at": 2118104.6,
+              "elapsed": 256.89999998221174,
+              "first": {
+                "at": 2118071.2,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2118104.6,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.123028,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 326.5,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2119105.599999994,
+          "at": 2119112.599999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.600000023841858,
+        "feedbackMilliseconds": 28.900000005960464,
+        "committedMilliseconds": 160.10000002384186,
+        "dynamic": {
+          "at": 2119362.8,
+          "elapsed": 250.2000000057742,
+          "first": {
+            "at": 2119329.532,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2119362.8,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2119111.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2119114,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 1.4000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2119114.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2119141.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2119171.400000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2119200.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2119272.700000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2119363.300000012,
+            "detail": {
+              "at": 2119362.8,
+              "elapsed": 250.2000000057742,
+              "first": {
+                "at": 2119329.532,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2119362.8,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.116852,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 308.5,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2120451.400000006,
+          "at": 2120454.400000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 0.9000000059604645,
+        "feedbackMilliseconds": 20.900000005960464,
+        "committedMilliseconds": 121.5,
+        "dynamic": {
+          "at": 2120671.2,
+          "elapsed": 216.7999999942258,
+          "first": {
+            "at": 2120637.9,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2120671.2,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2120453.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2120455.099999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 0.699999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2120455.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2120475.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2120505.400000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2120508.400000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2120575.900000006,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2120671.700000018,
+            "detail": {
+              "at": 2120671.2,
+              "elapsed": 216.7999999942258,
+              "first": {
+                "at": 2120637.9,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2120671.2,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.140057,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 360,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2121701.599999994,
+          "at": 2121706,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5.200000017881393,
+        "feedbackMilliseconds": 32,
+        "committedMilliseconds": 179.09999999403954,
+        "dynamic": {
+          "at": 2121983.6,
+          "elapsed": 277.60000000009313,
+          "first": {
+            "at": 2121950.3,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2121983.6,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2121703.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2121711,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 5
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2121711.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2121738,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2121771.099999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2121806.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2121885.099999994,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2121984,
+            "detail": {
+              "at": 2121983.6,
+              "elapsed": 277.60000000009313,
+              "first": {
+                "at": 2121950.3,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2121983.6,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.126159,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 372.5,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2123068,
+          "at": 2123075,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5,
+        "feedbackMilliseconds": 32.30000001192093,
+        "committedMilliseconds": 180,
+        "dynamic": {
+          "at": 2123346.1,
+          "elapsed": 271.10000000009313,
+          "first": {
+            "at": 2123317,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2123346.1,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2123073.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2123079.599999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 4.5999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2123080,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2123107.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2123145,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2123175.099999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2123255,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2123346.800000012,
+            "detail": {
+              "at": 2123346.1,
+              "elapsed": 271.10000000009313,
+              "first": {
+                "at": 2123317,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2123346.1,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.145161,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 352.69999998807907,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2124514.099999994,
+          "at": 2124520.099999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.100000023841858,
+        "feedbackMilliseconds": 27.600000023841858,
+        "committedMilliseconds": 155.80000001192093,
+        "dynamic": {
+          "at": 2124771.1,
+          "elapsed": 251.0000000060536,
+          "first": {
+            "at": 2124737.8,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2124771.1,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2124518.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2124522.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 2.800000011920929
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2124523.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2124547.700000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2124578,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2124603.400000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2124675.900000006,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2124771.599999994,
+            "detail": {
+              "at": 2124771.1,
+              "elapsed": 251.0000000060536,
+              "first": {
+                "at": 2124737.8,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2124771.1,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.146295,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 369.40000000596046,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2125905.900000006,
+          "at": 2125913.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 4.5,
+        "feedbackMilliseconds": 31.69999998807907,
+        "committedMilliseconds": 174.59999999403954,
+        "dynamic": {
+          "at": 2126187.7,
+          "elapsed": 273.89999998826534,
+          "first": {
+            "at": 2126154.432,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2126187.7,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2125911.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2125918,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 4.199999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2125918.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2125945.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2125968.599999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2125999.599999994,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2126088.400000006,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2126188.300000012,
+            "detail": {
+              "at": 2126187.7,
+              "elapsed": 273.89999998826534,
+              "first": {
+                "at": 2126154.432,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2126187.7,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.142371,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 368.69999998807907,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2127393.099999994,
+          "at": 2127399.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.899999976158142,
+        "feedbackMilliseconds": 28.19999998807907,
+        "committedMilliseconds": 177,
+        "dynamic": {
+          "at": 2127666.9,
+          "elapsed": 267.6999999820255,
+          "first": {
+            "at": 2127637.7,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2127666.9,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2127397.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2127402.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 3.699999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2127403.099999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2127427.400000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2127470.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2127499.300000012,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2127576.200000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2127667.5,
+            "detail": {
+              "at": 2127666.9,
+              "elapsed": 267.6999999820255,
+              "first": {
+                "at": 2127637.7,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2127666.9,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.143518,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 325,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2128784.900000006,
+          "at": 2128788.099999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.100000023841858,
+        "feedbackMilliseconds": 23.400000005960464,
+        "committedMilliseconds": 137.7000000178814,
+        "dynamic": {
+          "at": 2129021,
+          "elapsed": 232.90000000596046,
+          "first": {
+            "at": 2128987.632,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2129021,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2128786.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2128788.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 0.800000011920929
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2128789.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2128811.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2128837.700000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2128859.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2128925.800000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2129021.5,
+            "detail": {
+              "at": 2129021,
+              "elapsed": 232.90000000596046,
+              "first": {
+                "at": 2128987.632,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2129021,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.140284,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 322.90000000596046,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2130097.5,
+          "at": 2130103.200000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.399999976158142,
+        "feedbackMilliseconds": 22.599999994039536,
+        "committedMilliseconds": 126.7999999821186,
+        "dynamic": {
+          "at": 2130325.3,
+          "elapsed": 222.09999998193234,
+          "first": {
+            "at": 2130291.832,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2130325.3,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2130102,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2130106.300000012,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 3.0999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2130106.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2130125.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2130155.300000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2130158.700000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2130230,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2130325.900000006,
+            "detail": {
+              "at": 2130325.3,
+              "elapsed": 222.09999998193234,
+              "first": {
+                "at": 2130291.832,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2130325.3,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.147184,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 354.40000000596046,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2131472.099999994,
+          "at": 2131478.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 3.7999999821186066,
+        "feedbackMilliseconds": 25.299999982118607,
+        "committedMilliseconds": 159.69999998807907,
+        "dynamic": {
+          "at": 2131733.4,
+          "elapsed": 254.69999998202547,
+          "first": {
+            "at": 2131700.132,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2131733.4,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2131477.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2131482.099999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 3.399999976158142
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2131482.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2131504,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2131544.200000018,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2131569.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2131638.400000006,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2131734,
+            "detail": {
+              "at": 2131733.4,
+              "elapsed": 254.69999998202547,
+              "first": {
+                "at": 2131700.132,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2131733.4,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.147821,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 346.30000001192093,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2132847.900000006,
+          "at": 2132850.800000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.199999988079071,
+        "feedbackMilliseconds": 22,
+        "committedMilliseconds": 175.40000000596046,
+        "dynamic": {
+          "at": 2133116.8,
+          "elapsed": 265.9999999878928,
+          "first": {
+            "at": 2133087.6,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2133116.8,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2132849.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2132851.800000012,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 1
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2132852,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2132872.800000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2132907.800000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2132937,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2133026.200000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2133117.400000006,
+            "detail": {
+              "at": 2133116.8,
+              "elapsed": 265.9999999878928,
+              "first": {
+                "at": 2133087.6,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2133116.8,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.12362,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 322,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2134130.599999994,
+          "at": 2134137,
+          "trusted": true
+        },
+        "selectedMilliseconds": 2.5999999940395355,
+        "feedbackMilliseconds": 24.30000001192093,
+        "committedMilliseconds": 151.2000000178814,
+        "dynamic": {
+          "at": 2134383.5,
+          "elapsed": 246.5,
+          "first": {
+            "at": 2134354.232,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2134383.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2134135.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2134139.400000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 2.4000000059604645
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2134139.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2134161.300000012,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2134193.800000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2134219.900000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2134288.200000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2134384,
+            "detail": {
+              "at": 2134383.5,
+              "elapsed": 246.5,
+              "first": {
+                "at": 2134354.232,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2134383.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.123127,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 308.69999998807907,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2135453.300000012,
+          "at": 2135456.400000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.0999999940395355,
+        "feedbackMilliseconds": 21.19999998807907,
+        "committedMilliseconds": 140.09999999403954,
+        "dynamic": {
+          "at": 2135691.7,
+          "elapsed": 235.2999999942258,
+          "first": {
+            "at": 2135654.2,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2135691.7,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2135455.099999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2135457.200000018,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 0.800000011920929
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2135457.5,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2135477.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2135506.5,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2135531.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2135596.5,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2135692.300000012,
+            "detail": {
+              "at": 2135691.7,
+              "elapsed": 235.2999999942258,
+              "first": {
+                "at": 2135654.2,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2135691.7,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.119703,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 324.90000000596046,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2136767.900000006,
+          "at": 2136775.599999994,
+          "trusted": true
+        },
+        "selectedMilliseconds": 1.800000011920929,
+        "feedbackMilliseconds": 22.30000001192093,
+        "committedMilliseconds": 125.10000002384186,
+        "dynamic": {
+          "at": 2136995.9,
+          "elapsed": 220.30000000586733,
+          "first": {
+            "at": 2136958.4,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2136995.9,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2136774,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2136777.099999994,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 1.5
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2136777.400000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2136798,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2136829.900000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2136833.200000018,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2136900.700000018,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2136996.400000006,
+            "detail": {
+              "at": 2136995.9,
+              "elapsed": 220.30000000586733,
+              "first": {
+                "at": 2136958.4,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2136995.9,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.151026,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 358.60000002384186,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2138092.5,
+          "at": 2138096.300000012,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5.9000000059604645,
+        "feedbackMilliseconds": 26.099999994039536,
+        "committedMilliseconds": 159.59999999403954,
+        "dynamic": {
+          "at": 2138350,
+          "elapsed": 253.69999998807907,
+          "first": {
+            "at": 2138312.5,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2138350,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2138094.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2138101.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 5.5999999940395355
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2138102.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2138122.400000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2138152.300000012,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2138177.800000012,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2138255.900000006,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2138350.599999994,
+            "detail": {
+              "at": 2138350,
+              "elapsed": 253.69999998807907,
+              "first": {
+                "at": 2138312.5,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2138350,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.14955,
+          "visibility": "visible"
+        },
+        "hover": null
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 334.59999999403954,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "status": "明日方舟 X 轻音少女 · 视频",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": {
+          "id": "1986730797",
+          "downAt": 2139526.300000012,
+          "at": 2139529.700000018,
+          "trusted": true
+        },
+        "selectedMilliseconds": 5.5,
+        "feedbackMilliseconds": 26.899999976158142,
+        "committedMilliseconds": 162.59999999403954,
+        "dynamic": {
+          "at": 2139787.5,
+          "elapsed": 257.7999999821186,
+          "first": {
+            "at": 2139750,
+            "mediaTime": 0.033333,
+            "presentedFrames": 2
+          },
+          "second": {
+            "at": 2139787.5,
+            "mediaTime": 0.066667,
+            "presentedFrames": 3
+          },
+          "readyState": 4,
+          "paused": false,
+          "visible": true,
+          "width": 1920,
+          "height": 1080,
+          "callbackCount": 2
+        },
+        "native": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 2139528.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "click",
+            "at": 2139534.900000006,
+            "detail": {
+              "id": "1986730797",
+              "inputDelay": 5.199999988079071
+            }
+          },
+          {
+            "type": "selected",
+            "at": 2139535.200000018,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected-feedback-frame",
+            "at": 2139556.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 2139584.599999994,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 2139608.900000006,
+            "detail": null
+          },
+          {
+            "type": "media-committed",
+            "at": 2139692.300000012,
+            "detail": {
+              "tag": "video",
+              "readyState": 4,
+              "paused": false,
+              "width": 1920,
+              "height": 1080
+            }
+          },
+          {
+            "type": "dynamic-frame",
+            "at": 2139788,
+            "detail": {
+              "at": 2139787.5,
+              "elapsed": 257.7999999821186,
+              "first": {
+                "at": 2139750,
+                "mediaTime": 0.033333,
+                "presentedFrames": 2
+              },
+              "second": {
+                "at": 2139787.5,
+                "mediaTime": 0.066667,
+                "presentedFrames": 3
+              },
+              "readyState": 4,
+              "paused": false,
+              "visible": true,
+              "width": 1920,
+              "height": 1080,
+              "callbackCount": 2
+            }
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.119368,
+          "visibility": "visible"
+        },
+        "hover": null
+      }
+    ]
+  },
+  "finishedAt": "2026-11-20T05:37:31.146Z"
+}

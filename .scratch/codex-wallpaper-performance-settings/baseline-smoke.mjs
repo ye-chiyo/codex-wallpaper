@@ -3,6 +3,7 @@ import { openMainPageSession } from "../../launcher/read-only-probe.mjs";
 const port = Number(process.argv[2]);
 const durationSeconds = Number(process.argv[3] || 10);
 const repeats = Number(process.argv[4] || 1);
+const requireVisible = process.argv.includes("--visible");
 
 async function connectBrowser(port) {
   const version = await fetch(`http://127.0.0.1:${port}/json/version`).then(
@@ -54,11 +55,20 @@ async function evaluate(session, expression) {
 const stateExpression = `(() => {
   const api = globalThis.__codexWallpaperApi;
   const media = document.querySelector("#codex-wallpaper-p1 .media:not(.staged)");
+  const video = media?.querySelector("video");
+  const quality = video?.getVideoPlaybackQuality();
   return {
     state: api?.state?.() || null,
     visibility: document.visibilityState,
     theme: document.documentElement.dataset.theme || null,
     viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
+    video: video ? {
+      width: video.videoWidth, height: video.videoHeight, paused: video.paused,
+      readyState: video.readyState, position: video.currentTime,
+      totalFrames: quality?.totalVideoFrames ?? null,
+      droppedFrames: quality?.droppedVideoFrames ?? null,
+      fit: getComputedStyle(video).objectFit
+    } : null,
     media: media ? {
       className: media.className,
       tags: [...media.querySelectorAll("img,video,canvas,iframe,.scene-host.ready")]
@@ -99,6 +109,8 @@ try {
         evaluate(page, stateExpression),
       ]);
       const metrics = metricsObject(metricsResult);
+      if (requireVisible && state.visibility !== "visible")
+        throw new Error("Main page stopped being visible");
       const processes = processResult.processInfo;
       const renderer = nearestRenderer(processes, metrics.ProcessTime);
       const record = {

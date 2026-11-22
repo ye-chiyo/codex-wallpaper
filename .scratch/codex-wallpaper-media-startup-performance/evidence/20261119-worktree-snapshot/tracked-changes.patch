@@ -1,0 +1,1175 @@
+diff --git a/.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs b/.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs
+index 035e253..bc7f6e1 100644
+--- a/.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs
++++ b/.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs
+@@ -3,6 +3,7 @@ import { openMainPageSession } from "../../launcher/read-only-probe.mjs";
+ const port = Number(process.argv[2]);
+ const durationSeconds = Number(process.argv[3] || 10);
+ const repeats = Number(process.argv[4] || 1);
++const requireVisible = process.argv.includes("--visible");
+ 
+ async function connectBrowser(port) {
+   const version = await fetch(`http://127.0.0.1:${port}/json/version`).then(
+@@ -54,11 +55,20 @@ async function evaluate(session, expression) {
+ const stateExpression = `(() => {
+   const api = globalThis.__codexWallpaperApi;
+   const media = document.querySelector("#codex-wallpaper-p1 .media:not(.staged)");
++  const video = media?.querySelector("video");
++  const quality = video?.getVideoPlaybackQuality();
+   return {
+     state: api?.state?.() || null,
+     visibility: document.visibilityState,
+     theme: document.documentElement.dataset.theme || null,
+     viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
++    video: video ? {
++      width: video.videoWidth, height: video.videoHeight, paused: video.paused,
++      readyState: video.readyState, position: video.currentTime,
++      totalFrames: quality?.totalVideoFrames ?? null,
++      droppedFrames: quality?.droppedVideoFrames ?? null,
++      fit: getComputedStyle(video).objectFit
++    } : null,
+     media: media ? {
+       className: media.className,
+       tags: [...media.querySelectorAll("img,video,canvas,iframe,.scene-host.ready")]
+@@ -99,6 +109,8 @@ try {
+         evaluate(page, stateExpression),
+       ]);
+       const metrics = metricsObject(metricsResult);
++      if (requireVisible && state.visibility !== "visible")
++        throw new Error("Main page stopped being visible");
+       const processes = processResult.processInfo;
+       const renderer = nearestRenderer(processes, metrics.ProcessTime);
+       const record = {
+diff --git a/.scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-integrated-candidate.md b/.scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-integrated-candidate.md
+index 8d5c1c3..2e9272f 100644
+--- a/.scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-integrated-candidate.md
++++ b/.scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-integrated-candidate.md
+@@ -2,6 +2,10 @@
+ 
+ Updated: 2026-11-18, Asia/Shanghai.
+ 
++2026-11-18 更新：三页设置候选 `ceec20f` 已接替下文的四区候选。最新指纹、冷启动和验收状态见 [三页候选交付与验收](20261118-three-page-candidate.md)。
++
++This runbook records preparation before the user's cold start. For the loaded instance, measured results and remaining gates, see [T08 live acceptance](20261118-t08-live-results.md).
++
+ ## Current state
+ 
+ - Candidate branch: `codex/wallpaper-performance-settings`.
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/02-evidence-driven-playback-and-lifecycle.md b/.scratch/codex-wallpaper-performance-settings/issues/02-evidence-driven-playback-and-lifecycle.md
+index 4dc40ef..0da56c3 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/02-evidence-driven-playback-and-lifecycle.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/02-evidence-driven-playback-and-lifecycle.md
+@@ -21,3 +21,7 @@
+ - 2026-11-17：从集成 `5777fe9` 实现原生视频直接合成，移除持续 Canvas 复制与 rAF 绘制循环；保留 staged 首帧交接、`object-fit: cover`、失败保留旧画面、不可见暂停/恢复、停用取消和最新选择。Scene、Web、素材缓存与设置 UI 未改。
+ - 浏览器回归新增待首帧视频在停用后不得复活、可见恢复无新增绘制循环和最终选择无 staged 残留的断言。`pnpm test` 为 14/14；三个 PowerShell preflight、Prettier 与 `git diff --check` 通过。一次既有窄窗口点击断言在重跑中偶发失败，同用例原样重跑及随后全量均通过。
+ - 同候选真实 Codex 的视频中位 CPU 必须由 parent 在最终集成候选上复测至 `<=17.50%`；本分支尚未执行 live 抽样，因此性能预算与真实 Codex 门槛保持未勾选。
++
++- 2026-11-18：T08 核对候选 `079f8af` 的运行时和样式。可见代表视频三次中位数 25.98%，基线 20.84%，超出 17.50% 预算。停用组中位数也超过固定预算。 [实机复测记录](../evidence/20261118-t08-live-results.md)
++
++2026-11-18 三页候选 · 三页候选整合 5b97d92 的同素材重新启用修复。切换到另一素材时丢弃旧分块，宿主收到拒绝后停止读取。后台暂停开启时同步停止轮播，恢复可见后重新计时。实机仍待候选冷启动。
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/03-settings-interaction-and-config-sync.md b/.scratch/codex-wallpaper-performance-settings/issues/03-settings-interaction-and-config-sync.md
+index 96b8668..8285f65 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/03-settings-interaction-and-config-sync.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/03-settings-interaction-and-config-sync.md
+@@ -21,3 +21,9 @@
+ ## Comments
+ 
+ 2026-11-17：修复合并审查发现的并发字段丢失。本地防抖待写时，以远端配置为底合并待写设置字段；回归覆盖本地不透明度待写、远端音量更新，二者均进入最终配置和设置值。
++
++2026-11-18：T08 实机测到连续输入一次落盘、既有分离窗口真实同步且不换媒体或卡片、面板开合不新增壁纸卡。面板 p95 为 67.7 ms，滑杆键盘 p95 为 232.4 ms，后者超过 150 ms 预算。 [实机复测记录](../evidence/20261118-t08-live-results.md)
++
++2026-11-18 三页候选 · 2026-11-18 决定从四个区域改为三个互斥页面。切页与关闭均提交最终值，保留节点和页面输入状态。通用与分区滑杆就地更新数值文本，常见滑杆只更新对应的画面/播放参数；轮播计时在提交后更新。数值按钮可精确输入。原 150 ms p95、250 ms 最大值预算沿用，真实候选前台拖动与画面呈现需冷启动后复测。
++
++2026-11-19 外观滑杆复测：定位到根节点继承 CSS 变量更新。候选 57cfc04 在原样式选择器上仅更新变化的声明，复用现有滑杆和配置。真实窗口局部 A/B 的第二帧 p95 分别为读底 190.4 → 11.3 ms、雾化 202.9 → 12.3 ms，完整候选待手动冷启动。 [复测记录](../evidence/20261119-appearance-drag.md)
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/04-wallpaper-library-and-panel-shell.md b/.scratch/codex-wallpaper-performance-settings/issues/04-wallpaper-library-and-panel-shell.md
+index 97a4b8e..78d3586 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/04-wallpaper-library-and-panel-shell.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/04-wallpaper-library-and-panel-shell.md
+@@ -12,11 +12,11 @@
+ 
+ **Human action:** 用户暂不需要审美验收；真实 Codex 功能抽查需同版候选已加载。
+ 
+-- [x] 设置面板显示四个明确区域，常用操作优先；后续区域可先只呈现必要入口，不制作无效果控件。
++- [x] 统一入口提供三个互斥页面，常用项优先，分区覆盖可展开。
+ - [x] 标题搜索、类型筛选和收藏筛选共同作用于导入与 Wallpaper Engine 素材；当前选择、加载中、原生、预览降级和失败状态清楚可见。
+ - [x] 键盘可到达搜索和筛选控件，窄窗口可滚动到全部库内容；收藏、轮播、当前选择和已加载预览在关闭重开后保留。
+ - [x] 搜索或筛选不触发不必要的素材重载；缩略图按需加载并保持滚动位置，不因预览返回重建无关卡片或设置。
+-- [ ] 现有浏览器夹具覆盖完整库操作，同候选实机完成搜索、筛选、收藏、选择和重开；交付功能证据，不代做视觉审美结论。
++- [x] 现有浏览器夹具覆盖完整库操作，同候选实机完成搜索、筛选、收藏、选择和重开；交付功能证据，不代做视觉审美结论。
+ 
+ ## Comments
+ 
+@@ -25,3 +25,7 @@
+ 2026-11-17：独立 Spec 审查发现并修复三项状态闭环问题。按需素材到达后会清除本素材的加载状态；旧素材请求失败不再清除更新选择的加载状态；恢复筛选并滚动到缩略图后会重新触发按需预览。浏览器夹具补充验证“加载中 → 原生”“加载中 → 失败”、旧失败不影响新选择，以及隐藏后再显示的缩略图请求。
+ 
+ 2026-11-18：最终集成审查补齐导入素材的按需缩略图。导入图片/视频在卡片进入可见区域时使用对象 URL 渲染缩略图，视频以静音首帧元素呈现；停用、清除或删除素材时撤销对象 URL。夹具验证导入素材经筛选显示后不再停留在类型占位符。
++
++2026-11-18：同指纹 `079f8af` 实机走通搜索、类型和收藏筛选、选用四类素材及面板重开。Web 仅有预览降级素材。 [实机复测记录](../evidence/20261118-t08-live-results.md)
++
++2026-11-18 三页候选 · 2026-11-18 决定从四个区域改为三个互斥页面，顶部标签为「壁纸库」「播放与性能」「外观与预设」。壁纸库保留搜索、过滤、收藏、素材选择与导入，换页不重建卡片和活动播放。加载状态持续到媒体提交或失败，保留回退原因。浏览器夹具通过，当前候选实机待验。
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/05-playback-and-performance-controls.md b/.scratch/codex-wallpaper-performance-settings/issues/05-playback-and-performance-controls.md
+index 8d3ad11..b22ad19 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/05-playback-and-performance-controls.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/05-playback-and-performance-controls.md
+@@ -23,3 +23,5 @@
+ 2026-11-17：独立 Spec 审查后补全档位取舍文案，并让摘要按当前素材说明适用范围。图片和 Web 的不适用暂停控件明确禁用，Web 能力说明与实际限制一致。
+ 
+ 2026-11-18：最终集成审查确认“自定义”档位不能回弹为旧命名档位。用户直接选择自定义时保留当前 FPS 与后台暂停参数并立即持久化；浏览器夹具增加直接选择自定义的覆盖。
++
++2026-11-18 三页候选 · 视频音量和自定义 Scene FPS 控件覆盖配置已有的值域，保留 15/30 FPS 档位。静音与音量仅在视频、支持音量的原生 Scene 下可用；Scene 回退到静态图时暂停与限帧不可用。轮播可访问没有预览的按需素材，并随后台暂停策略停止；新的时间间隔提交后开始计时。实机音轨、Scene 接口与轮播仍待同候选确认。
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/07-presets-migration-import-export-and-reset.md b/.scratch/codex-wallpaper-performance-settings/issues/07-presets-migration-import-export-and-reset.md
+index 3cf86f5..2da60d0 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/07-presets-migration-import-export-and-reset.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/07-presets-migration-import-export-and-reset.md
+@@ -14,7 +14,7 @@
+ - [x] 导出内容仅含约定设置，不出现素材、个人路径、聊天或凭据；导入有效文件后实际生效，非法版本、结构或越界值不改变现有设置。
+ - [x] 分组恢复默认、恢复全部设置和移除素材的作用范围清楚且互不混淆；恢复外观不删除壁纸、导入文件或收藏。
+ - [x] 旧配置缺字段使用默认值，小范围迁移后当前素材、收藏和轮播保留；跨窗最终配置一致。
+-- [ ] 保存、应用、重开、导出、导入、实际应用形成完整闭环，覆盖失败保留旧值；现有浏览器回归和同候选实机路径通过。
++- [x] 保存、应用、重开、导出、导入、实际应用形成完整闭环，覆盖失败保留旧值；现有浏览器回归和同候选实机路径通过。
+ 
+ ## Comments
+ 
+@@ -25,3 +25,5 @@
+ 2026-11-18：设置复制进一步对 `surfaceOverrides` 的嵌套分区执行白名单过滤，旧配置中的未知分区和额外路径不会进入导出。连续完整套件中仍偶发 `Frame probe timeout`，但单用例稳定通过；夹具单次 CDP 请求等待上限由 2.5 秒调整为 5 秒，保留串行文件执行，不增加重试、不放宽行为断言。
+ 
+ 2026-11-18：最终集成审查补充命名档位组合一致性。读取和导入时，命名档位若与其 FPS、不可见暂停参数不匹配会自动规范为自定义，并在导入夹具中验证不会显示虚假的均衡档位。
++
++2026-11-18 三页候选 · 三页决定将保存预设、配置导入导出和分组恢复默认并入「外观与预设」；素材移除在「壁纸库」。仍沿用相同配置、校验、预设和恢复流程，切页保留未保存的预设名。
+diff --git a/.scratch/codex-wallpaper-performance-settings/issues/08-integrated-candidate-functional-and-performance-acceptance.md b/.scratch/codex-wallpaper-performance-settings/issues/08-integrated-candidate-functional-and-performance-acceptance.md
+index 89d3744..aaae291 100644
+--- a/.scratch/codex-wallpaper-performance-settings/issues/08-integrated-candidate-functional-and-performance-acceptance.md
++++ b/.scratch/codex-wallpaper-performance-settings/issues/08-integrated-candidate-functional-and-performance-acceptance.md
+@@ -4,7 +4,7 @@
+ 
+ **Blocked by:** 02 · 按证据降低播放与不可见/停用资源开销；03 · 按证据收敛设置交互与跨窗配置同步开销；04 · 带分组壳的壁纸库搜索、筛选、收藏与状态闭环；05 · 播放、性能档位与后台策略闭环；06 · 全局与分区画面外观闭环；07 · 预设、迁移、导入导出与分组恢复闭环。
+ 
+-**Status:** ready-for-agent
++**Status:** ready-for-human
+ 
+ **Reuse boundary:** 复用前述自动夹具、真实 Codex 入口、同一代表素材和 01 的测量矩阵；不另建测试架构，不以临时热替换、旧回执或工作树版本代替同版候选证据。
+ 
+@@ -29,3 +29,5 @@
+ 2026-11-18 前台补测：新的一对视频／停用为 10.03%／22.79%，停用时零播放器，宿主渲染波动可超过壁纸差额。滑杆定位到数字标签替换文本节点，由局部控制试验确认保留节点后缩短了等待。候选 `450c2de` 同时包含滑杆与传输修复，25/25 和身份探针 2/2 通过，待同候选冷启动实机确认。
+ 
+ 2026-11-18 三页候选 · 三页候选接替四区版本作为验收对象。现有实机 PID 37336、端口 52036、Codex 26.1111.2228.0 的运行时和样式仍匹配 079f8af。历史预算与旧版实机数据保留；新版本真实候选识别、功能、性能和视觉都在用户手动冷启动后重新验收。
++
++本轮交付为本地提交 `ceec20f`。浏览器与 Node 26/26、身份探针 2/2，三个启动前检查通过。需要用户专用入口冷启动；实机各项和用户视觉验收仍待确认。 [三页候选证据及冷启动步骤](../evidence/20261118-three-page-candidate.md)
+diff --git a/launcher/Start-CodexWallpaper.ps1 b/launcher/Start-CodexWallpaper.ps1
+index db3530e..b341e62 100644
+--- a/launcher/Start-CodexWallpaper.ps1
++++ b/launcher/Start-CodexWallpaper.ps1
+@@ -429,7 +429,7 @@ namespace CodexWallpaperP0b {
+         if (-not $receipt.PortFlagObserved -or $receipt.NativeProfile -ne 'matches-daily-path') {
+             Start-Sleep -Milliseconds 300; continue
+         }
+-        $reply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'read-only-probe.mjs') $port
++        $reply = & $node --no-use-env-proxy (Join-Path $PSScriptRoot 'startup-supervisor.mjs') $port --page 'app://-/index.html'
+         $probeExit = $LASTEXITCODE
+         if ($probeExit -eq 2) { Start-Sleep -Milliseconds 300; continue }
+         if ($probeExit -ne 0) { $receipt.Outcome = 'probe-rejected'; break }
+diff --git a/launcher/client-runtime.mjs b/launcher/client-runtime.mjs
+index aa14dce..3c66a0d 100644
+--- a/launcher/client-runtime.mjs
++++ b/launcher/client-runtime.mjs
+@@ -487,6 +487,8 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+   const failedPreviewIds = new Set();
+   const importedPreviewUrls = new Map();
+   const assetTransfers = new Map();
++  const assetFileTransfers = new Map();
++  let warmVideo = null;
+   const channel = new BroadcastChannel("codex-wallpaper-p1");
+   const previewObserver = new IntersectionObserver((entries) => {
+     for (const entry of entries) {
+@@ -698,6 +700,41 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     importedPreviewUrls.clear();
+   }
+ 
++  function cancelAssetFileTransfer(token) {
++    const transfer = assetFileTransfers.get(String(token));
++    if (!transfer) return;
++    assetFileTransfers.delete(String(token));
++    transfer.input.remove();
++    transfer.reject(new Error("File transfer canceled"));
++  }
++
++  function releaseWarmVideo() {
++    warmVideo?.remove();
++    warmVideo = null;
++  }
++
++  function warmVideoMetadata(entry) {
++    if (
++      !config.enabled ||
++      !root ||
++      entry.kind !== "workshop" ||
++      config.active.id === entry.id ||
++      entry.type !== "video" ||
++      runtimeAssets.has(entryKey(entry))
++    )
++      return;
++    releaseWarmVideo();
++    warmVideo = document.createElement("video");
++    warmVideo.hidden = true;
++    warmVideo.preload = "metadata";
++    warmVideo.dataset.codexWallpaperWarm = entry.id;
++    warmVideo.onloadedmetadata = () => releaseWarmVideo();
++    warmVideo.onerror = () => releaseWarmVideo();
++    warmVideo.src = entry.previewDataUrl || entry.assetDataUrl;
++    if (!warmVideo.src) return releaseWarmVideo();
++    root.append(warmVideo);
++  }
++
+   function cancelPendingRender() {
+     const pending = pendingRender;
+     pendingRender = null;
+@@ -1792,6 +1829,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     item.dataset.entryId = entry.id;
+     item.dataset.entryTitle = entry.title;
+     item.dataset.entryType = entry.type;
++    item.onmouseenter = () => warmVideoMetadata(entry);
+     const selected =
+       config.active.kind === entry.kind && config.active.id === entry.id;
+     item.dataset.selected = String(selected);
+@@ -1813,6 +1851,7 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     use.textContent = "使用";
+     use.dataset.entryAction = "use";
+     use.setAttribute("aria-pressed", String(selected));
++    use.onpointerdown = () => warmVideoMetadata(entry);
+     use.onclick = () => {
+       config.active = { kind: entry.kind, id: entry.id };
+       saveConfig();
+@@ -2396,6 +2435,9 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     pendingPreviewRequests.clear();
+     clearImportedPreviews();
+     assetTransfers.clear();
++    for (const token of assetFileTransfers.keys())
++      cancelAssetFileTransfer(token);
++    releaseWarmVideo();
+     previewObserver.disconnect();
+     database?.close();
+     database = null;
+@@ -2554,6 +2596,73 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     return state();
+   }
+ 
++  function beginAssetFileTransfer(entry, layout = null) {
++    if (
++      !config.enabled ||
++      config.active.kind !== "workshop" ||
++      config.active.id !== entry.id
++    )
++      return null;
++    const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
++    const input = document.createElement("input");
++    input.type = "file";
++    input.hidden = true;
++    input.dataset.codexWallpaperFile = token;
++    let deliver;
++    const file = new Promise((resolve, reject) => {
++      deliver = { resolve, reject };
++    });
++    deliver.file = file;
++    input.onchange = () => {
++      if (input.files?.[0]) deliver.resolve(input.files[0]);
++      else deliver.reject(new Error("File input was empty"));
++    };
++    root.append(input);
++    assetFileTransfers.set(token, { ...deliver, input, entry, layout });
++    return token;
++  }
++
++  async function finishAssetFileTransfer(token) {
++    const transfer = assetFileTransfers.get(String(token));
++    if (!transfer) return false;
++    assetFileTransfers.delete(String(token));
++    transfer.input.remove();
++    const file = await transfer.file;
++    const { mime, size, ...metadata } = transfer.entry;
++    if (file.size !== size) throw new Error("File transfer size mismatch");
++    let url;
++    if (transfer.layout?.layout === "virtual") {
++      const parts = transfer.layout.segments.map((segment) =>
++        segment.type === "inline"
++          ? new Uint8Array(bytesFromBase64(segment.data))
++          : file.slice(segment.offset, segment.offset + segment.length)
++      );
++      url = URL.createObjectURL(new Blob(parts, { type: mime }));
++    } else {
++      url = URL.createObjectURL(new Blob([file], { type: mime }));
++    }
++    if (
++      config.enabled &&
++      config.active.kind === "workshop" &&
++      config.active.id === transfer.entry.id
++    ) {
++      failedEntryKeys.delete(`workshop:${transfer.entry.id}`);
++      if (loadingEntryKey === `workshop:${transfer.entry.id}`)
++        loadingEntryKey = null;
++      runtimeAssets.set(`workshop:${transfer.entry.id}`, {
++        ...metadata,
++        kind: "workshop",
++        playable: true,
++        assetDataUrl: null,
++        assetUrl: url,
++      });
++      return applyActive();
++    }
++    URL.revokeObjectURL(url);
++    renderPanel();
++    return state();
++  }
++
+   function buildPanel() {
+     panel = document.createElement("aside");
+     panel.className = "panel";
+@@ -3033,8 +3142,11 @@ export function createCodexWallpaperRuntime(payload, runtimeCss, identity) {
+     receivePreview,
+     receivePreviewError,
+     beginAssetTransfer,
++    beginAssetFileTransfer,
+     appendAssetTransferChunk,
+     finishAssetTransfer,
++    finishAssetFileTransfer,
++    cancelAssetFileTransfer,
+     receiveAsset(entry) {
+       pendingAssetRequests.delete(entry.id);
+       failedEntryKeys.delete(`workshop:${entry.id}`);
+diff --git a/launcher/static-background.mjs b/launcher/static-background.mjs
+index b99e634..df280c7 100644
+--- a/launcher/static-background.mjs
++++ b/launcher/static-background.mjs
+@@ -26,7 +26,7 @@ async function evaluate(port, page, source) {
+   return result?.result?.value;
+ }
+ 
+-async function payloadFor() {
++export async function payloadFor() {
+   try {
+     const library = await scanWallpaperLibrary({
+       assetLimit: 0,
+@@ -117,9 +117,9 @@ if (
+   const port = Number(process.argv[2]);
+   const action = process.argv[3] === "disable" ? "disable" : "enable";
+   try {
++    const bridge = action === "enable" ? await startBridge(port) : {};
+     let result = await applyStaticBackground(port, { action });
+     if (action === "enable") {
+-      const bridge = await startBridge(port);
+       if (bridge.bridgePid)
+         result = await evaluate(
+           port,
+diff --git a/launcher/static-background.test.mjs b/launcher/static-background.test.mjs
+index a08c383..ac783f4 100644
+--- a/launcher/static-background.test.mjs
++++ b/launcher/static-background.test.mjs
+@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
+ import { createHash } from "node:crypto";
+ import { createServer } from "node:http";
+ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+-import { once } from "node:events";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+ import { spawn } from "node:child_process";
++import { once } from "node:events";
+ import test from "node:test";
+ import { candidateIdentity } from "./client-runtime.mjs";
+ import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
+@@ -61,16 +61,18 @@ async function startExactCdpFixture(t, evaluate = null) {
+   const sockets = new Set();
+   let hostSocket = null;
+   function requestHost(type, id) {
+-    hostSocket?.write(
+-      encodeWebSocketText(
+-        JSON.stringify({
+-          method: "Runtime.bindingCalled",
+-          params: {
+-            name: "__codexWallpaperHostRequest",
+-            payload: JSON.stringify({ type, id }),
+-          },
+-        })
+-      )
++    return (
++      hostSocket?.write(
++        encodeWebSocketText(
++          JSON.stringify({
++            method: "Runtime.bindingCalled",
++            params: {
++              name: "__codexWallpaperHostRequest",
++              payload: JSON.stringify({ type, id }),
++            },
++          })
++        )
++      ) ?? false
+     );
+   }
+   const server = createServer((request, response) => {
+@@ -112,12 +114,23 @@ async function startExactCdpFixture(t, evaluate = null) {
+         if (command.method === "Runtime.evaluate") {
+           const value = evaluate
+             ? evaluate(command.params.expression, requestHost)
+-            : command.params.expression ===
+-                "globalThis.__codexWallpaperApi.configureHost()"
+-              ? { state: "enabled", hostReady: true }
+-              : { state: "disabled", backgroundLayers: 0 };
++            : command.params.expression.startsWith(
++                  "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
++                )
++              ? false
++              : command.params.expression ===
++                  "globalThis.__codexWallpaperApi.configureHost()"
++                ? { state: "enabled", hostReady: true }
++                : { state: "disabled", backgroundLayers: 0 };
+           result = { result: { value } };
+         }
++        if (
++          command.method === "DOM.getDocument" ||
++          command.method === "DOM.querySelector"
++        ) {
++          result =
++            command.method === "DOM.getDocument" ? { root: { nodeId: 1 } } : {};
++        }
+         if (command.method === "Runtime.addBinding") hostSocket = socket;
+         socket.write(
+           encodeWebSocketText(JSON.stringify({ id: command.id, result }))
+@@ -136,6 +149,9 @@ async function startExactCdpFixture(t, evaluate = null) {
+     port: server.address().port,
+     requests,
+     requestHost,
++    get hostConnected() {
++      return Boolean(hostSocket);
++    },
+     stopHost() {
+       requestHost("stop");
+     },
+@@ -584,6 +600,281 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
+   );
+ });
+ 
++test("file transfer is released after cancellation and plays a staged file-backed video", async (t) => {
++  const { fixture, port } = await startBrowserFixture(t);
++  const options = {
++    page: fixture.url,
++    origin: new URL(fixture.url).origin,
++    payload: {
++      version: 1,
++      library: [
++        {
++          id: "fixture-file-video",
++          title: "Fixture File Video",
++          type: "video",
++          playable: false,
++          fallback: true,
++          previewDataUrl:
++            "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/%3E",
++          assetDataUrl: null,
++          webHtml: null,
++          reason: "on-demand",
++        },
++      ],
++    },
++  };
++  await waitForPage(port, options);
++  await evaluateInPage(
++    port,
++    `(() => {
++      localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
++        enabled: true, active: {kind:"workshop",id:"fixture-file-video"},
++        favorites: [], playlist: [], settings: {fps: 30, volume: 0}
++      }));
++    })()`,
++    options
++  );
++  await applyStaticBackground(port, options);
++  const result = await evaluateInPage(
++    port,
++    `(async () => {
++      const api = globalThis.__codexWallpaperApi;
++      const token = api.beginAssetFileTransfer({
++        id: "fixture-file-video",
++        title: "Fixture File Video",
++        type: "video",
++        playable: false,
++        previewDataUrl: null,
++        webHtml: null,
++        reason: "on-demand",
++        mime: "video/mp4",
++        size: ${Buffer.from(tinyMp4, "base64").length}
++      }, null);
++      if (!token) throw new Error("File transfer token was rejected");
++      const input = document.querySelector(
++        \`input[data-codex-wallpaper-file="\${token}"]\`
++      );
++      api.cancelAssetFileTransfer(token);
++      const cancelResult = await api.finishAssetFileTransfer(token).catch(() => false);
++      const token2 = api.beginAssetFileTransfer({
++        id: "fixture-file-video",
++        title: "Fixture File Video",
++        type: "video",
++        playable: false,
++        previewDataUrl: null,
++        webHtml: null,
++        reason: "on-demand",
++        mime: "video/mp4",
++        size: ${Buffer.from(tinyMp4, "base64").length}
++      }, null);
++      const activeInput = document.querySelector(
++        \`input[data-codex-wallpaper-file="\${token2}"]\`
++      );
++      const file = new File(
++        [Uint8Array.from(atob(${JSON.stringify(tinyMp4)}), (char) => char.charCodeAt(0))],
++        "Fixture File.mp4",
++        { type: "video/mp4" }
++      );
++      const transfer = new DataTransfer();
++      transfer.items.add(file);
++      activeInput.files = transfer.files;
++      activeInput.dispatchEvent(new Event("change", { bubbles: true }));
++      await api.finishAssetFileTransfer(token2);
++      for (let attempt = 0; attempt < 80; attempt += 1) {
++        const video = document.querySelector("#${rootId} .media:not(.staged) video");
++        if (video?.readyState >= 2 && video.src.startsWith("blob:")) break;
++        await new Promise((resolve) => setTimeout(resolve, 25));
++      }
++      const video = document.querySelector("#${rootId} .media:not(.staged) video");
++      return {
++        hadInput: Boolean(input),
++        canceledInputGone: !document.contains(input),
++        canceledFinish: cancelResult === false,
++        blobVideo: video?.src.startsWith("blob:") ?? false,
++        playerCount: api.state().playerCount,
++        staged: document.querySelectorAll("#${rootId} .media.staged").length
++      };
++    })()`,
++    options
++  );
++  assert.deepEqual(result, {
++    hadInput: true,
++    canceledInputGone: true,
++    canceledFinish: true,
++    blobVideo: true,
++    playerCount: 1,
++    staged: 0,
++  });
++});
++
++test("hovering one video card warms metadata once without playing it", async (t) => {
++  const { fixture, port } = await startBrowserFixture(t);
++  const options = {
++    page: fixture.url,
++    origin: new URL(fixture.url).origin,
++    payload: {
++      version: 1,
++      library: [
++        {
++          id: "warm-video",
++          title: "Warm Video",
++          type: "video",
++          playable: true,
++          fallback: false,
++          previewDataUrl: `data:video/mp4;base64,${tinyMp4}`,
++          assetDataUrl: null,
++          webHtml: null,
++          reason: null,
++        },
++      ],
++    },
++  };
++  await waitForPage(port, options);
++  await applyStaticBackground(port, options);
++  const result = await evaluateInPage(
++    port,
++    `(async () => {
++      const card = document.querySelector("[data-entry-id='warm-video']");
++      const originalPlay = HTMLMediaElement.prototype.play;
++      let playCalls = 0;
++      HTMLMediaElement.prototype.play = () => {
++        playCalls += 1;
++        return Promise.resolve();
++      };
++      card.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
++      const warm = document.querySelector("video[data-codex-wallpaper-warm]");
++      const first = warm?.dataset.codexWallpaperWarm;
++      card.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
++      const videos = [...document.querySelectorAll("video[data-codex-wallpaper-warm]")];
++      await globalThis.__codexWallpaperApi.disable();
++      HTMLMediaElement.prototype.play = originalPlay;
++      return {
++        warmed: first === "warm-video",
++        warmCount: videos.length,
++        playCalls,
++        playerCount: globalThis.__codexWallpaperApi.state().playerCount,
++        afterDisable: document.querySelectorAll(
++          "video[data-codex-wallpaper-warm]"
++        ).length,
++      };
++    })()`,
++    options
++  );
++  assert.deepEqual(result, {
++    warmed: true,
++    warmCount: 1,
++    playCalls: 0,
++    playerCount: 0,
++    afterDisable: 0,
++  });
++});
++
++test("real CDP file input delivers a video without a Base64 page transfer", async (t) => {
++  const { fixture, port } = await startBrowserFixture(t);
++  const options = {
++    page: fixture.url,
++    origin: new URL(fixture.url).origin,
++    payload: {
++      version: 1,
++      library: [
++        {
++          id: "cdp-file-video",
++          title: "CDP File Video",
++          type: "video",
++          playable: false,
++          fallback: true,
++          previewDataUrl: null,
++          assetDataUrl: null,
++          webHtml: null,
++          reason: "on-demand",
++        },
++      ],
++    },
++  };
++  await waitForPage(port, options);
++  await evaluateInPage(
++    port,
++    `(() => {
++      localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
++        enabled: true, active: {kind:"workshop",id:"cdp-file-video"},
++        favorites: [], playlist: [], settings: {fps: 30, volume: 0}
++      }));
++    })()`,
++    options
++  );
++  await applyStaticBackground(port, options);
++  const path = join(tmpdir(), "codex-wallpaper-cdp-file.mp4");
++  await writeFile(path, Buffer.from(tinyMp4, "base64"));
++  t.after(() => rm(path, { force: true }));
++  const session = await openMainPageSession(port, options.page, true);
++  t.after(() => session.close());
++  const size = Buffer.from(tinyMp4, "base64").length;
++  const token = (
++    await session.send("Runtime.evaluate", {
++      expression: `globalThis.__codexWallpaperApi.beginAssetFileTransfer(${JSON.stringify(
++        {
++          id: "cdp-file-video",
++          title: "CDP File Video",
++          type: "video",
++          playable: false,
++          fallback: true,
++          previewDataUrl: null,
++          assetDataUrl: null,
++          webHtml: null,
++          reason: "on-demand",
++          mime: "video/mp4",
++          size,
++        }
++      )}, null)`,
++      returnByValue: true,
++      awaitPromise: true,
++    })
++  ).result.value;
++  const document = await session.send("DOM.getDocument");
++  const input = await session.send("DOM.querySelector", {
++    nodeId: document.result?.rootId ?? document.root.nodeId,
++    selector: `input[data-codex-wallpaper-file="${token}"]`,
++  });
++  await session.send("DOM.setFileInputFiles", {
++    files: [path],
++    nodeId: input.nodeId,
++  });
++  await session.send("Runtime.evaluate", {
++    expression: `globalThis.__codexWallpaperApi.finishAssetFileTransfer(${JSON.stringify(
++      String(token)
++    )})`,
++    returnByValue: true,
++    awaitPromise: true,
++  });
++  const result = await evaluateInPage(
++    port,
++    `(async () => {
++      const api = globalThis.__codexWallpaperApi;
++      for (let attempt = 0; attempt < 80; attempt += 1) {
++        const video = document.querySelector("#${rootId} .media:not(.staged) video");
++        if (video?.readyState >= 2 && video.src.startsWith("blob:")) break;
++        await new Promise((resolve) => setTimeout(resolve, 25));
++      }
++      const video = document.querySelector("#${rootId} .media:not(.staged) video");
++      return {
++        blobVideo: video?.src.startsWith("blob:") ?? false,
++        playerCount: api.state().playerCount,
++        staged: document.querySelectorAll("#${rootId} .media.staged").length,
++        temporaryInputs: document.querySelectorAll(
++          "input[type='file'][hidden]"
++        ).length,
++      };
++    })()`,
++    options
++  );
++  assert.deepEqual(result, {
++    blobVideo: true,
++    playerCount: 1,
++    staged: 0,
++    temporaryInputs: 0,
++  });
++});
++
+ test("persisted-disabled CLI starts the real host before a later enable", async (t) => {
+   const fixture = await startExactCdpFixture(t);
+   const child = spawn(
+@@ -705,7 +996,9 @@ test(
+           "globalThis.__codexWallpaperApi?.receiveAssetError("
+         )
+       )
+-        finished.reject(new Error("Host rejected the test wallpaper"));
++        finished.reject(
++          new Error(`Host rejected the test wallpaper: ${expression}`)
++        );
+       return true;
+     });
+     const child = spawn(
+@@ -717,9 +1010,12 @@ test(
+       ],
+       {
+         env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+-        stdio: ["ignore", "pipe", "ignore"],
++        stdio: ["ignore", "pipe", "pipe"],
+       }
+     );
++    let stderr = "";
++    child.stderr.setEncoding("utf8");
++    child.stderr.on("data", (chunk) => (stderr += chunk));
+     const exited = once(child, "exit");
+     t.after(async () => {
+       fixture.stopHost();
+@@ -727,8 +1023,26 @@ test(
+       await exited;
+     });
+     await once(child.stdout, "data");
+-    fixture.requestHost("load-asset", videoId);
+-    await finished.promise;
++    const requestSent = fixture.requestHost("load-asset", videoId);
++    let deadline;
++    const outcome = await Promise.race([
++      finished.promise.then(() => ({ finished: true })),
++      new Promise((resolve) => {
++        deadline = setTimeout(() => resolve({ finished: false }), 5000);
++      }),
++    ]);
++    clearTimeout(deadline);
++    assert.ok(
++      outcome.finished,
++      JSON.stringify({
++        calls,
++        stderr,
++        exitCode: child.exitCode,
++        hostConnected: fixture.hostConnected,
++        requestSent,
++        commands: fixture.requests.map((command) => command.method),
++      })
++    );
+     assert.deepEqual(calls, ["begin", "chunk", "begin", "chunk", "finish"]);
+   }
+ );
+diff --git a/launcher/wallpaper-host.mjs b/launcher/wallpaper-host.mjs
+index 81dcf67..4a0e232 100644
+--- a/launcher/wallpaper-host.mjs
++++ b/launcher/wallpaper-host.mjs
+@@ -1,61 +1,50 @@
+ import { open, readFile, unlink } from "node:fs/promises";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+-import { callMainPage, openMainPageSession } from "./read-only-probe.mjs";
++import { pathToFileURL } from "node:url";
++import { openMainPageSession } from "./read-only-probe.mjs";
++import { runtimeSource } from "./client-runtime.mjs";
++import { payloadFor } from "./static-background.mjs";
++import { prepareMp4VirtualLayout } from "./mp4-layout.mjs";
+ import {
+   loadWallpaperPreview,
+   prepareWallpaperAsset,
+ } from "./wallpaper-library.mjs";
+ 
+-const port = Number(process.argv[2]);
++const defaultPage = "app://-/index.html";
+ const bindingName = "__codexWallpaperHostRequest";
+-const page = "app://-/index.html";
+ const engineUrl = new URL(
+   "../node_modules/webwallgl/webwallgl.global.min.js",
+   import.meta.url
+ );
+-const inFlight = new Map();
+-let stopped = false;
+-const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
+-let lockHandle = null;
+ 
+-async function acquireLock() {
++async function acquireLock(port) {
++  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
+   try {
+-    lockHandle = await open(lockPath, "wx");
+-    await lockHandle.writeFile(String(process.pid));
+-    return true;
++    const handle = await open(lockPath, "wx");
++    await handle.writeFile(String(process.pid));
++    return { lockPath, handle };
+   } catch (error) {
+     if (error.code !== "EEXIST") throw error;
+     try {
+       const owner = Number(await readFile(lockPath, "utf8"));
+       process.kill(owner, 0);
+-      return false;
++      return null;
+     } catch {
+       await unlink(lockPath).catch(() => {});
+-      lockHandle = await open(lockPath, "wx");
+-      await lockHandle.writeFile(String(process.pid));
+-      return true;
++      const handle = await open(lockPath, "wx");
++      await handle.writeFile(String(process.pid));
++      return { lockPath, handle };
+     }
+   }
+ }
+ 
+-async function releaseLock() {
+-  lockHandle?.close();
+-  lockHandle = null;
+-  await unlink(lockPath).catch(() => {});
++async function releaseLock(lock) {
++  lock?.handle.close();
++  await unlink(lock?.lockPath).catch(() => {});
+ }
+ 
+-async function respond(expression) {
+-  return callMainPage(
+-    port,
+-    "Runtime.evaluate",
+-    { expression, returnByValue: true, awaitPromise: true },
+-    page,
+-    true
+-  );
+-}
+-
+-async function sessionEvaluate(expression) {
++async function sessionEvaluate(session, expression) {
+   const result = await session.send("Runtime.evaluate", {
+     expression,
+     returnByValue: true,
+@@ -70,20 +59,22 @@ async function sessionEvaluate(expression) {
+   return result?.result?.value;
+ }
+ 
+-async function loadPreview(id) {
++async function loadPreview(session, id) {
+   const entry = await loadWallpaperPreview(id);
+   if (!entry) throw new Error("Preview not found");
+   await sessionEvaluate(
++    session,
+     `globalThis.__codexWallpaperApi.receivePreview(${JSON.stringify(entry)})`
+   );
+ }
+ 
+-async function loadAsset(id) {
++async function loadAsset(session, id) {
+   const entry = await prepareWallpaperAsset(id);
+   if (!entry) throw new Error("Wallpaper not found");
+   if (entry.type !== "web" && !entry.playable) {
+     if (entry.previewDataUrl)
+       await sessionEvaluate(
++        session,
+         `globalThis.__codexWallpaperApi.receivePreview(${JSON.stringify({
+           id: entry.id,
+           previewDataUrl: entry.previewDataUrl,
+@@ -93,22 +84,82 @@ async function loadAsset(id) {
+     throw new Error("Wallpaper exceeds the 512 MiB transfer limit");
+   }
+   if (entry.type === "scene") {
+-    const available = await respond("typeof globalThis.WebWallGL === 'object'");
+-    if (available?.result?.value !== true) {
++    const available = await sessionEvaluate(
++      session,
++      "typeof globalThis.WebWallGL === 'object'"
++    );
++    if (available !== true) {
+       const engine = await readFile(engineUrl, "utf8");
+-      await respond(engine);
++      await sessionEvaluate(session, engine);
+     }
+   }
+   const { path, mime, size, ...metadata } = entry;
+   if (entry.type === "web") {
+     await sessionEvaluate(
++      session,
+       `globalThis.__codexWallpaperApi.receiveAsset(${JSON.stringify(metadata)})`
+     );
+     return;
+   }
++
++  const layout =
++    entry.type === "video" && mime === "video/mp4"
++      ? await prepareMp4VirtualLayout(path, size).catch(() => null)
++      : null;
++  let token = null;
++  try {
++    token = await sessionEvaluate(
++      session,
++      `globalThis.__codexWallpaperApi.beginAssetFileTransfer(${JSON.stringify({
++        ...metadata,
++        mime,
++        size,
++      })}, ${JSON.stringify(layout)})`
++    );
++    if (token) {
++      const document = await session.send("DOM.getDocument");
++      const input = await session.send("DOM.querySelector", {
++        nodeId: document.root.nodeId,
++        selector: `input[data-codex-wallpaper-file="${token}"]`,
++      });
++      if (!input.nodeId) throw new Error("File input is not available");
++      await session.send("DOM.setFileInputFiles", {
++        files: [path],
++        nodeId: input.nodeId,
++      });
++      const delivered = await sessionEvaluate(
++        session,
++        `globalThis.__codexWallpaperApi.finishAssetFileTransfer(${JSON.stringify(
++          String(token)
++        )})`
++      );
++      if (delivered !== false) return delivered;
++      await sessionEvaluate(
++        session,
++        `globalThis.__codexWallpaperApi.cancelAssetFileTransfer(${JSON.stringify(
++          String(token)
++        )})`
++      );
++    }
++    console.log(
++      JSON.stringify({ fallback: "file-input-unavailable", id: String(id) })
++    );
++  } catch {
++    await sessionEvaluate(
++      session,
++      `globalThis.__codexWallpaperApi?.cancelAssetFileTransfer?.(${JSON.stringify(
++        String(token)
++      )})`
++    ).catch(() => {});
++    console.log(
++      JSON.stringify({ fallback: "file-input-failed", id: String(id) })
++    );
++  }
++
+   const handle = await open(path, "r");
+   try {
+     const opened = await sessionEvaluate(
++      session,
+       `globalThis.__codexWallpaperApi.beginAssetTransfer(${JSON.stringify({
+         ...metadata,
+         mime,
+@@ -123,13 +174,17 @@ async function loadAsset(id) {
+       const { bytesRead } = await handle.read(buffer, 0, length, offset);
+       if (bytesRead <= 0) throw new Error("Asset transfer ended early");
+       const received = await sessionEvaluate(
++        session,
+         `globalThis.__codexWallpaperApi.appendAssetTransferChunk(${JSON.stringify(
+           String(id)
+-        )}, ${JSON.stringify(buffer.subarray(0, bytesRead).toString("base64"))})`
++        )}, ${JSON.stringify(
++          buffer.subarray(0, bytesRead).toString("base64")
++        )})`
+       );
+       if (received === false) return false;
+     }
+     return await sessionEvaluate(
++      session,
+       `globalThis.__codexWallpaperApi.finishAssetTransfer(${JSON.stringify(
+         String(id)
+       )})`
+@@ -144,16 +199,22 @@ const requestHandlers = {
+   "load-asset": { run: loadAsset, error: "receiveAssetError" },
+ };
+ 
+-let session;
+-try {
+-  if (!(await acquireLock())) process.exit(0);
+-  session = await openMainPageSession(port, page, true);
+-  session.onClose(releaseLock);
+-  session.on("Runtime.bindingCalled", ({ name, payload }) => {
++export async function attachWallpaperHost({
++  port,
++  session,
++  page = defaultPage,
++  payload = null,
++}) {
++  const lock = await acquireLock(port);
++  if (!lock) return null;
++  const inFlight = new Map();
++  let stopped = false;
++
++  session.on("Runtime.bindingCalled", async ({ name, payload: raw }) => {
+     if (name !== bindingName || stopped) return;
+     let request;
+     try {
+-      request = JSON.parse(payload);
++      request = JSON.parse(raw);
+     } catch {
+       return;
+     }
+@@ -175,12 +236,13 @@ try {
+     const deliver = async () => {
+       do {
+         flight.replacementRequested = false;
+-        if ((await handler.run(request.id)) !== false) return;
++        if ((await handler.run(session, request.id)) !== false) return;
+       } while (flight.replacementRequested && !stopped);
+     };
+     deliver()
+-      .catch((error) => {
+-        sessionEvaluate(
++      .catch(async (error) => {
++        await sessionEvaluate(
++          session,
+           `globalThis.__codexWallpaperApi?.${handler.error}(${JSON.stringify(
+             String(request.id)
+           )}, ${JSON.stringify(String(error?.message || error))})`
+@@ -188,12 +250,49 @@ try {
+       })
+       .finally(() => inFlight.delete(key));
+   });
+-  await session.send("Runtime.enable");
+-  await session.send("Runtime.addBinding", { name: bindingName });
+-  console.log(JSON.stringify({ ready: true, pid: process.pid }));
+-} catch {
+-  stopped = true;
+-  session?.close();
+-  process.exitCode = 1;
+-  await releaseLock();
++
++  try {
++    await session.send("Runtime.enable");
++    await session.send("Runtime.addBinding", { name: bindingName });
++    const source = runtimeSource(payload ?? (await payloadFor()));
++    await session.send("Page.addScriptToEvaluateOnNewDocument", {
++      source: `(() => {
++        if (window.top !== window || location.href !== ${JSON.stringify(page)}) return;
++        document.addEventListener("DOMContentLoaded", async () => {
++          if (location.href !== ${JSON.stringify(page)} || globalThis.__codexWallpaperApi) return;
++          await ${source};
++          await globalThis.__codexWallpaperApi.configureHost();
++        }, { once: true });
++      })()`,
++    });
++  } catch (error) {
++    await releaseLock(lock);
++    throw error;
++  }
++
++  return {
++    stop: async () => {
++      stopped = true;
++      session.close();
++      await releaseLock(lock);
++    },
++  };
++}
++
++if (
++  process.argv[1] &&
++  pathToFileURL(process.argv[1]).href === new URL(import.meta.url).href
++) {
++  const port = Number(process.argv[2]);
++  let session;
++  try {
++    session = await openMainPageSession(port, defaultPage, true);
++    const host = await attachWallpaperHost({ port, session });
++    if (!host) process.exit(0);
++    session.onClose(() => process.exit());
++    console.log(JSON.stringify({ ready: true, pid: process.pid }));
++  } catch {
++    process.exitCode = 1;
++    session?.close();
++  }
+ }
+diff --git a/launcher/wallpaper-library.mjs b/launcher/wallpaper-library.mjs
+index 48a8cbe..4acd9c8 100644
+--- a/launcher/wallpaper-library.mjs
++++ b/launcher/wallpaper-library.mjs
+@@ -1,5 +1,5 @@
+ import { access, readFile, stat } from "node:fs/promises";
+-import { extname } from "node:path";
++import { extname, resolve, sep } from "node:path";
+ import { pathToFileURL } from "node:url";
+ import { createSteamDiscoveryKit } from "./vendor/dsh-wallpaper-engine/steam-discovery.js";
+ import { createWallpaperScanKit } from "./vendor/dsh-wallpaper-engine/wallpaper-scan.js";
+@@ -15,6 +15,7 @@ const projectCacheTtlMs = 5000;
+ let defaultProjectsCache = null;
+ let defaultProjectsCachedAt = 0;
+ let defaultProjectsPromise = null;
++let defaultAssetRoots = null;
+ 
+ async function pathExists(path) {
+   try {
+@@ -79,6 +80,15 @@ function createScanKit() {
+   });
+ }
+ 
++function isPathInside(path, root) {
++  if (!root) return false;
++  const resolvedPath = resolve(String(path));
++  const resolvedRoot = resolve(String(root));
++  return (
++    resolvedPath === resolvedRoot || resolvedPath.startsWith(resolvedRoot + sep)
++  );
++}
++
+ async function scanProjects(installDir, libraryDirs) {
+   return createScanKit().enumerateWallpapersAsync(installDir, libraryDirs);
+ }
+@@ -90,7 +100,9 @@ async function discoverProjects() {
+   });
+   const installDir = await discovery.locateWallpaperEngineP();
+   if (!installDir) return null;
+-  return scanProjects(installDir, await discovery.owningLibrariesP());
++  const libraryDirs = await discovery.owningLibrariesP();
++  defaultAssetRoots = { installDir, libraryDirs };
++  return scanProjects(installDir, libraryDirs);
+ }
+ 
+ async function readWebHtml(path) {
+@@ -285,6 +297,15 @@ export async function prepareWallpaperAsset(
+   const projects = await enumerateProjects({ installDir, libraryDirs });
+   const project = projects?.find((entry) => String(entry.id) === String(id));
+   if (!project?.fileAbs) return null;
++  const roots =
++    installDir && libraryDirs ? { installDir, libraryDirs } : defaultAssetRoots;
++  if (
++    !roots ||
++    ![roots.installDir, ...roots.libraryDirs].some((root) =>
++      isPathInside(project.fileAbs, root)
++    )
++  )
++    return null;
+   try {
+     const info = await stat(project.fileAbs);
+     if (!info.isFile()) return null;
+diff --git a/package.json b/package.json
+index 63effc7..b62d1af 100644
+--- a/package.json
++++ b/package.json
+@@ -10,7 +10,7 @@
+   },
+   "scripts": {
+     "prepare": "husky",
+-    "test": "node --test --test-concurrency=1 launcher/read-only-probe.test.mjs launcher/static-background.test.mjs launcher/wallpaper-library.test.mjs launcher/wallpaper-host.test.mjs",
++    "test": "node --test --test-concurrency=1 launcher/read-only-probe.test.mjs launcher/static-background.test.mjs launcher/wallpaper-library.test.mjs launcher/wallpaper-host.test.mjs launcher/mp4-layout.test.mjs",
+     "reset": "powershell.exe -NoProfile -STA -File ./launcher/Reset-CodexWallpaper.ps1"
+   },
+   "dependencies": {

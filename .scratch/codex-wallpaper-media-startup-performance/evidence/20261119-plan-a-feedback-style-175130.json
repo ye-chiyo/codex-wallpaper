@@ -1,0 +1,81 @@
+{
+  "startedAt": "2026-11-19T09:51:30.402Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "temporaryRuntime": true,
+  "style": [
+    {
+      "variant": "plain",
+      "elapsed": 69.70000000298023,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 69.29999999701977,
+      "settingsMatch": null
+    },
+    {
+      "variant": "style-query",
+      "elapsed": 15.300000011920929,
+      "settingsMatch": null
+    },
+    {
+      "variant": "style-query",
+      "elapsed": 14.199999988079071,
+      "settingsMatch": null
+    },
+    {
+      "variant": [
+        103
+      ],
+      "elapsed": 13.599999994039536,
+      "settingsMatch": null
+    },
+    {
+      "variant": [
+        103
+      ],
+      "elapsed": 12.900000005960464,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 69.29999999701977,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 72.29999999701977,
+      "settingsMatch": null
+    }
+  ],
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T09:51:32.467Z"
+}

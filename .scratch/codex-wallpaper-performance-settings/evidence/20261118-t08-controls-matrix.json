@@ -1,0 +1,1011 @@
+{
+  "startedAt": "2026-11-18T05:23:35.945Z",
+  "mode": "visible",
+  "conditions": {
+    "image-balanced-3x20": {
+      "capturedAt": "2026-11-18T05:23:36.792Z",
+      "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2",
+      "styleLength": 26399,
+      "viewport": {
+        "width": 1707,
+        "height": 1066,
+        "dpr": 1.5
+      },
+      "theme": "dark",
+      "visibilityState": "visible",
+      "config": {
+        "enabled": true,
+        "active": {
+          "kind": "workshop",
+          "idHash": "232dd33ca45c3f3d"
+        },
+        "favoriteCount": 1,
+        "playlistCount": 5,
+        "settings": {
+          "dim": 0,
+          "blur": 0,
+          "opacity": 100,
+          "fps": 30,
+          "volume": 0,
+          "rotationMinutes": 5
+        }
+      },
+      "runtimeState": {
+        "state": "enabled",
+        "activeKind": "workshop",
+        "activeIdHash": "232dd33ca45c3f3d",
+        "playerCount": 0,
+        "backgroundLayers": 1,
+        "styles": 1,
+        "libraryCount": 106,
+        "importedCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "runtimeIdentity": {
+        "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+        "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+      },
+      "activeMedia": [
+        {
+          "className": "media",
+          "children": [
+            {
+              "tagName": "img",
+              "className": "",
+              "width": 1707,
+              "height": 1066,
+              "videoWidth": null,
+              "videoHeight": null,
+              "duration": null,
+              "currentTime": null,
+              "paused": false,
+              "readyState": null,
+              "srcType": "blob"
+            }
+          ]
+        }
+      ],
+      "cards": [
+        {
+          "kind": "workshop",
+          "idHash": "eebff50e889c0875",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ea86ead9df99fe4d",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "a44cde2f7a21057f",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "7e886f3e335af31c",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "82f611f07443a3a7",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "24ff2f949ed5f4f8",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "29ce62c230da37ee",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "eb9d6437b1e45426",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "68510f42ecb6fb94",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "49b08596ce697565",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "a782e5eb7dd34fd2",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ce74ea4068c0534f",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b10cc0136d7e75fd",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "aa9421de8b6f5a85",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "327b91fa3b572bef",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "5523c29af4fb9f73",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "2644321c2014eebc",
+          "state": "web",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d28843e751c330a7",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b4256fc6a9b89cc6",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "afaab6d2cb51fb4f",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b4ae49a14a31a95b",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "627998cb372f55b7",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "32792ca6eeed883e",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "dd447007c6e3c9d6",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b04022ede23566f4",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "61535b0134eec87a",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "f3e78d1d5fc97e2e",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "4a0018c297ae74e8",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "586449b29a977808",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "4a770be6acae359d",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "17f56c244d3d8646",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "6a3220320c10d5ae",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "fc6391462c8d5f1b",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "0612ccc378cbd4cc",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "12a89f1b3d0e929e",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "867d5b49ab1ed63d",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "6e6a34ac5a69584c",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b23392d795670bf9",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d0a9784e315f9e79",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ba4a0588d4310a46",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "7b529a5adb9831fb",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "4d5b4285d16a2d87",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "98cff59e09ee59d2",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ca4ab6c9d7c0f214",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "2e28d075e93bb0d2",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "6aa81b8dd1f08089",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "96d7105a27cddafd",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "371bdda28e15caaa",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "e288ee6948d01771",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "f7a105fa1554722c",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "7e3c4418e34c1551",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "99655f15f037c613",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "114acb17f3627876",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "8690306f73164f81",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "6d659d41cef1b3b2",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "dda7040f84770f7e",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "aa154ab36e730de9",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "2956372ce542cfd4",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "999e7872f5449382",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "232dd33ca45c3f3d",
+          "state": "image",
+          "selected": true
+        },
+        {
+          "kind": "workshop",
+          "idHash": "8ea664ff6b57a08a",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "19ec700c96461dde",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "31dc9aff6a1be854",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d7476d90068834a5",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "fbb6f823603315c6",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "3a7d5c1aa5eb1c99",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b4a44a26d2b61417",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "0cb8d2752b864bc6",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "db527989b3a56b6c",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "fc79d5bad860438a",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d3c6419e6c236730",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "42237cd0eee849ce",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "a03c28b7553f0fca",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "15c6d611193988e4",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "6e1a4237f39d4a8e",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ab36e84344729d2b",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "2f2908a3742ffb7a",
+          "state": "web",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b5e9725bb6308565",
+          "state": "web",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "057325c9d859fa19",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "dc3e6b20fee2676d",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "cad76b918caaa164",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "cf61e79acf002f95",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "73e4efc84c9c261b",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "12785331b72eb2df",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "4f99cd8efd6a813f",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "54623b99e9fc7d49",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "91b63fcfb449a0a3",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d2fae868ed609836",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "5b0e10b2e58bc37a",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "16f531121815eb59",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "de9b30b01d2344f7",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "0c5a12448a29b82c",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "bbcd12b32e67ba3f",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "a831a5f067a8abdd",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "07ff89ec825da1d4",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "c54920321785afbb",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "af3136938b4241a5",
+          "state": "web",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "f719799708cb48a3",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "788b05b65486705e",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "85e5464309915bf2",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "b647f5b73ac1571c",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "d095d557d39dfe4a",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "59e3e47de7d96292",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "5b5663a2eb086420",
+          "state": "video",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "5f55ac6c37dc9dee",
+          "state": "scene",
+          "selected": false
+        },
+        {
+          "kind": "workshop",
+          "idHash": "ad7c394e6c81911d",
+          "state": "video",
+          "selected": false
+        }
+      ],
+      "mediaId": "2817646508",
+      "settleMilliseconds": 813,
+      "lowerQuality": false
+    },
+    "disabled-visible-3x60": {
+      "capturedAt": "2026-11-18T05:24:37.324Z",
+      "styleHash": null,
+      "styleLength": 0,
+      "viewport": {
+        "width": 1707,
+        "height": 1066,
+        "dpr": 1.5
+      },
+      "theme": "dark",
+      "visibilityState": "visible",
+      "config": {
+        "enabled": false,
+        "active": {
+          "kind": "workshop",
+          "idHash": "232dd33ca45c3f3d"
+        },
+        "favoriteCount": 1,
+        "playlistCount": 5,
+        "settings": {
+          "dim": 0,
+          "blur": 0,
+          "opacity": 100,
+          "fps": 30,
+          "volume": 0,
+          "rotationMinutes": 5
+        }
+      },
+      "runtimeState": {
+        "state": "disabled",
+        "activeKind": "workshop",
+        "activeIdHash": "232dd33ca45c3f3d",
+        "playerCount": 0,
+        "backgroundLayers": 0,
+        "styles": 0,
+        "libraryCount": 106,
+        "importedCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "runtimeIdentity": {
+        "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+        "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+      },
+      "activeMedia": [],
+      "cards": [],
+      "disableMilliseconds": 31
+    }
+  },
+  "summary": {
+    "image-balanced-3x20": {
+      "rawPath": "D:\\AI\\codex-wallpaper-hardening\\.scratch\\codex-wallpaper-performance-settings\\evidence\\t08-1794979415945-image-balanced-3x20.json",
+      "rejectedRuns": [],
+      "lowerQuality": false,
+      "runs": [
+        {
+          "run": 1,
+          "durationSeconds": 20,
+          "intervalCount": 21,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 8.75459079347661,
+          "taskOccupancyPercent": 4.732048276893921,
+          "scriptDurationDelta": 0.025159,
+          "jsHeapStart": 810358976,
+          "jsHeapEnd": 790891420,
+          "jsHeapDelta": -19467556,
+          "nodesStart": 24521,
+          "nodesEnd": 25715,
+          "measuredFps": 0,
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        },
+        {
+          "run": 2,
+          "durationSeconds": 20,
+          "intervalCount": 21,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 23.044054202162076,
+          "taskOccupancyPercent": 14.9937378568226,
+          "scriptDurationDelta": 0.10069299999999999,
+          "jsHeapStart": 790894128,
+          "jsHeapEnd": 773938900,
+          "jsHeapDelta": -16955228,
+          "nodesStart": 25715,
+          "nodesEnd": 9941,
+          "measuredFps": 0,
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        },
+        {
+          "run": 3,
+          "durationSeconds": 20,
+          "intervalCount": 21,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 4.865723959370435,
+          "taskOccupancyPercent": 1.644438358892653,
+          "scriptDurationDelta": 0.008428000000000019,
+          "jsHeapStart": 773941608,
+          "jsHeapEnd": 775342848,
+          "jsHeapDelta": 1401240,
+          "nodesStart": 9941,
+          "nodesEnd": 10141,
+          "measuredFps": 0,
+          "state": {
+            "state": "enabled",
+            "backgroundLayers": 1,
+            "controls": 332,
+            "styles": 1,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        }
+      ],
+      "medianMainRendererCpuPercent": 8.75459079347661,
+      "medianTaskOccupancyPercent": 4.732048276893921,
+      "medianJsHeapDelta": -16955228
+    },
+    "disabled-visible-3x60": {
+      "rawPath": "D:\\AI\\codex-wallpaper-hardening\\.scratch\\codex-wallpaper-performance-settings\\evidence\\t08-1794979415945-disabled-visible-3x60.json",
+      "rejectedRuns": [],
+      "lowerQuality": false,
+      "runs": [
+        {
+          "run": 1,
+          "durationSeconds": 60,
+          "intervalCount": 61,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 6.7071372796597,
+          "taskOccupancyPercent": 2.62790118123972,
+          "scriptDurationDelta": 0.202201,
+          "jsHeapStart": 775565088,
+          "jsHeapEnd": 797158888,
+          "jsHeapDelta": 21593800,
+          "nodesStart": 10287,
+          "nodesEnd": 11153,
+          "measuredFps": 0,
+          "state": {
+            "state": "disabled",
+            "backgroundLayers": 0,
+            "controls": 0,
+            "styles": 0,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        },
+        {
+          "run": 2,
+          "durationSeconds": 60,
+          "intervalCount": 61,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 9.091893012991791,
+          "taskOccupancyPercent": 4.109669979591498,
+          "scriptDurationDelta": 0.3062520000000001,
+          "jsHeapStart": 797161048,
+          "jsHeapEnd": 766319800,
+          "jsHeapDelta": -30841248,
+          "nodesStart": 11153,
+          "nodesEnd": 6895,
+          "measuredFps": 0,
+          "state": {
+            "state": "disabled",
+            "backgroundLayers": 0,
+            "controls": 0,
+            "styles": 0,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        },
+        {
+          "run": 3,
+          "durationSeconds": 60,
+          "intervalCount": 61,
+          "mainRendererId": 11888,
+          "mainRendererCpuPercent": 5.7498844958535,
+          "taskOccupancyPercent": 2.234968672616376,
+          "scriptDurationDelta": 0.159319,
+          "jsHeapStart": 766321960,
+          "jsHeapEnd": 786416088,
+          "jsHeapDelta": 20094128,
+          "nodesStart": 6895,
+          "nodesEnd": 7656,
+          "measuredFps": 0,
+          "state": {
+            "state": "disabled",
+            "backgroundLayers": 0,
+            "controls": 0,
+            "styles": 0,
+            "activeKind": "workshop",
+            "activeId": "2817646508",
+            "libraryCount": 106,
+            "importedCount": 0,
+            "playerCount": 0,
+            "visible": true,
+            "measuredFps": 0,
+            "fpsCap": 30,
+            "volume": 0,
+            "hostReady": true
+          },
+          "visibility": "visible",
+          "viewport": {
+            "width": 1707,
+            "height": 1066,
+            "dpr": 1.5
+          }
+        }
+      ],
+      "medianMainRendererCpuPercent": 6.7071372796597,
+      "medianTaskOccupancyPercent": 2.62790118123972,
+      "medianJsHeapDelta": 20094128
+    }
+  },
+  "completedAt": "2026-11-18T05:27:38.096Z"
+}

@@ -1,0 +1,54 @@
+{
+  "pid": 31900,
+  "at": "2026-11-18T05:38:17.187Z",
+  "identity": {
+    "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+    "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+  },
+  "videoFirstFrameMs": 62,
+  "appearance": {
+    "before": {
+      "chat": "12%",
+      "sidebar": "49%",
+      "right": "0%",
+      "settings": "64%"
+    },
+    "inherited": {
+      "chat": "15%",
+      "sidebar": "60%",
+      "right": "0%",
+      "settings": "78%"
+    },
+    "byScope": {
+      "chat": {
+        "applied": "44%",
+        "restored": "15%",
+        "expected": "15%"
+      },
+      "sidebar": {
+        "applied": "45%",
+        "restored": "60%",
+        "expected": "60%"
+      },
+      "right": {
+        "applied": "46%",
+        "restored": "0%",
+        "expected": "0%"
+      },
+      "settings": {
+        "applied": "47%",
+        "restored": "78%",
+        "expected": "78%"
+      }
+    },
+    "mediaPreserved": true
+  },
+  "invalidImport": {
+    "same": true,
+    "rejected": true
+  },
+  "disableMs": 360,
+  "error": "Expected state timed out: (() => { const s=globalThis.__codexWallpaperApi.state(), v=document.querySelector('#codex-wallpaper-p1 .media:not(.staged) video'); return s.activeId=== '3787353838' && s.playerCount===1 && !!v && !v.paused && v.readyState>=2 && !document.querySelector('#codex-wallpaper-p1 .media.staged');})()",
+  "configurationRestored": true,
+  "libraryCount": 106
+}

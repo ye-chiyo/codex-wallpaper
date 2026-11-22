@@ -1,0 +1,91 @@
+{
+    "Started":  "2026-11-19T15:21:28.1388836+08:00",
+    "Package":  "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Port":  59704,
+    "Outcome":  "wallpaper-ready",
+    "LoginAndChat":  "user-verification-required",
+    "Mode":  "unattended-startup",
+    "ActivationPid":  5152,
+    "MainPid":  5152,
+    "MainCreated":  "2026-11-19T15:21:28.1861370+08:00",
+    "PortFlagObserved":  true,
+    "NativeProfile":  "matches-daily-path",
+    "Probe":  {
+                  "state":  "verified",
+                  "method":  "Page.getFrameTree",
+                  "page":  "app://-/index.html",
+                  "origin":  "app://-"
+              },
+    "TargetAcknowledgedMs":  4978,
+    "Wallpaper":  {
+                      "state":  "enabled",
+                      "backgroundLayers":  1,
+                      "controls":  25,
+                      "styles":  1,
+                      "activeKind":  "workshop",
+                      "activeId":  "3312633016",
+                      "libraryCount":  106,
+                      "importedCount":  0,
+                      "playerCount":  0,
+                      "visible":  true,
+                      "measuredFps":  0,
+                      "fpsCap":  30,
+                      "volume":  0,
+                      "hostReady":  true,
+                      "identity":  {
+                                       "runtimeHash":  "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+                                       "styleHash":  "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+                                   },
+                      "hostPid":  29300
+                  },
+    "HostReadyMs":  7403,
+    "RootObservations":  [
+                             {
+                                 "ElapsedMs":  473,
+                                 "State":  "single",
+                                 "Candidates":  [
+                                                    {
+                                                        "Pid":  5152,
+                                                        "ParentPid":  55232,
+                                                        "Created":  "2026-11-19T15:21:28.1861370+08:00",
+                                                        "ExpectedExecutable":  true,
+                                                        "CommandLineReadable":  true
+                                                    }
+                                                ]
+                             },
+                             {
+                                 "ElapsedMs":  1306,
+                                 "State":  "ambiguous",
+                                 "Candidates":  [
+                                                    {
+                                                        "Pid":  5152,
+                                                        "ParentPid":  55232,
+                                                        "Created":  "2026-11-19T15:21:28.1861370+08:00",
+                                                        "ExpectedExecutable":  true,
+                                                        "CommandLineReadable":  true
+                                                    },
+                                                    {
+                                                        "Pid":  52824,
+                                                        "ParentPid":  5152,
+                                                        "Created":  "2026-11-19T15:21:29.1794090+08:00",
+                                                        "ExpectedExecutable":  false,
+                                                        "CommandLineReadable":  false
+                                                    }
+                                                ]
+                             },
+                             {
+                                 "ElapsedMs":  2063,
+                                 "State":  "single",
+                                 "Candidates":  [
+                                                    {
+                                                        "Pid":  5152,
+                                                        "ParentPid":  55232,
+                                                        "Created":  "2026-11-19T15:21:28.1861370+08:00",
+                                                        "ExpectedExecutable":  true,
+                                                        "CommandLineReadable":  true
+                                                    }
+                                                ]
+                             }
+                         ],
+    "RootObservationsTruncated":  false
+}

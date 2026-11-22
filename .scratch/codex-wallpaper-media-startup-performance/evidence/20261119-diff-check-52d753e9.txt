@@ -1,0 +1,14 @@
+warning: in the working copy of '.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.scratch/codex-wallpaper-visual-polish/issues/02-chat-tools-and-composer.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.scratch/codex-wallpaper-visual-polish/issues/03-files-and-changes-continuity.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.scratch/codex-wallpaper-visual-polish/issues/04-wallpaper-controls-and-recovery.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/client-runtime.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/read-only-probe.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/static-background.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/wallpaper-host.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/wallpaper-library.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/client-runtime.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/static-background.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/wallpaper-host.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'launcher/wallpaper-library.mjs', LF will be replaced by CRLF the next time Git touches it

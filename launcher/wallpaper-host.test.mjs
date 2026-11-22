@@ -1,18 +1,36 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { access } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
+import { attachWallpaperHost } from "./wallpaper-host.mjs";
+
+async function listenOnUnusedPort(server) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    const port = server.address().port;
+    const locked = await access(
+      join(tmpdir(), `codex-wallpaper-host-${port}.lock`)
+    ).then(
+      () => true,
+      () => false
+    );
+    if (!locked) return port;
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+  throw new Error("Could not find an unlocked fixture port");
+}
 
 test("host fails closed and removes its lock without a reachable Codex port", async () => {
   const probe = createServer();
-  probe.listen(0, "127.0.0.1");
-  await once(probe, "listening");
-  const port = probe.address().port;
+  const port = await listenOnUnusedPort(probe);
   await new Promise((resolve) => probe.close(resolve));
 
   const child = spawn(
@@ -87,9 +105,7 @@ test("host closes its socket and lock when Runtime initialization fails", async 
       );
     });
   });
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  const port = server.address().port;
+  const port = await listenOnUnusedPort(server);
   t.after(() => {
     for (const socket of sockets) socket.destroy();
     return new Promise((resolve) => server.close(resolve));
@@ -107,3 +123,147 @@ test("host closes its socket and lock when Runtime initialization fails", async 
   );
   assert.equal(sockets.size, 0);
 });
+
+for (const staleResult of ["success", "failure"]) {
+  test(`host retries the latest same-id request after a stale ${staleResult}`, async (t) => {
+    const steamRoot = await mkdtemp(
+      join(tmpdir(), `codex-wallpaper-flight-${staleResult}-`)
+    );
+    const project = join(
+      steamRoot,
+      "steamapps",
+      "workshop",
+      "content",
+      "431960",
+      "flight-project"
+    );
+    const distribution = join(
+      steamRoot,
+      "steamapps",
+      "common",
+      "wallpaper_engine",
+      "distribution"
+    );
+    await mkdir(project, { recursive: true });
+    await mkdir(distribution, { recursive: true });
+    await writeFile(join(distribution, "version.json"), "{}");
+    await writeFile(
+      join(project, "project.json"),
+      JSON.stringify({
+        type: "image",
+        title: "Flight project",
+        file: "image.png",
+      })
+    );
+    await writeFile(join(project, "image.png"), Buffer.from([1]));
+    const previousRoot = process.env.DSH_WE_STEAM_ROOT;
+    process.env.DSH_WE_STEAM_ROOT = steamRoot;
+    t.after(() => {
+      if (previousRoot === undefined) delete process.env.DSH_WE_STEAM_ROOT;
+      else process.env.DSH_WE_STEAM_ROOT = previousRoot;
+      return rm(steamRoot, { recursive: true, force: true });
+    });
+
+    const server = createServer();
+    const port = await listenOnUnusedPort(server);
+    await new Promise((resolve) => server.close(resolve));
+    const events = [];
+    const oldFinishSeen = Promise.withResolvers();
+    const oldRelease = Promise.withResolvers();
+    const newFinished = Promise.withResolvers();
+    let bindingHandler;
+    const requestToken = (expression) => {
+      const match = expression.match(/, ("(?:[^"\\]|\\.)*"|null)\)$/);
+      return match ? JSON.parse(match[1]) : null;
+    };
+    const session = {
+      async send(method, params = {}) {
+        if (method !== "Runtime.evaluate") return { result: {} };
+        const expression = params.expression;
+        if (expression.startsWith("document.querySelector("))
+          return { result: { objectId: "file-input" } };
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+          )
+        ) {
+          const token = requestToken(expression);
+          events.push(`begin:${token}`);
+          return { result: { value: `file-${token}` } };
+        }
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
+          )
+        ) {
+          const token = requestToken(expression);
+          events.push(`finish:${token}`);
+          if (token === "old") {
+            oldFinishSeen.resolve();
+            await oldRelease.promise;
+            if (staleResult === "failure")
+              return {
+                exceptionDetails: {
+                  exception: { description: "stale failure" },
+                },
+              };
+          } else {
+            newFinished.resolve();
+          }
+          return { result: { value: true } };
+        }
+        if (
+          expression.startsWith(
+            "globalThis.__codexWallpaperApi?.receiveAssetError("
+          )
+        ) {
+          events.push(`error:${requestToken(expression)}`);
+        }
+        return {
+          result: { value: { state: "enabled", hostReady: true } },
+        };
+      },
+      on(method, handler) {
+        if (method === "Runtime.bindingCalled") bindingHandler = handler;
+      },
+      onClose() {},
+      close() {},
+    };
+    const host = await attachWallpaperHost({
+      port,
+      session,
+      source: "({ state: 'disabled' })",
+    });
+    assert.ok(host);
+    t.after(() => host.stop());
+    const request = (token) =>
+      bindingHandler({
+        name: "__codexWallpaperHostRequest",
+        payload: JSON.stringify({
+          type: "load-asset",
+          id: "flight-project",
+          request: token,
+        }),
+      });
+    request("old");
+    await oldFinishSeen.promise;
+    request("new");
+    oldRelease.resolve();
+    await Promise.race([
+      newFinished.promise,
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Replacement request did not run")),
+          3000
+        )
+      ),
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    assert.deepEqual(events, [
+      "begin:old",
+      "finish:old",
+      "begin:new",
+      "finish:new",
+    ]);
+  });
+}

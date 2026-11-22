@@ -1,0 +1,218 @@
+{
+  "identity": {
+    "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+    "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+  },
+  "cycles": [
+    {
+      "i": 1,
+      "openMs": 49,
+      "returnMs": 144,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 2,
+      "openMs": 109,
+      "returnMs": 155,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 3,
+      "openMs": 81,
+      "returnMs": 158,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 4,
+      "openMs": 106,
+      "returnMs": 223,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 5,
+      "openMs": 133,
+      "returnMs": 160,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 6,
+      "openMs": 104,
+      "returnMs": 167,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 7,
+      "openMs": 95,
+      "returnMs": 171,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 8,
+      "openMs": 105,
+      "returnMs": 161,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 9,
+      "openMs": 101,
+      "returnMs": 167,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    },
+    {
+      "i": 10,
+      "openMs": 100,
+      "returnMs": 136,
+      "inChanges": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      },
+      "inChat": {
+        "visible": true,
+        "layers": 1,
+        "players": 1,
+        "media": 1,
+        "staged": 0,
+        "chat": true
+      }
+    }
+  ]
+}

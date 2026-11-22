@@ -1,0 +1,147 @@
+{
+  "startedAt": "2026-11-19T07:25:08.288Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 106,
+    "openedCardCount": 106
+  },
+  "error": "Timed out waiting for (() => {\n      const state = globalThis.__codexWallpaperApi.state();\n      return state.activeId === \"1791074903\" &&\n        Boolean(globalThis.__liveSwitchProbe?.committedAt);\n    })()",
+  "lastSample": {
+    "targetId": "",
+    "wallMilliseconds": 223703.79999999702,
+    "state": {
+      "activeId": "1791074903",
+      "state": "enabled",
+      "playerCount": 1
+    },
+    "status": "正在加载：[ 明 日 方 舟 ]",
+    "fileInputs": 0,
+    "staged": 1,
+    "click": {
+      "id": "1791074903",
+      "downAt": 217108.29999999702,
+      "at": 217111.79999999702,
+      "trusted": true
+    },
+    "selectedMilliseconds": 3.1000000089406967,
+    "feedbackMilliseconds": 77.30000001192093,
+    "committedMilliseconds": null,
+    "dynamic": null,
+    "native": {},
+    "warm": null,
+    "transfer": {
+      "file": 1,
+      "base64": 0,
+      "finished": 1,
+      "failed": 0
+    },
+    "events": [
+      {
+        "type": "pointerdown",
+        "at": 217110.90000000596,
+        "detail": {
+          "id": "1791074903"
+        }
+      },
+      {
+        "type": "click",
+        "at": 217113.10000000894,
+        "detail": {
+          "id": "1791074903",
+          "inputDelay": 1.300000011920929
+        }
+      },
+      {
+        "type": "selected",
+        "at": 217114.90000000596,
+        "detail": {
+          "id": "1791074903"
+        }
+      },
+      {
+        "type": "selected-feedback-frame",
+        "at": 217189.10000000894,
+        "detail": {
+          "id": "1791074903"
+        }
+      },
+      {
+        "type": "file-transfer-begin",
+        "at": 217194.70000000298,
+        "detail": null
+      },
+      {
+        "type": "file-transfer-finish",
+        "at": 217263.5,
+        "detail": null
+      }
+    ],
+    "media": {
+      "tag": "img",
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "visible"
+    }
+  },
+  "finishedAt": "2026-11-19T07:25:16.590Z"
+}

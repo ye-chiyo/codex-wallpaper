@@ -1,0 +1,13 @@
+2026-11-20T11:47:19.3856743+08:00 Waiting up to 30 minutes for the current Codex to exit
+2026-11-20T11:47:50.3916131+08:00 Still waiting for Codex to exit
+2026-11-20T11:48:20.8936206+08:00 Still waiting for Codex to exit
+2026-11-20T11:48:51.2901020+08:00 Still waiting for Codex to exit
+2026-11-20T11:49:21.4985904+08:00 Still waiting for Codex to exit
+2026-11-20T11:49:53.7610676+08:00 Still waiting for Codex to exit
+2026-11-20T11:50:23.9391461+08:00 Still waiting for Codex to exit
+2026-11-20T11:50:56.4458764+08:00 Still waiting for Codex to exit
+2026-11-20T11:51:21.6890781+08:00 Starting the real dedicated entry
+2026-11-20T11:51:30.4983779+08:00 Dedicated entry exited with 
+2026-11-20T11:51:30.6168178+08:00 Startup outcome: wallpaper-injection-failed
+2026-11-20T11:51:30.6257087+08:00 Stopped: Dedicated startup failed: wallpaper-injection-failed
+2026-11-20T11:51:30.6557664+08:00 Finished with result failed

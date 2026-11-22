@@ -1,0 +1,2405 @@
+{
+  "startedAt": "2026-11-20T04:03:21.435Z",
+  "port": 55136,
+  "identity": {
+    "runtimeHash": "f60cd7c70096cbd6a0ece5856bbe6a478fb7803cd52e66432824ed3c339cec02",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "b150f2f3cdaa867b876783e691fac7682901f298b41ddcda5d013472919d66c2",
+  "warm": null,
+  "switches": {
+    "frontCold": {
+      "click": {
+        "id": "1791074903",
+        "downAt": 712258,
+        "at": 712261.099999994,
+        "trusted": true
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 712260,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 712262.3000000119,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 1.2000000178813934
+          }
+        },
+        {
+          "type": "selected",
+          "at": 712262.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 712275.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 712296.8000000119,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 712313.599999994,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 712372.900000006,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 712472.5,
+          "detail": {
+            "at": 712472.1,
+            "elapsed": 211.00000000593718,
+            "first": {
+              "at": 712438.732,
+              "mediaTime": 0.033333,
+              "presentedFrames": 2
+            },
+            "second": {
+              "at": 712472.1,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        }
+      ],
+      "selectedId": "1791074903",
+      "selectedMilliseconds": 1.4000000059604645,
+      "feedbackMilliseconds": 14.400000005960464,
+      "committedMilliseconds": 111.80000001192093,
+      "dynamicMilliseconds": 211.00000000593718,
+      "dynamicValid": true,
+      "dynamic": {
+        "firstMediaTime": 0.033333,
+        "secondMediaTime": 0.066667,
+        "presentedFrames": 3,
+        "readyState": 4,
+        "paused": false,
+        "visible": true,
+        "width": 1920,
+        "height": 1080
+      },
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.125593,
+        "visibility": "visible"
+      }
+    },
+    "tailCold": {
+      "click": {
+        "id": "1986730797",
+        "downAt": 712785.3000000119,
+        "at": 712787.8000000119,
+        "trusted": true
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 712786.6999999881,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "click",
+          "at": 712788.5,
+          "detail": {
+            "id": "1986730797",
+            "inputDelay": 0.699999988079071
+          }
+        },
+        {
+          "type": "selected",
+          "at": 712788.8000000119,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 712806.1999999881,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 712832.900000006,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 712850.6999999881,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 712901.900000006,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 713018.599999994,
+          "detail": {
+            "at": 713017.9,
+            "elapsed": 230.09999998810235,
+            "first": {
+              "at": 712988.7,
+              "mediaTime": 0.033333,
+              "presentedFrames": 2
+            },
+            "second": {
+              "at": 713017.9,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        }
+      ],
+      "selectedId": "1986730797",
+      "selectedMilliseconds": 1,
+      "feedbackMilliseconds": 18.399999976158142,
+      "committedMilliseconds": 114,
+      "dynamicMilliseconds": 230.09999998810235,
+      "dynamicValid": true,
+      "dynamic": {
+        "firstMediaTime": 0.033333,
+        "secondMediaTime": 0.066667,
+        "presentedFrames": 3,
+        "readyState": 4,
+        "paused": false,
+        "visible": true,
+        "width": 1920,
+        "height": 1080
+      },
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.174657,
+        "visibility": "visible"
+      }
+    }
+  },
+  "rapid": {
+    "abc": {
+      "targetId": "2817646508",
+      "wallMilliseconds": 312.09999999403954,
+      "state": {
+        "activeId": "2817646508",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "status": "轻音少女 · image",
+      "fileInputs": 0,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "2817646508",
+        "downAt": 817694.099999994,
+        "at": 817698.8000000119,
+        "trusted": true
+      },
+      "selectedMilliseconds": 3.0999999940395355,
+      "feedbackMilliseconds": 21,
+      "committedMilliseconds": 103.89999997615814,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 2,
+        "base64": 0,
+        "finished": 2,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 817517.599999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 817520,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 1.199999988079071
+          }
+        },
+        {
+          "type": "selected",
+          "at": 817520.1999999881,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 817535.099999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 817556,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 817571.5,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 817597.3000000119,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "click",
+          "at": 817607.8000000119,
+          "detail": {
+            "id": "1986730797",
+            "inputDelay": 9.300000011920929
+          }
+        },
+        {
+          "type": "selected",
+          "at": 817608.5,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 817626.6999999881,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 817652,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 817676,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 817697.3000000119,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 817700.900000006,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 2.0999999940395355
+          }
+        },
+        {
+          "type": "selected",
+          "at": 817701.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 817719.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 817802.6999999881,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "aba": {
+      "targetId": "1791074903",
+      "wallMilliseconds": 280.40000000596046,
+      "state": {
+        "activeId": "1791074903",
+        "state": "enabled",
+        "playerCount": 1
+      },
+      "selected": "true",
+      "status": "[ 明 日 方 舟 ] · 视频",
+      "fileInputs": 0,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "1791074903",
+        "downAt": 818330.1999999881,
+        "at": 818336.3000000119,
+        "trusted": true
+      },
+      "selectedMilliseconds": 1.899999976158142,
+      "feedbackMilliseconds": 16.299999982118607,
+      "committedMilliseconds": 60.39999997615814,
+      "dynamic": null,
+      "native": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080
+      },
+      "warm": null,
+      "transfer": {
+        "file": 2,
+        "base64": 0,
+        "finished": 2,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 817831.8000000119,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 817833.6999999881,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 0.699999988079071
+          }
+        },
+        {
+          "type": "selected",
+          "at": 817833.900000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 817848.900000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 817871.6999999881,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 817874.3000000119,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 817992.6999999881,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "dynamic-frame",
+          "at": 818079.599999994,
+          "detail": {
+            "at": 818079,
+            "elapsed": 246,
+            "first": {
+              "at": 818049.8,
+              "mediaTime": 0.066667,
+              "presentedFrames": 3
+            },
+            "second": {
+              "at": 818079,
+              "mediaTime": 0.1,
+              "presentedFrames": 4
+            },
+            "readyState": 4,
+            "paused": false,
+            "visible": true,
+            "width": 1920,
+            "height": 1080,
+            "callbackCount": 2
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 818158.6999999881,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 818159.900000006,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 0.5999999940395355
+          }
+        },
+        {
+          "type": "selected",
+          "at": 818160.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 818173.6999999881,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 818213.1999999881,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 818238,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 818240.8000000119,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 1.9000000059604645
+          }
+        },
+        {
+          "type": "selected",
+          "at": 818241,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 818255.1999999881,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 818288.1999999881,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 818308.099999994,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 818334.900000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 818337.5,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 1.199999988079071
+          }
+        },
+        {
+          "type": "selected",
+          "at": 818338.1999999881,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 818352.599999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 818396.8000000119,
+          "detail": {
+            "tag": "video",
+            "readyState": 4,
+            "paused": false,
+            "width": 1920,
+            "height": 1080
+          }
+        }
+      ],
+      "media": {
+        "tag": "video",
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 0.000991,
+        "visibility": "visible"
+      }
+    }
+  },
+  "disableDuringSwitch": {
+    "beforeDisable": {
+      "targetId": "1791074903",
+      "wallMilliseconds": 25.700000017881393,
+      "state": {
+        "activeId": "1791074903",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "status": "正在加载：[ 明 日 方 舟 ]",
+      "fileInputs": 0,
+      "staged": 0,
+      "pendingMedia": null,
+      "click": {
+        "id": "1791074903",
+        "downAt": 818696.3000000119,
+        "at": 818700.8000000119,
+        "trusted": true
+      },
+      "selectedMilliseconds": 1.2999999821186066,
+      "feedbackMilliseconds": 15.299999982118607,
+      "committedMilliseconds": null,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 818449.3000000119,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 818452.1999999881,
+          "detail": {
+            "id": "2817646508",
+            "inputDelay": 1.5
+          }
+        },
+        {
+          "type": "selected",
+          "at": 818452.599999994,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 818468.6999999881,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 818476.3000000119,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 818492.8000000119,
+          "detail": null
+        },
+        {
+          "type": "media-committed",
+          "at": 818614.400000006,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 818699.900000006,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "click",
+          "at": 818701.900000006,
+          "detail": {
+            "id": "1791074903",
+            "inputDelay": 1.0999999940395355
+          }
+        },
+        {
+          "type": "selected",
+          "at": 818702.099999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected-feedback-frame",
+          "at": 818716.099999994,
+          "detail": {
+            "id": "1791074903"
+          }
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "dispatchToCleanupMilliseconds": 110.5,
+    "totalMilliseconds": 174.5,
+    "afterThirtySeconds": {
+      "state": "disabled",
+      "root": false,
+      "players": 0,
+      "warm": 0,
+      "fileInputs": 0
+    }
+  },
+  "failureRetention": {
+    "previous": {
+      "tag": "img",
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "visible"
+    },
+    "after": {
+      "activeId": "missing-live-probe",
+      "mediaCount": 1,
+      "staged": 0,
+      "tag": "img",
+      "previousNodeRetained": true,
+      "status": "已跳过缺失的壁纸，已保留当前画面"
+    }
+  },
+  "restored": {
+    "configExact": true,
+    "activeId": "3230938311",
+    "panelOpen": true
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 106,
+    "openedCardCount": 106,
+    "domElements": 3263
+  },
+  "warmSamples": {
+    "front": [
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 715878,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 720907.6999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 725965.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 731021.099999994,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 736047.900000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "hidden"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 744389.3000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 749439.6999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 754471.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 759524,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 764593.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 769641.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 774684.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 779709.3000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 784733.5,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 789775.900000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 794818,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 799851.599999994,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 804879.900000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 809930,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1791074903",
+        "wallMilliseconds": 814971.099999994,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      }
+    ],
+    "tail": [
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 718386.5,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 723431.5,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 728493.6999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 733533.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 741880.900000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 746921.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 751958.3000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 756998.400000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 762064.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 767105.5,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 772164.099999994,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 777197.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 782218.1999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 787255.400000006,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 792288.6999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 797330.099999994,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 802367.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 807417.6999999881,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 812458.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      },
+      {
+        "targetId": "1986730797",
+        "wallMilliseconds": 817507.8000000119,
+        "state": {
+          "activeId": "2817646508",
+          "state": "enabled",
+          "playerCount": 0
+        },
+        "selected": "false",
+        "status": "轻音少女 · image",
+        "fileInputs": 0,
+        "staged": 0,
+        "pendingMedia": null,
+        "click": null,
+        "selectedMilliseconds": null,
+        "feedbackMilliseconds": null,
+        "committedMilliseconds": null,
+        "dynamic": null,
+        "native": {},
+        "warm": null,
+        "transfer": {
+          "file": 0,
+          "base64": 0,
+          "finished": 0,
+          "failed": 0
+        },
+        "events": [],
+        "media": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": null,
+          "height": null,
+          "currentTime": null,
+          "visibility": "visible"
+        },
+        "error": "Error: Timed out waiting for Boolean(globalThis.__liveSwitchProbe?.warm?.loadedMetadata || globalThis.__liveSwitchProbe?.warm?.error)"
+      }
+    ]
+  },
+  "finishedAt": "2026-11-20T04:05:41.233Z"
+}

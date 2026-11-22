@@ -1,0 +1,368 @@
+{
+  "startedAt": "2026-11-20T05:13:19.123Z",
+  "initialConfigHash": "b150f2f3cdaa867b876783e691fac7682901f298b41ddcda5d013472919d66c2",
+  "identity": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "panel": {
+    "openReceivesClick": true,
+    "opened": true,
+    "reopened": true,
+    "panelPreserved": true,
+    "cardPresent": true,
+    "cardCountStable": true
+  },
+  "searchAndFilter": {
+    "favoriteClickReceivesClick": true,
+    "search": {
+      "cardCount": 106,
+      "visibleCardCount": 7,
+      "resultText": "显示 7 / 106 项"
+    },
+    "videoFilter": {
+      "visibleCardCount": 6,
+      "resultText": "显示 6 / 106 项"
+    },
+    "favoritesOnly": {
+      "visibleCardCount": 2,
+      "containsToggledFavorite": true
+    }
+  },
+  "media": {
+    "image": {
+      "clickReceivesClick": true,
+      "settleMilliseconds": 246,
+      "activeId": "2817646508",
+      "mediaCount": 1,
+      "stagedCount": 0,
+      "playerCount": 0,
+      "statusText": "轻音少女 · image",
+      "activeMedia": {
+        "className": "media",
+        "marker": null,
+        "children": [
+          {
+            "tagName": "img",
+            "className": "",
+            "ready": false,
+            "paused": null,
+            "readyState": null
+          }
+        ]
+      }
+    },
+    "scene": {
+      "clickReceivesClick": true,
+      "settleMilliseconds": 897,
+      "activeId": "2788691565",
+      "mediaCount": 1,
+      "stagedCount": 0,
+      "playerCount": 1,
+      "statusText": "Girl and Fluorescent Beach · Scene",
+      "activeMedia": {
+        "className": "media",
+        "marker": null,
+        "children": [
+          {
+            "tagName": "div",
+            "className": "scene-host ready",
+            "ready": true,
+            "paused": null,
+            "readyState": null
+          },
+          {
+            "tagName": "canvas",
+            "className": "",
+            "ready": false,
+            "paused": null,
+            "readyState": null
+          }
+        ]
+      }
+    },
+    "video": {
+      "clickReceivesClick": true,
+      "settleMilliseconds": 134,
+      "activeId": "3787353838",
+      "mediaCount": 1,
+      "stagedCount": 0,
+      "playerCount": 1,
+      "statusText": "[deepseek娘]深夜的大肥鱼 · 视频",
+      "activeMedia": {
+        "className": "media",
+        "marker": null,
+        "children": [
+          {
+            "tagName": "video",
+            "className": "",
+            "ready": false,
+            "paused": false,
+            "readyState": 4
+          }
+        ]
+      }
+    },
+    "web": {
+      "clickReceivesClick": true,
+      "settleMilliseconds": 204,
+      "activeId": "2179153203",
+      "mediaCount": 1,
+      "stagedCount": 0,
+      "playerCount": 0,
+      "statusText": "3D展览长廊+全屏展示(带落樱)+视频展播+幻灯片放映 · Web 预览降级",
+      "activeMedia": {
+        "className": "media",
+        "marker": null,
+        "children": [
+          {
+            "tagName": "img",
+            "className": "",
+            "ready": false,
+            "paused": null,
+            "readyState": null
+          }
+        ]
+      }
+    }
+  },
+  "rapidSelection": {
+    "dispatched": true,
+    "settleMilliseconds": 795,
+    "activeId": "2788691565",
+    "mediaCount": 1,
+    "stagedCount": 0
+  },
+  "failureRetention": {
+    "clickReceivesClick": true,
+    "previousMediaMarker": "090d28e9-c149-4e19-8b70-6701001e6f02",
+    "retainedMarker": false,
+    "activeIdAfterFailure": "3014214275",
+    "mediaCount": 1,
+    "stagedCount": 0,
+    "statusText": "[Sagiri] [4K 90FPS] 和泉纱雾❤❤❤❤ · 视频"
+  },
+  "playbackAndAppearance": {
+    "performanceProfileFps": 15,
+    "performanceProfilePauseWhenHidden": true,
+    "balancedProfileFps": 30,
+    "mediaPreserved": true,
+    "settings": {
+      "dim": 34,
+      "blur": 2,
+      "opacity": 88,
+      "fitMode": "contain",
+      "surfaceOpacity": 58,
+      "interfaceBlur": 3,
+      "interfaceBorders": false,
+      "surfaceOverrides": {
+        "chat": 55,
+        "sidebar": null,
+        "right": null,
+        "settings": null
+      },
+      "fps": 30,
+      "volume": 0,
+      "muted": true,
+      "rotationMinutes": 0,
+      "performanceProfile": "balanced",
+      "pauseWhenHidden": true
+    },
+    "mediaCount": 1,
+    "stagedCount": 0
+  },
+  "presets": {
+    "savedPresetCount": 1,
+    "activePresetId": "t08-acceptance",
+    "exportedVersion": 1,
+    "exportHasSettingsOnly": true,
+    "importStatus": "设置已导入",
+    "opacityAfterApply": 88,
+    "presetStillPresent": true
+  },
+  "keyboardInputScroll": {
+    "typedSearch": "ark",
+    "searchVisibleCards": 3,
+    "panelScrolled": true,
+    "keyboardChangedOpacity": true,
+    "opacityBefore": 80,
+    "opacityAfter": 81
+  },
+  "tenCycles": {
+    "cycles": 10,
+    "markersCreated": 10,
+    "heapStart": 691370247,
+    "heapEnd": 692693608,
+    "heapDelta": 1323361,
+    "finalOpacity": 89,
+    "mediaCount": 1,
+    "stagedCount": 0
+  },
+  "lifecycle": {
+    "disableReceivesClick": true,
+    "disabledMilliseconds": 183,
+    "disabledState": "disabled",
+    "disabledRootRemoved": true,
+    "enabledMilliseconds": 147,
+    "enabledState": "enabled",
+    "enabledLayers": 1,
+    "enabledPlayers": 0
+  },
+  "secondaryPages": [
+    {
+      "title": "ChatGPT",
+      "route": "/index.html",
+      "lifecycle": "avatar-overlay"
+    },
+    {
+      "title": "ChatGPT",
+      "route": "/detached-window.html",
+      "lifecycle": "detached-window"
+    }
+  ],
+  "finalState": {
+    "visibilityState": "visible",
+    "focused": true,
+    "viewport": {
+      "width": 1706,
+      "height": 1066,
+      "dpr": 1.5
+    },
+    "state": {
+      "state": "enabled",
+      "backgroundLayers": 1,
+      "controls": 13,
+      "styles": 1,
+      "activeKind": "workshop",
+      "activeId": "2788691565",
+      "libraryCount": 106,
+      "libraryRevalidationFailed": false,
+      "importedCount": 0,
+      "playerCount": 0,
+      "visible": true,
+      "measuredFps": 0,
+      "fpsCap": 30,
+      "volume": 0,
+      "hostReady": true
+    },
+    "identity": {
+      "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+      "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+    },
+    "config": {
+      "enabled": true,
+      "active": {
+        "kind": "workshop",
+        "id": "2788691565"
+      },
+      "favorites": [
+        {
+          "kind": "workshop",
+          "id": "3787353838"
+        },
+        {
+          "kind": "workshop",
+          "id": "3809295036"
+        }
+      ],
+      "playlist": [
+        {
+          "kind": "workshop",
+          "id": "3787353838"
+        },
+        {
+          "kind": "workshop",
+          "id": "1892847577"
+        },
+        {
+          "kind": "workshop",
+          "id": "2643977820"
+        },
+        {
+          "kind": "workshop",
+          "id": "3349153837"
+        },
+        {
+          "kind": "workshop",
+          "id": "1266437175"
+        }
+      ],
+      "presets": [
+        {
+          "id": "t08-acceptance",
+          "name": "T08 Acceptance",
+          "settings": {
+            "dim": 34,
+            "blur": 2,
+            "opacity": 88,
+            "fitMode": "contain",
+            "surfaceOpacity": 58,
+            "interfaceBlur": 3,
+            "interfaceBorders": false,
+            "surfaceOverrides": {
+              "chat": 55,
+              "sidebar": null,
+              "right": null,
+              "settings": null
+            },
+            "fps": 30,
+            "volume": 0,
+            "muted": true,
+            "rotationMinutes": 0,
+            "performanceProfile": "balanced",
+            "pauseWhenHidden": true
+          }
+        }
+      ],
+      "activePresetId": null,
+      "settings": {
+        "dim": 34,
+        "blur": 2,
+        "opacity": 89,
+        "fitMode": "contain",
+        "surfaceOpacity": 58,
+        "interfaceBlur": 3,
+        "interfaceBorders": false,
+        "surfaceOverrides": {
+          "chat": 55,
+          "sidebar": null,
+          "right": null,
+          "settings": null
+        },
+        "fps": 30,
+        "volume": 0,
+        "muted": true,
+        "rotationMinutes": 0,
+        "performanceProfile": "balanced",
+        "pauseWhenHidden": true
+      }
+    },
+    "panelOpen": false,
+    "panelScrollTop": 0,
+    "cardCount": 0,
+    "visibleCardCount": 0,
+    "resultText": null,
+    "statusText": "正在加载：Girl and Fluorescent Beach",
+    "activeMedia": {
+      "className": "media",
+      "marker": null,
+      "children": []
+    },
+    "stagedCount": 0,
+    "mediaCount": 1,
+    "activePresetId": null,
+    "presetCount": 1,
+    "favoriteIds": [
+      "3787353838",
+      "3809295036"
+    ],
+    "playlistIds": [
+      "3787353838",
+      "1892847577",
+      "2643977820",
+      "3349153837",
+      "1266437175"
+    ]
+  },
+  "completedAt": "2026-11-20T05:13:36.553Z"
+}

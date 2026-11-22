@@ -1,0 +1,28 @@
+2026-11-20T12:49:18.7064527+08:00 Waiting up to 240 minutes for the current Codex to exit
+2026-11-20T12:49:50.0874062+08:00 Still waiting for Codex to exit
+2026-11-20T12:50:21.4607013+08:00 Still waiting for Codex to exit
+2026-11-20T12:50:53.0788686+08:00 Still waiting for Codex to exit
+2026-11-20T12:51:23.9776541+08:00 Still waiting for Codex to exit
+2026-11-20T12:51:54.6118192+08:00 Still waiting for Codex to exit
+2026-11-20T12:52:25.2370583+08:00 Still waiting for Codex to exit
+2026-11-20T12:52:55.8003283+08:00 Still waiting for Codex to exit
+2026-11-20T12:53:26.3667421+08:00 Still waiting for Codex to exit
+2026-11-20T12:53:58.6199140+08:00 Still waiting for Codex to exit
+2026-11-20T12:54:29.2655623+08:00 Still waiting for Codex to exit
+2026-11-20T12:54:59.6663814+08:00 Still waiting for Codex to exit
+2026-11-20T12:55:31.0921160+08:00 Still waiting for Codex to exit
+2026-11-20T12:56:02.0960232+08:00 Still waiting for Codex to exit
+2026-11-20T12:56:33.4510719+08:00 Still waiting for Codex to exit
+2026-11-20T12:57:04.6097956+08:00 Still waiting for Codex to exit
+2026-11-20T12:57:35.6286522+08:00 Still waiting for Codex to exit
+2026-11-20T12:58:06.3059203+08:00 Still waiting for Codex to exit
+2026-11-20T12:58:37.2961960+08:00 Still waiting for Codex to exit
+2026-11-20T12:59:08.0842572+08:00 Still waiting for Codex to exit
+2026-11-20T12:59:38.5853876+08:00 Still waiting for Codex to exit
+2026-11-20T13:00:08.9130365+08:00 Still waiting for Codex to exit
+2026-11-20T13:00:39.6997531+08:00 Still waiting for Codex to exit
+2026-11-20T13:00:50.1873629+08:00 Starting the real dedicated entry
+2026-11-20T13:00:52.2199837+08:00 Dedicated entry exited with 
+2026-11-20T13:00:52.3767899+08:00 Startup outcome: launch-or-check-error
+2026-11-20T13:00:52.3908289+08:00 Stopped: Dedicated startup failed: launch-or-check-error
+2026-11-20T13:00:52.4291639+08:00 Finished with result failed

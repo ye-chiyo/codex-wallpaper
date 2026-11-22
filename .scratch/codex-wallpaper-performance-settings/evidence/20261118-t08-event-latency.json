@@ -1,0 +1,208 @@
+{
+  "startedAt": "2026-11-18T05:27:45.160Z",
+  "initialConfigHash": "0ae949dcfac39698c39f0e69cf12b8d8053f3a96d2305fdc60c9b9fd1977a0e6",
+  "conditions": {
+    "visibilityState": "visible",
+    "focused": true,
+    "viewport": {
+      "width": 1707,
+      "height": 1066,
+      "dpr": 1.5
+    },
+    "theme": "dark",
+    "identity": {
+      "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+      "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+    }
+  },
+  "panelLatency": [
+    {
+      "action": "open",
+      "milliseconds": 57.90000000037253,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 12.600000000093132,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 34.1999999997206,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 12.400000000372529,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 35.90000000037253,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 17.799999999813735,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 40.299999999813735,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 67.70000000018626,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 55,
+      "valid": true
+    },
+    {
+      "action": "close",
+      "milliseconds": 16,
+      "valid": true
+    },
+    {
+      "action": "open",
+      "milliseconds": 31.700000000186265,
+      "valid": true
+    }
+  ],
+  "keyboardLatency": [
+    {
+      "milliseconds": 197.20000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 194.1999999997206,
+      "valid": true
+    },
+    {
+      "milliseconds": 188.8000000002794,
+      "valid": true
+    },
+    {
+      "milliseconds": 195,
+      "valid": true
+    },
+    {
+      "milliseconds": 198,
+      "valid": true
+    },
+    {
+      "milliseconds": 225.70000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 217.40000000037253,
+      "valid": true
+    },
+    {
+      "milliseconds": 203.5,
+      "valid": true
+    },
+    {
+      "milliseconds": 202.39999999990687,
+      "valid": true
+    },
+    {
+      "milliseconds": 188.59999999962747,
+      "valid": true
+    },
+    {
+      "milliseconds": 191.60000000009313,
+      "valid": true
+    },
+    {
+      "milliseconds": 193.70000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 191.70000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 164.89999999990687,
+      "valid": true
+    },
+    {
+      "milliseconds": 232.39999999990687,
+      "valid": true
+    },
+    {
+      "milliseconds": 204.5,
+      "valid": true
+    },
+    {
+      "milliseconds": 186.20000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 212.89999999990687,
+      "valid": true
+    },
+    {
+      "milliseconds": 197.5,
+      "valid": true
+    },
+    {
+      "milliseconds": 198,
+      "valid": true
+    },
+    {
+      "milliseconds": 190.3000000002794,
+      "valid": true
+    },
+    {
+      "milliseconds": 194.89999999990687,
+      "valid": true
+    },
+    {
+      "milliseconds": 197.10000000009313,
+      "valid": true
+    },
+    {
+      "milliseconds": 201.6999999997206,
+      "valid": true
+    },
+    {
+      "milliseconds": 222.1999999997206,
+      "valid": true
+    },
+    {
+      "milliseconds": 239.59999999962747,
+      "valid": true
+    },
+    {
+      "milliseconds": 206.10000000009313,
+      "valid": true
+    },
+    {
+      "milliseconds": 186.3000000002794,
+      "valid": true
+    },
+    {
+      "milliseconds": 197.20000000018626,
+      "valid": true
+    },
+    {
+      "milliseconds": 199.6999999997206,
+      "valid": true
+    }
+  ],
+  "persistenceWrites": null,
+  "failureRetention": null,
+  "crossWindowUpdate": null,
+  "pacedMediaCycles": null,
+  "secondaryPages": [],
+  "sliderFocused": true,
+  "keyboardRange": {
+    "opacityBefore": 60,
+    "opacityAfter": 90
+  },
+  "wallpaperCardsAdded": 0
+}

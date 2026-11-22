@@ -1,0 +1,28 @@
+{
+  "stages": {
+    "selected": 3,
+    "staged": 3161.9,
+    "commit": 3355,
+    "playing": 3375
+  },
+  "after": {
+    "video": {
+      "readyState": 4,
+      "paused": false,
+      "width": 4680,
+      "height": 2160,
+      "currentTime": 0.148179,
+      "frames": 15,
+      "error": null
+    },
+    "status": "《鸣潮》今昔 · 视频",
+    "card": "video · 原生播放",
+    "stagedCount": 0,
+    "visibility": "visible",
+    "focus": true
+  },
+  "restored": {
+    "configExact": true,
+    "active": "3014214275"
+  }
+}

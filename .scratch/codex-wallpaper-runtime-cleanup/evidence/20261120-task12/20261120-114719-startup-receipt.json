@@ -1,0 +1,39 @@
+{
+    "Started":  "2026-11-20T11:51:24.5689847+08:00",
+    "Package":  "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Port":  55136,
+    "Outcome":  "wallpaper-injection-failed",
+    "LoginAndChat":  "user-verification-required",
+    "Mode":  "unattended-startup",
+    "ActivationPid":  55692,
+    "MainPid":  55692,
+    "MainCreated":  "2026-11-20T11:51:24.6513360+08:00",
+    "PortFlagObserved":  true,
+    "NativeProfile":  "matches-daily-path",
+    "TargetVerificationCount":  1,
+    "Probe":  {
+                  "state":  "verified",
+                  "method":  "Page.getFrameTree",
+                  "page":  "app://-/index.html",
+                  "origin":  "app://-"
+              },
+    "TargetVerified":  true,
+    "TargetAcknowledgedMs":  4169,
+    "SupervisorError":  "main-frame-unverified",
+    "RootObservations":  [
+                             {
+                                 "ElapsedMs":  581,
+                                 "State":  "single",
+                                 "Candidates":  [
+                                                    {
+                                                        "Pid":  55692,
+                                                        "ParentPid":  60444,
+                                                        "Created":  "2026-11-20T11:51:24.6513360+08:00",
+                                                        "ExpectedExecutable":  true,
+                                                        "CommandLineReadable":  true
+                                                    }
+                                                ]
+                             }
+                         ],
+    "RootObservationsTruncated":  false
+}

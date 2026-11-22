@@ -1,0 +1,174 @@
+{
+  "startedAt": "2026-11-18T16:42:54.762Z",
+  "port": 62769,
+  "page": "app://-/index.html",
+  "results": [
+    {
+      "index": 1,
+      "current": {
+        "milliseconds": 229.7781,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 15.473599999999976,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 2,
+      "current": {
+        "milliseconds": 231.35010000000005,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 4.599199999999996,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 3,
+      "current": {
+        "milliseconds": 224.13170000000002,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 4.017799999999966,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 4,
+      "current": {
+        "milliseconds": 243.64499999999998,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.3798000000000457,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 5,
+      "current": {
+        "milliseconds": 214.90579999999989,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.7872999999999593,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 6,
+      "current": {
+        "milliseconds": 228.70839999999998,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.0762999999999465,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 7,
+      "current": {
+        "milliseconds": 227.4937,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 4.110300000000052,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 8,
+      "current": {
+        "milliseconds": 220.94740000000002,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.2456999999999425,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 9,
+      "current": {
+        "milliseconds": 217.1776000000002,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.6873999999997977,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    },
+    {
+      "index": 10,
+      "current": {
+        "milliseconds": 217.80600000000004,
+        "nodeProcesses": 2,
+        "cdpConnections": 2,
+        "page": "app://-/index.html"
+      },
+      "consolidated": {
+        "milliseconds": 3.2903000000001157,
+        "nodeProcesses": 1,
+        "cdpConnections": 1,
+        "page": "app://-/index.html"
+      }
+    }
+  ],
+  "summary": {
+    "currentTwoProcessPath": {
+      "samples": 10,
+      "minimum": 214.90579999999989,
+      "median": 224.13170000000002,
+      "p95": 243.64499999999998,
+      "maximum": 243.64499999999998
+    },
+    "singleProcessSessionPath": {
+      "samples": 10,
+      "minimum": 3.0762999999999465,
+      "median": 3.6873999999997977,
+      "p95": 15.473599999999976,
+      "maximum": 15.473599999999976
+    }
+  },
+  "finishedAt": "2026-11-18T16:42:54.763Z"
+}

@@ -4,23 +4,32 @@
 
 - 本地图片和视频导入、切换、默认静音、15/30 FPS 上限及不可见暂停。
 - Wallpaper Engine 本机壁纸扫描；可见卡片懒加载作者预览，图片/视频/Scene 由隐藏宿主按需分块读取，Scene 使用 WebWallGL 或作者预览降级，Web 使用离线沙箱或预览降级。
-- 可视化壁纸库、收藏、播放列表、定时轮播、暗化/模糊/透明度、声音与一键停用。
+- 可视化壁纸库、收藏、播放列表、定时轮播、暗化/模糊/透明度、声音与快捷键开关。
 - 同源全局配置跨窗口同步；每个窗口独立判断可见性。
 - 显式启用、查询和撤销一个隐藏运行的 Windows 登录入口。
 
-运行期间可能有一个隐藏的本机 `wallpaper-host` Node 辅助进程，用于按需读取当前选中的 Wallpaper Engine 素材；它不监听网络端口，并随 Codex 页面退出而结束。
+专用入口使用一个隐藏的 Node 监督进程，在核验过的主界面会话里挂载运行时并处理按需素材请求。PowerShell 收到宿主就绪回执后退出。主界面连接断开时，监督进程在有限时间内重新发现主界面，复核原进程和环回监听归属后恢复上次壁纸或停用状态。Codex 退出后监督进程也退出。
 
-只接受本机已核对的 MSIX `26.1111.2228.0`、原 EXE SHA-256 `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6` 及 `OpenAI.Codex_2p2nqsd0c76g0!App`。更新后先用原入口；版本、摘要或登记不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
+启动器接受已核对的 x64 MSIX `26.1111.2228.0` 和 `26.1117.3838.0`。每个版本绑定各自的原 EXE SHA-256，并核验 `OpenAI.Codex_2p2nqsd0c76g0!App` 的登记。版本、摘要或登记不匹配时启动器不会接入。需要 Windows PowerShell 和 Node.js 24。
+
+桌面「Codex 壁纸」先显示上次壁纸的启动画面。启动层使用 PATH 中的 `ffmpeg.exe` 静音播放受核验的本地 Workshop 视频，或者播放主界面准备好的 Scene 和导入视频片段。片段只包含壁纸画面，按当前选择和适配方式缓存。缺少解码器或片段尚未准备好时使用静态首帧。壁纸停用后直接走原生启动。
+
+## 快捷键
+
+在 Codex 窗口内使用以下快捷键。主界面的壁纸工具栏已移除。
+
+- `Alt + Shift + S` 打开或收起壁纸设置。壁纸停用时，先用下方快捷键恢复。
+- `Alt + Shift + W` 关闭或恢复壁纸。重新开启后恢复上次选择的素材和设置。
 
 ## 交付与人工验收
 
-当前 worktree 是本地候选和自动测试证据，未部署为运行中版本；本轮没有连接、附加、启动、关闭或重启真实 Codex，也没有注册真实 Startup。脱敏历史录屏只证明曾观察到变更侧栏黑底；headless fixture 证明当前视觉/交互规则；二者都不替代真实 Codex、登录后宿主绑定或重启结果。03 的真实 detached 页面身份门禁仍未解决，因此没有按 URL 放行任何 browser/detached target。
+03 的验收基于本地候选、自动化测试和历史录屏。脱敏历史录屏只证明曾观察到变更侧栏黑底；headless fixture 证明当前视觉/交互规则；二者都不替代真实 Codex、登录后宿主绑定或重启结果。03 的真实 detached 页面身份门禁仍未解决，因此没有按 URL 放行任何 browser/detached target。
 
 从当前集成检出的工作树根目录执行：
 
 ```powershell
 # 打开当前 worktree 的专用候选入口
-.\launcher\Codex-Wallpaper.cmd
+powershell.exe -NoProfile -NonInteractive -STA -WindowStyle Hidden -File .\launcher\Start-CodexWallpaper.ps1 -Launch -Unattended
 
 # 只读检查现有实例；无专用成功回执时不会连接或注入
 powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
@@ -31,9 +40,9 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 人工门槛按以下顺序完成：
 
 1. 用户保存工作并完全退出 Codex。可先从原入口只读确认原账号和已有聊天正常，再退出；原入口保持未修改，自动接入仍未完成。
-2. 运行 `Codex-Wallpaper.cmd`，从专用实例打开同一聊天并确认当前壁纸。
+2. 运行上述隐藏启动命令，从专用实例打开同一聊天并确认当前壁纸。
 3. 选择本地图片、视频、代表性 Scene 和离线 Web；调整暗化、模糊、透明度、帧率、音量，并在聊天与变更侧栏间连续切换至少 10 次后返回。
-4. 点击“停用壁纸”，再按 `Alt+Shift+W` 恢复；确认当前素材和设置恢复、背景根层与控制层各一份、图片无活动播放器。对持久化为停用且上次选择按需素材的情况再退出/重开一次，确认快捷键恢复后会向真实媒体宿主请求素材，而不是永久停留在渐变。
+4. 按 `Alt + Shift + W` 停用壁纸，再按一次恢复；确认当前素材和设置恢复、背景根层与控制层各一份、图片无活动播放器。对持久化为停用且上次选择按需素材的情况再退出/重开一次，确认快捷键恢复后会向真实媒体宿主请求素材，而不是永久停留在渐变。
 5. 如验证登录入口，使用上面的 `-EnableStartup` 后由用户自行注销或重启；确认只复用/生成一个专用主进程且回执一致，完成后立即执行 `-DisableStartup`。
 6. 正常退出专用实例，再从原入口启动并执行只读检查；预期普通实例没有项目调试标志或环回监听。
 
@@ -54,20 +63,20 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -Startu
 powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -DisableStartup
 ```
 
-无人值守启动的回执保存在 `%LOCALAPPDATA%\CodexWallpaper\P0b`，并在 activation 阶段继续保留 `Mode: unattended-startup`。只有壁纸命令退出码为 0、响应状态为 `enabled` 或 `disabled` 时才写入 `dedicated-session.json`；该记录还必须与运行中主进程的 PID、创建时间、端口和环回监听归属全部一致时，重复入口才会直接成功返回；其他已运行实例都按冲突记录。
+无人值守启动的回执保存在 `%LOCALAPPDATA%\CodexWallpaper\P0b`。`Outcome` 为 `wallpaper-ready` 时，回执包含通过核验的主页面、`Wallpaper.hostReady`、候选哈希和监督进程 PID。壁纸偏好为停用时，`Wallpaper.state` 可以是 `disabled`。专用会话标记只有在宿主就绪后才写入。重复启动时，标记必须与运行中主进程的 PID、创建时间、端口和环回监听归属一致。若专用启动已核验主界面但注入失败，或成功回执对应的宿主随后消失，后续入口会先用本地回执、PID、创建时间、端口、日常 profile 和环回监听归属精确匹配该实例，再只重试监督握手；任一条件不匹配时仍保持原界面并拒绝接入。
 
 ## 手动验收
 
 选择一段可以完全退出 Codex 的空闲时间，建议预留 **20–30 分钟**。关闭窗口或最小化不等于完全退出。
 
 1. 从原入口启动，确认原账号和同一个已有聊天可用，然后完全退出。
-2. 双击 `Codex-Wallpaper.cmd`。预期控制台出现 `Outcome: read-only-probe-passed` 和 `Wallpaper: enabled`。
+2. 运行上述隐藏启动命令。预期回执的 `Outcome` 为 `wallpaper-ready`，`Wallpaper.hostReady` 为 `true`。
 3. 确认主聊天、工具卡片、代码、差异、输入框和左右面板可读可操作；切换明暗主题和窗口缩放。
-4. 点击右下角“壁纸设置”，导入一张图片和一个视频，分别切换；视频应默认静音并自动循环。
+4. 按 `Alt + Shift + S` 打开壁纸设置，导入一张图片和一个视频，分别切换；视频应默认静音并自动循环。
 5. 检查本机 Wallpaper Engine 条目分类。选择图片/视频、代表性 Scene 和离线 Web；记录原生播放、预览降级或不支持。
 6. 调整暗化、模糊、不透明度、帧率、音量和轮播间隔。把至少两个素材加入轮播，重开一次确认选择、收藏和列表恢复。
 7. 最小化、恢复并切换项目或聊天，确认不可见时停止绘制、恢复后继续。在另一个窗口确认设置一致但暂停状态独立。
-8. 点击“停用壁纸”，确认背景、设置面板和按钮立即消失；按 `Alt+Shift+W` 可重新启用。
+8. 按 `Alt + Shift + W`，确认背景和设置面板立即消失。再次按下可重新启用。
 9. 正常退出专用实例，再从原入口启动。运行以下只读状态检查，预期普通实例 `DebugFlag: false`、`ListeningPorts: []`：
 
 ```powershell
@@ -87,5 +96,6 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 ## 已知边界
 
 - 联网 Web 壁纸没有可证明的隔离通道，仍未启用；当前只支持不依赖外部网络的 `srcdoc` 沙箱和预览降级。
-- 单个主素材超过 512 MiB、读取失败或渲染器不支持时走作者预览降级。真实创意工坊兼容率必须逐样本验收，不能按扫描数量推定。
+- 视频主素材通过本地 File 通路支持到 1 GiB，超过 512 MiB 时不走 Base64 回退；其他素材和 File 不可用时的兼容回退仍以 512 MiB 为界。超过上限、读取失败或渲染器不支持时提交作者预览降级。真实创意工坊兼容率必须逐样本验收，不能按扫描数量推定。
+- 素材库索引超过复核窗口后先继续服务当前索引，后台用扫描签名判断是否重扫；每 5 分钟最多进行一次后台完整复核。File 输入使用 `objectId` 交接，不重复获取整棵 DOM。
 - CPU、GPU、内存预算和 8 小时、7 天结论尚未产生，必须按 [统一候选说明](../docs/planning/codex-wallpaper-candidate.md) 实测。

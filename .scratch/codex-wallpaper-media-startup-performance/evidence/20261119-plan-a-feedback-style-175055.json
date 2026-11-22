@@ -1,0 +1,62 @@
+{
+  "startedAt": "2026-11-19T09:50:55.311Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "temporaryRuntime": true,
+  "error": "SyntaxError: Invalid or unexpected token",
+  "lastSample": {
+    "targetId": "",
+    "wallMilliseconds": 8962772.700000003,
+    "state": {
+      "activeId": "3312633016",
+      "state": "enabled",
+      "playerCount": 0
+    },
+    "status": "正在加载：[鸣潮]_传承__",
+    "fileInputs": 0,
+    "staged": 0,
+    "pendingMedia": null,
+    "selectedMilliseconds": null,
+    "feedbackMilliseconds": null,
+    "committedMilliseconds": null,
+    "events": [],
+    "media": {
+      "tag": null,
+      "readyState": null,
+      "paused": null,
+      "width": null,
+      "height": null,
+      "currentTime": null,
+      "visibility": "visible"
+    }
+  },
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T09:50:55.682Z"
+}

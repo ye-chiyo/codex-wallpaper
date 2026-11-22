@@ -1,0 +1,219 @@
+{
+  "startedAt": "2026-11-20T05:12:55.787Z",
+  "port": 60377,
+  "expectedIdentity": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "115,500,404 B front moov",
+      "type": "video",
+      "startedAt": 701626.5,
+      "committedAt": 701993.7000000179,
+      "commitMilliseconds": 367.2000000178814,
+      "motion": {
+        "valid": true,
+        "first": {
+          "now": 702042.9,
+          "mediaTime": 0.033333
+        },
+        "second": {
+          "now": 702076.3,
+          "mediaTime": 0.066667
+        },
+        "count": 2,
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "error": null,
+        "visible": true
+      },
+      "counters": {
+        "file": 3,
+        "base64": 0,
+        "finished": 1,
+        "errors": 0,
+        "staged": 0,
+        "temporaryInputs": 0
+      },
+      "status": "[ 明 日 方 舟 ] · 视频"
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "75,689,196 B tail moov",
+      "type": "video",
+      "startedAt": 703746,
+      "committedAt": 703929.7000000179,
+      "commitMilliseconds": 183.7000000178814,
+      "motion": {
+        "valid": true,
+        "first": {
+          "now": 703963.732,
+          "mediaTime": 1.933333
+        },
+        "second": {
+          "now": 703976.2,
+          "mediaTime": 1.966667
+        },
+        "count": 2,
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "error": null,
+        "visible": true
+      },
+      "counters": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "errors": 0,
+        "staged": 0,
+        "temporaryInputs": 0
+      },
+      "status": "明日方舟 X 轻音少女 · 视频"
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "ordinary image",
+      "type": "image",
+      "startedAt": 699464.8000000119,
+      "committedAt": 699922.7000000179,
+      "commitMilliseconds": 457.90000000596046,
+      "motion": null,
+      "counters": {
+        "file": 32,
+        "base64": 0,
+        "finished": 1,
+        "errors": 0,
+        "staged": 0,
+        "temporaryInputs": 0
+      },
+      "status": "轻音少女 · image"
+    },
+    "3403349435": {
+      "id": "3403349435",
+      "title": "564,467,901 B bridge",
+      "type": "video",
+      "startedAt": 705655.900000006,
+      "committedAt": 705876.099999994,
+      "commitMilliseconds": 220.19999998807907,
+      "motion": {
+        "valid": true,
+        "first": {
+          "now": 705909.59,
+          "mediaTime": 1.866667
+        },
+        "second": {
+          "now": 705934.6,
+          "mediaTime": 1.9
+        },
+        "count": 2,
+        "readyState": 4,
+        "paused": false,
+        "width": 1920,
+        "height": 1080,
+        "error": null,
+        "visible": true
+      },
+      "counters": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "errors": 0,
+        "staged": 0,
+        "temporaryInputs": 0
+      },
+      "status": "吊桥-义妹生活/绫濑沙季 · 视频"
+    },
+    "3813100090": {
+      "id": "3813100090",
+      "title": "4K video",
+      "type": "video",
+      "startedAt": 707605.599999994,
+      "committedAt": 707727.2000000179,
+      "commitMilliseconds": 121.60000002384186,
+      "motion": {
+        "valid": true,
+        "first": {
+          "now": 707792.796,
+          "mediaTime": 1.75
+        },
+        "second": {
+          "now": 707830.4,
+          "mediaTime": 1.766667
+        },
+        "count": 2,
+        "readyState": 4,
+        "paused": false,
+        "width": 3840,
+        "height": 2716,
+        "error": null,
+        "visible": true
+      },
+      "counters": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "errors": 0,
+        "staged": 0,
+        "temporaryInputs": 0
+      },
+      "status": "DeepSeek娘4k超分60帧壁纸 · 视频"
+    }
+  },
+  "transition": {
+    "from": {
+      "id": "3809295036",
+      "title": "4K90"
+    },
+    "to": {
+      "id": "3272086010",
+      "title": "《鸣潮》今昔"
+    },
+    "oldLayerExisted": true,
+    "startedAt": 709715,
+    "committedAt": 709896.7000000179,
+    "commitMilliseconds": 181.7000000178814,
+    "motion": {
+      "valid": true,
+      "first": {
+        "now": 709913.666,
+        "mediaTime": 0.966667
+      },
+      "second": {
+        "now": 709942.9,
+        "mediaTime": 1
+      },
+      "count": 2,
+      "readyState": 4,
+      "paused": false,
+      "width": 3840,
+      "height": 2160,
+      "error": null,
+      "visible": true
+    },
+    "counters": {
+      "file": 1,
+      "base64": 0,
+      "finished": 1,
+      "errors": 0,
+      "staged": 0,
+      "temporaryInputs": 0
+    }
+  },
+  "identity": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "restored": {
+    "configExact": true,
+    "activeId": "3230938311",
+    "hostReady": true
+  },
+  "changed": false,
+  "finishedAt": "2026-11-20T05:13:08.422Z"
+}
