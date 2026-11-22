@@ -22,10 +22,8 @@ function createRuntimeStyles(rootId, controlsId) {
   const rightBody = `${rightFocus}:has(${paneViewport})`;
   const rightTitlebar = `${workspaceFrame}:has(${rightViewport}) [data-app-shell-titlebar]:has([data-app-shell-workspace-layout-toggle='right-panel'])`;
   const splitTitlePaint = `html:has(${rightViewport}) #${rootId} [data-codex-wallpaper-layer]`;
-  const panelColor = surfaceColor(
-    "var(--codex-wallpaper-panel-base)",
-    "settings"
-  );
+  const panelColor =
+    "color-mix(in srgb, var(--codex-wallpaper-panel-base) 96%, transparent)";
   const profileAccountRow = `body:has(button[aria-haspopup='menu'][aria-expanded='true']:is([aria-label='打开个人资料菜单'], [aria-label='Open profile menu']))
         [role='menu'][data-radix-menu-content][data-state='open'] > :first-child > [role='presentation']:first-child
         > [role='menuitem'][aria-disabled='true'][data-disabled]:only-child:has(> [data-menu-row-content] > [data-leading-icon-slot='menu'])`;
@@ -246,7 +244,7 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
         --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(12 12 16));
         --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(24 24 28));
-        --codex-wallpaper-native-settings-tint: 20%;
+        --codex-wallpaper-native-settings-tint: 0%;
         --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
         --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
         --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
@@ -539,7 +537,6 @@ function createCodexWallpaperRuntime(
         left: null,
         sidebar: null,
         right: null,
-        settings: null,
       },
       fps: 30,
       volume: 0,
@@ -641,6 +638,7 @@ function createCodexWallpaperRuntime(
         if (!value || typeof value !== "object" || Array.isArray(value))
           return { error: "surfaceOverrides 结构无效" };
         for (const [scope, override] of Object.entries(value)) {
+          if (scope === "settings") continue;
           if (!surfaceScopes.has(scope))
             return { error: `surfaceOverrides 包含未知分区：${scope}` };
           if (
@@ -1408,7 +1406,7 @@ function createCodexWallpaperRuntime(
     const overrides = config.settings.surfaceOverrides || {};
     if (hasSurfaceOverride(scope))
       return Math.max(0, Math.min(100, Number(overrides[scope])));
-    const factor = { chat: 0.25, sidebar: 1, right: 0, settings: 1.3 }[scope];
+    const factor = { chat: 0.25, sidebar: 1, right: 0 }[scope];
     return Math.min(100, Math.round(globalOpacity * (factor ?? 1)));
   }
 
@@ -1433,7 +1431,6 @@ function createCodexWallpaperRuntime(
   }
 
   function applyInterfaceAppearance() {
-    const settingsOpacity = surfaceOpacityValue("settings");
     const blurFilter = (value) => {
       const pixels = Math.max(0, Math.min(24, Number(value) || 0));
       return pixels > 0 ? `blur(${pixels}px)` : "none";
@@ -1446,12 +1443,9 @@ function createCodexWallpaperRuntime(
       "left-opacity": `${surfaceOpacityValue("left")}%`,
       "sidebar-opacity": `${surfaceOpacityValue("sidebar")}%`,
       "right-opacity": `${surfaceOpacityValue("right")}%`,
-      "settings-opacity": `${settingsOpacity}%`,
-      "settings-glass-opacity": `${
-        hasSurfaceOverride("settings") ? settingsOpacity : 68 + settingsOpacity * 0.32
-      }%`,
-      "settings-canvas-opacity": `${Math.round(settingsOpacity * 0.68)}%`,
-      "settings-card-opacity": `${Math.round(settingsOpacity * 0.45)}%`,
+      "settings-glass-opacity": "96%",
+      "settings-canvas-opacity": "0%",
+      "settings-card-opacity": "0%",
       "settings-blur": blurFilter(config.settings.interfaceBlur),
       "chat-blur": blurFilter(config.settings.chatBlur),
       "right-blur": blurFilter(config.settings.rightBlur),
@@ -3062,8 +3056,7 @@ function createCodexWallpaperRuntime(
         surfaceOverrideControl("聊天区覆盖", "chat"),
         surfaceOverrideControl("左侧面板覆盖", "left"),
         surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
-        surfaceOverrideControl("右侧面板覆盖", "right"),
-        surfaceOverrideControl("设置面板覆盖", "settings")
+        surfaceOverrideControl("右侧面板覆盖", "right")
       );
       const picture = settingsGroup(
         "壁纸画面",

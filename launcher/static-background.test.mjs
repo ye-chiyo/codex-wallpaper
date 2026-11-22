@@ -4809,7 +4809,7 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   await click("[data-panel-page=appearance]");
   const preference = "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
   const border = "[data-setting=interfaceBorders]";
-  const scopes = ["chat", "left", "sidebar", "right", "settings"];
+  const scopes = ["chat", "left", "sidebar", "right"];
   const affordance = await evaluate(`(() => {
     const box = document.querySelector('${border}');
     return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
@@ -4821,6 +4821,9 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   ), true);
   assert.equal(await evaluate(
     'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
+  ), true);
+  assert.equal(await evaluate(
+    'document.querySelector("[data-surface-override-value=settings]") === null'
   ), true);
 
   const initialBorders = await evaluate(`document.querySelector('${border}').checked`);
@@ -5000,7 +5003,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
         input.value = value;
         input.dispatchEvent(new Event("input", { bubbles: true }));
       };
-      const scopes = ["chat", "left", "sidebar", "right", "settings"];
+      const scopes = ["chat", "left", "sidebar", "right"];
       const restoreSurface = (scope) => panel.querySelector('[data-restore-surface=' + scope + ']').click();
       const zoneState = () => [
         chatAlpha(),
@@ -5126,15 +5129,9 @@ test("appearance controls update wallpaper and surface layers without reloading 
       const settingsCanvasBefore = alphaOf(
         getComputedStyle(settingsCanvas).backgroundColor
       );
-      const settingsRange = panel.querySelector(
-        "[data-surface-override-value='settings']"
-      );
-      settingsRange.value = "70";
-      settingsRange.dispatchEvent(new Event("input", { bubbles: true }));
       const settingsCanvasAfter = alphaOf(
         getComputedStyle(settingsCanvas).backgroundColor
       );
-      panel.querySelector("[data-restore-surface='settings']").click();
 
       const chatRange = panel.querySelector(
         "[data-surface-override-value='chat']"
@@ -5260,14 +5257,16 @@ test("appearance controls update wallpaper and surface layers without reloading 
           restores: restoredTopPaint === defaultTopPaint
         },
         settingsSurface: {
-          changes: settingsCanvasAfter !== settingsCanvasBefore,
+          controlAbsent:
+            panel.querySelector("[data-surface-override-value='settings']") === null,
           effective: settingsCanvasAfter > 0
         },
         override,
         restored,
         lightSurfaceTranslucent: lightAlpha > 0 && lightAlpha < 1,
         reopened,
-        crossWindow
+        crossWindow,
+        settingsCanvasUnchanged: settingsCanvasAfter === settingsCanvasBefore
       };
     })()`,
     options
@@ -5292,7 +5291,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     clearLeft: { left: 0, frame: 0, chat: 0.14 },
     restoredLeft: { left: 0.55, frame: 0, chat: 0.14 },
     allClear: {
-      zones: [0, 0, 0, 0, 0, 0, 0],
+      zones: [0, 0, 0, 0, 0, 0, 0.96],
       frameColor: 0,
       frameImage: "none",
       backingColor: 0,
@@ -5304,14 +5303,13 @@ test("appearance controls update wallpaper and surface layers without reloading 
       panelFilter: "none",
     },
     oneAtATime: [
-      [0.4, 0, 0, 0, 0, 0, 0],
-      [0, 0.4, 0, 0, 0, 0, 0],
-      [0, 0, 0.4, 0.4, 0, 0, 0],
-      [0, 0, 0, 0, 0.4, 0.4, 0],
-      [0, 0, 0, 0, 0, 0, 0.4],
+      [0.4, 0, 0, 0, 0, 0, 0.96],
+      [0, 0.4, 0, 0, 0, 0, 0.96],
+      [0, 0, 0.4, 0.4, 0, 0, 0.96],
+      [0, 0, 0, 0, 0.4, 0.4, 0.96],
     ],
     pinnedTreeClips: [28, 43],
-    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0.9104],
+    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0.96],
     settingsOnlyBlur: ["blur(8px)", "none", "none", "none"],
     chatOnlyBlur: ["none", "blur(12px)", "none", "none"],
     chatBlurMatchesLayout: true,
@@ -5331,8 +5329,8 @@ test("appearance controls update wallpaper and surface layers without reloading 
     flushChatEdge: true,
     top: { changes: true, restores: true },
     settingsSurface: {
-      changes: true,
-      effective: true,
+      controlAbsent: true,
+      effective: false,
     },
     override: {
       inheritedValue: "14",
@@ -5361,8 +5359,9 @@ test("appearance controls update wallpaper and surface layers without reloading 
       fit: "contain",
       chatOverride: 0.44,
       projectBlur: "blur(14px)",
-      settingsOverride: 0.7,
+      settingsOverride: 0.96,
     },
+    settingsCanvasUnchanged: true,
   });
 
   const second = await evaluateInPage(
@@ -5406,7 +5405,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     sidebarReadability: "60",
     chatBlur: "16",
     rightBlur: "20",
-    settingsOverride: 0.7,
+    settingsOverride: 0.96,
   });
 });
 
@@ -6533,7 +6532,7 @@ test("modern tab side panels use the wallpaper surface material", async (t) => {
   assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
-test("the native settings dialog uses a 20 percent theme tint for its two columns", async (t) => {
+test("the native settings dialog shows the wallpaper without a background tint", async (t) => {
   const { port, options } = await startRuntimeFixture(t);
   await evaluateInPage(
     port,
@@ -6637,7 +6636,7 @@ test("the native settings dialog uses a 20 percent theme tint for its two column
     sidebar: "rgba(0, 0, 0, 0)",
     content: "rgba(0, 0, 0, 0)",
   });
-  assert.equal(alpha(adapted.backdrop), 0.2);
+  assert.equal(alpha(adapted.backdrop), 0);
   const light = await evaluateInPage(
     port,
     `(() => {
@@ -6646,24 +6645,9 @@ test("the native settings dialog uses a 20 percent theme tint for its two column
     })()`,
     options
   );
-  assert.notEqual(light.backdrop, adapted.backdrop);
-  assert.equal(alpha(light.backdrop), 0.2);
+  assert.equal(light.backdrop, adapted.backdrop);
+  assert.equal(alpha(light.backdrop), 0);
   assert.equal(light.blur, adapted.blur);
-  const minimum = await evaluateInPage(
-    port,
-    `(() => {
-      const controls = document.getElementById("${controlRootId}");
-      ${toggleSettings};
-      controls.querySelector("[data-panel-page='appearance']").click();
-      const range = controls.querySelector("[data-surface-override-value='settings']");
-      range.value = "0";
-      range.dispatchEvent(new Event("input", { bubbles: true }));
-      return ${appearance};
-    })()`,
-    options
-  );
-  assert.ok(alpha(minimum.backdrop) === alpha(light.backdrop));
-  assert.equal(minimum.blur, adapted.blur);
   await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
   assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
@@ -8379,7 +8363,6 @@ test("static background is single, removable and persists disabled", async (t) =
           left: null,
           sidebar: null,
           right: null,
-          settings: null,
         },
         fps: 15,
         volume: 0,
@@ -8521,7 +8504,6 @@ test("static background is single, removable and persists disabled", async (t) =
           left: null,
           sidebar: null,
           right: null,
-          settings: null,
         },
         fps: 15,
         volume: 0,
@@ -8945,10 +8927,8 @@ test("static background is single, removable and persists disabled", async (t) =
       navigation.setAttribute("data-settings-nav-scroll-container", "");
       await new Promise(requestAnimationFrame);
       return {
-        viewportTranslucent:
-          readAlpha(viewport) > 0 && readAlpha(viewport) < 1,
-        cardTranslucent: readAlpha(card) > 0 && readAlpha(card) < 1,
-        cardBelowViewport: readAlpha(card) < readAlpha(viewport),
+        viewportTransparent: readAlpha(viewport) === 0,
+        cardTransparent: readAlpha(card) === 0,
         searchHasMaterial:
           getComputedStyle(searchShell).boxShadow !== "none",
         selectedHasMaterial:
@@ -8960,10 +8940,7 @@ test("static background is single, removable and persists disabled", async (t) =
             .backgroundColor !== "rgba(255, 255, 255, 0.05)",
         switchHasMaterial:
           getComputedStyle(switchTrack).boxShadow !== "none",
-        themesDiffer:
-          dark.viewport !== light.viewport &&
-          dark.card !== light.card &&
-          dark.search !== light.search,
+        themesDiffer: dark.search !== light.search,
         scopedToSettings:
           getComputedStyle(decoy).backgroundColor === "rgb(35, 35, 35)",
         restoresOrdinarySurfaces,
@@ -8992,9 +8969,8 @@ test("static background is single, removable and persists disabled", async (t) =
         keyboardFocus.focusVisible && keyboardFocus.outline !== "none",
     },
     {
-      viewportTranslucent: true,
-      cardTranslucent: true,
-      cardBelowViewport: true,
+      viewportTransparent: true,
+      cardTransparent: true,
       searchHasMaterial: true,
       selectedHasMaterial: true,
       controlHasMaterial: true,
