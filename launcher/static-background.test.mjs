@@ -1256,6 +1256,7 @@ async function clickAtElementCenter(port, options, selector) {
 
 async function pressWallpaperShortcut(port, options, key) {
   const virtualKey = key.charCodeAt(0);
+  await callMainPage(port, "Page.bringToFront", {}, options.page, true);
   for (const type of ["rawKeyDown", "keyUp"]) {
     await callMainPage(
       port,
