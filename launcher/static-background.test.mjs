@@ -112,7 +112,6 @@ async function startCdpFixture(
   let sessions = 0;
   let switched = false;
   let replacementId = null;
-  let overlappingId = null;
   let hostConnections = 0;
   let originIndex = 0;
   const delivered = Promise.withResolvers();
@@ -152,13 +151,16 @@ async function startCdpFixture(
         : oldId);
     response.end(
       JSON.stringify(
-        [targetId, overlappingId].filter(Boolean).map((id) => ({
-          id,
-          type: "page",
-          url: "app://-/index.html",
-          webSocketDebuggerUrl:
-            "ws://127.0.0.1:" + server.address().port + "/devtools/page/" + id,
-        }))
+        targetId
+          ? [
+              {
+                id: targetId,
+                type: "page",
+                url: "app://-/index.html",
+                webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${targetId}`,
+              },
+            ]
+          : []
       )
     );
   });
@@ -234,20 +236,6 @@ async function startCdpFixture(
                     "globalThis.__codexWallpaperApi.configureHost()"
                   ? { state: "enabled", hostReady: true }
                   : { state: "disabled", backgroundLayers: 0 };
-            if (value instanceof Promise) {
-              value.then((resolved) => {
-                socket.write(
-                  encodeWebSocketText(
-                    JSON.stringify({
-                      id: command.id,
-                      result: { result: { value: resolved } },
-                    })
-                  )
-                );
-              });
-              frame = takeWebSocketText(incoming);
-              continue;
-            }
             result = { result: { value } };
           }
         }
@@ -289,13 +277,9 @@ async function startCdpFixture(
     get switched() {
       return switched;
     },
-    replaceTarget(id, overlap = null) {
+    replaceTarget(id) {
       replacementId = id;
-      overlappingId = overlap;
       pageSocket.destroy();
-    },
-    finishTargetReplacement() {
-      overlappingId = null;
     },
     stopHost() {
       requestHost("stop");
@@ -507,18 +491,7 @@ test(
       [{ files: [join(project, "clip.mp4")], objectId: "file-input" }]
     );
 
-    const beforeReplacement = cdp.discoveries;
-    cdp.replaceTarget(
-      "11111111111111111111111111111111",
-      "fedcba9876543210fedcba9876543210"
-    );
-    await waitForCondition(
-      () => cdp.discoveries >= beforeReplacement + 2,
-      4000,
-      "The supervisor must keep looking while two main pages overlap"
-    );
-    assert.equal(cdp.hostConnections, 1);
-    cdp.finishTargetReplacement();
+    cdp.replaceTarget("11111111111111111111111111111111");
     await waitForCondition(
       () => completedTransfers === 2,
       8000,
@@ -557,7 +530,7 @@ test(
 );
 
 test(
-  "startup leaves an existing mismatched runtime in place",
+  "startup leaves a mismatched wallpaper runtime in place and tells the user to reopen Codex",
   { timeout: 8000 },
   async (t) => {
     const actions = [];
@@ -573,29 +546,16 @@ test(
     };
     context.window.top = context.window;
     const cdp = await startExactCdpFixture(t, (expression) =>
-      Promise.resolve(runInNewContext(expression, context))
+      runInNewContext(expression, context)
     );
-    const child = spawn(
-      process.execPath,
-      ["launcher/startup-supervisor.mjs", String(cdp.port)],
-      {
-        stdio: ["pipe", "pipe", "ignore"],
-        windowsHide: true,
-      }
+    const receipt = await runStartupHandoff(t, cdp);
+    assert.equal(receipt.TargetVerified, true);
+    assert.equal(receipt.Outcome, "runtime-version-mismatch", receipt.SupervisorError);
+    assert.match(
+      receipt.LauncherMessages.join("\n"),
+      /Fully quit Codex, then reopen it with the dedicated wallpaper launcher/
     );
-    t.after(() => child.kill());
-    const done = once(child, "exit");
-    const output = createInterface({ input: child.stdout });
-    const [first] = await once(output, "line");
-    const verified = JSON.parse(first);
-    assert.equal(verified.state, "verified");
-    const failure = once(output, "line");
-    child.stdin.write("attach " + verified.verification + "\n");
-    assert.deepEqual(JSON.parse((await failure)[0]), {
-      state: "failed",
-      error: "runtime-not-ready",
-    });
-    assert.deepEqual(await done, [1, null]);
+    assert.equal(cdp.hostConnections, 0);
     assert.deepEqual(actions, []);
     assert.equal(context.__codexWallpaperApi, existing);
     assert.equal(context.__codexWallpaperStartupPid, undefined);
@@ -764,7 +724,8 @@ async function runStartupHandoff(
     $receipt.MainCreated = (Get-CimInstance Win32_Process -Filter 'ProcessId=${listenerOwner}').CreationDate.ToString('o')
     $script:wallpaperRecheckCount = 0
     $stateFolder = ${previewFolder ? psLiteral(previewFolder) : "$null"}
-    Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"}
+    $messages = @(Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"} 6>&1 | ForEach-Object { $_.ToString() })
+    if ($messages.Count) { $receipt.LauncherMessages = $messages }
     $receipt.TargetRecheckCount = $script:wallpaperRecheckCount
     $receipt | ConvertTo-Json -Depth 6 -Compress
   `;
@@ -1209,7 +1170,7 @@ async function waitForPort(profile) {
 }
 
 async function waitForPage(port, options) {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
     const href = await evaluateInPage(port, "location.href", options);
     if (href === options.page) return;
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -1307,6 +1268,20 @@ async function pressWallpaperShortcut(port, options, key) {
       true
     );
   }
+}
+
+async function toggleWallpaperPanel(port, options) {
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
 }
 
 test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
@@ -3002,6 +2977,119 @@ test("reenabling during a video transfer discards the old stream and accepts its
   });
 });
 
+test("a failed local import reports the error and leaves the active wallpaper and library intact", async (t) => {
+  const fixture = await startHtmlFixture(`<!doctype html><html><body>
+    <div data-app-shell-active-page="true">
+      <main data-app-shell-main-surface>
+        <textarea data-composer-surface-variant="default"></textarea>
+      </main>
+    </div>
+  </body></html>`);
+  const { port, options } = await startRuntimeFixture(
+    t,
+    { version: 1, library: [] },
+    fixture
+  );
+  const evaluate = (expression) => evaluateInPage(port, expression, options);
+  await evaluate(runtimeSource(options.payload, true, true));
+  const image = `document.querySelector("#${rootId} .media:not(.staged) img")`;
+  const status = `document.querySelector("#${controlRootId} .runtime-status")`;
+  await waitForCondition(
+    () => evaluate(`Boolean(${status})`),
+    3000,
+    "wallpaper settings were not mounted"
+  );
+  await evaluate(`(() => {
+    globalThis.fixtureOpen = indexedDB.open;
+    indexedDB.open = () => {
+      throw new DOMException("Database access denied", "SecurityError");
+    };
+    ${toggleSettings};
+    globalThis.chooseFixtureImage = (name) => {
+      const input = document.querySelector("#${controlRootId} .import-row input");
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(
+        ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+        name,
+        { type: "image/svg+xml" }
+      ));
+      input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+  })()`);
+  await evaluate('chooseFixtureImage("Database unavailable.svg")');
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
+    2000,
+    "a database-open failure did not report a failure in wallpaper settings"
+  );
+  await evaluate(`(() => {
+    indexedDB.open = fixtureOpen;
+    delete globalThis.fixtureOpen;
+    chooseFixtureImage("Existing wallpaper.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${image}?.naturalWidth > 0`),
+    3000,
+    "the initial import did not become visible"
+  );
+  const saved = await evaluate(
+    'localStorage.getItem("codex-wallpaper-p1-config")'
+  );
+  const source = await evaluate(`${image}.src`);
+  await evaluate(`(() => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (item) {
+      const request = put.call(this, item);
+      if (item.title === "Aborted.svg") this.transaction.abort();
+      return request;
+    };
+    chooseFixtureImage("Aborted.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
+    2000,
+    "an aborted import did not report a failure in wallpaper settings"
+  );
+  assert.deepEqual(
+    await evaluate(`(() => ({
+      saved: localStorage.getItem("codex-wallpaper-p1-config"),
+      source: ${image}.src,
+      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
+        .map((title) => title.textContent)
+    }))()`),
+    { saved, source, titles: ["Existing wallpaper.svg"] }
+  );
+  await evaluate(`(() => {
+    const get = IDBObjectStore.prototype.get;
+    const activeId = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).active.id;
+    IDBObjectStore.prototype.get = function (id) {
+      if (id !== activeId)
+        throw new DOMException("Cannot read the newly saved file", "UnknownError");
+      return get.call(this, id);
+    };
+    chooseFixtureImage("Saved but unreadable.svg");
+  })()`);
+  await waitForCondition(
+    () => evaluate(`${status}.textContent.includes("素材已保存，但无法打开")`),
+    2000,
+    "a saved file that failed to open did not report a failure in wallpaper settings"
+  );
+  assert.deepEqual(
+    await evaluate(`(() => ({
+      saved: localStorage.getItem("codex-wallpaper-p1-config"),
+      source: ${image}.src,
+      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
+        .map((title) => title.textContent)
+    }))()`),
+    {
+      saved,
+      source,
+      titles: ["Saved but unreadable.svg", "Existing wallpaper.svg"],
+    }
+  );
+});
+
 test("failed first video shows its preview instead of a blank background", async (t) => {
   const { fixture, port, options } = await startRuntimeFixture(t, {
     version: 1,
@@ -3582,6 +3670,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
         }
         ${toggleSettings};
         const panel = controls.querySelector("[data-codex-wallpaper-panel]");
+        const content = panel.querySelector(".panel-content");
         panel.querySelector("[data-panel-page='playback']").click();
         const settings = controls.querySelector(".settings-grid");
         const cards = [...controls.querySelectorAll(".card")];
@@ -3590,7 +3679,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
           (range) => range.querySelector("span")?.textContent === "音量"
         ).querySelector("input");
         volume.focus();
-        panel.scrollTop = 60;
+        content.scrollTop = 60;
         let cardAdds = 0;
         let mediaMutations = 0;
         const cardObserver = new MutationObserver((records) => {
@@ -3654,7 +3743,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
           videoVolume: video?.volume,
           videoMuted: video?.muted,
           panelOpen: panel.classList.contains("open"),
-          panelScrollTop: panel.scrollTop,
+          contentScrollTop: content.scrollTop,
           volumeFocused: document.activeElement === volume,
           settingsSame:
             settings === controls.querySelector(".settings-grid"),
@@ -3694,7 +3783,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
       videoVolume: 0.4,
       videoMuted: false,
       panelOpen: true,
-      panelScrollTop: 60,
+      contentScrollTop: 60,
       volumeFocused: true,
       settingsSame: true,
       favoritePressed: "true",
@@ -4311,11 +4400,12 @@ test("wallpaper library shell combines filters without reloading the current med
         search.tabIndex >= 0 &&
         type.tabIndex >= 0 &&
         favorites.tabIndex >= 0;
-      panel.scrollTop = panel.scrollHeight;
+      const content = panel.querySelector(".panel-content");
+      content.scrollTop = content.scrollHeight;
       const scrollable =
-        getComputedStyle(panel).overflowY === "auto" &&
-        panel.scrollHeight > panel.clientHeight &&
-        panel.scrollTop > 0;
+        getComputedStyle(content).overflowY === "auto" &&
+        content.scrollHeight > content.clientHeight &&
+        content.scrollTop > 0;
 
       const close = panel.querySelector("header button");
       close.click();
@@ -4869,8 +4959,21 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   });
   const evaluate = (expression) => evaluateInPage(port, expression, options);
   const click = async (selector) => {
-    await evaluate(
-      `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`
+    await waitForCondition(
+      () =>
+        evaluate(`(() => {
+          const control = document.querySelector(${JSON.stringify(selector)});
+          control?.scrollIntoView({ block: "center", inline: "nearest" });
+          const rect = control?.getBoundingClientRect();
+          if (!rect) return false;
+          const hit = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2
+          );
+          return Boolean(hit && (hit === control || control.contains(hit)));
+        })()`),
+      3000,
+      `click target did not become operable: ${selector}`
     );
     assert.equal(
       await clickAtElementCenter(port, options, selector),
@@ -4888,30 +4991,53 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     document.head.append(style);
   })()`);
   await applyStaticBackground(port, options);
-  await pressWallpaperShortcut(port, options, "S");
+  await toggleWallpaperPanel(port, options);
+  await waitForCondition(
+    () =>
+      evaluate(
+        `Boolean(document.querySelector("#${controlRootId} .panel.open"))`
+      ),
+    3000,
+    "wallpaper settings panel did not open"
+  );
   assert.equal(
     await evaluate(
       'getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'
     ),
     "auto"
   );
-  await click("[data-panel-page=appearance]");
-  await click("[data-panel-region=appearance] summary");
+  await waitForCondition(
+    () =>
+      evaluate(`(() => {
+        document.querySelector("[data-panel-page=appearance]").click();
+        const region = document.querySelector("[data-panel-region=appearance]");
+        return Boolean(region && !region.hidden && region.offsetHeight > 0);
+      })()`),
+    3000,
+    "appearance settings page did not become visible"
+  );
   const preference =
     "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
   const border = "[data-setting=interfaceBorders]";
-  const scopes = ["chat", "sidebar", "right", "settings"];
-  for (const selector of [
-    border,
-    ...scopes.map((scope) => `[data-surface-override=${scope}]`),
-  ]) {
-    const affordance = await evaluate(`(() => {
-      const box = document.querySelector(${JSON.stringify(selector)});
-      return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
-    })()`);
-    assert.notEqual(affordance.appearance, "none", selector);
-    assert.ok(affordance.width >= 16 && affordance.height >= 16, selector);
-  }
+  const scopes = ["chat", "left", "sidebar", "right", "settings"];
+  const affordance = await evaluate(`(() => {
+    const box = document.querySelector('${border}');
+    return { appearance: getComputedStyle(box).appearance, width: box.offsetWidth, height: box.offsetHeight };
+  })()`);
+  assert.notEqual(affordance.appearance, "none", border);
+  assert.ok(affordance.width >= 16 && affordance.height >= 16, border);
+  assert.equal(
+    await evaluate(
+      'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
+    ),
+    true
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
+    ),
+    true
+  );
 
   const initialBorders = await evaluate(
     `document.querySelector('${border}').checked`
@@ -4928,18 +5054,21 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   );
 
   for (const scope of scopes) {
-    const override = `[data-surface-override=${scope}]`;
     const slider = `[data-surface-override-value=${scope}]`;
     const restore = `[data-restore-surface=${scope}]`;
     const state = () =>
       evaluate(`[
-      document.querySelector('${override}').checked,
       document.querySelector('${slider}').disabled,
       document.querySelector('${restore}').disabled
     ]`);
-    assert.deepEqual(await state(), [false, true, true]);
-    await click(override);
-    assert.deepEqual(await state(), [true, false, false]);
+    assert.deepEqual(await state(), [false, false]);
+    assert.equal(
+      await evaluate(`document.querySelector('${restore}').textContent`),
+      "恢复默认"
+    );
+    const inherited = await evaluate(
+      `document.querySelector('${slider}').value`
+    );
     await click(slider);
     for (const type of ["rawKeyDown", "keyUp"]) {
       await callMainPage(
@@ -4960,18 +5089,25 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
       ),
       "100%"
     );
-    await click(restore);
-    assert.deepEqual(await state(), [false, true, true]);
-    assert.equal(
-      await evaluate(`${preference}.surfaceOverrides.${scope}`),
-      null
-    );
-    assert.equal(
-      await evaluate(
-        `document.activeElement === document.querySelector('${override}')`
-      ),
-      true
-    );
+    assert.deepEqual(await state(), [false, false]);
+    for (let repeat = 0; repeat < 2; repeat += 1) {
+      await click(restore);
+      assert.deepEqual(await state(), [false, false]);
+      assert.equal(
+        await evaluate(`document.querySelector('${slider}').value`),
+        inherited
+      );
+      assert.equal(
+        await evaluate(`${preference}.surfaceOverrides.${scope}`),
+        null
+      );
+      assert.equal(
+        await evaluate(
+          `document.activeElement === document.querySelector('${restore}')`
+        ),
+        true
+      );
+    }
   }
 });
 
@@ -5006,6 +5142,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
           dim: 18,
           blur: 0,
           opacity: 100,
+          surfaceOpacity: 55,
           fps: 30,
           volume: 0,
           rotationMinutes: 0
@@ -5035,8 +5172,12 @@ test("appearance controls update wallpaper and surface layers without reloading 
       const settingsCanvas = settingsHost.querySelector(
         "[class~='electron:bg-surface']"
       );
-      const alphaOf = (value) =>
-        Number(value.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1] ?? 0);
+      const alphaOf = (value) => {
+        const alpha = value.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1];
+        if (alpha !== undefined) return Number(alpha);
+        if (value.startsWith("rgba(")) return Number(value.slice(5, -1).split(",").at(-1));
+        return 1;
+      };
       const setRange = (name, value) => {
         const input = panel.querySelector(\`[data-setting="\${name}"]\`);
         input.value = value;
@@ -5057,18 +5198,153 @@ test("appearance controls update wallpaper and surface layers without reloading 
       };
 
       const rootStyleBeforePreview = document.documentElement.getAttribute("style");
-      setRange("surfaceOpacity", "55");
       const surfaceAlpha = (selector) =>
         alphaOf(getComputedStyle(document.querySelector(selector)).backgroundColor);
       const globalSurface = surfaceAlpha("body [data-app-shell-frame]");
       const inheritedChat = surfaceAlpha("[data-app-shell-main-surface]");
       const inheritedSidebar = surfaceAlpha("[data-app-shell-page-sidebar]");
+      const frame = document.querySelector("[data-app-shell-frame]");
+      frame.dataset.appShellResponsiveSidebar = "false";
+      frame.dataset.appShellApplicationMenuBar = "true";
+      frame.style.setProperty("--app-shell-sidebar-docked-background", "rgb(24 24 28 / .5)");
+      frame.style.setProperty("--app-shell-application-menu-height", "36px");
+      frame.style.setProperty("--app-shell-titlebar-height", "8px");
+      frame.style.backgroundImage = "linear-gradient(var(--app-shell-sidebar-docked-background), var(--app-shell-sidebar-docked-background))";
+      const dockedRow = document.createElement("div");
+      dockedRow.dataset.appShellWorkspaceRow = "";
+      dockedRow.innerHTML = '<div data-app-shell-workspace><div data-app-shell-left-panel-appearance></div><div data-app-shell-surface-backing style="position:absolute;inset:0;border-start-start-radius:12px"></div></div>';
+      frame.append(dockedRow);
+      const chat = frame.querySelector("[data-app-shell-main-surface]");
+      chat.classList.add("mt-(--app-shell-titlebar-height)");
+      chat.style.borderInlineStart = "1px solid transparent";
+      const layout = document.createElement("div");
+      layout.dataset.appShellMainContentLayout = "thread-edge-scroll";
+      layout.dataset.appShellWorkspaceLayout = "split";
+      layout.style.minHeight = "180px";
+      const right = document.createElement("div");
+      right.dataset.appShellFocusArea = "right-panel";
+      right.style.cssText = "position:absolute; inset:0 0 0 auto; width:180px";
+      right.innerHTML = '<div data-app-shell-tabs><div style="background-color: var(--app-shell-panel-background, rgb(24 24 28))"><div data-app-shell-pane-content-viewport><diffs-container style="background-color:rgb(17 17 17)"></diffs-container><file-tree-container style="background-color:rgb(24 24 28)"></file-tree-container></div></div></div>';
+      const fullView = document.createElement("button");
+      fullView.textContent = "Enter full view";
+      fullView.dataset.appShellWorkspaceLayoutToggle = "right-panel";
+      titlebar.append(fullView);
+      const tree = right.querySelector("file-tree-container");
+      tree.style.display = "block";
+      const treeShadow = tree.attachShadow({ mode: "open" });
+      treeShadow.innerHTML = '<div data-file-tree-virtualized-scroll style="height:80px;overflow:auto"><div style="height:0"><div data-file-tree-sticky-overlay-content style="height:28px"></div></div><div data-file-tree-virtualized-list style="height:200px"></div></div>';
+      const scrollChrome = document.createElement("div");
+      scrollChrome.innerHTML = '<div aria-hidden="true" class="bg-[image:var(--app-shell-content-fade,transparent)]" style="background-image:linear-gradient(black,transparent)"></div><div><div data-app-action-timeline-scroll></div></div>';
+      layout.append(scrollChrome);
+      chat.append(titlebar, layout, right);
+      const treeScroll = treeShadow.querySelector("[data-file-tree-virtualized-scroll]");
+      const treeList = treeShadow.querySelector("[data-file-tree-virtualized-list]");
+      const treeClipTop = () => parseFloat(treeList.style.clipPath.slice(6));
+      const nextPaint = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await nextPaint();
+      const initialTreeClip = treeClipTop();
+      treeScroll.scrollTop = 15;
+      await nextPaint();
+      const scrolledTreeClip = treeClipTop();
+      const backingElement = dockedRow.querySelector("[data-app-shell-surface-backing]");
+      const wallpaperLayer = root.querySelector("[data-codex-wallpaper-layer]");
+      const chatAlpha = () => alphaOf(getComputedStyle(layout).backgroundColor);
+      const setSurface = (scope, value) => {
+        const input = panel.querySelector('[data-surface-override-value=' + scope + ']');
+        input.value = value;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      const scopes = ["chat", "left", "sidebar", "right", "settings"];
+      const restoreSurface = (scope) => panel.querySelector('[data-restore-surface=' + scope + ']').click();
+      const zoneState = () => [
+        chatAlpha(),
+        surfaceAlpha("[data-app-shell-left-panel-appearance]"),
+        alphaOf(getComputedStyle(frame, "::before").backgroundColor),
+        alphaOf(getComputedStyle(wallpaperLayer, "::before").backgroundColor),
+        alphaOf(getComputedStyle(right).backgroundColor),
+        alphaOf(getComputedStyle(wallpaperLayer, "::after").backgroundColor),
+        alphaOf(getComputedStyle(panel).backgroundColor)
+      ];
+      for (const scope of scopes) setSurface(scope, "0");
+      const allClear = {
+        zones: zoneState(),
+        frameColor: alphaOf(getComputedStyle(frame).backgroundColor),
+        frameImage: getComputedStyle(frame).backgroundImage,
+        backingColor: alphaOf(getComputedStyle(backingElement).backgroundColor),
+        backingImage: getComputedStyle(backingElement).backgroundImage,
+        main: alphaOf(getComputedStyle(chat).backgroundColor),
+        header: alphaOf(getComputedStyle(titlebar).backgroundColor),
+        rightInner: alphaOf(getComputedStyle(right.firstElementChild.firstElementChild).backgroundColor),
+        rightComponents: [...right.querySelectorAll("diffs-container, file-tree-container")].map((element) => [
+          alphaOf(getComputedStyle(element).backgroundColor),
+          getComputedStyle(element).getPropertyValue("--color-surface")
+        ]),
+        panelFilter: getComputedStyle(panel).backdropFilter
+      };
+      const oneAtATime = scopes.map((scope) => {
+        setSurface(scope, "40");
+        const state = zoneState();
+        setSurface(scope, "0");
+        return state;
+      });
+      for (const scope of scopes) restoreSurface(scope);
+      const defaults = zoneState();
+      const leftRange = panel.querySelector("[data-surface-override-value='left']");
+      const leftDefault = leftRange.value;
+      const leftState = () => ({
+        left: surfaceAlpha("[data-app-shell-left-panel-appearance]"),
+        frame: surfaceAlpha("[data-app-shell-frame]"),
+        chat: chatAlpha()
+      });
+      leftRange.value = "42";
+      leftRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const customLeft = leftState();
+      leftRange.value = "0";
+      leftRange.dispatchEvent(new Event("input", { bubbles: true }));
+      const clearLeft = leftState();
+      panel.querySelector("[data-restore-surface='left']").click();
+      const restoredLeft = leftState();
+      const dimLayer = wallpaperLayer.querySelector(".dim");
       setRange("interfaceBlur", "8");
+      const blurState = () => [
+        getComputedStyle(panel).backdropFilter,
+        getComputedStyle(root, "::after").backdropFilter,
+        getComputedStyle(dimLayer, "::after").backdropFilter,
+        getComputedStyle(right).backdropFilter,
+      ];
+      const settingsOnlyBlur = blurState();
+      setRange("chatBlur", "12");
+      setRange("interfaceBlur", "0");
+      const chatOnlyBlur = blurState();
+      const chatBox = layout.getBoundingClientRect();
+      const blurStyle = getComputedStyle(root, "::after");
+      const chatBlurMatchesLayout = ["left", "top", "width", "height"].every(
+        (property) => Math.abs(parseFloat(blurStyle[property]) - chatBox[property]) < 1
+      );
+      setRange("chatBlur", "0");
+      const rightOnlyBlur = ["0", "12", "24"].map((value) => {
+        setRange("rightBlur", value);
+        return blurState();
+      });
+      const rightBox = right.getBoundingClientRect();
+      const rightBlurStyle = getComputedStyle(dimLayer, "::after");
+      const titleTop = titlebar.getBoundingClientRect().top;
+      const rightBlurMatchesLayout = [
+        ["left", rightBox.left],
+        ["top", titleTop],
+        ["width", rightBox.width],
+        ["height", rightBox.bottom - titleTop]
+      ].every(([property, value]) => Math.abs(parseFloat(rightBlurStyle[property]) - value) < 1);
+      setRange("rightBlur", "12");
+      setRange("chatBlur", "12");
+      setRange("interfaceBlur", "8");
+      const projectSidebar = document.querySelector("[data-slate-sidebar-content]");
+      const projectBlurBefore = getComputedStyle(projectSidebar).backdropFilter;
+      setRange("projectSidebarBlur", "14");
+      const projectBlur = getComputedStyle(projectSidebar).backdropFilter;
+      const railBlur = getComputedStyle(document.querySelector("[data-app-navigation-rail]")).backdropFilter;
       const previewKeepsRootStyle =
         document.documentElement.getAttribute("style") === rootStyleBeforePreview;
-      const blur = getComputedStyle(
-        document.querySelector("[data-app-shell-main-surface]")
-      ).backdropFilter;
       const borders = panel.querySelector(
         "[data-setting-toggle='interfaceBorders']"
       );
@@ -5078,33 +5354,32 @@ test("appearance controls update wallpaper and surface layers without reloading 
           "--codex-wallpaper-line"
         ) === "transparent";
 
-      const titlebarBefore = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
-      const sidebarOverride = panel.querySelector(
-        "[data-surface-override='sidebar']"
-      );
-      sidebarOverride.click();
+      const topPaintValue = () => getComputedStyle(frame, "::before").backgroundColor;
+      const header = getComputedStyle(titlebar);
+      const topPaint = getComputedStyle(frame, "::before");
+      const backing = getComputedStyle(dockedRow.querySelector("[data-app-shell-surface-backing]"));
+      const seamlessTop = {
+        headerTint: alphaOf(getComputedStyle(wallpaperLayer, "::before").backgroundColor) === alphaOf(topPaint.backgroundColor) && header.boxShadow === "none" && header.borderRadius === "0px",
+        nativeCorner: backing.insetBlockStart === "0px" && backing.borderStartStartRadius === "12px",
+        chatCoversInset: getComputedStyle(chat).paddingBlockStart === "8px",
+        sharedTint: topPaint.pointerEvents === "none" && parseFloat(topPaint.height) === 44,
+        fadesContent: getComputedStyle(scrollChrome.firstElementChild).backgroundImage === "none" &&
+          getComputedStyle(scrollChrome.querySelector("[data-app-action-timeline-scroll]")).maskImage !== "none"
+      };
+      const flushChatEdge = Math.abs(layout.getBoundingClientRect().left - chat.getBoundingClientRect().left) < 0.1;
+      const defaultTopPaint = topPaintValue();
       const sidebarRange = panel.querySelector(
         "[data-surface-override-value='sidebar']"
       );
       sidebarRange.value = "40";
       sidebarRange.dispatchEvent(new Event("input", { bubbles: true }));
-      const titlebarOverridden = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
+      const customTopPaint = topPaintValue();
       panel.querySelector("[data-restore-surface='sidebar']").click();
-      const titlebarRestored = alphaOf(
-        getComputedStyle(titlebar).backgroundColor
-      );
+      const restoredTopPaint = topPaintValue();
 
       const settingsCanvasBefore = alphaOf(
         getComputedStyle(settingsCanvas).backgroundColor
       );
-      const settingsOverride = panel.querySelector(
-        "[data-surface-override='settings']"
-      );
-      settingsOverride.click();
       const settingsRange = panel.querySelector(
         "[data-surface-override-value='settings']"
       );
@@ -5115,30 +5390,26 @@ test("appearance controls update wallpaper and surface layers without reloading 
       );
       panel.querySelector("[data-restore-surface='settings']").click();
 
-      const chatOverride = panel.querySelector(
-        "[data-surface-override='chat']"
-      );
-      chatOverride.click();
       const chatRange = panel.querySelector(
         "[data-surface-override-value='chat']"
       );
+      const inheritedValue = chatRange.value;
+      const restoreChat = panel.querySelector("[data-restore-surface='chat']");
       chatRange.value = "30";
       chatRange.dispatchEvent(new Event("input", { bubbles: true }));
       const override = {
-        enabled: chatOverride.checked,
+        inheritedValue,
         rangeEnabled: !chatRange.disabled,
-        value: surfaceAlpha("[data-app-shell-main-surface]")
+        value: chatAlpha()
       };
-      panel.querySelector("[data-restore-surface='chat']").click();
+      restoreChat.click();
       const restored = {
-        enabled: chatOverride.checked,
-        value: surfaceAlpha("[data-app-shell-main-surface]")
+        rangeEnabled: !chatRange.disabled,
+        value: chatAlpha()
       };
 
       document.documentElement.dataset.theme = "light";
-      const lightBackground = getComputedStyle(
-        document.querySelector("[data-app-shell-main-surface]")
-      ).backgroundColor;
+      const lightBackground = getComputedStyle(layout).backgroundColor;
       const lightAlpha = Number(
         lightBackground.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1]
       );
@@ -5148,23 +5419,22 @@ test("appearance controls update wallpaper and surface layers without reloading 
       ${toggleSettings};
       const reopened = {
         fit: panel.querySelector("[data-setting='fitMode']").value,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
-        blur: panel.querySelector("[data-setting='interfaceBlur']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
+        settingsBlur: panel.querySelector("[data-setting='interfaceBlur']").value,
+        chatBlur: panel.querySelector("[data-setting='chatBlur']").value,
+        rightBlur: panel.querySelector("[data-setting='rightBlur']").value,
+        projectBlur: panel.querySelector("[data-setting='projectSidebarBlur']").value,
         borders: panel.querySelector(
           "[data-setting-toggle='interfaceBorders']"
         ).checked,
-        overrideEnabled: panel.querySelector(
-          "[data-surface-override='chat']"
-        ).checked,
+        restoreAvailable: !panel.querySelector(
+          "[data-restore-surface='chat']"
+        ).disabled,
         mediaSame: root.querySelector(".media:not(.staged)") === media
       };
 
       const previous = localStorage.getItem("codex-wallpaper-p1-config");
-      const pendingChatOverride = panel.querySelector(
-        "[data-surface-override='chat']"
-      );
-      pendingChatOverride.click();
       const pendingChatRange = panel.querySelector(
         "[data-surface-override-value='chat']"
       );
@@ -5177,6 +5447,8 @@ test("appearance controls update wallpaper and surface layers without reloading 
           fitMode: "contain",
           surfaceOpacity: 60,
           interfaceBlur: 4,
+          chatBlur: 16,
+          rightBlur: 20,
           interfaceBorders: true,
           surfaceOverrides: { chat: null, sidebar: null, right: null, settings: 70 }
         }
@@ -5194,10 +5466,11 @@ test("appearance controls update wallpaper and surface layers without reloading 
       await new Promise((resolve) => setTimeout(resolve, 30));
       const crossWindow = {
         mediaSame: root.querySelector(".media:not(.staged)") === syncedMedia,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
         fit: panel.querySelector("[data-setting='fitMode']").value,
-        chatOverride: surfaceAlpha("[data-app-shell-main-surface]"),
+        chatOverride: chatAlpha(),
+        projectBlur: getComputedStyle(projectSidebar).backdropFilter,
         settingsOverride: alphaOf(getComputedStyle(panel).backgroundColor)
       };
 
@@ -5215,13 +5488,30 @@ test("appearance controls update wallpaper and surface layers without reloading 
         globalSurface,
         inheritedChat,
         inheritedSidebar,
-        blur,
+        leftDefault,
+        customLeft,
+        clearLeft,
+        restoredLeft,
+        allClear,
+        oneAtATime,
+        pinnedTreeClips: [initialTreeClip, scrolledTreeClip],
+        defaults,
+        settingsOnlyBlur,
+        chatOnlyBlur,
+        chatBlurMatchesLayout,
+        rightOnlyBlur,
+        rightBlurMatchesLayout,
+        syncedBlur: blurState(),
+        projectBlurBefore,
+        projectBlur,
+        railBlur,
         previewKeepsRootStyle,
         bordersOff,
+        seamlessTop,
+        flushChatEdge,
         top: {
-          before: titlebarBefore,
-          overridden: titlebarOverridden,
-          restored: titlebarRestored
+          changes: customTopPaint !== defaultTopPaint,
+          restores: restoredTopPaint === defaultTopPaint
         },
         settingsSurface: {
           changes: settingsCanvasAfter !== settingsCanvasBefore,
@@ -5251,41 +5541,89 @@ test("appearance controls update wallpaper and surface layers without reloading 
     globalSurface: 0.55,
     inheritedChat: 0.14,
     inheritedSidebar: 0.55,
-    blur: "blur(8px)",
+    leftDefault: "55",
+    customLeft: { left: 0.42, frame: 0, chat: 0.14 },
+    clearLeft: { left: 0, frame: 0, chat: 0.14 },
+    restoredLeft: { left: 0.55, frame: 0, chat: 0.14 },
+    allClear: {
+      zones: [0, 0, 0, 0, 0, 0, 0],
+      frameColor: 0,
+      frameImage: "none",
+      backingColor: 0,
+      backingImage: "none",
+      main: 0,
+      header: 0,
+      rightInner: 0,
+      rightComponents: [
+        [0, "transparent"],
+        [0, "transparent"],
+      ],
+      panelFilter: "none",
+    },
+    oneAtATime: [
+      [0.4, 0, 0, 0, 0, 0, 0],
+      [0, 0.4, 0, 0, 0, 0, 0],
+      [0, 0, 0.4, 0.4, 0, 0, 0],
+      [0, 0, 0, 0, 0.4, 0.4, 0],
+      [0, 0, 0, 0, 0, 0, 0.4],
+    ],
+    pinnedTreeClips: [28, 43],
+    defaults: [0.14, 0.55, 0.55, 0.55, 0, 0, 0.9104],
+    settingsOnlyBlur: ["blur(8px)", "none", "none", "none"],
+    chatOnlyBlur: ["none", "blur(12px)", "none", "none"],
+    chatBlurMatchesLayout: true,
+    rightOnlyBlur: [
+      ["none", "none", "none", "none"],
+      ["none", "none", "blur(12px)", "none"],
+      ["none", "none", "blur(24px)", "none"],
+    ],
+    rightBlurMatchesLayout: true,
+    syncedBlur: ["blur(4px)", "blur(16px)", "blur(20px)", "none"],
+    projectBlurBefore: "none",
+    projectBlur: "blur(14px)",
+    railBlur: "blur(14px)",
     previewKeepsRootStyle: true,
     bordersOff: true,
-    top: {
-      before: 0,
-      overridden: 0.4,
-      restored: 0,
+    seamlessTop: {
+      headerTint: true,
+      nativeCorner: true,
+      chatCoversInset: true,
+      sharedTint: true,
+      fadesContent: true,
     },
+    flushChatEdge: true,
+    top: { changes: true, restores: true },
     settingsSurface: {
       changes: true,
       effective: true,
     },
     override: {
-      enabled: true,
+      inheritedValue: "14",
       rangeEnabled: true,
       value: 0.3,
     },
     restored: {
-      enabled: false,
+      rangeEnabled: true,
       value: 0.14,
     },
     lightSurfaceTranslucent: true,
     reopened: {
       fit: "contain",
-      surface: "55",
-      blur: "8",
+      sidebarReadability: "55",
+      settingsBlur: "8",
+      chatBlur: "12",
+      rightBlur: "12",
+      projectBlur: "14",
       borders: false,
-      overrideEnabled: false,
+      restoreAvailable: true,
       mediaSame: true,
     },
     crossWindow: {
       mediaSame: true,
-      surface: "60",
+      sidebarReadability: "60",
       fit: "contain",
       chatOverride: 0.44,
+      projectBlur: "blur(14px)",
       settingsOverride: 0.7,
     },
   });
@@ -5294,9 +5632,13 @@ test("appearance controls update wallpaper and surface layers without reloading 
     port,
     `(async () => {
       await globalThis.__codexWallpaperApi.disable();
+      const mainAfterDisable = document.querySelector("[data-app-shell-main-surface]");
+      const treeList = mainAfterDisable.querySelector("file-tree-container").shadowRoot.querySelector("[data-file-tree-virtualized-list]");
       const cleared =
         !document.getElementById("${rootId}-style") &&
-        getComputedStyle(document.querySelector("[data-app-shell-main-surface]")).backdropFilter === "none";
+        getComputedStyle(mainAfterDisable).backdropFilter === "none" &&
+        getComputedStyle(mainAfterDisable).borderInlineStartWidth === "1px" &&
+        treeList.style.clipPath === "";
       await globalThis.__codexWallpaperApi.enable();
       const root = document.getElementById("${rootId}");
       for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -5311,8 +5653,10 @@ test("appearance controls update wallpaper and surface layers without reloading 
         cleared,
         state: globalThis.__codexWallpaperApi.state().state,
         fit: getComputedStyle(root.querySelector(".media img")).objectFit,
-        surface:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
+        chatBlur: panel.querySelector("[data-setting='chatBlur']").value,
+        rightBlur: panel.querySelector("[data-setting='rightBlur']").value,
         settingsOverride: Number(getComputedStyle(panel).backgroundColor.match(/\\/\\s*([\\d.]+)\\s*\\)$/)?.[1])
       };
     })()`,
@@ -5322,7 +5666,9 @@ test("appearance controls update wallpaper and surface layers without reloading 
     cleared: true,
     state: "enabled",
     fit: "contain",
-    surface: "60",
+    sidebarReadability: "60",
+    chatBlur: "16",
+    rightBlur: "20",
     settingsOverride: 0.7,
   });
 });
@@ -5881,14 +6227,20 @@ test("settings presets import export migration and scoped resets form a complete
           .getAttribute("aria-pressed"),
         playlist: panel.querySelector(".playlist-summary").textContent,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
-        surfaceOpacity:
-          panel.querySelector("[data-setting='surfaceOpacity']").value,
+        sidebarReadability:
+          panel.querySelector("[data-surface-override-value='sidebar']").value,
         profile: panel.querySelector("[data-playback-profile]").value
       };
 
       const dim = panel.querySelector("[data-setting='dim']");
       dim.value = "33";
       dim.dispatchEvent(new Event("input", { bubbles: true }));
+      const projectBlur = panel.querySelector("[data-setting='projectSidebarBlur']");
+      projectBlur.value = "11";
+      projectBlur.dispatchEvent(new Event("input", { bubbles: true }));
+      const rightBlur = panel.querySelector("[data-setting='rightBlur']");
+      rightBlur.value = "12";
+      rightBlur.dispatchEvent(new Event("input", { bubbles: true }));
       const volume = panel.querySelector("[data-setting='volume']");
       volume.value = "45";
       volume.dispatchEvent(new Event("input", { bubbles: true }));
@@ -5971,7 +6323,8 @@ test("settings presets import export migration and scoped resets form a complete
         activePresetId: null,
         settings: {
           ...JSON.parse(previous).settings,
-          dim: 41
+          dim: 41,
+          rightBlur: 2
         }
       });
       localStorage.setItem("codex-wallpaper-p1-config", next);
@@ -6013,6 +6366,8 @@ test("settings presets import export migration and scoped resets form a complete
       }
       const imported = {
         dim: panel.querySelector("[data-setting='dim']").value,
+        projectBlur: projectBlur.value,
+        rightBlur: rightBlur.value,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
         volume: panel.querySelector("[data-setting='volume']").value,
         activePresetId: JSON.parse(
@@ -6126,6 +6481,8 @@ test("settings presets import export migration and scoped resets form a complete
       recovery.querySelector("[data-reset-group='appearance']").click();
       const appearanceReset = {
         dim: panel.querySelector("[data-setting='dim']").value,
+        projectBlur: projectBlur.value,
+        rightBlur: rightBlur.value,
         fitMode: panel.querySelector("[data-setting='fitMode']").value,
         activeId: globalThis.__codexWallpaperApi.state().activeId,
         favorite: panel
@@ -6218,12 +6575,14 @@ test("settings presets import export migration and scoped resets form a complete
     favorite: "true",
     playlist: "轮播：Fixture Image",
     fitMode: "cover",
-    surfaceOpacity: "72",
+    sidebarReadability: "72",
     profile: "custom",
   });
   assert.equal(result.savedPreset.id, "night");
   assert.equal(result.savedPreset.name, "Night");
   assert.equal(result.savedPreset.settings.dim, 33);
+  assert.equal(result.savedPreset.settings.projectSidebarBlur, 11);
+  assert.equal(result.savedPreset.settings.rightBlur, 12);
   assert.equal(result.savedPreset.settings.volume, 45);
   assert.deepEqual(result.customAfterEdit, {
     dim: 50,
@@ -6247,6 +6606,8 @@ test("settings presets import export migration and scoped resets form a complete
   assert.equal("legacyPath" in result.exported.settings, false);
   assert.equal("unknown" in result.exported.settings.surfaceOverrides, false);
   assert.equal(result.exported.settings.dim, 33);
+  assert.equal(result.exported.settings.projectSidebarBlur, 11);
+  assert.equal(result.exported.settings.rightBlur, 12);
   assert.deepEqual(result.crossWindow, {
     dim: "41",
     activePreset: "false",
@@ -6254,6 +6615,8 @@ test("settings presets import export migration and scoped resets form a complete
   });
   assert.deepEqual(result.imported, {
     dim: "33",
+    projectBlur: "11",
+    rightBlur: "12",
     fitMode: "cover",
     volume: "45",
     activePresetId: null,
@@ -6277,6 +6640,8 @@ test("settings presets import export migration and scoped resets form a complete
   });
   assert.deepEqual(result.appearanceReset, {
     dim: "18",
+    projectBlur: "0",
+    rightBlur: "0",
     fitMode: "cover",
     activeId: "fixture-image",
     favorite: "true",
@@ -6668,7 +7033,10 @@ test("static background is single, removable and persists disabled", async (t) =
           (item) => item.querySelector("strong")?.textContent === "Fixture Lazy"
         );
         const settings = panel.querySelector(".settings-grid").firstElementChild;
-        panel.scrollTop = 80;
+        const content = panel.querySelector(".panel-content");
+        const navigation = panel.querySelector(".panel-navigation");
+        const navigationTop = navigation.getBoundingClientRect().top;
+        content.scrollTop = 80;
         await globalThis.__codexWallpaperApi.receivePreview({
           id: "fixture-lazy",
           previewDataUrl:
@@ -6683,7 +7051,10 @@ test("static background is single, removable and persists disabled", async (t) =
           sameSettings: panel.querySelector(".settings-grid").firstElementChild === settings,
           previewAttached: Boolean(card.querySelector(".thumb img")),
           placeholderRemaining: Boolean(card.querySelector(".thumb[data-preview-id]")),
-          scrollTop: panel.scrollTop
+          scrollTop: content.scrollTop,
+          navigationFixed: navigation.getBoundingClientRect().top === navigationTop,
+          navigationBackground: getComputedStyle(navigation).backgroundColor,
+          contentBackground: getComputedStyle(content).backgroundColor
         };
       })()`,
       options
@@ -6694,6 +7065,9 @@ test("static background is single, removable and persists disabled", async (t) =
       previewAttached: true,
       placeholderRemaining: false,
       scrollTop: 80,
+      navigationFixed: true,
+      navigationBackground: "rgba(0, 0, 0, 0)",
+      contentBackground: "rgba(0, 0, 0, 0)",
     }
   );
   assert.deepEqual(
@@ -7274,31 +7648,43 @@ test("static background is single, removable and persists disabled", async (t) =
     await evaluateInPage(
       port,
       `(async () => {
+        const waitFor = async (check, timeout = 2000) => {
+          const startedAt = performance.now();
+          while (performance.now() - startedAt < timeout) {
+            if (check()) return;
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          }
+          throw new Error("Timed out waiting for Scene state");
+        };
         const root = document.getElementById("${rootId}");
         const controls = document.getElementById("${controlRootId}");
         const sceneCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Scene"
         );
         sceneCard.querySelector(".card-actions button").click();
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await waitFor(() => typeof globalThis.__sceneResolve === "function");
         globalThis.__sceneResolve();
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await waitFor(() => root.querySelector(".media:not(.staged) [data-scene-canvas]"));
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "hidden"
         });
         document.dispatchEvent(new Event("visibilitychange"));
+        await waitFor(() => globalThis.__scenePaused === true);
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
+        await waitFor(() => globalThis.__sceneResumed === true);
         const fps = controls.querySelector("[data-setting='fps']");
         const volume = controls.querySelector("[data-setting='volume']");
         fps.value = "15";
         fps.dispatchEvent(new Event("input", { bubbles: true }));
+        await waitFor(() => globalThis.__sceneFps === 15);
         volume.value = "40";
         volume.dispatchEvent(new Event("input", { bubbles: true }));
+        await waitFor(() => globalThis.__sceneVolume === 0.4);
         const canvas = root.querySelector("[data-scene-canvas]");
         const layer = root.querySelector("[data-codex-wallpaper-layer]");
         return {
@@ -7719,10 +8105,10 @@ test("static background is single, removable and persists disabled", async (t) =
               light === "rgb(232, 232, 237) / rgb(232, 232, 237)" &&
               dark === "rgb(12, 12, 16) / rgb(12, 12, 16)";
           })(),
-          wallpaperControlsUseSharedPalette:
-            getComputedStyle(panel).backgroundColor ===
+          wallpaperControlsHaveSeparateGlassSurface:
+            getComputedStyle(panel).backgroundColor !==
               getComputedStyle(dialog).backgroundColor,
-          wallpaperControlsHaveNoExtraBlur:
+          wallpaperControlsRespectZeroInterfaceBlur:
             getComputedStyle(panel).backdropFilter === "none",
           menuPaintsOnlyVisibleContent:
             getComputedStyle(popper).backgroundColor ===
@@ -7794,8 +8180,8 @@ test("static background is single, removable and persists disabled", async (t) =
     wallpaperRemainsVisible: true,
     panelSurfacesHaveReadability: true,
     browserSurfaceIsOpaque: true,
-    wallpaperControlsUseSharedPalette: true,
-    wallpaperControlsHaveNoExtraBlur: true,
+    wallpaperControlsHaveSeparateGlassSurface: true,
+    wallpaperControlsRespectZeroInterfaceBlur: true,
     menuPaintsOnlyVisibleContent: true,
     dialogKeepsHostPosition: true,
     changesOpened: true,
@@ -7897,7 +8283,27 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     [1, false]
   );
-  await pressWallpaperShortcut(port, options, "S");
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
+  await waitForCondition(
+    () =>
+      evaluateInPage(
+        port,
+        `document.querySelector("#${controlRootId} .panel.open") !== null`,
+        options
+      ),
+    3000,
+    "wallpaper settings panel did not open"
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -7930,7 +8336,17 @@ test("static background is single, removable and persists disabled", async (t) =
       nativeShortcutEvents: 1,
     }
   );
-  await pressWallpaperShortcut(port, options, "S");
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
+      altKey: true,
+      shiftKey: true,
+      code: "KeyS",
+      bubbles: true,
+      cancelable: true
+    }))`,
+    options
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -8004,28 +8420,34 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
-  await pressWallpaperShortcut(port, options, "S");
-  assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `(() => {
-        const panel = document.querySelector("#${controlRootId} .panel.open");
-        const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
-        const p = panel?.getBoundingClientRect();
-        return {
-          visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
-          clear: Boolean(p && p.bottom < c.top),
-          hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
-            p.right - 8,
-            p.top + 8
-          )))
-        };
-      })()`,
-      options
-    ),
-    { visible: true, clear: true, hitTestable: true }
+  await toggleWallpaperPanel(port, options);
+  const panelLayout = `(() => {
+    const panel = document.querySelector("#${controlRootId} .panel.open");
+    const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
+    const p = panel?.getBoundingClientRect();
+    return {
+      visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
+      clear: Boolean(p && p.bottom < c.top),
+      hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
+        p.right - 8,
+        p.top + 8
+      )))
+    };
+  })()`;
+  await waitForCondition(
+    () =>
+      evaluateInPage(port, panelLayout, options).then(
+        ({ visible, clear, hitTestable }) => visible && clear && hitTestable
+      ),
+    3000,
+    "wallpaper settings panel layout did not settle"
   );
-  await pressWallpaperShortcut(port, options, "S");
+  assert.deepEqual(await evaluateInPage(port, panelLayout, options), {
+    visible: true,
+    clear: true,
+    hitTestable: true,
+  });
+  await toggleWallpaperPanel(port, options);
   for (const [width, height] of [
     [1290, 900],
     [360, 700],
@@ -8036,7 +8458,17 @@ test("static background is single, removable and persists disabled", async (t) =
       deviceScaleFactor: 1,
       mobile: false,
     });
-    await pressWallpaperShortcut(port, options, "S");
+    await toggleWallpaperPanel(port, options);
+    await waitForCondition(
+      () =>
+        evaluateInPage(
+          port,
+          `Boolean(document.querySelector("#${controlRootId} .panel.open"))`,
+          options
+        ),
+      3000,
+      "wallpaper settings panel did not open after viewport resize"
+    );
     const layouts = await evaluateInPage(
       port,
       `(() => {
@@ -8063,7 +8495,7 @@ test("static background is single, removable and persists disabled", async (t) =
       'document.querySelector("[data-panel-page=library]").click()',
       options
     );
-    await pressWallpaperShortcut(port, options, "S");
+    await toggleWallpaperPanel(port, options);
   }
   await evaluateInPage(
     port,
@@ -8159,9 +8591,13 @@ test("static background is single, removable and persists disabled", async (t) =
         fitMode: "cover",
         surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
         interfaceBorders: true,
         surfaceOverrides: {
           chat: null,
+          left: null,
           sidebar: null,
           right: null,
           settings: null,
@@ -8296,9 +8732,13 @@ test("static background is single, removable and persists disabled", async (t) =
         fitMode: "cover",
         surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
         interfaceBorders: true,
         surfaceOverrides: {
           chat: null,
+          left: null,
           sidebar: null,
           right: null,
           settings: null,
@@ -8374,8 +8814,10 @@ test("static background is single, removable and persists disabled", async (t) =
         dim: 42,
         blur: 6,
         opacity: 73,
-        surfaceOpacity: 72,
         interfaceBlur: 0,
+        chatBlur: 0,
+        rightBlur: 0,
+        projectSidebarBlur: 0,
       },
       savedActive: { kind: "workshop", id: "fixture-image" },
       savedEnabled: true,

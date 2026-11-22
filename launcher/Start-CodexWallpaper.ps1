@@ -317,7 +317,14 @@ function Start-WallpaperSupervisor($Node, $LauncherFolder, $Port, $Clock, $Recei
             $message = $read.Result | ConvertFrom-Json
             if ($message.state -eq 'failed') {
                 $Receipt.SupervisorError = $message.error
-                if ($Receipt.TargetVerified) { $Receipt.Outcome = 'wallpaper-injection-failed' }
+                if ($Receipt.TargetVerified) {
+                    if ($message.error -ceq 'runtime-version-mismatch') {
+                        $Receipt.Outcome = 'runtime-version-mismatch'
+                        Write-Host 'A different wallpaper runtime is already loaded. Fully quit Codex, then reopen it with the dedicated wallpaper launcher.'
+                    } else {
+                        $Receipt.Outcome = 'wallpaper-injection-failed'
+                    }
+                }
                 return
             }
             if ($message.state -eq 'verified') {

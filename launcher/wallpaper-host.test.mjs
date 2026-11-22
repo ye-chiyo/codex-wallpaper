@@ -1,13 +1,25 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
-import { attachWallpaperHost } from "./wallpaper-host.mjs";
+import {
+  acquireHostLock,
+  attachWallpaperHost,
+  releaseHostLock,
+} from "./wallpaper-host.mjs";
 
 async function listenOnUnusedPort(server) {
   for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -27,6 +39,55 @@ async function listenOnUnusedPort(server) {
   }
   throw new Error("Could not find an unlocked fixture port");
 }
+
+test("host reuses a live lock and recovers stale and recycled-PID locks", async () => {
+  const probe = createServer();
+  const port = await listenOnUnusedPort(probe);
+  await new Promise((resolve) => probe.close(resolve));
+  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
+
+  const live = await acquireHostLock(port);
+  assert.ok(live);
+  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
+  assert.equal(await acquireHostLock(port), null);
+  await releaseHostLock(live);
+
+  await writeFile(lockPath, String(process.pid));
+  const stale = new Date("2020-01-01T00:00:00.000Z");
+  await utimes(lockPath, stale, stale);
+  const recovered = await acquireHostLock(port);
+  assert.ok(recovered);
+  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
+  await releaseHostLock(recovered);
+});
+
+test("host recovers the lock after its original owner exits", async () => {
+  const probe = createServer();
+  const port = await listenOnUnusedPort(probe);
+  await new Promise((resolve) => probe.close(resolve));
+  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
+  const child = spawn(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import { acquireHostLock } from ${JSON.stringify(
+        new URL("./wallpaper-host.mjs", import.meta.url).href
+      )}; const lock = await acquireHostLock(${port}); console.log(lock ? "held" : "blocked"); setInterval(() => {}, 1000);`,
+    ],
+    { stdio: ["ignore", "pipe", "ignore"], windowsHide: true }
+  );
+  const [line] = await once(child.stdout, "data");
+  assert.equal(line.toString().trim(), "held");
+  assert.equal(await acquireHostLock(port), null);
+  child.kill();
+  await once(child, "exit");
+
+  const recovered = await acquireHostLock(port);
+  assert.ok(recovered);
+  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
+  await releaseHostLock(recovered);
+});
 
 test("host fails closed and removes its lock without a reachable Codex port", async () => {
   const probe = createServer();

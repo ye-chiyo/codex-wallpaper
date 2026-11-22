@@ -7,6 +7,24 @@ function createRuntimeStyles(rootId, controlsId) {
     `color-mix(in srgb, ${base} var(--codex-wallpaper-${scope}-opacity), transparent)`;
   const frame = surfaceColor("var(--codex-wallpaper-surface-base)", "surface");
   const canvas = surfaceColor("var(--codex-wallpaper-surface-base)", "chat");
+  const top = surfaceColor(surface, "sidebar");
+  const right = surfaceColor(surface, "right");
+  const menuFrame =
+    "body [data-app-shell-frame][data-app-shell-application-menu-bar='true']";
+  const topInset = "var(--codex-wallpaper-top-inset, 0px)";
+  const topHeight = `calc(var(--app-shell-application-menu-height, 0px) + ${topInset})`;
+  const scrollFade = "[aria-hidden='true'][class*='--app-shell-content-fade,']";
+  const workspace =
+    "> [data-app-shell-workspace-row] > [data-app-shell-workspace]";
+  const workspaceFrame = `body [data-app-shell-frame]:has(${workspace} > [data-app-shell-surface-backing])`;
+  const chatLayout = "[data-app-shell-main-content-layout]";
+  const rightFocus =
+    "[data-app-shell-main-surface] [data-app-shell-focus-area='right-panel']";
+  const paneViewport = "[data-app-shell-pane-content-viewport]";
+  const rightViewport = `${rightFocus} ${paneViewport}`;
+  const rightBody = `${rightFocus}:has(${paneViewport})`;
+  const rightTitlebar = `${workspaceFrame}:has(${rightViewport}) [data-app-shell-titlebar]:has([data-app-shell-workspace-layout-toggle='right-panel'])`;
+  const splitTitlePaint = `html:has(${rightViewport}) #${rootId} [data-codex-wallpaper-layer]`;
   const panelColor = surfaceColor(
     "var(--codex-wallpaper-panel-base)",
     "settings"
@@ -16,6 +34,15 @@ function createRuntimeStyles(rootId, controlsId) {
       #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
       #${controlsId} { z-index: 2147483647; }
       #${rootId} [data-codex-wallpaper-layer] { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+      /* Sample the wallpaper below the host's clipped chat content. */
+      #${rootId}::after {
+        content: "";
+        position: fixed;
+        inset: anchor(--codex-wallpaper-chat top, 100%) anchor(--codex-wallpaper-chat right, 0px) anchor(--codex-wallpaper-chat bottom, 0px) anchor(--codex-wallpaper-chat left, 0px);
+        z-index: 1;
+        pointer-events: none;
+        backdrop-filter: var(--codex-wallpaper-chat-blur);
+      }
       #${rootId} .media { position: absolute; inset: 0; overflow: hidden; }
       #${rootId} .media.staged { opacity: 0; }
       #${rootId} .media.builtin { background: radial-gradient(circle at 18% 20%, #57d7ff 0, transparent 36%), radial-gradient(circle at 82% 78%, #ff9ac6 0, transparent 38%), linear-gradient(135deg, #1b2ab5, #5d32b8 48%, #d44c87); }
@@ -24,6 +51,16 @@ function createRuntimeStyles(rootId, controlsId) {
       #${rootId} .media img, #${rootId} .media video, #${rootId} .media canvas { width: 100%; height: 100%; object-fit: cover; display: block; transform: translateZ(0); }
       #${rootId} .media iframe { display: block; width: 100%; height: 100%; border: 0; }
       #${rootId} .dim { position: absolute; inset: 0; }
+      /* Blur the wallpaper below the right pane and its titlebar fill. */
+      ${splitTitlePaint} .dim::after {
+        content: "";
+        position: fixed;
+        top: anchor(--codex-wallpaper-split-titlebar top, anchor(--codex-wallpaper-right-pane top, 100%));
+        right: anchor(--codex-wallpaper-right-pane right, 0px);
+        bottom: anchor(--codex-wallpaper-right-pane bottom, 0px);
+        left: anchor(--codex-wallpaper-right-pane left, 100%);
+        backdrop-filter: var(--codex-wallpaper-right-blur);
+      }
       /* Position the settings panel above the composer when it is available. */
       body [data-composer-surface-variant] { anchor-name: --codex-wallpaper-composer; }
       #${controlsId} .panel :where(button, .panel-file) { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; padding: 6px 10px; font: inherit; min-block-size: 32px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
@@ -31,30 +68,32 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .panel button:hover { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 8%, var(--codex-wallpaper-raised)); }
       #${controlsId} .panel button:active { background: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 14%, var(--codex-wallpaper-raised)); }
       #${controlsId} .panel button[aria-pressed='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .panel :is(button, select, input, summary):focus-visible,
+      #${controlsId} .panel :is(button, select, input):focus-visible,
       #${controlsId} .panel .panel-file:focus-within { outline: 2px solid var(--color-text-accent, rgb(51 156 255)); outline-offset: 2px; }
       #${controlsId} .panel button:disabled { opacity: .48; cursor: not-allowed; }
       #${controlsId} .panel {
-        --panel-inset: 20px;
+        --panel-inset: 17px;
         --panel-accent: var(--color-text-accent, var(--app-color-accent-blue, #0285ff));
-        --panel-muted: color-mix(in srgb, currentColor 75%, transparent);
+        --panel-muted: color-mix(in srgb, currentColor 80%, transparent);
+        --panel-glass: color-mix(in srgb, var(--codex-wallpaper-panel-base) 76%, #314966);
+        --panel-control: color-mix(in srgb, var(--panel-glass) 93%, currentColor);
+        --panel-selected: color-mix(in srgb, var(--panel-control) 83%, var(--panel-accent));
         box-sizing: border-box;
-        position: fixed; z-index: 2147483647; width: min(448px, calc(100% - 28px)); overflow: auto; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background-color: ${panelColor}; backdrop-filter: var(--codex-wallpaper-interface-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
-        overscroll-behavior: contain;
-        scrollbar-width: thin;
-        scrollbar-gutter: stable;
-        scroll-padding-block: 112px 12px;
+        position: fixed; z-index: 2147483647; width: min(448px, calc(100% - 28px)); overflow: hidden; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius); background-color: color-mix(in srgb, var(--panel-glass) var(--codex-wallpaper-settings-glass-opacity), transparent); backdrop-filter: var(--codex-wallpaper-settings-blur); box-shadow: var(--codex-wallpaper-shadow); pointer-events: auto; display: none;
         inset: auto 14px 14px auto;
         height: min(80vh, 760px, calc(100% - 28px));
       }
-      #${controlsId} .panel.open { display: block; }
+      #${controlsId} .panel.open { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+      html[data-theme='light'] #${controlsId} .panel { --panel-glass: color-mix(in srgb, var(--codex-wallpaper-panel-base) 88%, #a2bddd); }
       html:has([data-composer-surface-variant]) #${controlsId} .panel {
         position-anchor: --codex-wallpaper-composer;
         position-area: top span-right;
         inset: 14px 14px 8px 14px;
         place-self: end;
       }
-      #${controlsId} .panel-navigation { position: sticky; top: 0; z-index: 1; padding: 14px var(--panel-inset) 0; background: var(--codex-wallpaper-panel-base); border-bottom: 1px solid var(--codex-wallpaper-line-strong); }
+      #${controlsId} :is(.panel-navigation, .panel-content) { scrollbar-width: thin; scrollbar-gutter: stable; }
+      #${controlsId} .panel-navigation { overflow: hidden; padding: 12px var(--panel-inset) 0; border-bottom: 1px solid var(--codex-wallpaper-line-strong); }
+      #${controlsId} .panel-content { overflow: auto; overscroll-behavior: contain; scroll-padding-block: 12px; }
       #${controlsId} .panel-navigation header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
       #${controlsId} .panel-navigation h2 { margin: 0; font-size: 18px; font-weight: 650; }
       #${controlsId} .panel-navigation .panel-close { display: grid; place-items: center; width: 32px; padding: 0; border-color: transparent; background-color: transparent; }
@@ -63,41 +102,69 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .panel-tabs button { min-width: 0; padding: 8px 4px; border: 0; border-radius: 6px 6px 0 0; background: transparent; color: var(--panel-muted); font-weight: 550; }
       #${controlsId} .panel-tabs button:hover { background: var(--codex-wallpaper-settings-control); color: inherit; }
       #${controlsId} .panel-tabs button:focus-visible { outline-offset: -3px; }
-      #${controlsId} .panel-tabs button[aria-selected='true'] { box-shadow: inset 0 -2px var(--panel-accent); color: inherit; font-weight: 650; }
+      #${controlsId} .panel-tabs button[aria-selected='true'] { box-shadow: inset 0 -2px var(--panel-accent); background: var(--panel-selected); color: inherit; font-weight: 650; }
       #${controlsId} .panel-region[hidden] { display: none; }
       #${controlsId} .panel-region-body { display: grid; gap: 16px; padding: 16px var(--panel-inset) 20px; }
       #${controlsId} .settings-group, #${controlsId} .preset-section { display: grid; gap: 8px; min-width: 0; }
       #${controlsId} .settings-group + .settings-group, #${controlsId} .preset-section, #${controlsId} .preset-section > .settings-group { border-top: 1px solid var(--codex-wallpaper-line-strong); padding-top: 14px; }
       #${controlsId} .panel-region-body h3 { margin: 0 0 2px; font-size: 14px; font-weight: 650; }
-      #${controlsId} .panel-region-body summary { cursor: pointer; padding: 8px 0; }
       #${controlsId} .panel-file { position: relative; display: grid; align-items: center; box-sizing: border-box; text-align: center; }
       #${controlsId} .panel-file input { position: absolute; width: 1px; height: 1px; margin: 0; clip-path: inset(50%); }
-      #${controlsId} .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 12px; row-gap: 8px; }
-      #${controlsId} .library-filter { display: grid; gap: 4px; min-width: 0; color: var(--panel-muted); font-size: 12px; }
-      #${controlsId} .library-filter:has(input[type='checkbox']) { display: flex; align-items: center; gap: 8px; min-height: 32px; color: inherit; }
+      #${controlsId} .panel [data-panel-region='library'] .panel-region-body { gap: 10px; }
+      #${controlsId} .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) 96px max-content; gap: 7px; }
+      #${controlsId} .library-filter { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+      #${controlsId} .current-wallpaper { display: grid; gap: 8px; overflow: hidden; border-radius: 12px; padding: 8px; background: var(--panel-selected); }
+      #${controlsId} .current-wallpaper :is(img, canvas) { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 6px; background: var(--panel-control); }
+      #${controlsId} .current-wallpaper :is(img, canvas)[hidden], #${controlsId} .current-wallpaper small[hidden] { display: none; }
+      #${controlsId} .current-wallpaper:has(img[data-cover]:not([hidden])) { grid-template-columns: 64px minmax(0, 1fr); align-items: center; }
+      #${controlsId} .current-wallpaper-description, #${controlsId} .wallpaper-picture-heading { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+      #${controlsId} [data-current-wallpaper-title] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #${controlsId} .current-wallpaper-description { flex-wrap: wrap; row-gap: 2px; }
+      #${controlsId} .current-wallpaper-description span { flex: 0 0 auto; }
+      #${controlsId} .current-wallpaper-description strong { flex: 1 1 10rem; font-size: 14px; }
+      #${controlsId} .current-wallpaper-description small { flex: 0 0 100%; color: var(--panel-muted); font-size: 12px; }
+      #${controlsId} .current-wallpaper.has-preview { position: relative; isolation: isolate; height: 144px; box-sizing: border-box; align-content: end; padding: 10px 12px; color: #f5f8ff; }
+      #${controlsId} .current-wallpaper.has-preview :is(img, canvas) { position: absolute; inset: 0; z-index: -2; height: 100%; aspect-ratio: auto; border-radius: 0; }
+      #${controlsId} .current-wallpaper.has-preview::before { content: ""; position: absolute; inset: auto 0 0; height: 42px; z-index: -1; background: linear-gradient(transparent, #091424df); }
+      #${controlsId} .current-wallpaper.has-preview .current-wallpaper-description span { position: absolute; top: 9px; left: 9px; padding: 3px 7px; border-radius: 6px; background: #192941; color: #e1edff; font-size: 12px; font-weight: 600; }
+      #${controlsId} .current-wallpaper.has-preview .current-wallpaper-description strong { font-size: 15px; }
+      #${controlsId} .wallpaper-picture-heading { justify-content: space-between; }
+      #${controlsId} .wallpaper-picture-heading span:first-child { flex: 0 0 auto; }
+      #${controlsId} .wallpaper-picture-heading [data-current-wallpaper-title] { color: var(--panel-muted); font-size: 12px; font-weight: 500; }
       #${controlsId} .panel :is(input[type='search'], input[type='text'], select) { box-sizing: border-box; min-width: 0; width: 100%; min-height: 34px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; padding: 6px 10px; font: inherit; }
       #${controlsId} .panel select { appearance: auto; }
       #${controlsId} .panel input::placeholder { color: var(--panel-muted); }
-      #${controlsId} .library-summary { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding-top: 12px; border-top: 1px solid var(--codex-wallpaper-line-strong); }
-      #${controlsId} .runtime-status { margin: 0; min-width: 0; overflow-wrap: anywhere; font-weight: 550; }
+      #${controlsId} .library-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+      #${controlsId} .runtime-status { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+      #${controlsId} .runtime-status[hidden] { display: none; }
       #${controlsId} .library-result, #${controlsId} .playlist-summary, #${controlsId} .playback-capability, #${controlsId} .settings-status { margin: 0; color: var(--panel-muted); font-size: 12px; overflow-wrap: anywhere; }
-      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-      #${controlsId} .card { position: relative; min-width: 0; padding: 8px; border: 1px solid var(--codex-wallpaper-line); border-radius: 12px; background: var(--codex-wallpaper-settings-control); }
+      #${controlsId} .wallpaper-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      #${controlsId} .card { position: relative; min-width: 0; padding: 0 0 7px; border: 1px solid var(--codex-wallpaper-line); border-radius: 12px; background: var(--panel-control); }
       #${controlsId} .card[hidden] { display: none; }
       #${controlsId} .card[data-selected='true'] { border-color: var(--codex-wallpaper-line-strong); background: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 12%, var(--codex-wallpaper-raised)); }
-      #${controlsId} .card-current { position: absolute; top: 14px; right: 14px; padding: 2px 6px; border-radius: 6px; background: var(--codex-wallpaper-panel-base); color: inherit; font-size: 11px; font-weight: 650; }
+      #${controlsId} .card-current { position: absolute; top: 8px; right: 8px; padding: 2px 6px; border-radius: 6px; background: var(--panel-glass); color: inherit; font-size: 12px; font-weight: 650; }
       #${controlsId} .card-current[hidden] { display: none; }
-      #${controlsId} .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 10px; }
+      #${controlsId} .thumb { aspect-ratio: 1.95; display: grid; place-items: center; overflow: hidden; border-radius: 11px 11px 0 0; background: color-mix(in srgb, var(--app-color-text-foreground, white) 8%, transparent); font-size: 12px; }
       #${controlsId} .thumb img, #${controlsId} .thumb video { width: 100%; height: 100%; object-fit: cover; }
-      #${controlsId} .card strong { display: block; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
-      #${controlsId} .card small { display: block; margin-top: 2px; color: var(--panel-muted); overflow-wrap: anywhere; }
-      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-      #${controlsId} .panel .card-actions button { padding: 4px 8px; font-size: 12px; }
-      #${controlsId} .card-actions [data-entry-action='use'] { font-weight: 650; }
+      #${controlsId} .card strong { display: block; margin: 6px 8px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+      #${controlsId} .card small { display: block; margin: 2px 8px 0; color: var(--panel-muted); font-size: 12px; overflow-wrap: anywhere; }
+      #${controlsId} .card-actions { display: flex; flex-wrap: wrap; gap: 3px; margin: 6px 7px 0; }
+      #${controlsId} .panel .card-actions button { min-block-size: 28px; padding: 3px 7px; font-size: 12px; }
+      #${controlsId} .panel [data-entry-action='use'], #${controlsId} .panel [data-preset-save] { background: var(--panel-selected); font-weight: 650; }
+      #${controlsId} .panel :is([data-entry-action='use'], [data-preset-save]):hover { background: color-mix(in srgb, var(--panel-selected) 90%, currentColor); }
+      #${controlsId} .panel .card-actions .card-icon { position: relative; display: grid; place-items: center; width: 29px; padding: 0; border-color: transparent; background: transparent; color: var(--panel-muted); }
+      #${controlsId} .panel .card-icon:hover, #${controlsId} .panel .card-icon[aria-pressed='true'] { background: var(--panel-selected); color: inherit; }
+      #${controlsId} .card-icon[aria-pressed='true'][data-entry-action='favorite'] svg { fill: currentColor; }
+      #${controlsId} .card-icon span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      #${controlsId} .card-actions [data-entry-action='use'] { margin-inline-end: auto; }
       #${controlsId} .panel [data-remove-imported] { justify-self: start; }
       #${controlsId} .settings-grid, #${controlsId} .control-grid { display: grid; gap: 16px; }
       #${controlsId} .range, #${controlsId} .profile-control { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); align-items: center; gap: 8px; }
       #${controlsId} .range { grid-template-columns: 6.5em minmax(0, 1fr) 5.25em; }
+      #${controlsId} [data-panel-region='appearance'] :is(.panel-region-body, .settings-grid) { gap: 10px; }
+      #${controlsId} [data-panel-region='appearance'] :is(.settings-group, .preset-section) { gap: 5px; }
+      #${controlsId} [data-panel-region='appearance'] .range { grid-template-columns: 6.5em minmax(0, 1fr) 54px; }
+      #${controlsId} [data-panel-region='appearance'] .range-value :is(button,input) { min-height: 28px; background: var(--panel-control); }
       #${controlsId} .range-value { min-width: 0; }
       #${controlsId} .panel .range-value :is(button, input) { width: 100%; min-width: 0; min-height: 32px; box-sizing: border-box; padding: 3px 4px; font: inherit; text-align: center; }
       #${controlsId} .range-value input { border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); background: var(--codex-wallpaper-raised); color: inherit; }
@@ -113,10 +180,9 @@ function createRuntimeStyles(rootId, controlsId) {
         accent-color: var(--color-text-accent, rgb(51 156 255));
       }
       #${controlsId} .panel label:has(> input[type='checkbox']:enabled) { cursor: pointer; }
-      #${controlsId} .panel-region-body details { padding-inline: 10px; border: 1px solid var(--codex-wallpaper-line-strong); border-radius: var(--codex-wallpaper-radius-sm); }
-      #${controlsId} .panel-region-body details[open] { padding-bottom: 8px; }
-      #${controlsId} .panel-region-body summary { font-weight: 550; }
-      #${controlsId} .surface-override { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .surface-overrides { margin-top: 3px; padding-top: 8px; border-top: 1px solid var(--codex-wallpaper-line); }
+      #${controlsId} .surface-overrides h4 { margin: 0; font-size: 13px; font-weight: 650; }
+      #${controlsId} .surface-override { display: grid; gap: 2px; padding: 3px 0; border-bottom: 1px solid var(--codex-wallpaper-line); }
       #${controlsId} .surface-override:last-child { border-bottom: 0; }
       #${controlsId} .surface-override-controls { display: grid; grid-template-columns: minmax(0, 1fr) 42px auto; align-items: center; gap: 7px; }
       #${controlsId} .panel input[type='range'] {
@@ -133,6 +199,7 @@ function createRuntimeStyles(rootId, controlsId) {
         border-radius: 4px;
         background: color-mix(in srgb, currentColor 45%, transparent);
       }
+      #${controlsId} [data-panel-region='appearance'] input[type='range']::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--panel-accent) var(--appearance-progress, 0%), color-mix(in srgb, currentColor 38%, transparent) var(--appearance-progress, 0%)); }
       #${controlsId} .panel input[type='range']::-webkit-slider-thumb {
         appearance: none;
         width: 14px;
@@ -149,15 +216,16 @@ function createRuntimeStyles(rootId, controlsId) {
       #${controlsId} .preset-editor { grid-template-columns: minmax(0, 1fr) auto; }
       #${controlsId} .preset-list { display: grid; gap: 8px; }
       #${controlsId} .preset-row { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
-      #${controlsId} .settings-transfer, #${controlsId} .reset-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #${controlsId} .settings-transfer, #${controlsId} .reset-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+      #${controlsId} .reset-groups button { border-color: transparent; background: transparent; color: var(--panel-muted); }
+      #${controlsId} .settings-status:empty { display: none; }
       #${controlsId} .preset-list:empty { display: none; }
-      #${controlsId} .reset-groups [data-reset-group='all'] { grid-column: 1 / -1; }
       #${controlsId} .panel .reset { justify-self: start; margin-top: 4px; color: var(--color-text-danger, #f07474); }
       html[data-theme='light'] #${controlsId} .panel .reset { color: var(--color-text-danger, #ab2424); }
       @media (max-width: 520px) {
         #${controlsId} .panel, html:has([data-composer-surface-variant]) #${controlsId} .panel {
           --panel-inset: 14px;
-          width: min(400px, calc(100% - 16px));
+          width: min(448px, calc(100% - 16px));
           height: min(82vh, calc(100dvh - 64px));
           position-anchor: auto;
           position-area: none;
@@ -169,6 +237,8 @@ function createRuntimeStyles(rootId, controlsId) {
         #${controlsId} .panel-tabs { gap: 4px; }
         #${controlsId} .panel-tabs button { font-size: 12px; }
         #${controlsId} .wallpaper-list { grid-template-columns: 1fr; }
+        #${controlsId} .library-filters { grid-template-columns: minmax(0, 1fr) 94px; }
+        #${controlsId} .library-filters .import-row { grid-column: 1 / -1; justify-self: end; }
       }
       :root {
         --codex-wallpaper-surface-base: ${surface};
@@ -187,23 +257,37 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(232 232 237));
         --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(247 247 249));
       }
-      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-titlebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${frame} !important; backdrop-filter: var(--codex-wallpaper-interface-blur);
-        &:not([data-app-shell-titlebar]) { position: relative; z-index: 1; }
+      body :where([data-app-shell-main-surface], [data-app-shell-page-sidebar], [data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${frame} !important; position: relative; z-index: 1;
       }
       body [data-app-shell-workspace] > [data-app-shell-surface-backing] { background-color: transparent !important; }
-      body [data-app-shell-main-surface] { background-color: ${canvas} !important; border-radius: 0 var(--codex-wallpaper-radius) 0 0 !important; --color-text-tertiary: var(--color-text-secondary); }
-      body [data-app-shell-page-sidebar], body [data-app-shell-titlebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-sidebar-opacity), transparent) !important; }
-      body [data-app-shell-pane-content-viewport], body [data-app-shell-trailing-sidebar] { background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) var(--codex-wallpaper-right-opacity), transparent) !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
+      body [data-app-shell-main-surface] { background-color: ${canvas} !important; --color-text-tertiary: var(--color-text-secondary); }
+      body [data-app-shell-main-surface]:has([data-composer-surface-variant]):not(:has(${chatLayout})) { anchor-name: --codex-wallpaper-chat; }
+      body [data-app-shell-page-sidebar] { background-color: ${top} !important; }
+      body :is([data-app-shell-pane-content-viewport], [data-app-shell-trailing-sidebar]) { background-color: ${right} !important; box-shadow: inset 1px 0 0 var(--codex-wallpaper-line); }
       body [data-app-shell-tabs] [data-app-shell-compact-page-gutter='false'] { background-color: transparent !important; }
       body :where([data-app-navigation-rail], [data-slate-sidebar-content]) {
         background-color: transparent !important;
         box-shadow: inset -1px 0 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
       }
+      body :is([data-app-navigation-rail], [data-slate-sidebar-content]) { backdrop-filter: var(--codex-wallpaper-project-sidebar-blur); }
       body :is([data-app-shell-titlebar], [data-app-shell-frame] > :has(> [role='menubar'])) {
-        background-color: ${surfaceColor(surface, "top")} !important;
-        box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line);
         --color-text-tertiary: var(--color-text-secondary);
+      }
+      ${menuFrame} { --codex-wallpaper-top-inset: var(--app-shell-titlebar-height, 0px); }
+      /* Paint the menu and the gap below it as one continuous surface. */
+      ${menuFrame}::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        block-size: calc(${topHeight} + 24px);
+        background-image: linear-gradient(${top} ${topHeight}, transparent);
+        pointer-events: none;
+      }
+      /* Fill from the native rounded edge while leaving the chat contents in place. */
+      ${menuFrame} [data-app-shell-main-surface][class~='mt-(--app-shell-titlebar-height)'] {
+        margin-block-start: 0;
+        padding-block-start: ${topInset};
       }
       body [data-app-shell-trailing-sidebar] [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
       body [data-app-shell-trailing-sidebar] file-tree-container { --trees-bg-override: transparent !important; background-color: transparent !important; }
@@ -211,6 +295,74 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-browser-sidebar-webview] { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; opacity: 1 !important; }
       body [data-browser-sidebar-webview] > webview { background-color: var(--app-color-background-surface-under, rgb(12, 12, 16)) !important; }
       body [data-app-shell-frame] { background-color: ${frame} !important; }
+      /* Paint the workspace regions separately, including when the right pane opens inside main. */
+      ${workspaceFrame} {
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+      ${workspaceFrame} ${workspace} > [data-app-shell-surface-backing] {
+        background-image: none !important;
+      }
+      ${workspaceFrame} ${workspace} > [data-app-shell-left-panel-appearance] {
+        background-color: ${surfaceColor("var(--codex-wallpaper-surface-base)", "left")} !important;
+      }
+      ${workspaceFrame}[data-app-shell-application-menu-bar='true']::before {
+        block-size: ${topHeight};
+        background-color: ${top};
+        background-image: none;
+      }
+      ${workspaceFrame} [data-app-shell-titlebar] { background-color: ${top} !important; }
+      ${rightTitlebar} {
+        anchor-name: --codex-wallpaper-split-titlebar;
+        background-color: transparent !important;
+      }
+      /* Align the two titlebar fills to the same boundary as the panes. */
+      ${splitTitlePaint}::before,
+      ${splitTitlePaint}::after {
+        content: "";
+        position: fixed;
+        top: anchor(--codex-wallpaper-split-titlebar top, 100%);
+        bottom: anchor(--codex-wallpaper-split-titlebar bottom, 0px);
+        z-index: 1;
+      }
+      ${splitTitlePaint}::before {
+        left: anchor(--codex-wallpaper-split-titlebar left, 0px);
+        right: anchor(--codex-wallpaper-right-pane left, 0px);
+        background-color: ${top};
+      }
+      ${splitTitlePaint}::after {
+        left: anchor(--codex-wallpaper-right-pane left, 100%);
+        right: anchor(--codex-wallpaper-right-pane right, 0px);
+        background-color: ${right};
+      }
+      ${workspaceFrame} [data-app-shell-main-surface]:has(${chatLayout}) {
+        background-color: transparent !important;
+        /* A transparent native border leaves a strip between the two painted areas. */
+        border-inline-start-width: 0 !important;
+      }
+      ${workspaceFrame} [data-app-shell-main-surface] ${chatLayout} {
+        background-color: ${canvas} !important;
+        anchor-name: --codex-wallpaper-chat;
+      }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) {
+        background-color: ${right} !important;
+      }
+      ${workspaceFrame} ${rightBody} { anchor-name: --codex-wallpaper-right-pane; }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) [data-app-shell-tabs] {
+        --app-shell-panel-background: transparent;
+      }
+      ${workspaceFrame} :is(${rightBody}, [data-app-shell-trailing-sidebar]) [data-app-shell-pane-content-viewport] {
+        background-color: transparent !important;
+        backdrop-filter: none;
+      }
+      ${workspaceFrame} ${rightBody} :is(file-tree-container, diffs-container) {
+        --color-surface: transparent !important;
+        background-color: transparent !important;
+      }
+      ${workspaceFrame} ${rightBody} file-tree-container { --trees-bg-override: transparent !important; }
+      ${workspaceFrame} ${rightBody} :is([class~='bg-surface'][class*='--diffs-editor-selection-bg'], [data-testid='diff-preview-scroll'], [data-thread-find-target='review']) {
+        background-color: transparent !important;
+      }
       /* Resolve the settings route once before matching its descendant rules. */
       body [data-app-shell-feature-navigation='true']:has([data-settings-nav-scroll-container]) { --codex-wallpaper-native-settings: active; }
       @container style(--codex-wallpaper-native-settings: active) {
@@ -264,6 +416,11 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-composer-surface-variant]:hover { background-color: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 4%, var(--codex-wallpaper-raised)) !important; }
       body [data-composer-surface-variant]:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 32%, transparent), 0 12px 32px rgb(0 0 0 / .16) !important; }
       body [data-app-shell-main-content-top-fade] > [aria-hidden='true'] { background-image: linear-gradient(${canvas}, transparent) !important; }
+      /* Fade the scrolling content without painting over the wallpaper. */
+      body [data-app-shell-main-content-layout] ${scrollFade} { background-image: none !important; }
+      body [data-app-shell-main-content-layout] :has(> ${scrollFade}) [data-app-action-timeline-scroll] {
+        mask-image: linear-gradient(transparent, black var(--app-shell-content-fade-height, 40px));
+      }
       body [data-thread-scroll-footer] [class~='bg-surface']:not([data-composer-surface-variant], [data-composer-surface-variant] *, [data-pip-obstacle='thread-footer-leading'], [data-pip-obstacle='thread-footer-leading'] *) { background-color: transparent !important; }
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::before,
       body [data-app-action-timeline-scroll] > :has(> [data-thread-scroll-footer])::after { background: none !important; }
@@ -350,9 +507,13 @@ function createCodexWallpaperRuntime(
       fitMode: "cover",
       surfaceOpacity: 72,
       interfaceBlur: 0,
+      chatBlur: 0,
+      rightBlur: 0,
+      projectSidebarBlur: 0,
       interfaceBorders: true,
       surfaceOverrides: {
         chat: null,
+        left: null,
         sidebar: null,
         right: null,
         settings: null,
@@ -382,6 +543,14 @@ function createCodexWallpaperRuntime(
       max: 100,
     },
     interfaceBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    chatBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    rightBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    projectSidebarBlur: {
+      group: "appearance",
+      type: "number",
+      min: 0,
+      max: 24,
+    },
     interfaceBorders: { group: "appearance", type: "boolean" },
     surfaceOverrides: { group: "appearance", type: "surfaceOverrides" },
     fps: { group: "playback", type: "number", min: 1, max: 30 },
@@ -401,7 +570,9 @@ function createCodexWallpaperRuntime(
     pauseWhenHidden: { group: "playback", type: "boolean" },
   };
   const settingKeys = new Set(Object.keys(settingDefinitions));
-  const surfaceScopes = new Set(["chat", "sidebar", "right", "settings"]);
+  const surfaceScopes = new Set(
+    Object.keys(defaults.settings.surfaceOverrides)
+  );
 
   function cloneSettings(source = defaults.settings) {
     const next = structuredClone(defaults.settings);
@@ -532,10 +703,12 @@ function createCodexWallpaperRuntime(
   let rotationImportsLoading = false;
   let root = null;
   let removeUsageMenuInteraction;
+  let removeRightFileTreeClipping;
   let panel = null;
   let panelReturnFocus = null;
   let layer = null;
   let media = null;
+  let mediaSelection = null;
   let presentedMedia = null;
   let committedSelection = null;
   let previewKey = null;
@@ -570,6 +743,13 @@ function createCodexWallpaperRuntime(
       previewObserver.unobserve(entry.target);
       requestPreview(entry.target.dataset.previewId);
     }
+  });
+  let wallpaperPreviewVisible = false;
+  let wallpaperPreviewVideo = null;
+  let wallpaperPreviewFrame = null;
+  const wallpaperPreviewObserver = new IntersectionObserver(([entry]) => {
+    wallpaperPreviewVisible = entry.isIntersecting;
+    syncWallpaperPreviewPlayback();
   });
   let measuredFps = 0;
   let configSaveTimer = null;
@@ -639,8 +819,8 @@ function createCodexWallpaperRuntime(
   function openDatabase() {
     if (database) return Promise.resolve(database);
     if (openingDatabase) return openingDatabase;
+    const request = indexedDB.open(dbName, 1);
     const opening = new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 1);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(dbStore))
@@ -772,7 +952,14 @@ function createCodexWallpaperRuntime(
   }
 
   function setStatus(message) {
-    if (status) status.textContent = message;
+    if (!status) return;
+    status.textContent = message;
+    const title = panel?.querySelector(
+      ".current-wallpaper strong"
+    )?.textContent;
+    status.hidden = Boolean(
+      title && (message === title || message.startsWith(`${title} · `))
+    );
   }
 
   function releasePlayback(target) {
@@ -819,6 +1006,7 @@ function createCodexWallpaperRuntime(
   function revokePlayback() {
     cancelPendingRender();
     measuredFps = 0;
+    stopWallpaperPreviewPlayback();
     releasePlayback(playback);
     releaseObjectUrl(currentObjectUrl);
     playback = null;
@@ -832,6 +1020,7 @@ function createCodexWallpaperRuntime(
     if (next.parentNode !== layer) layer.insertBefore(next, dim);
     next.classList.remove("staged");
     media = next;
+    mediaSelection = entryKey(config.active);
     playback = nextPlayback;
     currentObjectUrl = objectUrl;
     previousMedia?.remove();
@@ -844,6 +1033,7 @@ function createCodexWallpaperRuntime(
       loadingEntryKey = null;
       syncCardState(config.active);
     }
+    syncCurrentWallpaper();
     if (desktopStartup) {
       committedSelection = JSON.stringify(config.active);
       requestAnimationFrame(() =>
@@ -1242,7 +1432,7 @@ function createCodexWallpaperRuntime(
 
   function bindInterfaceAppearance(rules) {
     const token =
-      /var\(--codex-wallpaper-((?:surface|chat|sidebar|top|right|settings(?:-canvas|-card)?)-opacity|interface-blur)\)/g;
+      /var\(--codex-wallpaper-((?:surface|chat|left|sidebar|right|settings(?:-canvas|-card|-glass)?)-opacity|(?:settings|chat|right|project-sidebar)-blur)\)/g;
     for (const rule of rules) {
       for (const property of rule.style || []) {
         const template = rule.style.getPropertyValue(property);
@@ -1262,22 +1452,30 @@ function createCodexWallpaperRuntime(
 
   function applyInterfaceAppearance() {
     const settingsOpacity = surfaceOpacityValue("settings");
-    const blur = Math.max(
-      0,
-      Math.min(24, Number(config.settings.interfaceBlur) || 0)
-    );
+    const blurFilter = (value) => {
+      const pixels = Math.max(0, Math.min(24, Number(value) || 0));
+      return pixels > 0 ? `blur(${pixels}px)` : "none";
+    };
     // Updating inherited variables on html invalidates unrelated Codex styles
     // during a drag. Update the original surface declarations instead.
     const values = {
       "surface-opacity": `${Math.max(20, Math.min(100, Number(config.settings.surfaceOpacity) || 72))}%`,
       "chat-opacity": `${surfaceOpacityValue("chat")}%`,
+      "left-opacity": `${surfaceOpacityValue("left")}%`,
       "sidebar-opacity": `${surfaceOpacityValue("sidebar")}%`,
-      "top-opacity": `${hasSurfaceOverride("sidebar") ? surfaceOpacityValue("sidebar") : 0}%`,
       "right-opacity": `${surfaceOpacityValue("right")}%`,
       "settings-opacity": `${settingsOpacity}%`,
+      "settings-glass-opacity": `${
+        hasSurfaceOverride("settings")
+          ? settingsOpacity
+          : 68 + settingsOpacity * 0.32
+      }%`,
       "settings-canvas-opacity": `${Math.round(settingsOpacity * 0.68)}%`,
       "settings-card-opacity": `${Math.round(settingsOpacity * 0.45)}%`,
-      "interface-blur": blur > 0 ? `blur(${blur}px)` : "none",
+      "settings-blur": blurFilter(config.settings.interfaceBlur),
+      "chat-blur": blurFilter(config.settings.chatBlur),
+      "right-blur": blurFilter(config.settings.rightBlur),
+      "project-sidebar-blur": blurFilter(config.settings.projectSidebarBlur),
     };
     for (const apply of interfaceRules) apply(values);
   }
@@ -1296,7 +1494,14 @@ function createCodexWallpaperRuntime(
   function applyVisualSettings(key) {
     if (
       !key ||
-      ["surfaceOpacity", "surfaceOverrides", "interfaceBlur"].includes(key)
+      [
+        "surfaceOpacity",
+        "surfaceOverrides",
+        "interfaceBlur",
+        "chatBlur",
+        "rightBlur",
+        "projectSidebarBlur",
+      ].includes(key)
     )
       applyInterfaceAppearance();
     if (!key || key === "interfaceBorders") applyInterfaceBorders();
@@ -1376,25 +1581,19 @@ function createCodexWallpaperRuntime(
       const key = select.dataset.settingSelect;
       select.value = config.settings[key];
     }
-    for (const override of panel.querySelectorAll("[data-surface-override]")) {
-      const scope = override.dataset.surfaceOverride;
-      const enabled = hasSurfaceOverride(scope);
-      override.checked = enabled;
-      const input = panel.querySelector(
-        `[data-surface-override-value="${scope}"]`
-      );
-      const restore = panel.querySelector(`[data-restore-surface="${scope}"]`);
-      if (input) {
-        input.disabled = !enabled;
-        input.value = String(surfaceOpacityValue(scope));
-        const output = input
-          .closest(".surface-override-controls")
-          ?.querySelector("output");
-        if (output) setControlText(output, input.value);
-      }
-      if (restore) restore.disabled = !enabled;
-    }
+    syncSurfaceOverrideControls();
     syncPerformanceControls();
+  }
+
+  function syncSurfaceOverrideControls() {
+    for (const input of panel.querySelectorAll(
+      "[data-surface-override-value]"
+    )) {
+      const scope = input.dataset.surfaceOverrideValue;
+      const value = String(surfaceOpacityValue(scope));
+      if (input.value !== value) input.value = value;
+      setControlText(input.parentElement.querySelector("output"), value);
+    }
   }
 
   function syncPerformanceControls() {
@@ -1500,11 +1699,12 @@ function createCodexWallpaperRuntime(
     if (use) use.setAttribute("aria-pressed", String(selected));
     if (current) current.hidden = !selected;
     if (favoriteButton) {
-      favoriteButton.textContent = favorite ? "★" : "☆";
       favoriteButton.setAttribute("aria-pressed", String(favorite));
     }
     if (queueButton) {
-      queueButton.textContent = queued ? "移除轮播" : "加入轮播";
+      const label = queued ? "移除轮播" : "加入轮播";
+      setControlText(queueButton.querySelector("span"), label);
+      queueButton.title = label;
       queueButton.setAttribute("aria-pressed", String(queued));
     }
     if (status) {
@@ -1566,14 +1766,16 @@ function createCodexWallpaperRuntime(
       panel.querySelector("[data-panel-region='library']").hidden
     )
       return;
-    const panelRect = panel.getBoundingClientRect();
+    const contentRect = panel
+      .querySelector(".panel-content")
+      .getBoundingClientRect();
     for (const item of panel.querySelectorAll(".card:not([hidden])")) {
       const visual = item.querySelector(".thumb[data-preview-id]");
       if (!visual) continue;
       const visualRect = visual.getBoundingClientRect();
       if (
-        visualRect.bottom >= panelRect.top &&
-        visualRect.top <= panelRect.bottom
+        visualRect.bottom >= contentRect.top &&
+        visualRect.top <= contentRect.bottom
       )
         requestPreview(visual.dataset.previewId);
     }
@@ -1626,6 +1828,7 @@ function createCodexWallpaperRuntime(
       loadingEntryKey = null;
       syncCardState(config.active);
     }
+    syncCurrentWallpaper();
     if (
       media &&
       (media.classList.contains("builtin") ||
@@ -1982,6 +2185,7 @@ function createCodexWallpaperRuntime(
     const active = config.active || defaults.active;
     discardInactiveAssetRequests(active);
     const entry = findEntry(active);
+    syncCurrentWallpaper(entry);
     loadingEntryKey = entry ? entryKey(entry) : null;
     if (entry) {
       failedEntryKeys.delete(loadingEntryKey);
@@ -2212,6 +2416,177 @@ function createCodexWallpaperRuntime(
     previewObserver.observe(visual);
   }
 
+  function currentWallpaper() {
+    const banner = document.createElement("div");
+    banner.className = "current-wallpaper";
+    const canvas = document.createElement("canvas");
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.hidden = true;
+    canvas.setAttribute("aria-hidden", "true");
+    const image = document.createElement("img");
+    image.alt = "";
+    image.hidden = true;
+    image.onerror = () => {
+      image.hidden = true;
+    };
+    const description = document.createElement("div");
+    description.className = "current-wallpaper-description";
+    const title = document.createElement("strong");
+    title.dataset.currentWallpaperTitle = "";
+    const label = document.createElement("span");
+    label.textContent = "当前壁纸";
+    const fallback = document.createElement("small");
+    fallback.textContent = "仅显示封面";
+    fallback.hidden = true;
+    description.append(label, title, fallback);
+    banner.append(canvas, image, description);
+    wallpaperPreviewObserver.observe(canvas);
+    return banner;
+  }
+
+  function stopWallpaperPreviewPlayback() {
+    if (wallpaperPreviewFrame !== null)
+      wallpaperPreviewVideo.cancelVideoFrameCallback(wallpaperPreviewFrame);
+    wallpaperPreviewFrame = null;
+    wallpaperPreviewVideo = null;
+  }
+
+  function syncWallpaperPreviewPlayback() {
+    const canvas = panel?.querySelector(".current-wallpaper canvas");
+    const video =
+      wallpaperPreviewVisible &&
+      document.visibilityState === "visible" &&
+      panel?.classList.contains("open") &&
+      !panel.querySelector("[data-panel-region='library']").hidden &&
+      canvas &&
+      !canvas.hidden
+        ? playback?.video
+        : null;
+    if (video === wallpaperPreviewVideo) return;
+    stopWallpaperPreviewPlayback();
+    if (!video) return;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) return;
+    wallpaperPreviewVideo = video;
+    const maxFps = 30;
+    const frameInterval = 1000 / maxFps;
+    const frameTimes = [];
+    let nextFrameAt = performance.now();
+
+    function drawFrame() {
+      const { videoWidth: width, videoHeight: height } = video;
+      if (!width || !height || video.readyState < 2) return;
+      const box = canvas.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      const sourceAspect = width / height;
+      const previewAspect = Math.max(
+        sourceAspect,
+        Math.min(box.width / box.height, sourceAspect * 1.5)
+      );
+      // Keep the full width and crop at most one third of the height.
+      const croppedHeight = Math.round(width / previewAspect);
+      const cropTop = Math.round((height - croppedHeight) * 0.26);
+      const scale = Math.min(
+        1,
+        (box.width * devicePixelRatio) / width,
+        (box.height * devicePixelRatio) / croppedHeight,
+        1920 / Math.max(width, croppedHeight),
+        1080 / Math.min(width, croppedHeight)
+      );
+      const targetWidth = Math.max(1, Math.round(width * scale));
+      const targetHeight = Math.max(1, Math.round(croppedHeight * scale));
+      const now = performance.now();
+      // Leave a millisecond of headroom for timer rounding at the window boundary.
+      if (frameTimes.length === maxFps) {
+        if (now - frameTimes[0] < 1001) return;
+        frameTimes.shift();
+      }
+      frameTimes.push(now);
+      if (canvas.width !== targetWidth) canvas.width = targetWidth;
+      if (canvas.height !== targetHeight) canvas.height = targetHeight;
+      context.drawImage(
+        video,
+        0,
+        cropTop,
+        width,
+        croppedHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight
+      );
+      nextFrameAt = Math.max(
+        nextFrameAt + frameInterval,
+        now + frameInterval / 2
+      );
+    }
+
+    function onVideoFrame() {
+      if (wallpaperPreviewVideo !== video) return;
+      if (performance.now() >= nextFrameAt) drawFrame();
+      wallpaperPreviewFrame = video.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    drawFrame();
+    wallpaperPreviewFrame = video.requestVideoFrameCallback(onVideoFrame);
+  }
+
+  function syncCurrentWallpaper(entry) {
+    if (!panel?.classList.contains("open")) return;
+    if (entry === undefined) entry = findEntry(config.active);
+    const title =
+      entry?.title ||
+      (config.active.kind === "builtin" ? "内置渐变" : "当前素材不可用");
+    for (const heading of panel.querySelectorAll(
+      "[data-current-wallpaper-title]"
+    )) {
+      setControlText(heading, title);
+      heading.title = title;
+    }
+    const banner = panel.querySelector(".current-wallpaper");
+    const canvas = banner.querySelector("canvas");
+    const image = banner.querySelector("img");
+    const matchingMedia = mediaSelection === entryKey(config.active);
+    const video =
+      matchingMedia && playback?.video?.requestVideoFrameCallback
+        ? playback.video
+        : null;
+    const originalImage =
+      matchingMedia && entry?.type === "image"
+        ? media?.querySelector("img")?.currentSrc
+        : null;
+    const cover =
+      entry?.thumbnailKind === "video" ? null : entry?.previewDataUrl;
+    const preview = originalImage || cover;
+    banner.classList.toggle("has-preview", Boolean(video || originalImage));
+    canvas.hidden = !video;
+    if (!video && canvas.width) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    image.hidden = Boolean(video || !preview);
+    image.toggleAttribute("data-cover", !originalImage);
+    if (!image.hidden && image.getAttribute("src") !== preview)
+      image.src = preview;
+    if (image.hidden) image.removeAttribute("src");
+    banner.querySelector("small").hidden = Boolean(
+      image.hidden ||
+      entry?.type !== "video" ||
+      !failedEntryKeys.has(entryKey(entry))
+    );
+    syncWallpaperPreviewPlayback();
+    if (status?.textContent) setStatus(status.textContent);
+    if (
+      entry &&
+      !video &&
+      !preview &&
+      entry.thumbnailKind !== "video" &&
+      !panel.querySelector("[data-panel-region='library']").hidden
+    )
+      requestPreview(entry.id);
+  }
+
   function card(entry) {
     const item = document.createElement("article");
     item.className = "card";
@@ -2248,16 +2623,25 @@ function createCodexWallpaperRuntime(
       return applyActive();
     };
     const favorite = document.createElement("button");
-    favorite.textContent = isFavorite(entry) ? "★" : "☆";
+    favorite.className = "card-icon";
+    favorite.innerHTML =
+      '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m12 3 2.6 5.5 6.1.8-4.5 4.3 1.1 6.1-5.3-3-5.3 3 1.1-6.1-4.5-4.3 6.1-.8Z"/></svg>';
     favorite.dataset.entryAction = "favorite";
     favorite.title = "收藏";
     favorite.setAttribute("aria-label", "收藏");
     favorite.setAttribute("aria-pressed", String(isFavorite(entry)));
     favorite.onclick = () => toggleKey("favorites", entry);
     const queue = document.createElement("button");
-    queue.textContent = inPlaylist(entry) ? "移除轮播" : "加入轮播";
+    queue.className = "card-icon";
+    queue.innerHTML =
+      '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11V8a2 2 0 0 1 2-2h12m-3-3 3 3-3 3M20 13v3a2 2 0 0 1-2 2H6m3-3-3 3 3 3"/></svg>';
+    const queueLabel = document.createElement("span");
+    const queued = inPlaylist(entry);
+    queueLabel.textContent = queued ? "移除轮播" : "加入轮播";
+    queue.title = queueLabel.textContent;
+    queue.append(queueLabel);
     queue.dataset.entryAction = "queue";
-    queue.setAttribute("aria-pressed", String(inPlaylist(entry)));
+    queue.setAttribute("aria-pressed", String(queued));
     queue.onclick = () => toggleKey("playlist", entry);
     actions.append(use, favorite, queue);
     item.append(current, visual, title, meta, actions);
@@ -2271,6 +2655,11 @@ function createCodexWallpaperRuntime(
   ) {
     const value = String(setting);
     if (input.value !== value) input.value = value;
+    if (editor.closest("[data-panel-region='appearance']")) {
+      const progress = `${((Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min))) * 100}%`;
+      if (input.style.getPropertyValue("--appearance-progress") !== progress)
+        input.style.setProperty("--appearance-progress", progress);
+    }
     setControlText(editor.querySelector("output"), value);
     const number = editor.querySelector("input");
     if (document.activeElement !== number) number.value = value;
@@ -2457,15 +2846,8 @@ function createCodexWallpaperRuntime(
   function surfaceOverrideControl(label, scope) {
     const row = document.createElement("div");
     row.className = "surface-override";
-    const top = document.createElement("label");
-    top.className = "setting-toggle";
-    const override = document.createElement("input");
-    override.type = "checkbox";
-    override.dataset.surfaceOverride = scope;
-    override.checked = hasSurfaceOverride(scope);
-    const text = document.createElement("span");
-    text.textContent = label;
-    top.append(override, text);
+    const title = document.createElement("label");
+    title.textContent = label;
 
     const controls = document.createElement("div");
     controls.className = "surface-override-controls";
@@ -2475,8 +2857,9 @@ function createCodexWallpaperRuntime(
     input.max = "100";
     input.step = "1";
     input.dataset.surfaceOverrideValue = scope;
+    input.id = `codex-wallpaper-surface-${scope}`;
+    title.htmlFor = input.id;
     input.setAttribute("aria-label", `${label}强度`);
-    input.disabled = !override.checked;
     input.value = String(surfaceOpacityValue(scope));
     const output = document.createElement("output");
     output.dataset.unit = "%";
@@ -2484,26 +2867,9 @@ function createCodexWallpaperRuntime(
     const restore = document.createElement("button");
     restore.type = "button";
     restore.dataset.restoreSurface = scope;
-    restore.textContent = "恢复继承";
-    restore.setAttribute("aria-label", `${label}：恢复继承`);
-    restore.disabled = !override.checked;
+    restore.textContent = "恢复默认";
+    restore.setAttribute("aria-label", `${label}：恢复默认`);
 
-    const sync = () => {
-      const enabled = override.checked;
-      input.disabled = !enabled;
-      restore.disabled = !enabled;
-      input.value = String(surfaceOpacityValue(scope));
-      setControlText(output, input.value);
-    };
-    override.onchange = () => {
-      markSettingsChanged();
-      config.settings.surfaceOverrides[scope] = override.checked
-        ? surfaceOpacityValue(scope)
-        : null;
-      applyInterfaceAppearance();
-      saveConfig();
-      sync();
-    };
     input.oninput = () => {
       markSettingsChanged();
       config.settings.surfaceOverrides[scope] = Number(input.value);
@@ -2514,16 +2880,15 @@ function createCodexWallpaperRuntime(
     input.onchange = flushConfigSave;
     input.onblur = flushConfigSave;
     restore.onclick = () => {
+      if (!hasSurfaceOverride(scope)) return;
       markSettingsChanged();
-      override.checked = false;
       config.settings.surfaceOverrides[scope] = null;
       applyInterfaceAppearance();
       saveConfig();
-      sync();
-      override.focus();
+      syncSurfaceOverrideControls();
     };
     controls.append(input, output, restore);
-    row.append(top, controls);
+    row.append(title, controls);
     return row;
   }
 
@@ -2763,78 +3128,105 @@ function createCodexWallpaperRuntime(
           playlist
         )
       );
-      const advanced = document.createElement("details");
-      const advancedTitle = document.createElement("summary");
-      advancedTitle.textContent = "分区读底覆盖";
-      const advancedHelp = document.createElement("p");
-      advancedHelp.className = "playback-capability";
-      advancedHelp.textContent =
-        "勾选分区后可单独调节读底强度。未勾选时沿用默认读底。";
-      advanced.append(
-        advancedTitle,
-        advancedHelp,
+      const surfaces = document.createElement("section");
+      surfaces.className = "surface-overrides";
+      const surfacesTitle = document.createElement("h4");
+      surfacesTitle.textContent = "分区读底覆盖";
+      surfaces.append(
+        surfacesTitle,
         surfaceOverrideControl("聊天区覆盖", "chat"),
+        surfaceOverrideControl("左侧面板覆盖", "left"),
         surfaceOverrideControl("侧栏/顶部覆盖", "sidebar"),
         surfaceOverrideControl("右侧面板覆盖", "right"),
         surfaceOverrideControl("设置面板覆盖", "settings")
       );
+      const picture = settingsGroup(
+        "壁纸画面",
+        range("暗化", "dim", 0, 70, "%"),
+        range("模糊", "blur", 0, 24, "px"),
+        range("不透明度", "opacity", 20, 100, "%"),
+        ...(controlKind !== "base"
+          ? [
+              settingSelect("画面适配", "fitMode", [
+                ["cover", "保持比例填充"],
+                ["contain", "完整显示"],
+              ]),
+            ]
+          : [])
+      );
+      const heading = picture.firstElementChild;
+      const headingLabel = document.createElement("span");
+      headingLabel.textContent = heading.textContent;
+      const wallpaperName = document.createElement("span");
+      wallpaperName.dataset.currentWallpaperTitle = "";
+      heading.className = "wallpaper-picture-heading";
+      heading.replaceChildren(headingLabel, wallpaperName);
       appearanceSettings.replaceChildren(
-        settingsGroup(
-          "壁纸画面",
-          range("暗化", "dim", 0, 70, "%"),
-          range("模糊", "blur", 0, 24, "px"),
-          range("不透明度", "opacity", 20, 100, "%"),
-          ...(controlKind !== "base"
-            ? [
-                settingSelect("画面适配", "fitMode", [
-                  ["cover", "保持比例填充"],
-                  ["contain", "完整显示"],
-                ]),
-              ]
-            : [])
-        ),
+        picture,
         settingsGroup(
           "界面效果",
-          range("界面读底", "surfaceOpacity", 20, 100, "%"),
-          range("界面雾化", "interfaceBlur", 0, 24, "px"),
+          range("设置栏雾化", "interfaceBlur", 0, 24, "px"),
+          range("聊天界面雾化", "chatBlur", 0, 24, "px"),
+          range("右侧面板雾化", "rightBlur", 0, 24, "px"),
+          range("项目栏雾化", "projectSidebarBlur", 0, 24, "px"),
           settingToggle("细边框", "interfaceBorders"),
-          advanced
+          surfaces
         )
       );
       renderPresetList();
     }
+    syncCurrentWallpaper();
     syncSettingControls();
     syncMediaCapabilities();
   }
 
   async function importFiles(files) {
-    const db = await openDatabase();
-    const transaction = db.transaction(dbStore, "readwrite");
-    const store = transaction.objectStore(dbStore);
-    let first = null;
-    for (const file of files) {
-      const type = mediaType(file);
-      if (!type) continue;
-      const id = `import-${Date.now()}-${crypto.randomUUID()}`;
-      first ??= id;
-      store.put({
-        id,
-        title: file.name,
-        type,
-        blob: file,
-        createdAt: Date.now(),
+    const entries = files.filter(mediaType).map((file) => ({
+      id: `import-${Date.now()}-${crypto.randomUUID()}`,
+      title: file.name,
+      type: mediaType(file),
+      blob: file,
+      createdAt: Date.now(),
+    }));
+    if (!entries.length) return;
+    try {
+      const db = await openDatabase();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(dbStore, "readwrite");
+        transaction.oncomplete = resolve;
+        transaction.onabort = () => reject(transaction.error);
+        try {
+          const store = transaction.objectStore(dbStore);
+          for (const entry of entries) store.put(entry);
+        } catch (error) {
+          transaction.abort();
+          reject(error);
+        }
       });
+    } catch {
+      setStatus("素材导入失败，未保存所选素材，请重试");
+      return;
     }
-    await new Promise((resolve, reject) => {
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-    });
-    await loadImported();
-    if (first) {
-      config.active = { kind: "imported", id: first };
-      saveConfig();
+    try {
+      await loadImported();
+    } catch {
+      setStatus("素材已保存，但无法刷新壁纸库");
+      return;
+    }
+    const previous = config.active;
+    const selection = { kind: "imported", id: entries[0].id };
+    config.active = selection;
+    try {
       await applyActive();
+    } catch {
+      if (config.active === selection) {
+        config.active = previous;
+        saveConfig();
+        recoverFailedMedia("素材已保存，但无法打开");
+        scheduleRotation();
+      }
     }
+    if (config.active === selection) saveConfig();
     renderPanel();
   }
 
@@ -2971,9 +3363,116 @@ function createCodexWallpaperRuntime(
     };
   }
 
+  function clipFileTreeUnderPinnedRows(shadow) {
+    const events = new AbortController();
+    let frame = null;
+    let list = null;
+    let restoreClip = null;
+    let pinnedRows = null;
+
+    function update() {
+      frame = null;
+      const scroll = shadow.querySelector(
+        "[data-file-tree-virtualized-scroll]"
+      );
+      const currentList = scroll?.querySelector(
+        "[data-file-tree-virtualized-list]"
+      );
+      const currentPinned = scroll?.querySelector(
+        "[data-file-tree-sticky-overlay-content]"
+      );
+      if (currentList !== list) {
+        restoreClip?.();
+        list = currentList;
+        restoreClip = null;
+        if (list) {
+          const style = list.style;
+          const value = style.getPropertyValue("clip-path");
+          const priority = style.getPropertyPriority("clip-path");
+          restoreClip = () => style.setProperty("clip-path", value, priority);
+        }
+      }
+      if (currentPinned !== pinnedRows) {
+        resizeObserver.disconnect();
+        pinnedRows = currentPinned;
+        if (pinnedRows) resizeObserver.observe(pinnedRows);
+      }
+      // The pinned rows sit over the scrolling list and share its panel background.
+      const height = pinnedRows?.offsetHeight;
+      if (list && height) {
+        const clip = `inset(${scroll.scrollTop + height}px 0px 0px)`;
+        if (list.style.clipPath !== clip) list.style.clipPath = clip;
+      } else {
+        restoreClip?.();
+      }
+    }
+
+    function schedule() {
+      if (frame === null) frame = requestAnimationFrame(update);
+    }
+
+    const resizeObserver = new ResizeObserver(schedule);
+    const observer = new MutationObserver(schedule);
+    observer.observe(shadow, { childList: true, subtree: true });
+    shadow.addEventListener("scroll", schedule, {
+      capture: true,
+      signal: events.signal,
+    });
+    update();
+    return () => {
+      events.abort();
+      observer.disconnect();
+      resizeObserver.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
+      restoreClip?.();
+    };
+  }
+
+  function bindRightFileTreeClipping() {
+    const selector =
+      "[data-app-shell-frame] [data-app-shell-main-surface] [data-app-shell-focus-area='right-panel'] [data-app-shell-pane-content-viewport] file-tree-container";
+    const attached = new Map();
+    function sync() {
+      const trees = new Set(document.querySelectorAll(selector));
+      for (const [tree, cleanup] of attached) {
+        if (trees.has(tree)) continue;
+        cleanup();
+        attached.delete(tree);
+      }
+      for (const tree of trees) {
+        if (!attached.has(tree) && tree.shadowRoot) {
+          attached.set(tree, clipFileTreeUnderPinnedRows(tree.shadowRoot));
+        }
+      }
+    }
+
+    const containsTree = (node) =>
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node.matches("file-tree-container") ||
+        node.querySelector("file-tree-container"));
+    const observer = new MutationObserver((records) => {
+      if (
+        records.some(
+          ({ addedNodes, removedNodes }) =>
+            Array.from(addedNodes).some(containsTree) ||
+            Array.from(removedNodes).some(containsTree)
+        )
+      )
+        sync();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+    return () => {
+      observer.disconnect();
+      for (const cleanup of attached.values()) cleanup();
+    };
+  }
+
   function removeAdapterNodes() {
     removeUsageMenuInteraction?.();
     removeUsageMenuInteraction = undefined;
+    removeRightFileTreeClipping?.();
+    removeRightFileTreeClipping = undefined;
     interfaceRules = [];
     document.documentElement.style.removeProperty("--codex-wallpaper-line");
     document.documentElement.style.removeProperty(
@@ -3010,11 +3509,14 @@ function createCodexWallpaperRuntime(
 
   function removeMountedRuntime() {
     restorePanelFocus();
+    wallpaperPreviewObserver.disconnect();
+    wallpaperPreviewVisible = false;
     removeAdapterNodes();
     root = null;
     panel = null;
     layer = null;
     media = null;
+    mediaSelection = null;
     presentedMedia = null;
     committedSelection = null;
     dim = null;
@@ -3050,6 +3552,12 @@ function createCodexWallpaperRuntime(
       previewObserver.unobserve(visual);
       renderThumb(previewEntry, visual);
     }
+    if (
+      previewEntry &&
+      entry.id === config.active.id &&
+      previewEntry.kind === config.active.kind
+    )
+      syncCurrentWallpaper(previewEntry);
     if (isActiveWorkshop(entry.id) && item?.type === "web" && !item.webHtml)
       return applyActive();
     return state();
@@ -3250,6 +3758,10 @@ function createCodexWallpaperRuntime(
     flushConfigSave();
     restorePanelFocus();
     panel.classList.remove("open");
+    stopWallpaperPreviewPlayback();
+    const canvas = panel.querySelector(".current-wallpaper canvas");
+    canvas.width = 0;
+    canvas.height = 0;
   }
 
   async function togglePanel() {
@@ -3261,6 +3773,7 @@ function createCodexWallpaperRuntime(
     panelReturnFocus = document.activeElement;
     opened.classList.add("open");
     opened.focus({ preventScroll: true });
+    syncCurrentWallpaper();
     if (!opened.querySelector(".wallpaper-list .card")) {
       // Keep the local library off the first-frame path.
       if (waitForMainInterface) {
@@ -3282,6 +3795,8 @@ function createCodexWallpaperRuntime(
     panel.className = "panel";
     panel.dataset.codexWallpaperPanel = "";
     panel.setAttribute("aria-label", "Codex 壁纸设置");
+    const content = document.createElement("div");
+    content.className = "panel-content";
     const header = document.createElement("header");
     const heading = document.createElement("h2");
     heading.textContent = "壁纸设置";
@@ -3305,20 +3820,13 @@ function createCodexWallpaperRuntime(
     filters.className = "library-filters";
     filters.setAttribute("role", "search");
     filters.setAttribute("aria-label", "查找壁纸");
-    const searchLabel = document.createElement("label");
-    searchLabel.className = "library-filter";
-    const searchText = document.createElement("span");
-    searchText.textContent = "标题";
     const search = document.createElement("input");
     search.type = "search";
     search.placeholder = "搜索壁纸";
+    search.setAttribute("aria-label", "标题");
     search.dataset.librarySearch = "";
-    searchLabel.append(searchText, search);
-    const typeLabel = document.createElement("label");
-    typeLabel.className = "library-filter";
-    const typeText = document.createElement("span");
-    typeText.textContent = "类型";
     const type = document.createElement("select");
+    type.setAttribute("aria-label", "类型");
     type.dataset.libraryType = "";
     for (const [value, label] of [
       ["all", "全部类型"],
@@ -3332,7 +3840,6 @@ function createCodexWallpaperRuntime(
       option.textContent = label;
       type.append(option);
     }
-    typeLabel.append(typeText, type);
     const favoritesLabel = document.createElement("label");
     favoritesLabel.className = "library-filter";
     const favorites = document.createElement("input");
@@ -3348,20 +3855,25 @@ function createCodexWallpaperRuntime(
     fileInput.type = "file";
     fileInput.accept = "image/*,video/*";
     fileInput.multiple = true;
-    fileInput.onchange = () => importFiles(fileInput.files);
+    fileInput.onchange = () => {
+      const files = Array.from(fileInput.files);
+      fileInput.value = "";
+      return importFiles(files);
+    };
     importRow.append(fileInput);
-    filters.append(searchLabel, typeLabel, favoritesLabel, importRow);
+    filters.append(search, type, importRow);
 
     const librarySummary = document.createElement("div");
     librarySummary.className = "library-summary";
     status = document.createElement("p");
     status.className = "runtime-status";
+    status.hidden = true;
     status.setAttribute("aria-live", "polite");
     const result = document.createElement("p");
     result.className = "library-result";
     result.dataset.libraryResult = "";
     result.setAttribute("aria-live", "polite");
-    librarySummary.append(status, result);
+    librarySummary.append(result, favoritesLabel);
     const list = document.createElement("div");
     list.className = "wallpaper-list";
     list.setAttribute("aria-label", "壁纸素材");
@@ -3369,15 +3881,23 @@ function createCodexWallpaperRuntime(
       libraryFilters.query = search.value;
       libraryFilters.type = type.value;
       libraryFilters.favoritesOnly = favorites.checked;
-      const scrollTop = panel.scrollTop;
+      const scrollTop = content.scrollTop;
       applyLibraryFilters();
-      panel.scrollTop = scrollTop;
+      content.scrollTop = scrollTop;
     };
     search.oninput = applyFilters;
     type.onchange = applyFilters;
     favorites.onchange = applyFilters;
-    panel.addEventListener("scroll", requestVisiblePreviews, { passive: true });
-    libraryBody.append(filters, librarySummary, list);
+    content.addEventListener("scroll", requestVisiblePreviews, {
+      passive: true,
+    });
+    libraryBody.append(
+      currentWallpaper(),
+      filters,
+      status,
+      librarySummary,
+      list
+    );
     library.append(libraryBody);
 
     const playback = document.createElement("section");
@@ -3410,8 +3930,7 @@ function createCodexWallpaperRuntime(
     recoveryTitle.textContent = "预设";
     const resetHelp = document.createElement("p");
     resetHelp.className = "playlist-summary";
-    resetHelp.textContent =
-      "预设保存画面与播放参数；导入导出只包含设置，不包含素材或个人数据。";
+    resetHelp.textContent = "保存画面与播放参数。导入导出仅包含设置。";
     const presetEditor = document.createElement("div");
     presetEditor.className = "preset-editor";
     const presetName = document.createElement("input");
@@ -3466,7 +3985,7 @@ function createCodexWallpaperRuntime(
       importInput.value = "";
     };
     importLabel.append(importInput);
-    transfer.append(exportButton, importLabel);
+    transfer.append(importLabel, exportButton);
     const settingsStatus = document.createElement("p");
     settingsStatus.className = "settings-status";
     settingsStatus.dataset.settingsStatus = "";
@@ -3539,7 +4058,8 @@ function createCodexWallpaperRuntime(
         tabs.children[position].setAttribute("aria-selected", String(selected));
         tabs.children[position].tabIndex = selected ? 0 : -1;
       }
-      panel.scrollTop = 0;
+      content.scrollTop = 0;
+      syncCurrentWallpaper();
       if (index === 0) requestAnimationFrame(requestVisiblePreviews);
     };
     for (const [index, [page, label]] of pages.entries()) {
@@ -3570,7 +4090,8 @@ function createCodexWallpaperRuntime(
       tabs.append(tab);
     }
     navigation.append(header, tabs);
-    panel.append(navigation, ...pages.map(([page]) => page));
+    content.append(...pages.map(([page]) => page));
+    panel.append(navigation, content);
     selectPage(0);
     return panel;
   }
@@ -3601,6 +4122,7 @@ function createCodexWallpaperRuntime(
     applyInterfaceAppearance();
     applyInterfaceBorders();
     removeUsageMenuInteraction = bindUsageMenuInteraction();
+    removeRightFileTreeClipping = bindRightFileTreeClipping();
   }
 
   function watchMainInterface() {
@@ -3802,6 +4324,7 @@ function createCodexWallpaperRuntime(
   }
 
   function syncVisibility() {
+    syncWallpaperPreviewPlayback();
     if (document.visibilityState === "hidden") {
       cancelStartupMotion();
       flushConfigSave();

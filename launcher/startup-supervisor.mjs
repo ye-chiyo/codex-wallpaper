@@ -13,6 +13,9 @@ import { createStartupPreviewStore } from "./startup-preview.mjs";
 const port = Number(process.argv[2]);
 const page = "app://-/index.html";
 const expected = candidateIdentity();
+const mismatchedIdentity = `(identity) =>
+  identity?.runtimeHash !== ${JSON.stringify(expected.runtimeHash)} ||
+  identity?.styleHash !== ${JSON.stringify(expected.styleHash)}`;
 const cancelled = Symbol("cancelled");
 const execFileAsync = promisify(execFile);
 const previewCache = process.env.CODEX_WALLPAPER_STARTUP_CACHE;
@@ -203,6 +206,23 @@ try {
         if (command !== approval) continue;
       }
       if (targetLost || (!kept && parentClosed)) continue;
+      phase = "runtime-not-ready";
+      const mismatch = await Promise.race([
+        stop,
+        sessionEvaluate(
+          session,
+          `(() => {
+            if (window.top !== window || location.href !== ${JSON.stringify(page)}) return false;
+            const existing = globalThis.__codexWallpaperApi;
+            return !!existing && (${mismatchedIdentity})(existing.identity?.());
+          })()`
+        ),
+      ]);
+      if (mismatch === cancelled || signal?.aborted) continue;
+      if (mismatch === true) {
+        phase = "runtime-version-mismatch";
+        throw new Error(phase);
+      }
       const payload = await libraryPayload;
       const playbackClock = process.env.CODEX_WALLPAPER_PLAYBACK_CLOCK;
       if (awaitingPresentation && playbackClock) {
@@ -242,8 +262,8 @@ try {
           const existing = globalThis.__codexWallpaperApi;
           if (existing) {
             const identity = existing.identity?.();
-            if (identity?.runtimeHash !== ${JSON.stringify(expected.runtimeHash)} ||
-                identity?.styleHash !== ${JSON.stringify(expected.styleHash)}) return null;
+            if ((${mismatchedIdentity})(identity))
+              return { error: "runtime-version-mismatch" };
             return { ...await existing.configureHost(), identity };
           }
           globalThis.__codexWallpaperStartupPid = ${process.pid};
@@ -253,6 +273,10 @@ try {
         ),
       ]);
       if (wallpaper === cancelled || signal?.aborted) continue;
+      if (wallpaper?.error === "runtime-version-mismatch") {
+        phase = wallpaper.error;
+        throw new Error(phase);
+      }
       if (
         !wallpaper?.hostReady ||
         !["enabled", "disabled"].includes(wallpaper.state) ||
