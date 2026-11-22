@@ -16,4 +16,4 @@ if (Test-Path -LiteralPath $target) {
 }
 
 Write-Host 'Codex, its package, profile, login state, and chats were not changed.'
-Write-Host 'To clear page storage and imported media, use the two-click data reset in wallpaper settings (Alt+Shift+S).'
+Write-Host 'If Codex is running, use the in-app stop button first to clear its page storage and imported media.'

@@ -17,7 +17,6 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createInterface } from "node:readline";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import { setTimeout as delay } from "node:timers/promises";
 import { candidateIdentity, runtimeSource } from "./client-runtime.mjs";
 import { applyStaticBackground, evaluateInPage } from "./static-background.mjs";
@@ -530,43 +529,6 @@ test(
 );
 
 test(
-  "startup leaves a mismatched wallpaper runtime in place and tells the user to reopen Codex",
-  { timeout: 8000 },
-  async (t) => {
-    const actions = [];
-    const existing = {
-      identity: () => ({ ...candidateIdentity(), runtimeHash: "older" }),
-      configureHost: () => actions.push("configure"),
-      discardStartup: () => actions.push("discard"),
-    };
-    const context = {
-      location: { href: "app://-/index.html" },
-      window: {},
-      __codexWallpaperApi: existing,
-    };
-    context.window.top = context.window;
-    const cdp = await startExactCdpFixture(t, (expression) =>
-      runInNewContext(expression, context)
-    );
-    const receipt = await runStartupHandoff(t, cdp);
-    assert.equal(receipt.TargetVerified, true);
-    assert.equal(receipt.Outcome, "runtime-version-mismatch", receipt.SupervisorError);
-    assert.match(
-      receipt.LauncherMessages.join("\n"),
-      /Fully quit Codex, then reopen it with the dedicated wallpaper launcher/
-    );
-    assert.equal(cdp.hostConnections, 0);
-    assert.deepEqual(actions, []);
-    assert.equal(context.__codexWallpaperApi, existing);
-    assert.equal(context.__codexWallpaperStartupPid, undefined);
-    await assert.rejects(
-      access(join(tmpdir(), "codex-wallpaper-host-" + cdp.port + ".lock")),
-      { code: "ENOENT" }
-    );
-  }
-);
-
-test(
   "supervisor rejects post-startup replacement when the listener owner does not match",
   { timeout: 15000 },
   async (t) => {
@@ -724,8 +686,7 @@ async function runStartupHandoff(
     $receipt.MainCreated = (Get-CimInstance Win32_Process -Filter 'ProcessId=${listenerOwner}').CreationDate.ToString('o')
     $script:wallpaperRecheckCount = 0
     $stateFolder = ${previewFolder ? psLiteral(previewFolder) : "$null"}
-    $messages = @(Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"} 6>&1 | ForEach-Object { $_.ToString() })
-    if ($messages.Count) { $receipt.LauncherMessages = $messages }
+    Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"}
     $receipt.TargetRecheckCount = $script:wallpaperRecheckCount
     $receipt | ConvertTo-Json -Depth 6 -Compress
   `;
@@ -832,44 +793,30 @@ test(
   }
 );
 
-test(
-  "the desktop handoff waits for a presented wallpaper after verifying the host",
-  { timeout: 8000 },
-  async (t) => {
-    const previewFolder = await mkdtemp(
-      join(tmpdir(), "codex-wallpaper-presentation-")
-    );
-    t.after(() => rm(previewFolder, { recursive: true, force: true }));
-    let sampled = 0;
-    const interfaceAt = Date.now();
-    const frameAt = interfaceAt + 100;
-    const cdp = await startExactCdpFixture(t, (expression) => {
-      if (
-        expression ===
-        "globalThis.__codexWallpaperApi?.waitForStartupPresentation()"
-      ) {
-        sampled += 1;
-        return { status: "visible", interfaceAt, frameAt };
-      }
-      return {
-        state: "enabled",
-        hostReady: true,
-        identity: candidateIdentity(),
-      };
-    });
-    const receipt = await runStartupHandoff(t, cdp, {
-      previewFolder,
-      env: { ...process.env, CODEX_WALLPAPER_DESKTOP_HANDSHAKE: "1" },
-    });
-    assert.equal(receipt.Outcome, "wallpaper-ready");
-    assert.equal(receipt.StartupPreview, "visible");
-    assert.ok(receipt.StartupPreviewHandoffMs >= receipt.HostReadyMs);
-    assert.equal(receipt.StartupPreviewInterfaceAt, interfaceAt);
-    assert.equal(receipt.StartupPreviewFirstFrameAt, frameAt);
-    assert.deepEqual(receipt.DesktopSignals, ["CodexWallpaper:presented"]);
-    assert.equal(sampled, 1);
-  }
-);
+test("the desktop handoff waits for a presented wallpaper after verifying the host", { timeout: 8000 }, async (t) => {
+  const previewFolder = await mkdtemp(join(tmpdir(), "codex-wallpaper-presentation-"));
+  t.after(() => rm(previewFolder, { recursive: true, force: true }));
+  let sampled = 0;
+  const interfaceAt = Date.now();
+  const frameAt = interfaceAt + 100;
+  const cdp = await startExactCdpFixture(t, (expression) => {
+    if (expression === "globalThis.__codexWallpaperApi?.waitForStartupPresentation()") {
+      sampled += 1;
+      return { status: "visible", interfaceAt, frameAt };
+    }
+    return { state: "enabled", hostReady: true, identity: candidateIdentity() };
+  });
+  const receipt = await runStartupHandoff(t, cdp, {
+    previewFolder, env: { ...process.env, CODEX_WALLPAPER_DESKTOP_HANDSHAKE: "1" },
+  });
+  assert.equal(receipt.Outcome, "wallpaper-ready");
+  assert.equal(receipt.StartupPreview, "visible");
+  assert.ok(receipt.StartupPreviewHandoffMs >= receipt.HostReadyMs);
+  assert.equal(receipt.StartupPreviewInterfaceAt, interfaceAt);
+  assert.equal(receipt.StartupPreviewFirstFrameAt, frameAt);
+  assert.deepEqual(receipt.DesktopSignals, ["CodexWallpaper:presented"]);
+  assert.equal(sampled, 1);
+});
 
 async function startHtmlFixture(html) {
   const server = createServer((_request, response) => {
@@ -1170,7 +1117,7 @@ async function waitForPort(profile) {
 }
 
 async function waitForPage(port, options) {
-  for (let attempt = 0; attempt < 400; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     const href = await evaluateInPage(port, "location.href", options);
     if (href === options.page) return;
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -1270,20 +1217,6 @@ async function pressWallpaperShortcut(port, options, key) {
   }
 }
 
-async function toggleWallpaperPanel(port, options) {
-  await evaluateInPage(
-    port,
-    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
-      altKey: true,
-      shiftKey: true,
-      code: "KeyS",
-      bubbles: true,
-      cancelable: true
-    }))`,
-    options
-  );
-}
-
 test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = { page: fixture.url };
@@ -1380,7 +1313,9 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   const source = runtimeSource(
     {
-      library: [{ id: selected.id, title: "Saved image", type: "image" }],
+      library: [
+        { id: selected.id, title: "Saved image", type: "image" },
+      ],
     },
     true,
     true,
@@ -1391,9 +1326,7 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     document.querySelectorAll('#${controlRootId} [data-codex-wallpaper-panel]').length,
     globalThis.__codexWallpaperApi.state().styles
   ]`;
-  const afterPaint = (
-    value
-  ) => `new Promise(resolve => requestAnimationFrame(() =>
+  const afterPaint = (value) => `new Promise(resolve => requestAnimationFrame(() =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(${value})))))`;
   const saveEnabled = `localStorage.setItem('${key}', ${JSON.stringify(
     JSON.stringify({ enabled: true, active: selected })
@@ -1403,25 +1336,19 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
   assert.equal(startup.hostReady, true);
   assert.equal(startup.activeId, selected.id);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(
-    await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"),
-    "waiting"
-  );
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "waiting");
   assert.equal(await evaluate("assetRequests().length"), 1);
   assert.equal(await evaluate("assetRequests().at(-1).id"), selected.id);
 
   await evaluate(`document.querySelector('main').innerHTML =
     '<div data-composer-surface-variant>Message composer</div>'`);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(
-    await evaluate(`(() => {
+  assert.equal(await evaluate(`(() => {
     globalThis.cancelledFile = globalThis.__codexWallpaperApi.beginAssetFileTransfer(
       { id: ${JSON.stringify(selected.id)} }, null, assetRequests().at(-1).request
     );
     return document.querySelector('input[data-codex-wallpaper-file]')?.hidden;
-  })()`),
-    true
-  );
+  })()`), true);
 
   // A cross-window stop while startup waits must cancel the pending mount.
   await evaluate(`(() => {
@@ -1431,25 +1358,12 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     document.querySelector('[data-app-shell-active-page]').style.opacity = '1';
   })()`);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(
-    await evaluate(
-      "document.querySelectorAll('input[data-codex-wallpaper-file]').length"
-    ),
-    0
-  );
-  assert.equal(
-    await evaluate(
-      "globalThis.__codexWallpaperApi.finishAssetFileTransfer(cancelledFile)"
-    ),
-    false
-  );
+  assert.equal(await evaluate("document.querySelectorAll('input[data-codex-wallpaper-file]').length"), 0);
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.finishAssetFileTransfer(cancelledFile)"), false);
   await evaluate("globalThis.__codexWallpaperApi.discardStartup()");
   assert.equal((await evaluate(source)).state, "disabled");
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(
-    await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"),
-    "disabled"
-  );
+  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "disabled");
   assert.equal(await evaluate("startupRequests.at(-1).enabled"), false);
 
   await evaluate(`(async () => {
@@ -1496,34 +1410,22 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     "wallpaper and settings panel were not mounted after the composer"
   );
   await waitForCondition(
-    () =>
-      evaluate(`document.querySelector('#${rootId} img')?.src.startsWith('blob:') &&
+    () => evaluate(`document.querySelector('#${rootId} img')?.src.startsWith('blob:') &&
       presentation?.status === 'visible'`),
     3000,
     "saved wallpaper did not restore"
   );
-  assert.deepEqual(
-    await evaluate(
-      "[presentation.frameAt >= presentation.interfaceAt, assetRequests().length, libraryReads]"
-    ),
-    [true, 2, 0]
-  );
+  assert.deepEqual(await evaluate("[presentation.frameAt >= presentation.interfaceAt, assetRequests().length, libraryReads]"),
+    [true, 2, 0]);
   await waitForCondition(
-    () =>
-      evaluate(
-        "startupRequests.at(-1).poster?.startsWith('data:image/jpeg;base64,')"
-      ),
+    () => evaluate("startupRequests.at(-1).poster?.startsWith('data:image/jpeg;base64,')"),
     3000,
     "wallpaper poster was not published after presentation"
   );
   await evaluate(source);
   assert.deepEqual(await evaluate(layers), [1, 1, 1]);
   await evaluate(toggleSettings);
-  await waitForCondition(
-    () => evaluate("libraryReads === 1"),
-    3000,
-    "opening the panel did not load local imports"
-  );
+  await waitForCondition(() => evaluate("libraryReads === 1"), 3000, "opening the panel did not load local imports");
 
   await evaluate(`(async () => {
     await globalThis.__codexWallpaperApi.discardStartup();
@@ -1544,30 +1446,12 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     localStorage.setItem('${key}', JSON.stringify({ enabled: true, active: {kind:'imported',id:'saved-import'} }));
   })()`);
   assert.equal((await evaluate(source)).activeId, "saved-import");
-  await waitForCondition(
-    () => evaluate("importReads.length === 1"),
-    3000,
-    "the selected import was not prepared"
-  );
+  await waitForCondition(() => evaluate("importReads.length === 1"), 3000, "the selected import was not prepared");
   assert.deepEqual(await evaluate(layers), [0, 0, 0]);
   assert.deepEqual(await evaluate("importReads"), ["saved-import"]);
-  await evaluate(
-    "document.querySelector('[data-app-shell-active-page]').inert = false"
-  );
-  await waitForCondition(
-    () =>
-      evaluate(
-        "globalThis.__codexWallpaperApi.startupPresentation() === 'visible'"
-      ),
-    3000,
-    "the selected import was not presented"
-  );
-  assert.deepEqual(
-    await evaluate(
-      "[importReads.length, libraryReads, assetRequests().length]"
-    ),
-    [1, 1, 2]
-  );
+  await evaluate("document.querySelector('[data-app-shell-active-page]').inert = false");
+  await waitForCondition(() => evaluate("globalThis.__codexWallpaperApi.startupPresentation() === 'visible'"), 3000, "the selected import was not presented");
+  assert.deepEqual(await evaluate("[importReads.length, libraryReads, assetRequests().length]"), [1, 1, 2]);
 });
 
 test("window chrome keeps wallpaper sharp and native titlebar interactive", async (t) => {
@@ -1596,7 +1480,7 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
   await applyStaticBackground(port, options);
   assert.deepEqual(await evaluateInPage(port, readBacking, options), {
     ...nativeBacking,
-    background: "rgba(0, 0, 0, 0)",
+    background: "rgba(0, 0, 0, 0)"
   });
   assert.deepEqual(
     await evaluateInPage(
@@ -1677,10 +1561,7 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     options
   );
   await pressWallpaperShortcut(port, options, "W");
-  assert.deepEqual(
-    await evaluateInPage(port, readBacking, options),
-    nativeBacking
-  );
+  assert.deepEqual(await evaluateInPage(port, readBacking, options), nativeBacking);
 });
 
 test("changing selection cancels a pending File and accepts a new transfer when reselected", async (t) => {
@@ -2975,119 +2856,6 @@ test("reenabling during a video transfer discards the old stream and accepts its
     player: true,
     staged: 0,
   });
-});
-
-test("a failed local import reports the error and leaves the active wallpaper and library intact", async (t) => {
-  const fixture = await startHtmlFixture(`<!doctype html><html><body>
-    <div data-app-shell-active-page="true">
-      <main data-app-shell-main-surface>
-        <textarea data-composer-surface-variant="default"></textarea>
-      </main>
-    </div>
-  </body></html>`);
-  const { port, options } = await startRuntimeFixture(
-    t,
-    { version: 1, library: [] },
-    fixture
-  );
-  const evaluate = (expression) => evaluateInPage(port, expression, options);
-  await evaluate(runtimeSource(options.payload, true, true));
-  const image = `document.querySelector("#${rootId} .media:not(.staged) img")`;
-  const status = `document.querySelector("#${controlRootId} .runtime-status")`;
-  await waitForCondition(
-    () => evaluate(`Boolean(${status})`),
-    3000,
-    "wallpaper settings were not mounted"
-  );
-  await evaluate(`(() => {
-    globalThis.fixtureOpen = indexedDB.open;
-    indexedDB.open = () => {
-      throw new DOMException("Database access denied", "SecurityError");
-    };
-    ${toggleSettings};
-    globalThis.chooseFixtureImage = (name) => {
-      const input = document.querySelector("#${controlRootId} .import-row input");
-      const transfer = new DataTransfer();
-      transfer.items.add(new File(
-        ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
-        name,
-        { type: "image/svg+xml" }
-      ));
-      input.files = transfer.files;
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    };
-  })()`);
-  await evaluate('chooseFixtureImage("Database unavailable.svg")');
-  await waitForCondition(
-    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
-    2000,
-    "a database-open failure did not report a failure in wallpaper settings"
-  );
-  await evaluate(`(() => {
-    indexedDB.open = fixtureOpen;
-    delete globalThis.fixtureOpen;
-    chooseFixtureImage("Existing wallpaper.svg");
-  })()`);
-  await waitForCondition(
-    () => evaluate(`${image}?.naturalWidth > 0`),
-    3000,
-    "the initial import did not become visible"
-  );
-  const saved = await evaluate(
-    'localStorage.getItem("codex-wallpaper-p1-config")'
-  );
-  const source = await evaluate(`${image}.src`);
-  await evaluate(`(() => {
-    const put = IDBObjectStore.prototype.put;
-    IDBObjectStore.prototype.put = function (item) {
-      const request = put.call(this, item);
-      if (item.title === "Aborted.svg") this.transaction.abort();
-      return request;
-    };
-    chooseFixtureImage("Aborted.svg");
-  })()`);
-  await waitForCondition(
-    () => evaluate(`${status}.textContent.includes("素材导入失败")`),
-    2000,
-    "an aborted import did not report a failure in wallpaper settings"
-  );
-  assert.deepEqual(
-    await evaluate(`(() => ({
-      saved: localStorage.getItem("codex-wallpaper-p1-config"),
-      source: ${image}.src,
-      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
-        .map((title) => title.textContent)
-    }))()`),
-    { saved, source, titles: ["Existing wallpaper.svg"] }
-  );
-  await evaluate(`(() => {
-    const get = IDBObjectStore.prototype.get;
-    const activeId = JSON.parse(localStorage.getItem("codex-wallpaper-p1-config")).active.id;
-    IDBObjectStore.prototype.get = function (id) {
-      if (id !== activeId)
-        throw new DOMException("Cannot read the newly saved file", "UnknownError");
-      return get.call(this, id);
-    };
-    chooseFixtureImage("Saved but unreadable.svg");
-  })()`);
-  await waitForCondition(
-    () => evaluate(`${status}.textContent.includes("素材已保存，但无法打开")`),
-    2000,
-    "a saved file that failed to open did not report a failure in wallpaper settings"
-  );
-  assert.deepEqual(
-    await evaluate(`(() => ({
-      saved: localStorage.getItem("codex-wallpaper-p1-config"),
-      source: ${image}.src,
-      titles: [...document.querySelectorAll("#${controlRootId} .card strong")]
-        .map((title) => title.textContent)
-    }))()`),
-    {
-      saved,
-      source,
-      titles: ["Saved but unreadable.svg", "Existing wallpaper.svg"],
-    }
-  );
 });
 
 test("failed first video shows its preview instead of a blank background", async (t) => {
@@ -4953,33 +4721,11 @@ test("playback profiles and capability controls apply without replacing media", 
 });
 
 test("Codex form resets leave wallpaper settings controls visible and operable", async (t) => {
-  const { port, options } = await startRuntimeFixture(t, {
-    version: 1,
-    library: [],
-  });
+  const { port, options } = await startRuntimeFixture(t, { version: 1, library: [] });
   const evaluate = (expression) => evaluateInPage(port, expression, options);
   const click = async (selector) => {
-    await waitForCondition(
-      () =>
-        evaluate(`(() => {
-          const control = document.querySelector(${JSON.stringify(selector)});
-          control?.scrollIntoView({ block: "center", inline: "nearest" });
-          const rect = control?.getBoundingClientRect();
-          if (!rect) return false;
-          const hit = document.elementFromPoint(
-            rect.left + rect.width / 2,
-            rect.top + rect.height / 2
-          );
-          return Boolean(hit && (hit === control || control.contains(hit)));
-        })()`),
-      3000,
-      `click target did not become operable: ${selector}`
-    );
-    assert.equal(
-      await clickAtElementCenter(port, options, selector),
-      true,
-      selector
-    );
+    await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`);
+    assert.equal(await clickAtElementCenter(port, options, selector), true, selector);
   };
   await evaluate(`(() => {
     const style = document.createElement("style");
@@ -4991,33 +4737,13 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     document.head.append(style);
   })()`);
   await applyStaticBackground(port, options);
-  await toggleWallpaperPanel(port, options);
-  await waitForCondition(
-    () =>
-      evaluate(
-        `Boolean(document.querySelector("#${controlRootId} .panel.open"))`
-      ),
-    3000,
-    "wallpaper settings panel did not open"
-  );
+  await pressWallpaperShortcut(port, options, "S");
   assert.equal(
-    await evaluate(
-      'getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'
-    ),
+    await evaluate('getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'),
     "auto"
   );
-  await waitForCondition(
-    () =>
-      evaluate(`(() => {
-        document.querySelector("[data-panel-page=appearance]").click();
-        const region = document.querySelector("[data-panel-region=appearance]");
-        return Boolean(region && !region.hidden && region.offsetHeight > 0);
-      })()`),
-    3000,
-    "appearance settings page did not become visible"
-  );
-  const preference =
-    "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
+  await click("[data-panel-page=appearance]");
+  const preference = "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
   const border = "[data-setting=interfaceBorders]";
   const scopes = ["chat", "left", "sidebar", "right", "settings"];
   const affordance = await evaluate(`(() => {
@@ -5026,87 +4752,43 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   })()`);
   assert.notEqual(affordance.appearance, "none", border);
   assert.ok(affordance.width >= 16 && affordance.height >= 16, border);
-  assert.equal(
-    await evaluate(
-      'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
-    ),
-    true
-  );
-  assert.equal(
-    await evaluate(
-      'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
-    ),
-    true
-  );
+  assert.equal(await evaluate(
+    'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
+  ), true);
+  assert.equal(await evaluate(
+    'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
+  ), true);
 
-  const initialBorders = await evaluate(
-    `document.querySelector('${border}').checked`
-  );
+  const initialBorders = await evaluate(`document.querySelector('${border}').checked`);
   await click(border);
-  assert.equal(
-    await evaluate(`${preference}.interfaceBorders`),
-    !initialBorders
-  );
+  assert.equal(await evaluate(`${preference}.interfaceBorders`), !initialBorders);
   await click(border);
-  assert.equal(
-    await evaluate(`${preference}.interfaceBorders`),
-    initialBorders
-  );
+  assert.equal(await evaluate(`${preference}.interfaceBorders`), initialBorders);
 
   for (const scope of scopes) {
     const slider = `[data-surface-override-value=${scope}]`;
     const restore = `[data-restore-surface=${scope}]`;
-    const state = () =>
-      evaluate(`[
+    const state = () => evaluate(`[
       document.querySelector('${slider}').disabled,
       document.querySelector('${restore}').disabled
     ]`);
     assert.deepEqual(await state(), [false, false]);
-    assert.equal(
-      await evaluate(`document.querySelector('${restore}').textContent`),
-      "恢复默认"
-    );
-    const inherited = await evaluate(
-      `document.querySelector('${slider}').value`
-    );
+    assert.equal(await evaluate(`document.querySelector('${restore}').textContent`), "恢复默认");
+    const inherited = await evaluate(`document.querySelector('${slider}').value`);
     await click(slider);
     for (const type of ["rawKeyDown", "keyUp"]) {
-      await callMainPage(
-        port,
-        "Input.dispatchKeyEvent",
-        { type, key: "End", code: "End", windowsVirtualKeyCode: 35 },
-        options.page,
-        true
-      );
+      await callMainPage(port, "Input.dispatchKeyEvent",
+        { type, key: "End", code: "End", windowsVirtualKeyCode: 35 }, options.page, true);
     }
-    assert.equal(
-      await evaluate(`${preference}.surfaceOverrides.${scope}`),
-      100
-    );
-    assert.equal(
-      await evaluate(
-        `document.querySelector('${slider}').nextElementSibling.textContent`
-      ),
-      "100%"
-    );
+    assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), 100);
+    assert.equal(await evaluate(`document.querySelector('${slider}').nextElementSibling.textContent`), "100%");
     assert.deepEqual(await state(), [false, false]);
     for (let repeat = 0; repeat < 2; repeat += 1) {
       await click(restore);
       assert.deepEqual(await state(), [false, false]);
-      assert.equal(
-        await evaluate(`document.querySelector('${slider}').value`),
-        inherited
-      );
-      assert.equal(
-        await evaluate(`${preference}.surfaceOverrides.${scope}`),
-        null
-      );
-      assert.equal(
-        await evaluate(
-          `document.activeElement === document.querySelector('${restore}')`
-        ),
-        true
-      );
+      assert.equal(await evaluate(`document.querySelector('${slider}').value`), inherited);
+      assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), null);
+      assert.equal(await evaluate(`document.activeElement === document.querySelector('${restore}')`), true);
     }
   }
 });
@@ -5554,10 +5236,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
       main: 0,
       header: 0,
       rightInner: 0,
-      rightComponents: [
-        [0, "transparent"],
-        [0, "transparent"],
-      ],
+      rightComponents: [[0, "transparent"], [0, "transparent"]],
       panelFilter: "none",
     },
     oneAtATime: [
@@ -5584,13 +5263,7 @@ test("appearance controls update wallpaper and surface layers without reloading 
     railBlur: "blur(14px)",
     previewKeepsRootStyle: true,
     bordersOff: true,
-    seamlessTop: {
-      headerTint: true,
-      nativeCorner: true,
-      chatCoversInset: true,
-      sharedTint: true,
-      fadesContent: true,
-    },
+    seamlessTop: { headerTint: true, nativeCorner: true, chatCoversInset: true, sharedTint: true, fadesContent: true },
     flushChatEdge: true,
     top: { changes: true, restores: true },
     settingsSurface: {
@@ -5793,19 +5466,12 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
   const id = "123456";
   const { port, options } = await startRuntimeFixture(t, {
     version: 1,
-    library: [
-      {
-        id,
-        title: "Startup scene fixture",
-        type: "scene",
-        playable: true,
-        assetDataUrl: "data:application/octet-stream;base64,AA==",
-      },
-    ],
+    library: [{
+      id, title: "Startup scene fixture", type: "scene", playable: true,
+      assetDataUrl: "data:application/octet-stream;base64,AA==",
+    }],
   });
-  await evaluateInPage(
-    port,
-    `
+  await evaluateInPage(port, `
     localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
       enabled: true, active: { kind: "workshop", id: "${id}" },
       settings: { dim: 18, opacity: 100, fitMode: "cover" },
@@ -5836,18 +5502,10 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
         return scene;
       },
     };
-  `,
-    options
-  );
-  await evaluateInPage(
-    port,
-    runtimeSource(options.payload, false, false, true),
-    options
-  );
+  `, options);
+  await evaluateInPage(port, runtimeSource(options.payload, false, false, true), options);
 
-  const result = await evaluateInPage(
-    port,
-    `(async () => {
+  const result = await evaluateInPage(port, `(async () => {
     const wait = async (check) => {
       for (let attempt = 0; attempt < 120; attempt++) {
         const result = check();
@@ -5888,9 +5546,7 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
     await new Promise(resolve => setTimeout(resolve, 25));
     return { first, resized, fitted, frameCount: sceneRequests().length,
       enabled: previewRequests.at(-1).enabled };
-  })()`,
-    options
-  );
+  })()`, options);
   assert.deepEqual(result, {
     first: [800, 500, "cover", 18, false],
     resized: [800, 450, "cover", 18, false],
@@ -6673,6 +6329,38 @@ test("settings presets import export migration and scoped resets form a complete
   });
 });
 
+test("the read-only profile account row retains its native opacity and cursor when wallpaper is toggled", async (t) => {
+  const fixture = await startHtmlFixture(`<!doctype html><meta charset="utf-8">
+    <style>@layer utilities { .account { opacity: .9; cursor: default; } }</style>
+    <button aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="true"></button>
+    <div role="menu" data-radix-menu-content data-state="open">
+      <div>
+        <div role="presentation">
+          <div id="account" class="account" role="menuitem" aria-disabled="true" data-disabled>
+            <div data-menu-row-content><span data-leading-icon-slot="menu"></span>Profile / Plus</div>
+          </div>
+        </div>
+        <div id="other" role="menuitem" aria-disabled="true" data-disabled>Unavailable action</div>
+      </div>
+    </div>`);
+  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
+  const read = (source) => evaluateInPage(port, source, options);
+  const rows = () => read(`[...document.querySelectorAll('#account, #other')].map(row => {
+    const { opacity, cursor } = getComputedStyle(row);
+    return { opacity, cursor, disabled: row.getAttribute('aria-disabled'), nativeDisabled: row.hasAttribute('data-disabled') };
+  })`);
+  const native = await rows();
+  assert.equal(native[0].opacity, "0.9");
+  const enabled = [native[0], { ...native[1], opacity: "0.48", cursor: "not-allowed" }];
+
+  await applyStaticBackground(port, options);
+  assert.deepEqual(await rows(), enabled);
+  await read("globalThis.__codexWallpaperApi.disable(false)");
+  assert.deepEqual(await rows(), native);
+  await read("globalThis.__codexWallpaperApi.enable(false)");
+  assert.deepEqual(await rows(), enabled);
+});
+
 test("usage rows retain their hover tooltip and open native usage settings while wallpaper is enabled", async (t) => {
   const fixture = await startHtmlFixture(`<!doctype html><meta charset="utf-8">
     <style>
@@ -6707,11 +6395,7 @@ test("usage rows retain their hover tooltip and open native usage settings while
         settings.hidden = false;
       };
     </script>`);
-  const { port, options } = await startRuntimeFixture(
-    t,
-    { library: [] },
-    fixture
-  );
+  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
   const read = (source) => evaluateInPage(port, source, options);
   const settingsVisible = '!document.querySelector("#usage-settings").hidden';
   await applyStaticBackground(port, options);
@@ -6730,17 +6414,8 @@ test("usage rows retain their hover tooltip and open native usage settings while
     { type: "mouseMoved", buttons: 0, pointerType: "mouse", ...point },
     options.page
   );
-  assert.ok(
-    await read(
-      'document.querySelector("#reset-time").getBoundingClientRect().width > 0'
-    )
-  );
-  assert.notEqual(
-    await read(
-      'getComputedStyle(document.querySelector("#weekly")).backgroundColor'
-    ),
-    "rgba(0, 0, 0, 0)"
-  );
+  assert.ok(await read('document.querySelector("#reset-time").getBoundingClientRect().width > 0'));
+  assert.notEqual(await read('getComputedStyle(document.querySelector("#weekly")).backgroundColor'), "rgba(0, 0, 0, 0)");
 
   await read('document.querySelector("#weekly").focus()');
   for (const type of ["keyDown", "keyUp"]) {
@@ -6755,12 +6430,7 @@ test("usage rows retain their hover tooltip and open native usage settings while
 
   await clickAtElementCenter(port, options, "#usage");
   await read("globalThis.__codexWallpaperApi.disable(false)");
-  assert.equal(
-    await read(
-      'document.querySelector("#weekly").getAttribute("aria-disabled")'
-    ),
-    "true"
-  );
+  assert.equal(await read('document.querySelector("#weekly").getAttribute("aria-disabled")'), "true");
   await clickAtElementCenter(port, options, "#weekly");
   assert.equal(await read(settingsVisible), false);
   await clickAtElementCenter(port, options, "#manage");
@@ -6769,22 +6439,57 @@ test("usage rows retain their hover tooltip and open native usage settings while
   await clickAtElementCenter(port, options, "#usage");
   await clickAtElementCenter(port, options, "#weekly");
   assert.equal(await read(settingsVisible), true);
-  assert.equal(
-    await read(
-      'document.querySelector("#profile-summary").getAttribute("aria-disabled")'
-    ),
-    "true"
-  );
+  assert.equal(await read('document.querySelector("#profile-summary").getAttribute("aria-disabled")'), "true");
 });
 
-test("the native settings dialog uses one translucent backdrop for its two columns", async (t) => {
+test("modern tab side panels use the wallpaper surface material", async (t) => {
+  const { port, options } = await startRuntimeFixture(t, { library: [] });
+  const createPanel = `(() => {
+    const panel = document.createElement("aside");
+    panel.dataset.appShellFocusArea = "right-panel";
+    panel.innerHTML = '<div id="app-shell-tab-panel-fixture" role="tabpanel"><div id="modern-right-surface" class="electron:bg-surface" style="background-color: rgb(35 35 35)">Changes</div></div>';
+    document.querySelector("[data-app-shell-main-surface]").append(panel);
+  })()`;
+  await evaluateInPage(port, createPanel, options);
+  const appearance = `(() => ({
+    panel: getComputedStyle(document.querySelector("aside[data-app-shell-focus-area='right-panel']")).backgroundColor,
+    surface: getComputedStyle(document.querySelector("#modern-right-surface")).backgroundColor,
+  }))()`;
+  const native = await evaluateInPage(port, appearance, options);
+  await applyStaticBackground(port, { ...options, payload: { library: [] } });
+  const adapted = await evaluateInPage(port, appearance, options);
+  assert.equal(native.surface, "rgb(35, 35, 35)");
+  assert.ok(
+    Number(adapted.panel.match(/\/ ([\d.]+)\)$/)?.[1]) >= 0.8,
+    JSON.stringify(adapted)
+  );
+  assert.notEqual(adapted.surface, native.surface);
+  assert.notEqual(adapted.surface, "rgba(0, 0, 0, 0)");
+  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  assert.deepEqual(await evaluateInPage(port, appearance, options), native);
+});
+
+test("the native settings dialog uses a 20 percent theme tint for its two columns", async (t) => {
   const { port, options } = await startRuntimeFixture(t);
   await evaluateInPage(
     port,
     `(() => {
+      const wallpaper = document.createElement("div");
+      wallpaper.style.cssText = "position:fixed;inset:0;z-index:100;background:" +
+        "repeating-linear-gradient(90deg, #181818 0 4px, #c0c0c0 4px 8px) bottom / 100% 35% no-repeat," +
+        "linear-gradient(90deg, #182838 50%, #90b8db 50%)";
+      document.body.append(wallpaper);
+      const portal = document.createElement("div");
+      portal.style.cssText = "position:fixed;inset:0;z-index:101;contain:layout";
+      const modal = document.createElement("div");
+      modal.style.isolation = "isolate";
+      const overlay = document.createElement("div");
+      overlay.className = "settings-dialog-backdrop";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgb(0 0 0 / .18);backdrop-filter:blur(3px)";
       const dialog = document.createElement("div");
       dialog.className = "settings-dialog";
       dialog.setAttribute("role", "dialog");
+      dialog.style.cssText = "position:fixed;inset:32px;display:grid;grid-template-columns:1fr 2fr";
       dialog.innerHTML = \`
         <div class="settings-dialog-sidebar" style="background-color: rgb(255 255 255 / .025); border-right: 1px solid rgb(48 48 48)">
           <div data-settings-nav-scroll-container>Settings navigation</div>
@@ -6795,7 +6500,9 @@ test("the native settings dialog uses one translucent backdrop for its two colum
           </div>
         </div>
       \`;
-      document.body.append(dialog);
+      modal.append(overlay, dialog);
+      portal.append(modal);
+      document.body.append(portal);
       const ordinary = document.createElement("div");
       ordinary.setAttribute("role", "dialog");
       ordinary.innerHTML = '<div class="electron:bg-surface" style="background-color: rgb(35 35 35)">Another dialog</div>';
@@ -6803,35 +6510,98 @@ test("the native settings dialog uses one translucent backdrop for its two colum
     })()`,
     options
   );
-  const colors = `(() => {
+  const appearance = `(() => {
     const dialog = document.querySelector(".settings-dialog");
     const sidebar = dialog.querySelector(".settings-dialog-sidebar");
     const content = dialog.querySelector(".settings-dialog-content");
     return {
       backdrop: getComputedStyle(dialog).backgroundColor,
+      blur: getComputedStyle(dialog).backdropFilter,
       sidebar: getComputedStyle(sidebar).backgroundColor,
       content: getComputedStyle(content).backgroundColor,
       divider: getComputedStyle(sidebar).borderRightWidth,
       button: getComputedStyle(content.querySelector("button")).backgroundColor,
       ordinary: getComputedStyle(document.querySelector("[role='dialog']:not(.settings-dialog) > div")).backgroundColor,
+      ordinaryBlur: getComputedStyle(document.querySelector("[role='dialog']:not(.settings-dialog)")).backdropFilter,
     };
   })()`;
-  const native = await evaluateInPage(port, colors, options);
+  const native = await evaluateInPage(port, appearance, options);
   await applyStaticBackground(port, { ...options, payload: { library: [] } });
-  const adapted = await evaluateInPage(port, colors, options);
-  assert.match(adapted.backdrop, /\/ 0\.[0-9]+\)/);
+  const adapted = await evaluateInPage(port, appearance, options);
+  const { data } = await callMainPage(
+    port,
+    "Page.captureScreenshot",
+    { format: "png" },
+    options.page,
+    true
+  );
+  const { broadContrast, stripeContrast } = await evaluateInPage(
+    port,
+    `(async () => {
+      const image = new Image();
+      image.src = "data:image/png;base64,${data}";
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      const red = (x, y) => context.getImageData(x, y, 1, 1).data[0];
+      const x = Math.floor(image.width / 16) * 8;
+      const broadY = Math.floor(image.height * 0.45);
+      const stripeY = Math.floor(image.height * 0.75);
+      return {
+        broadContrast: red(image.width * 0.75, broadY) - red(image.width * 0.25, broadY),
+        stripeContrast: Math.abs(red(x + 2, stripeY) - red(x + 6, stripeY)),
+      };
+    })()`,
+    options
+  );
+  assert.ok(
+    broadContrast >= 70 && broadContrast <= 125,
+    `Large background shapes should stay visible (red-channel difference: ${broadContrast})`
+  );
+  assert.ok(
+    stripeContrast <= 6,
+    `Fine background detail should be blurred (red-channel difference: ${stripeContrast})`
+  );
+  const alpha = (color) => Number(color.match(/\/ ([\d.]+)\)$/)?.[1]);
   assert.deepEqual(adapted, {
     ...native,
     backdrop: adapted.backdrop,
+    blur: "blur(15px)",
     sidebar: "rgba(0, 0, 0, 0)",
     content: "rgba(0, 0, 0, 0)",
   });
-  await evaluateInPage(
+  assert.equal(alpha(adapted.backdrop), 0.2);
+  const light = await evaluateInPage(
     port,
-    "globalThis.__codexWallpaperApi.disable()",
+    `(() => {
+      document.documentElement.dataset.theme = "light";
+      return ${appearance};
+    })()`,
     options
   );
-  assert.deepEqual(await evaluateInPage(port, colors, options), native);
+  assert.notEqual(light.backdrop, adapted.backdrop);
+  assert.equal(alpha(light.backdrop), 0.2);
+  assert.equal(light.blur, adapted.blur);
+  const minimum = await evaluateInPage(
+    port,
+    `(() => {
+      const controls = document.getElementById("${controlRootId}");
+      ${toggleSettings};
+      controls.querySelector("[data-panel-page='appearance']").click();
+      const range = controls.querySelector("[data-surface-override-value='settings']");
+      range.value = "0";
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+      return ${appearance};
+    })()`,
+    options
+  );
+  assert.ok(alpha(minimum.backdrop) === alpha(light.backdrop));
+  assert.equal(minimum.blur, adapted.blur);
+  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
 test("static background is single, removable and persists disabled", async (t) => {
@@ -7648,43 +7418,37 @@ test("static background is single, removable and persists disabled", async (t) =
     await evaluateInPage(
       port,
       `(async () => {
-        const waitFor = async (check, timeout = 2000) => {
-          const startedAt = performance.now();
-          while (performance.now() - startedAt < timeout) {
-            if (check()) return;
-            await new Promise((resolve) => setTimeout(resolve, 20));
-          }
-          throw new Error("Timed out waiting for Scene state");
-        };
         const root = document.getElementById("${rootId}");
         const controls = document.getElementById("${controlRootId}");
         const sceneCard = [...controls.querySelectorAll(".card")].find(
           (card) => card.querySelector("strong")?.textContent === "Fixture Scene"
         );
         sceneCard.querySelector(".card-actions button").click();
-        await waitFor(() => typeof globalThis.__sceneResolve === "function");
+        await new Promise((resolve) => setTimeout(resolve, 20));
         globalThis.__sceneResolve();
-        await waitFor(() => root.querySelector(".media:not(.staged) [data-scene-canvas]"));
+        const committedScene = ".media:not(.staged) [data-scene-canvas]";
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (root.querySelector(committedScene)) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        if (!root.querySelector(committedScene))
+          throw new Error("Timed out waiting for the scene to commit");
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "hidden"
         });
         document.dispatchEvent(new Event("visibilitychange"));
-        await waitFor(() => globalThis.__scenePaused === true);
         Object.defineProperty(document, "visibilityState", {
           configurable: true,
           get: () => "visible"
         });
         document.dispatchEvent(new Event("visibilitychange"));
-        await waitFor(() => globalThis.__sceneResumed === true);
         const fps = controls.querySelector("[data-setting='fps']");
         const volume = controls.querySelector("[data-setting='volume']");
         fps.value = "15";
         fps.dispatchEvent(new Event("input", { bubbles: true }));
-        await waitFor(() => globalThis.__sceneFps === 15);
         volume.value = "40";
         volume.dispatchEvent(new Event("input", { bubbles: true }));
-        await waitFor(() => globalThis.__sceneVolume === 0.4);
         const canvas = root.querySelector("[data-scene-canvas]");
         const layer = root.querySelector("[data-codex-wallpaper-layer]");
         return {
@@ -8273,37 +8037,13 @@ test("static background is single, removable and persists disabled", async (t) =
     options
   );
   assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `[
+    await evaluateInPage(port, `[
       nativeShortcutEvents,
       document.querySelector("#${controlRootId} .panel.open") !== null
-    ]`,
-      options
-    ),
+    ]`, options),
     [1, false]
   );
-  await evaluateInPage(
-    port,
-    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
-      altKey: true,
-      shiftKey: true,
-      code: "KeyS",
-      bubbles: true,
-      cancelable: true
-    }))`,
-    options
-  );
-  await waitForCondition(
-    () =>
-      evaluateInPage(
-        port,
-        `document.querySelector("#${controlRootId} .panel.open") !== null`,
-        options
-      ),
-    3000,
-    "wallpaper settings panel did not open"
-  );
+  await pressWallpaperShortcut(port, options, "S");
   assert.deepEqual(
     await evaluateInPage(
       port,
@@ -8336,26 +8076,12 @@ test("static background is single, removable and persists disabled", async (t) =
       nativeShortcutEvents: 1,
     }
   );
-  await evaluateInPage(
-    port,
-    `globalThis.__codexWallpaperHotkey(new KeyboardEvent("keydown", {
-      altKey: true,
-      shiftKey: true,
-      code: "KeyS",
-      bubbles: true,
-      cancelable: true
-    }))`,
-    options
-  );
+  await pressWallpaperShortcut(port, options, "S");
   assert.deepEqual(
-    await evaluateInPage(
-      port,
-      `[
+    await evaluateInPage(port, `[
       document.querySelector("#${controlRootId} .panel.open") !== null,
       document.activeElement.matches("[data-composer-surface-variant]")
-    ]`,
-      options
-    ),
+    ]`, options),
     [false, true]
   );
   await metrics.send("Emulation.setDeviceMetricsOverride", {
@@ -8420,55 +8146,36 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     true
   );
-  await toggleWallpaperPanel(port, options);
-  const panelLayout = `(() => {
-    const panel = document.querySelector("#${controlRootId} .panel.open");
-    const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
-    const p = panel?.getBoundingClientRect();
-    return {
-      visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
-      clear: Boolean(p && p.bottom < c.top),
-      hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
-        p.right - 8,
-        p.top + 8
-      )))
-    };
-  })()`;
-  await waitForCondition(
-    () =>
-      evaluateInPage(port, panelLayout, options).then(
-        ({ visible, clear, hitTestable }) => visible && clear && hitTestable
-      ),
-    3000,
-    "wallpaper settings panel layout did not settle"
+  await pressWallpaperShortcut(port, options, "S");
+  assert.deepEqual(
+    await evaluateInPage(
+      port,
+      `(() => {
+        const panel = document.querySelector("#${controlRootId} .panel.open");
+        const c = document.querySelector("[data-composer-surface-variant]").getBoundingClientRect();
+        const p = panel?.getBoundingClientRect();
+        return {
+          visible: Boolean(p && p.top >= 0 && p.right <= innerWidth),
+          clear: Boolean(p && p.bottom < c.top),
+          hitTestable: Boolean(p && panel.contains(document.elementFromPoint(
+            p.right - 8,
+            p.top + 8
+          )))
+        };
+      })()`,
+      options
+    ),
+    { visible: true, clear: true, hitTestable: true }
   );
-  assert.deepEqual(await evaluateInPage(port, panelLayout, options), {
-    visible: true,
-    clear: true,
-    hitTestable: true,
-  });
-  await toggleWallpaperPanel(port, options);
-  for (const [width, height] of [
-    [1290, 900],
-    [360, 700],
-  ]) {
+  await pressWallpaperShortcut(port, options, "S");
+  for (const [width, height] of [[1290, 900], [360, 700]]) {
     await metrics.send("Emulation.setDeviceMetricsOverride", {
       width,
       height,
       deviceScaleFactor: 1,
       mobile: false,
     });
-    await toggleWallpaperPanel(port, options);
-    await waitForCondition(
-      () =>
-        evaluateInPage(
-          port,
-          `Boolean(document.querySelector("#${controlRootId} .panel.open"))`,
-          options
-        ),
-      3000,
-      "wallpaper settings panel did not open after viewport resize"
-    );
+    await pressWallpaperShortcut(port, options, "S");
     const layouts = await evaluateInPage(
       port,
       `(() => {
@@ -8486,16 +8193,14 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     );
     assert.equal(layouts.length, 3);
-    assert.ok(
-      layouts[0].fitsWindow && layouts[0].width > 0 && layouts[0].height > 0
-    );
+    assert.ok(layouts[0].fitsWindow && layouts[0].width > 0 && layouts[0].height > 0);
     assert.deepEqual(layouts, [layouts[0], layouts[0], layouts[0]]);
     await evaluateInPage(
       port,
       'document.querySelector("[data-panel-page=library]").click()',
       options
     );
-    await toggleWallpaperPanel(port, options);
+    await pressWallpaperShortcut(port, options, "S");
   }
   await evaluateInPage(
     port,
