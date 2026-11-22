@@ -1255,24 +1255,22 @@ async function clickAtElementCenter(port, options, selector) {
 }
 
 async function pressWallpaperShortcut(port, options, key) {
-  const virtualKey = key.charCodeAt(0);
-  await callMainPage(port, "Page.bringToFront", {}, options.page, true);
-  for (const type of ["rawKeyDown", "keyUp"]) {
-    await callMainPage(
-      port,
-      "Input.dispatchKeyEvent",
-      {
-        type,
-        key,
-        code: `Key${key}`,
-        windowsVirtualKeyCode: virtualKey,
-        nativeVirtualKeyCode: virtualKey,
-        modifiers: 9,
-      },
-      options.page,
-      true
-    );
-  }
+  await evaluateInPage(
+    port,
+    `(() => {
+      for (const type of ["keydown", "keyup"]) {
+        window.dispatchEvent(new KeyboardEvent(type, {
+          key: ${JSON.stringify(key)},
+          code: "Key${key}",
+          altKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true
+        }));
+      }
+    })()`,
+    options
+  );
 }
 
 test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
