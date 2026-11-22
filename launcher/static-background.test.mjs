@@ -6442,6 +6442,33 @@ test("usage rows retain their hover tooltip and open native usage settings while
   assert.equal(await read('document.querySelector("#profile-summary").getAttribute("aria-disabled")'), "true");
 });
 
+test("modern tab side panels use the wallpaper surface material", async (t) => {
+  const { port, options } = await startRuntimeFixture(t, { library: [] });
+  const createPanel = `(() => {
+    const panel = document.createElement("aside");
+    panel.dataset.appShellFocusArea = "right-panel";
+    panel.innerHTML = '<div id="app-shell-tab-panel-fixture" role="tabpanel"><div id="modern-right-surface" class="electron:bg-surface" style="background-color: rgb(35 35 35)">Changes</div></div>';
+    document.querySelector("[data-app-shell-main-surface]").append(panel);
+  })()`;
+  await evaluateInPage(port, createPanel, options);
+  const appearance = `(() => ({
+    panel: getComputedStyle(document.querySelector("aside[data-app-shell-focus-area='right-panel']")).backgroundColor,
+    surface: getComputedStyle(document.querySelector("#modern-right-surface")).backgroundColor,
+  }))()`;
+  const native = await evaluateInPage(port, appearance, options);
+  await applyStaticBackground(port, { ...options, payload: { library: [] } });
+  const adapted = await evaluateInPage(port, appearance, options);
+  assert.equal(native.surface, "rgb(35, 35, 35)");
+  assert.ok(
+    Number(adapted.panel.match(/\/ ([\d.]+)\)$/)?.[1]) >= 0.8,
+    JSON.stringify(adapted)
+  );
+  assert.notEqual(adapted.surface, native.surface);
+  assert.notEqual(adapted.surface, "rgba(0, 0, 0, 0)");
+  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  assert.deepEqual(await evaluateInPage(port, appearance, options), native);
+});
+
 test("the native settings dialog uses a 20 percent theme tint for its two columns", async (t) => {
   const { port, options } = await startRuntimeFixture(t);
   await evaluateInPage(

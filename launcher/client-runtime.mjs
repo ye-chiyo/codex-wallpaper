@@ -361,7 +361,7 @@ function createRuntimeStyles(rootId, controlsId) {
         background-color: transparent !important;
       }
       ${workspaceFrame} ${rightBody} file-tree-container { --trees-bg-override: transparent !important; }
-      ${workspaceFrame} ${rightBody} :is([class~='bg-surface'][class*='--diffs-editor-selection-bg'], [data-testid='diff-preview-scroll'], [data-thread-find-target='review']) {
+      ${workspaceFrame} ${rightBody} :is([class~='bg-surface'][class*='--diffs-editor-selection-bg'], [data-testid='diff-preview-scroll'], [data-thread-find-target='review']:not([class~='electron:bg-surface'])) {
         background-color: transparent !important;
       }
       /* Resolve the settings route once before matching its descendant rules. */
@@ -431,6 +431,26 @@ function createRuntimeStyles(rootId, controlsId) {
         --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
       }
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
+      html:has(> #${rootId}) body [data-app-shell-main-surface] aside[data-app-shell-focus-area='right-panel']:has([role='tabpanel']) {
+        background-color: color-mix(in srgb, var(--app-color-background-surface, rgb(24 24 28)) 86%, transparent) !important;
+        backdrop-filter: var(--codex-wallpaper-right-blur);
+        box-shadow: inset 1px 0 0 var(--codex-wallpaper-line);
+        & [role='tablist'] { background-color: transparent !important; box-shadow: inset 0 -1px 0 var(--codex-wallpaper-line); }
+        & :where([class~='electron:bg-surface']) { background-color: var(--codex-wallpaper-raised) !important; }
+        & :where(file-tree-container, [data-testid='diff-preview-scroll']:not([class~='electron:bg-surface'])) {
+          --trees-bg-override: transparent !important;
+          background-color: transparent !important;
+        }
+        & [data-testid='diff-preview-scroll'] {
+          background-color: transparent !important;
+          --diffs-bg-addition: color-mix(in srgb, var(--color-codex-diff-added, transparent) 24%, transparent) !important;
+          --diffs-bg-deletion: color-mix(in srgb, var(--color-codex-diff-deleted, transparent) 24%, transparent) !important;
+        }
+        & [data-testid='diff-preview-scroll'] .composer-diff-simple-line {
+          background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important;
+          border-radius: var(--codex-wallpaper-radius-sm);
+        }
+      }
       body :where([role='dialog'], [role='menu']) { background-color: ${panelColor} !important; }
       body [role='dialog'].settings-dialog:has([data-settings-nav-scroll-container]) {
         background-color: color-mix(in srgb, var(--codex-wallpaper-settings-canvas-base) var(--codex-wallpaper-native-settings-tint), transparent) !important;
