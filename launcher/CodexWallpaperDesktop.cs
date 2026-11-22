@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -12,6 +13,7 @@ using System.Windows.Forms;
 internal static class CodexWallpaperDesktop
 {
     private const string PreviewRequest = "CodexWallpaper:preview:";
+    private const string ErrorRequest = "CodexWallpaper:error:";
 
     [DllImport("user32.dll")]
     private static extern bool SetProcessDpiAwarenessContext(IntPtr value);
@@ -32,6 +34,8 @@ internal static class CodexWallpaperDesktop
 
     internal static int Run(string launcher, string cache, Rectangle bounds)
     {
+        bool showFailureDialog =
+            Environment.GetEnvironmentVariable("CODEX_WALLPAPER_SUPPRESS_ERROR_UI") != "1";
         var start = new ProcessStartInfo
         {
             FileName = Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe"),
@@ -40,7 +44,8 @@ internal static class CodexWallpaperDesktop
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardInput = true,
-            RedirectStandardOutput = true
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
         start.EnvironmentVariables["CODEX_WALLPAPER_DESKTOP_HANDSHAKE"] = "1";
         string playbackClock = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(cache)),
@@ -48,6 +53,9 @@ internal static class CodexWallpaperDesktop
         start.EnvironmentVariables["CODEX_WALLPAPER_PLAYBACK_CLOCK"] = playbackClock;
 
         var exitCode = 1;
+        string failureMessage = null;
+        string lastOutput = null;
+        string lastError = null;
         StartupScreen screen = null;
         using (var dispatcher = new Control())
         using (var app = new ApplicationContext())
@@ -88,24 +96,52 @@ internal static class CodexWallpaperDesktop
                         else screen.ShowUntilHandoff(acknowledge);
                     }));
                 }
+                else if (message.StartsWith(ErrorRequest, StringComparison.Ordinal))
+                {
+                    try
+                    {
+                        failureMessage = Encoding.UTF8.GetString(
+                            Convert.FromBase64String(message.Substring(ErrorRequest.Length)));
+                    }
+                    catch (FormatException)
+                    {
+                        failureMessage = "Codex \u58C1\u7EB8\u6CA1\u6709\u6210\u529F\u542F\u52A8\uFF0CCodex \u539F\u754C\u9762\u5DF2\u4FDD\u7559\u3002";
+                    }
+                }
                 else if (message == "CodexWallpaper:activated")
                     dispatcher.BeginInvoke((Action)(() => { if (screen != null) screen.ShowLoadingIcon(); }));
                 else if (message == "CodexWallpaper:presented")
                     dispatcher.BeginInvoke(reveal);
+                else if (!string.IsNullOrWhiteSpace(message))
+                    lastOutput = message;
+            };
+            process.ErrorDataReceived += (sender, eventArgs) =>
+            {
+                if (!string.IsNullOrWhiteSpace(eventArgs.Data))
+                    lastError = eventArgs.Data;
             };
             process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             Task.Run(() =>
             {
                 // The supervisor can inherit stdout and outlive PowerShell. A timed
                 // wait returns on process exit without waiting for the pipe to close.
                 process.WaitForExit(Int32.MaxValue);
                 process.CancelOutputRead();
+                process.CancelErrorRead();
                 exitCode = process.ExitCode;
                 dispatcher.BeginInvoke((Action)(() =>
                 {
                     scriptExited = true;
                     if (exitCode == 0) reveal();
-                    if (exitCode != 0 || !fadeStarted || fadeFinished)
+                    if (exitCode != 0)
+                    {
+                        if (screen != null) screen.Hide();
+                        if (showFailureDialog)
+                            ShowFailureDialog(failureMessage ?? lastOutput ?? lastError);
+                        app.ExitThread();
+                    }
+                    else if (!fadeStarted || fadeFinished)
                         app.ExitThread();
                 }));
             });
@@ -116,6 +152,21 @@ internal static class CodexWallpaperDesktop
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
         return exitCode;
+    }
+
+    private static void ShowFailureDialog(string detail)
+    {
+        if (string.IsNullOrWhiteSpace(detail))
+            detail = "Codex \u58C1\u7EB8\u6CA1\u6709\u6210\u529F\u542F\u52A8\u3002";
+        string preserved = "Codex \u539F\u754C\u9762\u5DF2\u4FDD\u7559\u3002";
+        string message = detail.Trim();
+        if (!message.Contains(preserved))
+            message += "\r\n\r\n" + preserved;
+        MessageBox.Show(
+            message,
+            "Codex \u58C1\u7EB8\u542F\u52A8\u5931\u8D25",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
     }
 }
 

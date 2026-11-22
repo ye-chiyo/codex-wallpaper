@@ -17,6 +17,11 @@ const execFileAsync = promisify(execFile);
 const previewCache = process.env.CODEX_WALLPAPER_STARTUP_CACHE;
 const updateStartupPreview = previewCache ? createStartupPreviewStore(previewCache) : null;
 let awaitingPresentation = process.argv[3] === "--desktop-preview";
+const compatibilityProbe = process.argv.includes("--compatibility-probe");
+const compatibilityTimeout = Math.max(
+  100,
+  Number(process.env.CODEX_WALLPAPER_COMPATIBILITY_PROBE_MS) || 15_000
+);
 const presentationDeadline = awaitingPresentation
   ? delay(25_000, "timeout", { ref: false })
   : null;
@@ -110,6 +115,27 @@ async function waitForSession(signal) {
     }
     if (signal) await delay(150);
     else await Promise.race([delay(150), parentDone]);
+  }
+  return null;
+}
+
+async function waitForMainInterface(stop) {
+  const deadline = Date.now() + compatibilityTimeout;
+  while (Date.now() < deadline) {
+    const state = await Promise.race([
+      sessionEvaluate(
+        session,
+        "globalThis.__codexWallpaperApi?.state()"
+      ),
+      stop,
+    ]);
+    if (state === cancelled) return cancelled;
+    if (state?.mainInterfaceShown) return state;
+    const pause = await Promise.race([
+      delay(150).then(() => true),
+      stop,
+    ]);
+    if (pause === cancelled) return cancelled;
   }
   return null;
 }
@@ -234,6 +260,12 @@ try {
         wallpaper.identity?.styleHash !== expected.styleHash
       )
         throw new Error(phase);
+      if (compatibilityProbe) {
+        phase = "compatibility-probe-failed";
+        const probed = await waitForMainInterface(stop);
+        if (probed === cancelled) continue;
+        if (!probed) throw new Error(phase);
+      }
       if (!kept) {
         await reply({
           state: "ready",

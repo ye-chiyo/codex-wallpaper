@@ -11,8 +11,13 @@ $ErrorActionPreference = 'Stop'
 $supportedExeHashes = @{
     'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0' = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
     'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0' = 'AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514'
+    'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0' = '21C2EAC7703B43611392234738F669A8AF23907585B231EBDE54CA3CB104CC82'
 }
 $appId = 'OpenAI.Codex_2p2nqsd0c76g0!App'
+$codexPackageName = 'OpenAI.Codex'
+$codexPackageFamilyName = 'OpenAI.Codex_2p2nqsd0c76g0'
+$codexPublisherId = '2p2nqsd0c76g0'
+$codexSignerSubject = 'CN="OpenAI OpCo, LLC"'
 $nativeProfile = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
 $stateFolder = if ($ReceiptRoot) { $ReceiptRoot } else {
     Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'CodexWallpaper\P0b'
@@ -188,6 +193,71 @@ if (-not (Get-Command Get-FileSha256 -CommandType Function -ErrorAction Silently
     }
 }
 
+function Test-TrackedCodexPackage($Package) {
+    if ($null -eq $Package -or
+        $Package.Name -cne $codexPackageName -or
+        $Package.PackageFamilyName -cne $codexPackageFamilyName -or
+        $Package.PublisherId -cne $codexPublisherId -or
+        $Package.SignatureKind -cne 'Store' -or
+        $Package.Status -cne 'Ok' -or
+        $Package.Architecture -cne 'X64' -or
+        $Package.IsDevelopmentMode -or
+        $Package.PackageFullName -cnotmatch '^OpenAI\.Codex_[0-9]+(?:\.[0-9]+){3}_x64__2p2nqsd0c76g0$') {
+        return [pscustomobject]@{ Trusted = $false; Reason = 'package-identity' }
+    }
+    $exe = Join-Path $Package.InstallLocation 'app\ChatGPT.exe'
+    try {
+        $signature = Get-AuthenticodeSignature -LiteralPath $exe
+    } catch {
+        return [pscustomobject]@{ Trusted = $false; Reason = 'signature-query' }
+    }
+    if ($signature.Status -ne 'Valid' -or $null -eq $signature.SignerCertificate -or
+        $signature.SignerCertificate.Subject -notlike "$codexSignerSubject*") {
+        return [pscustomobject]@{ Trusted = $false; Reason = 'signer' }
+    }
+    return [pscustomobject]@{
+        Trusted = $true
+        Executable = $exe
+        ExecutableHash = Get-FileSha256 $exe
+    }
+}
+
+function Write-DesktopError($Message) {
+    if ($env:CODEX_WALLPAPER_DESKTOP_HANDSHAKE -ceq '1') {
+        $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Message))
+        [Console]::WriteLine("CodexWallpaper:error:$encoded")
+    }
+}
+
+function ConvertFrom-Utf8Base64($Value) {
+    return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Value))
+}
+
+function Get-LaunchFailureMessage($Outcome) {
+    switch ($Outcome) {
+        'package-query-failed' { return ConvertFrom-Utf8Base64 '5peg5rOV6K+75Y+WIENvZGV4IOWuieijheS/oeaBr+OAguivt+ehruiupCBDb2RleCDlt7LmraPnoa7lronoo4XlkI7ph43or5XjgII=' }
+        'unsupported-package' { return ConvertFrom-Utf8Base64 '5b2T5YmNIENvZGV4IOWuieijheWMheaXoOazlemAmui/h+WPr+S/oei6q+S7veagoemqjO+8jOWjgee6uOacquWKoOi9ve+8jOWOn+eVjOmdouW3suS/neeVmeOAgg==' }
+        'executable-or-app-registration-mismatch' { return ConvertFrom-Utf8Base64 'Q29kZXgg5Li756iL5bqP5oiW5bqU55So55m76K6w5LiO5a6J6KOF5YyF5LiN5LiA6Ie077yM5aOB57q45pyq5Yqg6L2977yM5Y6f55WM6Z2i5bey5L+d55WZ44CC' }
+        'daily-profile-missing' { return ConvertFrom-Utf8Base64 '5pyq5om+5YiwIENvZGV4IOaXpeW4uOaVsOaNruebruW9le+8jOWjgee6uOacquWKoOi9ve+8jOWOn+eVjOmdouW3suS/neeVmeOAgg==' }
+        'launcher-in-progress' { return ConvertFrom-Utf8Base64 '5Y+m5LiA5Liq5aOB57q45ZCv5Yqo5qOA5p+l5q2j5Zyo6L+b6KGM77yM6K+356iN562J5Yeg56eS5ZCO6YeN6K+V44CC' }
+        'multiple-main-processes' { return ConvertFrom-Utf8Base64 '5qOA5rWL5Yiw5aSa5LiqIENvZGV4IOS4u+i/m+eoi+OAguivt+WujOWFqOmAgOWHuuaJgOaciSBDb2RleCDnqpflj6PlkI7ph43or5XjgII=' }
+        'ordinary-instance-running' { return ConvertFrom-Utf8Base64 'Q29kZXgg5q2j5Zyo6L+Q6KGM44CC5aOB57q45YWl5Y+j5LiN5Lya6ZmE5Yqg5Yiw5bey5omT5byA55qE5pmu6YCa5a6e5L6L77yM6K+35a6M5YWo6YCA5Ye6IENvZGV4IOWQjumHjeaWsOaJk+W8gOOAgg==' }
+        'unverified-running-instance' { return ConvertFrom-Utf8Base64 'Q29kZXgg5q2j5Zyo6L+Q6KGM77yM5L2G5rKh5pyJ5om+5Yiw5Yy56YWN55qE5aOB57q45ZCv5Yqo6K6w5b2V44CC6K+35a6M5YWo6YCA5Ye6IENvZGV4IOWQjumHjeaWsOaJk+W8gOOAgg==' }
+        'main-process-appeared-during-preparation' { return ConvertFrom-Utf8Base64 '5YeG5aSH5ZCv5Yqo5pe2IENvZGV4IOW3suiiq+WFtuS7luWFpeWPo+aJk+W8gOOAguivt+WujOWFqOmAgOWHuiBDb2RleCDlkI7ph43or5XjgII=' }
+        'compatibility-probe-failed' { return ConvertFrom-Utf8Base64 '5paw54mI5pysIENvZGV4IOacqumAmui/h+eVjOmdouWFvOWuueaOoua1i++8jOWjgee6uOacquWKoOi9ve+8jOWOn+eVjOmdouW3suS/neeVmeOAguivt+etieW+heWjgee6uOmAgumFjeabtOaWsOOAgg==' }
+        'wallpaper-injection-failed' { return ConvertFrom-Utf8Base64 '5aOB57q46L+Q6KGM5bGC5pyq6IO95oiQ5Yqf5o6l5YWl5b2T5YmNIENvZGV4IOeVjOmdou+8jOWOn+eVjOmdouW3suS/neeVmeOAguivt+eojeWQjumHjeivleOAgg==' }
+        'supervisor-startup-timeout' { return ConvertFrom-Utf8Base64 '5aOB57q45ZCv5Yqo5qOA5p+l6LaF5pe277yMQ29kZXgg5Y6f55WM6Z2i5bey5L+d55WZ44CC6K+36YeN6K+V5oiW5p+l55yL5pys5Zyw5Zue5omn44CC' }
+        'launch-or-check-error' { return ConvertFrom-Utf8Base64 '5aOB57q45ZCv5Yqo5qOA5p+l5Y+R55Sf6ZSZ6K+v77yMQ29kZXgg5Y6f55WM6Z2i5bey5L+d55WZ44CC6K+35p+l55yL5pys5Zyw5Zue5omn5Lit55qE6ZSZ6K+v5L+h5oGv44CC' }
+        default {
+            if ([string]::IsNullOrWhiteSpace($Outcome)) {
+                return ConvertFrom-Utf8Base64 'Q29kZXgg5aOB57q45rKh5pyJ5oiQ5Yqf5ZCv5Yqo77yMQ29kZXgg5Y6f55WM6Z2i5bey5L+d55WZ44CC'
+            }
+            return (ConvertFrom-Utf8Base64 'Q29kZXgg5aOB57q45rKh5pyJ5oiQ5Yqf5ZCv5Yqo77yI') + $Outcome +
+                (ConvertFrom-Utf8Base64 '77yJ77yMQ29kZXgg5Y6f55WM6Z2i5bey5L+d55WZ44CC')
+        }
+    }
+}
+
 function Test-WallpaperHost($Port, $LockFolder = [IO.Path]::GetTempPath()) {
     $process = $null
     $file = Join-Path $LockFolder ('codex-wallpaper-host-{0}.lock' -f $Port)
@@ -295,6 +365,7 @@ function Start-WallpaperSupervisor($Node, $LauncherFolder, $Port, $Clock, $Recei
         $info.EnvironmentVariables['CODEX_WALLPAPER_STARTUP_CACHE'] = Join-Path $stateFolder 'startup-preview.json'
     }
     if ($ShowStartupPreview) { $info.Arguments += ' --desktop-preview' }
+    if ($Receipt.CompatibilityMode -eq 'probe') { $info.Arguments += ' --compatibility-probe' }
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
     $info.RedirectStandardInput = $true
@@ -316,7 +387,11 @@ function Start-WallpaperSupervisor($Node, $LauncherFolder, $Port, $Clock, $Recei
             $message = $read.Result | ConvertFrom-Json
             if ($message.state -eq 'failed') {
                 $Receipt.SupervisorError = $message.error
-                if ($Receipt.TargetVerified) { $Receipt.Outcome = 'wallpaper-injection-failed' }
+                if ($message.error -eq 'compatibility-probe-failed') {
+                    $Receipt.Outcome = 'compatibility-probe-failed'
+                } elseif ($Receipt.TargetVerified) {
+                    $Receipt.Outcome = 'wallpaper-injection-failed'
+                }
                 return
             }
             if ($message.state -eq 'verified') {
@@ -429,22 +504,42 @@ try {
         $receipt.Outcome = 'package-query-failed'
         Save-Receipt $receipt $stateFolder
     }
+    Write-DesktopError (Get-LaunchFailureMessage 'package-query-failed')
     Write-Host 'Codex package query failed. Use the original entry. No activation attempted.'
     exit 2
 }
-$packageName = if ($pkg.Count -eq 1) { $pkg[0].PackageFullName }
+$package = if ($pkg.Count -eq 1) { $pkg[0] }
+$packageName = $package.PackageFullName
 if ($receipt) { $receipt.Package = $packageName }
-if (-not $packageName -or -not $supportedExeHashes.ContainsKey($packageName)) {
+if (-not $packageName -or $null -eq $package) {
     if ($receipt) {
         $receipt.Outcome = 'unsupported-package'
         Save-Receipt $receipt $stateFolder
     }
+    Write-DesktopError (Get-LaunchFailureMessage 'unsupported-package')
     Write-Host 'Unsupported or ambiguous Codex package. Use the original entry. No activation attempted.'
     exit 2
 }
-$exe = Join-Path $pkg[0].InstallLocation 'app\ChatGPT.exe'
+$exe = Join-Path $package.InstallLocation 'app\ChatGPT.exe'
+$compatibilityMode = 'known'
+$knownHash = $supportedExeHashes[$packageName]
+if (-not $knownHash -or (Get-FileSha256 $exe) -ine $knownHash) {
+    $packageTrust = Test-TrackedCodexPackage $package
+    if (-not $packageTrust.Trusted) {
+        if ($receipt) {
+            $receipt.Outcome = 'unsupported-package'
+            $receipt.PackageTrustFailure = $packageTrust.Reason
+            Save-Receipt $receipt $stateFolder
+        }
+        Write-DesktopError (Get-LaunchFailureMessage 'unsupported-package')
+        Write-Host 'Unsupported or untrusted Codex package. Use the original entry. No activation attempted.'
+        exit 2
+    }
+    $compatibilityMode = 'probe'
+}
+if ($receipt) { $receipt.CompatibilityMode = $compatibilityMode }
 $packageProfile = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) `
-    ('Packages\{0}\LocalCache\Roaming\Codex\web\Codex' -f $pkg[0].PackageFamilyName)
+    ('Packages\{0}\LocalCache\Roaming\Codex\web\Codex' -f $package.PackageFamilyName)
 
 if (-not $Launch) {
     $processes = @(Get-CodexProcesses)
@@ -453,6 +548,7 @@ if (-not $Launch) {
     [pscustomobject]@{
         Mode = 'status-only'
         Package = $packageName
+        CompatibilityMode = $compatibilityMode
         Running = @($roots | ForEach-Object {
             [pscustomobject]@{
                 Pid = $_.ProcessId
@@ -477,6 +573,7 @@ try {
     try { $locked = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $locked = $true }
     if (-not $locked) {
         if ($receipt) { $receipt.Outcome = 'launcher-in-progress' }
+        Write-DesktopError (Get-LaunchFailureMessage 'launcher-in-progress')
         Write-Host 'Another probe is in progress. No activation attempted.'
         exit 2
     }
@@ -485,11 +582,12 @@ try {
     while ($true) {
         $processes = @(Get-CodexProcesses)
         $existingRoots = @(Get-CodexRoots $processes)
-        if ($existingRoots.Count -eq 0 -or $exitWait.Elapsed.TotalSeconds -ge 25) { break }
+        if ($existingRoots.Count -eq 0 -or $exitWait.Elapsed.TotalSeconds -ge 4) { break }
         Start-Sleep -Milliseconds 300
     }
     if ($existingRoots.Count -gt 1) {
         if ($receipt) { $receipt.Outcome = 'multiple-main-processes' }
+        Write-DesktopError (Get-LaunchFailureMessage 'multiple-main-processes')
         Write-Host 'Multiple Codex main processes were observed. No activation attempted.'
         exit 2
     }
@@ -509,9 +607,11 @@ try {
         $recoverableRoot = Get-RecoverableRootState $existingRoots $processes $exe $stateFolder
         $hasDebugFlag = $existingRoots[0].CommandLine -match '(?:^|\s|\")--remote-debugging-(?:port|pipe)(?:=|\s|\"|$)'
         if ($recoverableRoot.State -ne 'recoverable') {
+            $runningOutcome = if ($hasDebugFlag) { 'unverified-running-instance' } else { 'ordinary-instance-running' }
             if ($receipt) {
-                $receipt.Outcome = if ($hasDebugFlag) { 'unverified-running-instance' } else { 'ordinary-instance-running' }
+                $receipt.Outcome = $runningOutcome
             }
+            Write-DesktopError (Get-LaunchFailureMessage $runningOutcome)
             if ($hasDebugFlag) {
                 Write-Host 'Codex is already running, but no matching dedicated-launch receipt was found. Nothing was started, connected, or changed.'
             } else {
@@ -520,9 +620,10 @@ try {
             exit 2
         }
     }
-    if ((Get-FileSha256 $exe) -ine $supportedExeHashes[$packageName] -or
+    if (($compatibilityMode -eq 'known' -and (Get-FileSha256 $exe) -ine $supportedExeHashes[$packageName]) -or
         -not @(Get-StartApps | Where-Object AppID -eq $appId).Count) {
         if ($receipt) { $receipt.Outcome = 'executable-or-app-registration-mismatch' }
+        Write-DesktopError (Get-LaunchFailureMessage 'executable-or-app-registration-mismatch')
         Write-Host 'Original executable or app registration did not match. No activation attempted.'
         exit 2
     }
@@ -531,6 +632,7 @@ try {
     if (-not (Test-Path -LiteralPath $nativeProfile -PathType Container) -and
         -not (Test-Path -LiteralPath $packageProfile -PathType Container)) {
         if ($receipt) { $receipt.Outcome = 'daily-profile-missing' }
+        Write-DesktopError (Get-LaunchFailureMessage 'daily-profile-missing')
         Write-Host 'Expected daily profile directory is missing. No activation attempted.'
         exit 2
     }
@@ -601,6 +703,7 @@ namespace CodexWallpaperP0b {
             Port = $port
             Outcome = 'recovery-attach-started'
             Mode = 'failed-launch-recovery'
+            CompatibilityMode = $compatibilityMode
             LoginAndChat = 'user-verification-required'
             ActivationPid = $root.ProcessId
             MainPid = $root.ProcessId
@@ -631,6 +734,7 @@ namespace CodexWallpaperP0b {
             Write-Host 'Recovered the matching failed dedicated launch and attached the wallpaper host.'
         } else {
             $exitCode = 2
+            Write-DesktopError (Get-LaunchFailureMessage $receipt.Outcome)
             Write-Host "Outcome: $($receipt.Outcome)"
         }
         exit $exitCode
@@ -642,12 +746,13 @@ namespace CodexWallpaperP0b {
     $showStartupPreview = $false
     if ($env:CODEX_WALLPAPER_DESKTOP_HANDSHAKE -ceq '1') {
         # The desktop process acknowledges the first painted wallpaper frame before native activation.
-        $loadingIcon = Join-Path $pkg[0].InstallLocation 'assets\Square44x44Logo.targetsize-80_altform-unplated.png'
+        $loadingIcon = Join-Path $package.InstallLocation 'assets\Square44x44Logo.targetsize-80_altform-unplated.png'
         [Console]::WriteLine("CodexWallpaper:preview:$loadingIcon")
         $showStartupPreview = [Console]::ReadLine() -ceq 'shown'
     }
     if (@(Get-CodexRoots @(Get-CodexProcesses)).Count -ne 0) {
         if ($receipt) { $receipt.Outcome = 'main-process-appeared-during-preparation' }
+        Write-DesktopError (Get-LaunchFailureMessage 'main-process-appeared-during-preparation')
         Write-Host 'Codex appeared during preparation. No activation attempted.'
         exit 2
     }
@@ -655,6 +760,7 @@ namespace CodexWallpaperP0b {
     $receipt = [ordered]@{
         Started = [DateTimeOffset]::Now.ToString('o'); Package = $packageName; Port = $port
         Outcome = 'activation-attempted'; LoginAndChat = 'user-verification-required'
+        CompatibilityMode = $compatibilityMode
     }
     if ($receiptMode) { $receipt.Mode = $receiptMode }
     $beforeLaunch = Get-Date
@@ -732,6 +838,10 @@ namespace CodexWallpaperP0b {
     if ($receipt.Outcome -eq 'no-verified-cdp-before-timeout' -and $null -ne $observation.AmbiguousSinceMs) {
         $receipt.Outcome = 'root-ambiguity-at-timeout'
     }
+    if ($receipt.Outcome -ne 'wallpaper-ready') {
+        $exitCode = 2
+        Write-DesktopError (Get-LaunchFailureMessage $receipt.Outcome)
+    }
     Write-Host "Outcome: $($receipt.Outcome)"
     if ($receipt.Wallpaper) { Write-Host "Wallpaper: $($receipt.Wallpaper.state)" }
     Write-Host 'Verify the account and an existing chat yourself. If you see a login screen, do not sign in for this test.'
@@ -749,6 +859,8 @@ namespace CodexWallpaperP0b {
             $receipt.ErrorStatement = $_.InvocationInfo.Line.Trim()
         }
     }
+    $exitCode = 2
+    Write-DesktopError (Get-LaunchFailureMessage 'launch-or-check-error')
     Write-Host "Stopped: $($_.Exception.GetType().Name). No retry or restart."
 } finally {
     if ($locked) { $mutex.ReleaseMutex() }

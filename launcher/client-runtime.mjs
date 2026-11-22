@@ -4152,6 +4152,7 @@ function createCodexWallpaperRuntime(
       fpsCap: Number(config.settings.fps),
       volume: Number(config.settings.volume),
       hostReady,
+      mainInterfaceShown,
     };
   }
 

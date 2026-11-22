@@ -30,9 +30,15 @@ $dedicatedMarker = [pscustomobject]@{
 function Get-AppxPackage {
     if ($mockPackageThrows) { throw 'Offline package query failure.' }
     if ($mockPackage) {
-        [pscustomobject]@{ PackageFullName = $mockPackage; PackageFamilyName = $family; InstallLocation = $env:TEMP }
+        [pscustomobject]@{
+            Name = 'OpenAI.Codex'; PackageFullName = $mockPackage
+            PackageFamilyName = $mockPackageFamilyName; PublisherId = $mockPublisherId
+            SignatureKind = $mockSignatureKind; Status = 'Ok'; Architecture = 'X64'
+            IsDevelopmentMode = $false; InstallLocation = $env:TEMP
+        }
     }
 }
+function Get-AuthenticodeSignature { [pscustomobject]@{ Status = $mockSignatureStatus; SignerCertificate = [pscustomobject]@{ Subject = $mockSignerSubject } } }
 function Get-CimInstance {
     if ($processSnapshots.Count) { return $processSnapshots.Dequeue() }
     return $mockProcesses
@@ -64,17 +70,31 @@ $cases = @(
     },
     @{
         Name = 'updated Codex package and its executable reach activation boundary'
-        Package = 'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0'
-        Hash = 'AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514'
+        Package = 'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0'
+        Hash = '21C2EAC7703B43611392234738F669A8AF23907585B231EBDE54CA3CB104CC82'
         StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
         ExpectedReceipt = 'launch-or-check-error'
     },
     @{
-        Name = 'updated Codex package cannot use the older executable hash'
-        Package = 'OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0'
+        Name = 'trusted known package no longer requires the older executable hash'
+        Package = 'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0'
         Hash = $hash; StartApp = $appId; Directories = @($cache)
-        ReachesBoundary = $false; Expected = 'Original executable or app registration did not match'
-        ExpectedReceipt = 'executable-or-app-registration-mismatch'
+        ReachesBoundary = $true
+        ExpectedReceipt = 'launch-or-check-error'
+    },
+    @{
+        Name = 'trusted unlisted Codex package reaches activation boundary'
+        Package = 'OpenAI.Codex_26.1118.4957.0_x64__2p2nqsd0c76g0'
+        Hash = ('1' * 64); StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
+        ExpectedReceipt = 'launch-or-check-error'
+    },
+    @{
+        Name = 'unlisted Codex package with an untrusted signature stays on the original interface'
+        Package = 'OpenAI.Codex_26.1118.4957.0_x64__2p2nqsd0c76g0'
+        Hash = ('1' * 64); SignatureStatus = 'NotSigned'
+        StartApp = $appId; Directories = @($cache); ReachesBoundary = $false
+        Expected = 'Unsupported or untrusted Codex package'
+        ExpectedReceipt = 'unsupported-package'
     },
     @{
         Name = 'current package accepts the logical daily profile path'
@@ -82,16 +102,17 @@ $cases = @(
         ExpectedReceipt = 'launch-or-check-error'
     },
     @{
-        Name = 'unknown package remains on the original interface'
-        Package = 'OpenAI.Codex_26.1111.2229.0_x64__2p2nqsd0c76g0'; Hash = $hash; StartApp = $appId
-        Directories = @($cache); ReachesBoundary = $false; Expected = 'Unsupported or ambiguous Codex package'
+        Name = 'untrusted package identity remains on the original interface'
+        Package = 'OpenAI.Codex_26.1111.2229.0_x64__2p2nqsd0c76g0'; Hash = $hash
+        PackageFamilyName = 'OpenAI.Codex_other'; StartApp = $appId
+        Directories = @($cache); ReachesBoundary = $false; Expected = 'Unsupported or untrusted Codex package'
         ExpectedReceipt = 'unsupported-package'
     },
     @{
-        Name = 'executable hash drift remains on the original interface'
+        Name = 'trusted executable hash drift enters compatibility probe'
         Package = $package; Hash = ('0' * 64); StartApp = $appId; Directories = @($cache)
-        ReachesBoundary = $false; Expected = 'Original executable or app registration did not match'
-        ExpectedReceipt = 'executable-or-app-registration-mismatch'
+        ReachesBoundary = $true
+        ExpectedReceipt = 'launch-or-check-error'
     },
     @{
         Name = 'missing app registration remains on the original interface'
@@ -163,6 +184,11 @@ foreach ($case in $cases) {
     $mockPackageThrows = [bool]$case.PackageThrows
     $mockHash = $case.Hash
     $mockStartApp = $case.StartApp
+    $mockPackageFamilyName = if ($case.PackageFamilyName) { $case.PackageFamilyName } else { $family }
+    $mockPublisherId = '2p2nqsd0c76g0'
+    $mockSignatureKind = 'Store'
+    $mockSignatureStatus = if ($case.SignatureStatus) { $case.SignatureStatus } else { 'Valid' }
+    $mockSignerSubject = 'CN="OpenAI OpCo, LLC", O="OpenAI OpCo, LLC"'
     $mockProcesses = @($case.Processes | Where-Object { $null -ne $_ })
     $processSnapshots = [Collections.Generic.Queue[object]]::new()
     if ($case.Exiting) {

@@ -667,6 +667,7 @@ async function runStartupHandoff(
     rejection = "",
     recheck = null,
     env = process.env,
+    compatibilityProbe = false,
     listenerOwner = process.pid,
     previewFolder = null,
   } = {}
@@ -684,6 +685,7 @@ async function runStartupHandoff(
     $receipt = [ordered]@{}
     $receipt.MainPid = ${listenerOwner}
     $receipt.MainCreated = (Get-CimInstance Win32_Process -Filter 'ProcessId=${listenerOwner}').CreationDate.ToString('o')
+    $receipt.CompatibilityMode = ${compatibilityProbe ? "'probe'" : "$null"}
     $script:wallpaperRecheckCount = 0
     $stateFolder = ${previewFolder ? psLiteral(previewFolder) : "$null"}
     Start-WallpaperSupervisor ${psLiteral(process.execPath)} (Split-Path -Parent $launcher) ${cdp.port} ([Diagnostics.Stopwatch]::StartNew()) $receipt { $script:wallpaperRecheckCount++; ${recheckCode} } ${previewFolder ? "$true" : "$false"}
@@ -790,6 +792,54 @@ test(
     assert.equal(reconfigured, true);
     assert.equal(cdp.hostConnections, 1);
     assert.deepEqual(receipt.Wallpaper.identity, identity);
+  }
+);
+
+test(
+  "compatibility probe fails closed when the current Codex interface never appears",
+  { timeout: 8000 },
+  async (t) => {
+    const identity = candidateIdentity();
+    const cdp = await startExactCdpFixture(t, () => ({
+      state: "enabled",
+      hostReady: true,
+      mainInterfaceShown: false,
+      identity,
+    }));
+    const receipt = await runStartupHandoff(t, cdp, {
+      compatibilityProbe: true,
+      env: {
+        ...process.env,
+        CODEX_WALLPAPER_COMPATIBILITY_PROBE_MS: "300",
+      },
+    });
+    assert.equal(receipt.Outcome, "compatibility-probe-failed");
+    assert.equal(receipt.SupervisorError, "compatibility-probe-failed");
+    assert.equal(receipt.Wallpaper, undefined);
+  }
+);
+
+test(
+  "compatibility probe waits for the current Codex interface before declaring ready",
+  { timeout: 8000 },
+  async (t) => {
+    const identity = candidateIdentity();
+    let polls = 0;
+    const cdp = await startExactCdpFixture(t, (expression) => {
+      if (expression === "globalThis.__codexWallpaperApi?.state()") polls += 1;
+      return {
+        state: "enabled",
+        hostReady: true,
+        mainInterfaceShown: polls >= 2,
+        identity,
+      };
+    });
+    const receipt = await runStartupHandoff(t, cdp, {
+      compatibilityProbe: true,
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(receipt.HostReady, true);
+    assert.ok(polls >= 2);
   }
 );
 
@@ -8427,6 +8477,7 @@ test("static background is single, removable and persists disabled", async (t) =
         fpsCap: 15,
         volume: 0,
         hostReady: true,
+        mainInterfaceShown: true,
       },
       savedEnabled: false,
       savedActive: { kind: "workshop", id: "fixture-image" },
@@ -8508,6 +8559,7 @@ test("static background is single, removable and persists disabled", async (t) =
         fpsCap: 15,
         volume: 0,
         hostReady: true,
+        mainInterfaceShown: true,
       },
       roots: { wallpaper: 1, controls: 1, styles: 1 },
       imageIsFixture: true,
@@ -8655,6 +8707,7 @@ test("static background is single, removable and persists disabled", async (t) =
         fpsCap: 15,
         volume: 0,
         hostReady: true,
+        mainInterfaceShown: true,
       },
     }
   );
