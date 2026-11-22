@@ -53,10 +53,24 @@ $hostFolder = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-roots-' + [
 $hostLock = Join-Path $hostFolder ('codex-wallpaper-host-{0}.lock' -f $port)
 try {
     [IO.File]::WriteAllText($hostLock, [string]$PID)
+    Assert-Outcome (Test-WallpaperHost $port $hostFolder) $true
+
+    $exited = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList '/c','exit','0' -PassThru -WindowStyle Hidden
+    $exitedPid = $exited.Id
+    $exited.WaitForExit()
+    $exited.Dispose()
+    [IO.File]::WriteAllText($hostLock, [string]$exitedPid)
+    Assert-Outcome (Test-WallpaperHost $port $hostFolder) $false
+
+    [IO.File]::WriteAllText($hostLock, [string]$PID)
     $dedicated = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder
     Assert-Outcome $dedicated.State 'dedicated'
     Assert-Outcome $dedicated.Port $port
     Assert-Outcome $dedicated.Root.ProcessId 26324
+
+    [IO.File]::SetLastWriteTimeUtc($hostLock, [DateTime]::UtcNow.AddDays(-1))
+    $recycledPid = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder
+    Assert-Outcome $recycledPid.State 'unknown'
 
     Remove-Item -LiteralPath $hostLock
     $missingHost = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder

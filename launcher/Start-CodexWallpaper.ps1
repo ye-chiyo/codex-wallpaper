@@ -194,7 +194,8 @@ function Test-WallpaperHost($Port, $LockFolder = [IO.Path]::GetTempPath()) {
     try {
         $owner = [int]([IO.File]::ReadAllText($file).Trim())
         $process = [Diagnostics.Process]::GetProcessById($owner)
-        return -not $process.HasExited
+        # A recycled PID cannot own a lock written before its process existed.
+        return -not $process.HasExited -and $process.StartTime.ToUniversalTime() -le [IO.File]::GetLastWriteTimeUtc($file)
     } catch [IO.IOException] {
         return Test-Path -LiteralPath $file -PathType Leaf
     } catch {
@@ -316,7 +317,14 @@ function Start-WallpaperSupervisor($Node, $LauncherFolder, $Port, $Clock, $Recei
             $message = $read.Result | ConvertFrom-Json
             if ($message.state -eq 'failed') {
                 $Receipt.SupervisorError = $message.error
-                if ($Receipt.TargetVerified) { $Receipt.Outcome = 'wallpaper-injection-failed' }
+                if ($Receipt.TargetVerified) {
+                    if ($message.error -ceq 'runtime-version-mismatch') {
+                        $Receipt.Outcome = 'runtime-version-mismatch'
+                        Write-Host 'A different wallpaper runtime is already loaded. Fully quit Codex, then reopen it with the dedicated wallpaper launcher.'
+                    } else {
+                        $Receipt.Outcome = 'wallpaper-injection-failed'
+                    }
+                }
                 return
             }
             if ($message.state -eq 'verified') {

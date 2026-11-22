@@ -12,10 +12,16 @@ import { createStartupPreviewStore } from "./startup-preview.mjs";
 
 const port = Number(process.argv[2]);
 const page = "app://-/index.html";
+const expected = candidateIdentity();
+const mismatchedIdentity = `(identity) =>
+  identity?.runtimeHash !== ${JSON.stringify(expected.runtimeHash)} ||
+  identity?.styleHash !== ${JSON.stringify(expected.styleHash)}`;
 const cancelled = Symbol("cancelled");
 const execFileAsync = promisify(execFile);
 const previewCache = process.env.CODEX_WALLPAPER_STARTUP_CACHE;
-const updateStartupPreview = previewCache ? createStartupPreviewStore(previewCache) : null;
+const updateStartupPreview = previewCache
+  ? createStartupPreviewStore(previewCache)
+  : null;
 let awaitingPresentation = process.argv[3] === "--desktop-preview";
 const presentationDeadline = awaitingPresentation
   ? delay(25_000, "timeout", { ref: false })
@@ -86,14 +92,23 @@ async function reportPresentation(lost) {
   const result = await Promise.race([
     lost,
     presentationDeadline,
-    sessionEvaluate(session, "globalThis.__codexWallpaperApi?.waitForStartupPresentation()").catch(() => cancelled),
+    sessionEvaluate(
+      session,
+      "globalThis.__codexWallpaperApi?.waitForStartupPresentation()"
+    ).catch(() => cancelled),
   ]);
   if (result === cancelled) return;
   const { status, interfaceAt, frameAt } =
-    result === "timeout" ? { status: "timeout" } : result ?? {};
+    result === "timeout" ? { status: "timeout" } : (result ?? {});
   if (!["visible", "disabled", "timeout"].includes(status)) return;
   awaitingPresentation = false;
-  await reply({ state: "presentation", status, interfaceAt, frameAt, hostPid: process.pid }).catch(() => {});
+  await reply({
+    state: "presentation",
+    status,
+    interfaceAt,
+    frameAt,
+    hostPid: process.pid,
+  }).catch(() => {});
 }
 
 async function waitForSession(signal) {
@@ -104,9 +119,11 @@ async function waitForSession(signal) {
       });
       if (candidate) return candidate;
     } catch (error) {
-      if (!signal) throw error;
-      if (error?.code === "ECONNREFUSED") return null;
-      if (error?.message !== "WebSocket failed") throw error;
+      if (
+        error?.code !== "ECONNREFUSED" &&
+        !["Ambiguous main page", "WebSocket failed"].includes(error?.message)
+      )
+        throw error;
     }
     if (signal) await delay(150);
     else await Promise.race([delay(150), parentDone]);
@@ -189,6 +206,23 @@ try {
         if (command !== approval) continue;
       }
       if (targetLost || (!kept && parentClosed)) continue;
+      phase = "runtime-not-ready";
+      const mismatch = await Promise.race([
+        stop,
+        sessionEvaluate(
+          session,
+          `(() => {
+            if (window.top !== window || location.href !== ${JSON.stringify(page)}) return false;
+            const existing = globalThis.__codexWallpaperApi;
+            return !!existing && (${mismatchedIdentity})(existing.identity?.());
+          })()`
+        ),
+      ]);
+      if (mismatch === cancelled || signal?.aborted) continue;
+      if (mismatch === true) {
+        phase = "runtime-version-mismatch";
+        throw new Error(phase);
+      }
       const payload = await libraryPayload;
       const playbackClock = process.env.CODEX_WALLPAPER_PLAYBACK_CLOCK;
       if (awaitingPresentation && playbackClock) {
@@ -198,9 +232,20 @@ try {
           payload.startupVideo = { id: match[1], started: Number(match[2]) };
       }
       if (targetLost || signal?.aborted || (!kept && parentClosed)) continue;
-      const source = runtimeSource(payload, true, true, Boolean(updateStartupPreview));
+      const source = runtimeSource(
+        payload,
+        true,
+        true,
+        Boolean(updateStartupPreview)
+      );
       phase = "host-unavailable";
-      attaching = attachWallpaperHost({ port, session, page, source, updateStartupPreview });
+      attaching = attachWallpaperHost({
+        port,
+        session,
+        page,
+        source,
+        updateStartupPreview,
+      });
       const attached = await Promise.race([stop, attaching]);
       if (attached === cancelled) continue;
       host = attached;
@@ -214,19 +259,24 @@ try {
           session,
           `(async () => {
           if (window.top !== window || location.href !== ${JSON.stringify(page)}) return null;
-          globalThis.__codexWallpaperStartupPid = ${process.pid};
           const existing = globalThis.__codexWallpaperApi;
           if (existing) {
-            const state = await existing.configureHost();
-            return { ...state, identity: existing.identity() };
+            const identity = existing.identity?.();
+            if ((${mismatchedIdentity})(identity))
+              return { error: "runtime-version-mismatch" };
+            return { ...await existing.configureHost(), identity };
           }
+          globalThis.__codexWallpaperStartupPid = ${process.pid};
           const state = await ${source};
           return { ...state, identity: globalThis.__codexWallpaperApi.identity() };
         })()`
         ),
       ]);
       if (wallpaper === cancelled || signal?.aborted) continue;
-      const expected = candidateIdentity();
+      if (wallpaper?.error === "runtime-version-mismatch") {
+        phase = wallpaper.error;
+        throw new Error(phase);
+      }
       if (
         !wallpaper?.hostReady ||
         !["enabled", "disabled"].includes(wallpaper.state) ||
