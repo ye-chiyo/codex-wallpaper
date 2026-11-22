@@ -6329,6 +6329,38 @@ test("settings presets import export migration and scoped resets form a complete
   });
 });
 
+test("the read-only profile account row retains its native opacity and cursor when wallpaper is toggled", async (t) => {
+  const fixture = await startHtmlFixture(`<!doctype html><meta charset="utf-8">
+    <style>@layer utilities { .account { opacity: .9; cursor: default; } }</style>
+    <button aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="true"></button>
+    <div role="menu" data-radix-menu-content data-state="open">
+      <div>
+        <div role="presentation">
+          <div id="account" class="account" role="menuitem" aria-disabled="true" data-disabled>
+            <div data-menu-row-content><span data-leading-icon-slot="menu"></span>Profile / Plus</div>
+          </div>
+        </div>
+        <div id="other" role="menuitem" aria-disabled="true" data-disabled>Unavailable action</div>
+      </div>
+    </div>`);
+  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
+  const read = (source) => evaluateInPage(port, source, options);
+  const rows = () => read(`[...document.querySelectorAll('#account, #other')].map(row => {
+    const { opacity, cursor } = getComputedStyle(row);
+    return { opacity, cursor, disabled: row.getAttribute('aria-disabled'), nativeDisabled: row.hasAttribute('data-disabled') };
+  })`);
+  const native = await rows();
+  assert.equal(native[0].opacity, "0.9");
+  const enabled = [native[0], { ...native[1], opacity: "0.48", cursor: "not-allowed" }];
+
+  await applyStaticBackground(port, options);
+  assert.deepEqual(await rows(), enabled);
+  await read("globalThis.__codexWallpaperApi.disable(false)");
+  assert.deepEqual(await rows(), native);
+  await read("globalThis.__codexWallpaperApi.enable(false)");
+  assert.deepEqual(await rows(), enabled);
+});
+
 test("usage rows retain their hover tooltip and open native usage settings while wallpaper is enabled", async (t) => {
   const fixture = await startHtmlFixture(`<!doctype html><meta charset="utf-8">
     <style>

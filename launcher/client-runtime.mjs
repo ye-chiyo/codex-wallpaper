@@ -26,6 +26,9 @@ function createRuntimeStyles(rootId, controlsId) {
     "var(--codex-wallpaper-panel-base)",
     "settings"
   );
+  const profileAccountRow = `body:has(button[aria-haspopup='menu'][aria-expanded='true']:is([aria-label='打开个人资料菜单'], [aria-label='Open profile menu']))
+        [role='menu'][data-radix-menu-content][data-state='open'] > :first-child > [role='presentation']:first-child
+        > [role='menuitem'][aria-disabled='true'][data-disabled]:only-child:has(> [data-menu-row-content] > [data-leading-icon-slot='menu'])`;
   return `
       #${rootId}, #${rootId} * { box-sizing: border-box; }
       #${rootId}, #${controlsId} { position: fixed; inset: 0; pointer-events: none; color: var(--app-color-text-foreground, rgb(245 245 250)); font: 13px/1.4 system-ui, sans-serif; }
@@ -437,7 +440,7 @@ function createRuntimeStyles(rootId, controlsId) {
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]) { border-radius: var(--codex-wallpaper-radius-sm); }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([role^='menuitem'], [data-radix-collection-item]):is(:hover:where(:not([aria-disabled='true'], [data-disabled], :disabled)), :focus-visible) { background-color: color-mix(in srgb, var(--app-color-text-foreground, white) 9%, transparent) !important; }
       body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-checked='true'], [aria-selected='true'], [data-state='checked']) { background-color: color-mix(in srgb, var(--app-color-accent-blue, rgb(51 156 255)) 18%, transparent) !important; }
-      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled) { opacity: .48; cursor: not-allowed; }
+      body :where([role='menu'], [data-radix-popper-content-wrapper]) :is([aria-disabled='true'], :disabled):not(:where(${profileAccountRow})) { opacity: .48; cursor: not-allowed; }
       body [data-codex-wallpaper-usage-action] { cursor: pointer; }
     `;
 }
