@@ -1223,18 +1223,25 @@ async function startBrowserFixture(t, fixture = null) {
 }
 
 async function clickAtElementCenter(port, options, selector) {
-  const target = await evaluateInPage(
-    port,
-    `(() => {
-      const control = document.querySelector(${JSON.stringify(selector)});
-      const rect = control.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const hit = document.elementFromPoint(x, y);
-      return { x, y, receivesClick: hit === control || control.contains(hit) };
-    })()`,
-    options
-  );
+  let target = null;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    target = await evaluateInPage(
+      port,
+      `(() => {
+        const control = document.querySelector(${JSON.stringify(selector)});
+        if (!control) return null;
+        const rect = control.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const hit = document.elementFromPoint(x, y);
+        return { x, y, receivesClick: hit === control || control.contains(hit) };
+      })()`,
+      options
+    );
+    if (target?.receivesClick) break;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  if (!target) return false;
   for (const type of ["mousePressed", "mouseReleased"]) {
     await callMainPage(
       port,
@@ -4788,6 +4795,14 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   })()`);
   await applyStaticBackground(port, options);
   await pressWallpaperShortcut(port, options, "S");
+  await waitForCondition(
+    async () =>
+      await evaluate(
+        'document.querySelector("#codex-wallpaper-p1-controls .panel.open") !== null'
+      ),
+    2000,
+    "Wallpaper settings panel did not open"
+  );
   assert.equal(
     await evaluate('getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'),
     "auto"
@@ -8094,6 +8109,16 @@ test("static background is single, removable and persists disabled", async (t) =
     [1, false]
   );
   await pressWallpaperShortcut(port, options, "S");
+  await waitForCondition(
+    async () =>
+      await evaluateInPage(
+        port,
+        `document.querySelector("#${controlRootId} .panel.open") !== null`,
+        options
+      ),
+    2000,
+    "Wallpaper settings panel did not open"
+  );
   assert.deepEqual(
     await evaluateInPage(
       port,
