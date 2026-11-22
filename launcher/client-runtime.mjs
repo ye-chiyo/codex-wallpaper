@@ -246,6 +246,7 @@ function createRuntimeStyles(rootId, controlsId) {
         --codex-wallpaper-raised: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 90%, transparent);
         --codex-wallpaper-settings-canvas-base: var(--app-color-background-surface-under, rgb(12 12 16));
         --codex-wallpaper-settings-card-base: var(--app-color-background-surface, rgb(24 24 28));
+        --codex-wallpaper-native-settings-tint: 20%;
         --codex-wallpaper-settings-control: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 6%, transparent);
         --codex-wallpaper-line: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 10%, transparent);
         --codex-wallpaper-line-strong: color-mix(in srgb, var(--app-color-text-foreground, rgb(245 245 250)) 16%, transparent);
@@ -432,6 +433,8 @@ function createRuntimeStyles(rootId, controlsId) {
       body [data-app-shell-trailing-sidebar] [data-testid='diff-preview-scroll'] .composer-diff-simple-line { background-color: color-mix(in srgb, var(--app-color-background-surface-under, rgb(12 12 16)) 78%, transparent) !important; border-radius: var(--codex-wallpaper-radius-sm); }
       body :where([role='dialog'], [role='menu']) { background-color: ${panelColor} !important; }
       body [role='dialog'].settings-dialog:has([data-settings-nav-scroll-container]) {
+        background-color: color-mix(in srgb, var(--codex-wallpaper-settings-canvas-base) var(--codex-wallpaper-native-settings-tint), transparent) !important;
+        backdrop-filter: blur(15px);
         & .settings-dialog-sidebar, & [data-settings-panel] .settings-dialog-content {
           background-color: transparent !important;
         }

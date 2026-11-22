@@ -6442,14 +6442,27 @@ test("usage rows retain their hover tooltip and open native usage settings while
   assert.equal(await read('document.querySelector("#profile-summary").getAttribute("aria-disabled")'), "true");
 });
 
-test("the native settings dialog uses one translucent backdrop for its two columns", async (t) => {
+test("the native settings dialog uses a 20 percent theme tint for its two columns", async (t) => {
   const { port, options } = await startRuntimeFixture(t);
   await evaluateInPage(
     port,
     `(() => {
+      const wallpaper = document.createElement("div");
+      wallpaper.style.cssText = "position:fixed;inset:0;z-index:100;background:" +
+        "repeating-linear-gradient(90deg, #181818 0 4px, #c0c0c0 4px 8px) bottom / 100% 35% no-repeat," +
+        "linear-gradient(90deg, #182838 50%, #90b8db 50%)";
+      document.body.append(wallpaper);
+      const portal = document.createElement("div");
+      portal.style.cssText = "position:fixed;inset:0;z-index:101;contain:layout";
+      const modal = document.createElement("div");
+      modal.style.isolation = "isolate";
+      const overlay = document.createElement("div");
+      overlay.className = "settings-dialog-backdrop";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgb(0 0 0 / .18);backdrop-filter:blur(3px)";
       const dialog = document.createElement("div");
       dialog.className = "settings-dialog";
       dialog.setAttribute("role", "dialog");
+      dialog.style.cssText = "position:fixed;inset:32px;display:grid;grid-template-columns:1fr 2fr";
       dialog.innerHTML = \`
         <div class="settings-dialog-sidebar" style="background-color: rgb(255 255 255 / .025); border-right: 1px solid rgb(48 48 48)">
           <div data-settings-nav-scroll-container>Settings navigation</div>
@@ -6460,7 +6473,9 @@ test("the native settings dialog uses one translucent backdrop for its two colum
           </div>
         </div>
       \`;
-      document.body.append(dialog);
+      modal.append(overlay, dialog);
+      portal.append(modal);
+      document.body.append(portal);
       const ordinary = document.createElement("div");
       ordinary.setAttribute("role", "dialog");
       ordinary.innerHTML = '<div class="electron:bg-surface" style="background-color: rgb(35 35 35)">Another dialog</div>';
@@ -6468,31 +6483,98 @@ test("the native settings dialog uses one translucent backdrop for its two colum
     })()`,
     options
   );
-  const colors = `(() => {
+  const appearance = `(() => {
     const dialog = document.querySelector(".settings-dialog");
     const sidebar = dialog.querySelector(".settings-dialog-sidebar");
     const content = dialog.querySelector(".settings-dialog-content");
     return {
       backdrop: getComputedStyle(dialog).backgroundColor,
+      blur: getComputedStyle(dialog).backdropFilter,
       sidebar: getComputedStyle(sidebar).backgroundColor,
       content: getComputedStyle(content).backgroundColor,
       divider: getComputedStyle(sidebar).borderRightWidth,
       button: getComputedStyle(content.querySelector("button")).backgroundColor,
       ordinary: getComputedStyle(document.querySelector("[role='dialog']:not(.settings-dialog) > div")).backgroundColor,
+      ordinaryBlur: getComputedStyle(document.querySelector("[role='dialog']:not(.settings-dialog)")).backdropFilter,
     };
   })()`;
-  const native = await evaluateInPage(port, colors, options);
+  const native = await evaluateInPage(port, appearance, options);
   await applyStaticBackground(port, { ...options, payload: { library: [] } });
-  const adapted = await evaluateInPage(port, colors, options);
-  assert.match(adapted.backdrop, /\/ 0\.[0-9]+\)/);
+  const adapted = await evaluateInPage(port, appearance, options);
+  const { data } = await callMainPage(
+    port,
+    "Page.captureScreenshot",
+    { format: "png" },
+    options.page,
+    true
+  );
+  const { broadContrast, stripeContrast } = await evaluateInPage(
+    port,
+    `(async () => {
+      const image = new Image();
+      image.src = "data:image/png;base64,${data}";
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      const red = (x, y) => context.getImageData(x, y, 1, 1).data[0];
+      const x = Math.floor(image.width / 16) * 8;
+      const broadY = Math.floor(image.height * 0.45);
+      const stripeY = Math.floor(image.height * 0.75);
+      return {
+        broadContrast: red(image.width * 0.75, broadY) - red(image.width * 0.25, broadY),
+        stripeContrast: Math.abs(red(x + 2, stripeY) - red(x + 6, stripeY)),
+      };
+    })()`,
+    options
+  );
+  assert.ok(
+    broadContrast >= 70 && broadContrast <= 125,
+    `Large background shapes should stay visible (red-channel difference: ${broadContrast})`
+  );
+  assert.ok(
+    stripeContrast <= 6,
+    `Fine background detail should be blurred (red-channel difference: ${stripeContrast})`
+  );
+  const alpha = (color) => Number(color.match(/\/ ([\d.]+)\)$/)?.[1]);
   assert.deepEqual(adapted, {
     ...native,
     backdrop: adapted.backdrop,
+    blur: "blur(15px)",
     sidebar: "rgba(0, 0, 0, 0)",
     content: "rgba(0, 0, 0, 0)",
   });
+  assert.equal(alpha(adapted.backdrop), 0.2);
+  const light = await evaluateInPage(
+    port,
+    `(() => {
+      document.documentElement.dataset.theme = "light";
+      return ${appearance};
+    })()`,
+    options
+  );
+  assert.notEqual(light.backdrop, adapted.backdrop);
+  assert.equal(alpha(light.backdrop), 0.2);
+  assert.equal(light.blur, adapted.blur);
+  const minimum = await evaluateInPage(
+    port,
+    `(() => {
+      const controls = document.getElementById("${controlRootId}");
+      ${toggleSettings};
+      controls.querySelector("[data-panel-page='appearance']").click();
+      const range = controls.querySelector("[data-surface-override-value='settings']");
+      range.value = "0";
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+      return ${appearance};
+    })()`,
+    options
+  );
+  assert.ok(alpha(minimum.backdrop) === alpha(light.backdrop));
+  assert.equal(minimum.blur, adapted.blur);
   await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
-  assert.deepEqual(await evaluateInPage(port, colors, options), native);
+  assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
 test("static background is single, removable and persists disabled", async (t) => {
