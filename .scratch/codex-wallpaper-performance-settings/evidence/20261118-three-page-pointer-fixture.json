@@ -1,0 +1,910 @@
+{
+  "viewport": {
+    "width": 1707,
+    "height": 1066,
+    "deviceScaleFactor": 1.5,
+    "mobile": false
+  },
+  "summary": {
+    "baseline": {
+      "valueMs": {
+        "count": 48,
+        "p95": 0.20000000298023224,
+        "max": 0.6000000014901161
+      },
+      "renderOpportunityMs": {
+        "count": 48,
+        "p95": 0.8999999985098839,
+        "max": 2.5
+      },
+      "secondFrameMs": {
+        "count": 48,
+        "p95": 4.199999999254942,
+        "max": 4.900000002235174
+      }
+    },
+    "candidate": {
+      "valueMs": {
+        "count": 48,
+        "p95": 0.19999999925494194,
+        "max": 0.3999999985098839
+      },
+      "renderOpportunityMs": {
+        "count": 48,
+        "p95": 0.30000000074505806,
+        "max": 1.0999999977648258
+      },
+      "secondFrameMs": {
+        "count": 48,
+        "p95": 6,
+        "max": 7
+      }
+    }
+  },
+  "sessions": [
+    {
+      "label": "baseline",
+      "identity": {
+        "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+        "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+      },
+      "setup": {
+        "x": 1426,
+        "y": 282.734375,
+        "width": 223,
+        "videoPlaying": true,
+        "visible": "visible"
+      },
+      "during": {
+        "writes": 1,
+        "saved": 42
+      },
+      "samples": [
+        {
+          "value": 42,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.6000000014901161,
+          "renderOpportunityMs": 2.5,
+          "secondFrameMs": 4.900000002235174
+        },
+        {
+          "value": 44,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.199999999254942
+        },
+        {
+          "value": 46,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 3.199999999254942
+        },
+        {
+          "value": 48,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 1.699999999254942
+        },
+        {
+          "value": 50,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 3.800000000745058
+        },
+        {
+          "value": 52,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.300000000745058
+        },
+        {
+          "value": 54,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 1.4000000022351742
+        },
+        {
+          "value": 56,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.29999999701976776,
+          "renderOpportunityMs": 0.8999999985098839,
+          "secondFrameMs": 2.099999997764826
+        },
+        {
+          "value": 58,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 3.300000000745058
+        },
+        {
+          "value": 60,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 1.3999999985098839
+        },
+        {
+          "value": 62,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.7999999970197678
+        },
+        {
+          "value": 64,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.199999999254942
+        },
+        {
+          "value": 66,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 3.2999999970197678
+        },
+        {
+          "value": 68,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 1.699999999254942
+        },
+        {
+          "value": 70,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.6000000014901161,
+          "secondFrameMs": 3.400000002235174
+        },
+        {
+          "value": 72,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 3.199999999254942
+        },
+        {
+          "value": 74,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.20000000298023224,
+          "renderOpportunityMs": 0.9000000022351742,
+          "secondFrameMs": 3.800000000745058
+        },
+        {
+          "value": 76,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.199999999254942
+        },
+        {
+          "value": 78,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 80,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 1.800000000745058
+        },
+        {
+          "value": 82,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 3.199999999254942
+        },
+        {
+          "value": 84,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.7999999970197678
+        },
+        {
+          "value": 86,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 1.1000000014901161
+        },
+        {
+          "value": 88,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 2.599999997764826
+        }
+      ],
+      "sameVideo": true,
+      "saved": 88,
+      "writes": 2,
+      "finalValue": 88
+    },
+    {
+      "label": "candidate",
+      "identity": {
+        "runtimeHash": "da525807a55e0c4fc9f8187986ac356b3c9da88d64e768c89342ffbb47cef380",
+        "styleHash": "820b5695f60ef9b5d3b9f4a1788077b804d5b40a2555b0da00902dd80ed65b61"
+      },
+      "setup": {
+        "x": 1371,
+        "y": 197.46875,
+        "width": 209,
+        "videoPlaying": true,
+        "visible": "visible"
+      },
+      "during": {
+        "writes": 0,
+        "saved": 40
+      },
+      "samples": [
+        {
+          "value": 42,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.3999999985098839,
+          "renderOpportunityMs": 1.0999999977648258,
+          "secondFrameMs": 7
+        },
+        {
+          "value": 44,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 4.399999998509884
+        },
+        {
+          "value": 46,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.30000000074505806,
+          "secondFrameMs": 4.100000001490116
+        },
+        {
+          "value": 48,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 50,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 2.2999999970197678
+        },
+        {
+          "value": 52,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.20000000298023224,
+          "secondFrameMs": 3.7000000029802322
+        },
+        {
+          "value": 54,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 1
+        },
+        {
+          "value": 56,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 0.7999999970197678
+        },
+        {
+          "value": 58,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 3.600000001490116
+        },
+        {
+          "value": 60,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 1.3999999985098839
+        },
+        {
+          "value": 62,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 3.199999999254942
+        },
+        {
+          "value": 64,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 2.599999997764826
+        },
+        {
+          "value": 66,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 0.8999999985098839
+        },
+        {
+          "value": 68,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 2.300000000745058
+        },
+        {
+          "value": 70,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 1.3999999985098839
+        },
+        {
+          "value": 72,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 0.8999999985098839
+        },
+        {
+          "value": 74,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 3.800000000745058
+        },
+        {
+          "value": 76,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 1.2999999970197678
+        },
+        {
+          "value": 78,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 3.699999999254942
+        },
+        {
+          "value": 80,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 2.199999999254942
+        },
+        {
+          "value": 82,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 84,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 1.8999999985098839
+        },
+        {
+          "value": 86,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 0.7999999970197678
+        },
+        {
+          "value": 88,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 4.100000001490116
+        }
+      ],
+      "sameVideo": true,
+      "saved": 88,
+      "writes": 1,
+      "finalValue": 88
+    },
+    {
+      "label": "candidate",
+      "identity": {
+        "runtimeHash": "da525807a55e0c4fc9f8187986ac356b3c9da88d64e768c89342ffbb47cef380",
+        "styleHash": "820b5695f60ef9b5d3b9f4a1788077b804d5b40a2555b0da00902dd80ed65b61"
+      },
+      "setup": {
+        "x": 1371,
+        "y": 197.46875,
+        "width": 209,
+        "videoPlaying": true,
+        "visible": "visible"
+      },
+      "during": {
+        "writes": 0,
+        "saved": 40
+      },
+      "samples": [
+        {
+          "value": 42,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5999999977648258,
+          "secondFrameMs": 4.099999997764826
+        },
+        {
+          "value": 44,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 4.5
+        },
+        {
+          "value": 46,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 48,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 4.5
+        },
+        {
+          "value": 50,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 0.8000000007450581
+        },
+        {
+          "value": 52,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 3.399999998509884
+        },
+        {
+          "value": 54,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 2.7999999970197678
+        },
+        {
+          "value": 56,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.30000000074505806,
+          "secondFrameMs": 1.3999999985098839
+        },
+        {
+          "value": 58,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 6
+        },
+        {
+          "value": 60,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 2.5
+        },
+        {
+          "value": 62,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 1.300000000745058
+        },
+        {
+          "value": 64,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 2.699999999254942
+        },
+        {
+          "value": 66,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 1.5
+        },
+        {
+          "value": 68,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 3.7999999970197678
+        },
+        {
+          "value": 70,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 3
+        },
+        {
+          "value": 72,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 2.5
+        },
+        {
+          "value": 74,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 1.5
+        },
+        {
+          "value": 76,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 4.099999997764826
+        },
+        {
+          "value": 78,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.20000000298023224,
+          "secondFrameMs": 2.5
+        },
+        {
+          "value": 80,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 3.7000000029802322
+        },
+        {
+          "value": 82,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.10000000149011612,
+          "secondFrameMs": 6.800000000745058
+        },
+        {
+          "value": 84,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.19999999925494194,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 86,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 3
+        },
+        {
+          "value": 88,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.09999999776482582,
+          "secondFrameMs": 1.2999999970197678
+        }
+      ],
+      "sameVideo": true,
+      "saved": 88,
+      "writes": 1,
+      "finalValue": 88
+    },
+    {
+      "label": "baseline",
+      "identity": {
+        "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+        "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+      },
+      "setup": {
+        "x": 1426,
+        "y": 282.734375,
+        "width": 223,
+        "videoPlaying": true,
+        "visible": "visible"
+      },
+      "during": {
+        "writes": 0,
+        "saved": 40
+      },
+      "samples": [
+        {
+          "value": 42,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 4.099999997764826
+        },
+        {
+          "value": 44,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 4.100000001490116
+        },
+        {
+          "value": 46,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.20000000298023224,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 3.900000002235174
+        },
+        {
+          "value": 48,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 4.100000001490116
+        },
+        {
+          "value": 50,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 4.199999999254942
+        },
+        {
+          "value": 52,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.1000000014901161
+        },
+        {
+          "value": 54,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.100000001490116
+        },
+        {
+          "value": 56,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 3.5
+        },
+        {
+          "value": 58,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 3
+        },
+        {
+          "value": 60,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.800000000745058
+        },
+        {
+          "value": 62,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 1
+        },
+        {
+          "value": 64,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 3.400000002235174
+        },
+        {
+          "value": 66,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 3.399999998509884
+        },
+        {
+          "value": 68,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.19999999925494194,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.099999997764826
+        },
+        {
+          "value": 70,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.8000000007450581,
+          "secondFrameMs": 1.4000000022351742
+        },
+        {
+          "value": 72,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 3.5
+        },
+        {
+          "value": 74,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.100000001490116
+        },
+        {
+          "value": 76,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.0999999977648258
+        },
+        {
+          "value": 78,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.5
+        },
+        {
+          "value": 80,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.20000000298023224,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.1000000014901161
+        },
+        {
+          "value": 82,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.10000000149011612,
+          "renderOpportunityMs": 0.4000000022351742,
+          "secondFrameMs": 4
+        },
+        {
+          "value": 84,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.20000000298023224,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 1.1000000014901161
+        },
+        {
+          "value": 86,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.3999999985098839,
+          "secondFrameMs": 3.300000000745058
+        },
+        {
+          "value": 88,
+          "visualAtInput": true,
+          "labelAtInput": true,
+          "valueMs": 0.09999999776482582,
+          "renderOpportunityMs": 0.5,
+          "secondFrameMs": 2.5
+        }
+      ],
+      "sameVideo": true,
+      "saved": 88,
+      "writes": 1,
+      "finalValue": 88
+    }
+  ]
+}

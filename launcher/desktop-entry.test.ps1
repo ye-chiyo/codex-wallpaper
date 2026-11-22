@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-desktop-' + [guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($root)
+$env:CODEX_WALLPAPER_SUPPRESS_ERROR_UI = '1'
 
 try {
     $compiler = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
@@ -44,6 +45,85 @@ exit 17
         $process.Dispose()
     }
     Write-Host 'Passed: GUI launcher calls its Windows PowerShell script once without a console.'
+
+    Add-Type -TypeDefinition @'
+public static class DesktopFailureDialogProbe {
+    private delegate bool Visit(System.IntPtr window, System.IntPtr unused);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool EnumWindows(Visit visit, System.IntPtr unused);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool EnumChildWindows(System.IntPtr parent, Visit visit, System.IntPtr unused);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(System.IntPtr window, out uint pid);
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int GetWindowText(System.IntPtr window, System.Text.StringBuilder text, int length);
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int GetWindowTextLength(System.IntPtr window);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern bool PostMessage(System.IntPtr window, uint message, System.IntPtr wParam, System.IntPtr lParam);
+    public static System.IntPtr Find(uint pid, string title) {
+        System.IntPtr found = System.IntPtr.Zero;
+        EnumWindows((window, unused) => {
+            uint owner;
+            GetWindowThreadProcessId(window, out owner);
+            if (owner == pid && Text(window) == title) {
+                found = window;
+                return false;
+            }
+            return true;
+        }, System.IntPtr.Zero);
+        return found;
+    }
+    public static string AllText(System.IntPtr window) {
+        var text = new System.Text.StringBuilder(Text(window));
+        EnumChildWindows(window, (child, unused) => {
+            text.Append('\n').Append(Text(child));
+            return true;
+        }, System.IntPtr.Zero);
+        return text.ToString();
+    }
+    private static string Text(System.IntPtr window) {
+        int length = GetWindowTextLength(window);
+        if (length == 0) return "";
+        var text = new System.Text.StringBuilder(length + 1);
+        GetWindowText(window, text, text.Capacity);
+        return text.ToString();
+    }
+}
+'@
+    $message = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(
+        '5rWL6K+V77yaQ29kZXgg5q2j5Zyo6L+Q6KGM77yM6K+35a6M5YWo6YCA5Ye6IENvZGV4IOWQjumHjeaWsOaJk+W8gOOAgg=='))
+    $failureTitle = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(
+        'Q29kZXgg5aOB57q45ZCv5Yqo5aSx6LSl'))
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($message))
+    Set-Content -LiteralPath $fixture -Encoding UTF8 -Value @"
+param([switch]`$Launch)
+[Console]::WriteLine('CodexWallpaper:error:$encoded')
+exit 9
+"@
+    Remove-Item Env:\CODEX_WALLPAPER_SUPPRESS_ERROR_UI
+    $process = Start-Process -FilePath $entry -ArgumentList ('"{0}"' -f $fixture) -PassThru
+    try {
+        $dialog = [IntPtr]::Zero
+        $clock = [Diagnostics.Stopwatch]::StartNew()
+        while ($dialog -eq [IntPtr]::Zero -and $clock.ElapsedMilliseconds -lt 5000) {
+            Start-Sleep -Milliseconds 50
+            $dialog = [DesktopFailureDialogProbe]::Find($process.Id, $failureTitle)
+        }
+        if ($dialog -eq [IntPtr]::Zero) { throw 'Failure dialog did not appear.' }
+        if (-not [DesktopFailureDialogProbe]::AllText($dialog).Contains($message)) {
+            throw 'Failure dialog did not include the launcher message.'
+        }
+        [void][DesktopFailureDialogProbe]::PostMessage($dialog, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)
+        if (-not $process.WaitForExit(5000) -or $process.ExitCode -ne 9) {
+            throw 'Failure dialog did not return the launcher exit code.'
+        }
+    } finally {
+        if (-not $process.HasExited) { $process.Kill() }
+        $process.Dispose()
+        $env:CODEX_WALLPAPER_SUPPRESS_ERROR_UI = '1'
+    }
+    Write-Host 'Passed: launcher failures show a dialog with the user-facing reason.'
 
     @'
 param([switch]$Launch)
@@ -316,6 +396,7 @@ exit 0
         Write-Host 'Skipped: ffmpeg.exe is unavailable for the native video fixture.'
     }
 } finally {
+    Remove-Item Env:\CODEX_WALLPAPER_SUPPRESS_ERROR_UI -ErrorAction SilentlyContinue
     Remove-Item Env:\CODEX_WALLPAPER_EXPECT_PREVIEW -ErrorAction SilentlyContinue
     [IO.Directory]::Delete($root, $true)
 }

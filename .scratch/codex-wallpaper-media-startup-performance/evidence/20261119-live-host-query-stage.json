@@ -1,0 +1,42 @@
+{
+  "stages": [
+    {
+      "type": "host-request",
+      "ms": 4,
+      "detail": "3272086010"
+    },
+    {
+      "type": "input-created",
+      "ms": 24.4,
+      "detail": "1795100884575-7ddcce71899a28"
+    },
+    {
+      "type": "staged-created",
+      "ms": 3134.6,
+      "detail": {
+        "readyState": 0
+      }
+    },
+    {
+      "type": "committed",
+      "ms": 3326.1,
+      "detail": null
+    }
+  ],
+  "after": {
+    "video": {
+      "readyState": 4,
+      "paused": false,
+      "width": 4680,
+      "height": 2160,
+      "currentTime": 0.160949,
+      "error": null
+    },
+    "status": "《鸣潮》今昔 · 视频",
+    "card": "video · 原生播放"
+  },
+  "restored": {
+    "configExact": true,
+    "active": "3014214275"
+  }
+}

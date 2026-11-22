@@ -1,0 +1,35 @@
+{
+  "startedAt": "2026-11-18T16:48:40.906Z",
+  "packageId": "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+  "currentRootPid": 40352,
+  "isolatedRootPid": 47904,
+  "port": 61731,
+  "outcome": "isolated-cold-page-single-session-passed",
+  "timings": {
+    "rootSpawnedMilliseconds": 0,
+    "targetAvailableMilliseconds": 2631.4892999999997,
+    "cdpSessionOpenedMilliseconds": 2653.6106,
+    "frameVerifiedMilliseconds": 2733.9429999999998,
+    "pageEvaluatedMilliseconds": 2796.7864,
+    "cdpSetupMilliseconds": 22.121300000000247,
+    "verificationAndEvaluationMilliseconds": 143.17579999999998
+  },
+  "target": {
+    "id": "59C4E21F3F7D051D1EB0BD08D52A2FB7",
+    "type": "page",
+    "url": "app://-/index.html"
+  },
+  "pageState": {
+    "href": "app://-/index.html",
+    "origin": "app://-",
+    "readyState": "complete",
+    "navigation": {
+      "responseStart": 7.799999997019768,
+      "domContentLoadedEventEnd": 166.09999999403954,
+      "loadEventEnd": 166.59999999403954
+    }
+  },
+  "isolatedRootExited": true,
+  "cleanupError": "EBUSY: resource busy or locked, rmdir 'C:\\Users\\614\\AppData\\Local\\Temp\\codex-wallpaper-startup-probe-67oSRU\\codex-home'",
+  "finishedAt": "2026-11-18T16:48:44.595Z"
+}

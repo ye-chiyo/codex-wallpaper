@@ -1,0 +1,9 @@
+{
+    "Started":  "2026-11-20T13:40:52.1510590+08:00",
+    "Package":  "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Mode":  "unattended-startup",
+    "Outcome":  "dedicated-instance-reused",
+    "MainPid":  58548,
+    "MainCreated":  "2026-11-20T13:01:13.0123960+08:00",
+    "Port":  60377
+}

@@ -1,0 +1,29 @@
+{
+  "coldMs": 125.4271,
+  "revalidatedMs": 2.0072000000000116,
+  "layoutMs": 1.009900000000016,
+  "stages": {
+    "clickReturn": 34.5,
+    "active": 38.1,
+    "begin": 82.8,
+    "querySelectorObject": 84.6,
+    "setFiles": 86.4,
+    "finish": 112.2,
+    "committed": 298.4
+  },
+  "video": {
+    "readyState": 4,
+    "paused": false,
+    "width": 4680,
+    "height": 2160,
+    "error": null
+  },
+  "restored": {
+    "configExact": true,
+    "runtime": {
+      "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+      "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+    },
+    "active": "3310545673"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "pass": true,
+  "expected": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "actual": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76",
+    "capturedStyleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "checks": {
+    "runtimeHash": true,
+    "styleHash": true
+  },
+  "state": "enabled",
+  "libraryCount": 106
+}

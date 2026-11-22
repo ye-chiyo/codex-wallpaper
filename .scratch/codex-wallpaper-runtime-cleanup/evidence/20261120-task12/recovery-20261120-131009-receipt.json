@@ -1,0 +1,50 @@
+{
+    "Started":  "2026-11-20T13:10:06.5488318+08:00",
+    "Package":  "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Port":  60377,
+    "Outcome":  "wallpaper-ready",
+    "Mode":  "failed-launch-recovery",
+    "LoginAndChat":  "user-verification-required",
+    "ActivationPid":  58548,
+    "MainPid":  58548,
+    "MainCreated":  "2026-11-20T13:01:13.0123960+08:00",
+    "NativeProfile":  "matches-daily-path",
+    "RecoveryReceipt":  "C:\\Users\\614\\AppData\\Local\\CodexWallpaper\\P0b\\20261120-130122-af0706ad9163417a81738b80f5ed7e0a.json",
+    "TargetVerificationCount":  1,
+    "Probe":  {
+                  "state":  "verified",
+                  "method":  "Page.getFrameTree",
+                  "page":  "app://-/index.html",
+                  "origin":  "app://-"
+              },
+    "TargetVerified":  true,
+    "TargetAcknowledgedMs":  1008,
+    "Wallpaper":  {
+                      "state":  "enabled",
+                      "backgroundLayers":  1,
+                      "controls":  13,
+                      "styles":  1,
+                      "activeKind":  "workshop",
+                      "activeId":  "3230938311",
+                      "libraryCount":  106,
+                      "libraryRevalidationFailed":  false,
+                      "importedCount":  0,
+                      "playerCount":  0,
+                      "visible":  true,
+                      "measuredFps":  0,
+                      "fpsCap":  30,
+                      "volume":  0,
+                      "hostReady":  true,
+                      "identity":  {
+                                       "runtimeHash":  "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+                                       "styleHash":  "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+                                   },
+                      "hostPid":  62716
+                  },
+    "HostReadyMs":  2597,
+    "HostReady":  true,
+    "RootObservations":  [
+
+                         ],
+    "RootObservationsTruncated":  false
+}

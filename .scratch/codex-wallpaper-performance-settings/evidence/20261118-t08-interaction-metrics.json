@@ -1,0 +1,26 @@
+{
+  "startedAt": "2026-11-18T05:20:19.218Z",
+  "initialConfigHash": "0ae949dcfac39698c39f0e69cf12b8d8053f3a96d2305fdc60c9b9fd1977a0e6",
+  "conditions": {
+    "visibilityState": "visible",
+    "focused": false,
+    "viewport": {
+      "width": 1707,
+      "height": 1066,
+      "dpr": 1.5
+    },
+    "theme": "dark",
+    "identity": {
+      "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+      "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+    }
+  },
+  "panelLatency": [],
+  "keyboardLatency": [],
+  "persistenceWrites": null,
+  "failureRetention": null,
+  "crossWindowUpdate": null,
+  "pacedMediaCycles": null,
+  "secondaryPages": [],
+  "error": "Interaction metrics require a visible, focused main page"
+}

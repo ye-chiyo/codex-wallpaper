@@ -1,0 +1,117 @@
+{
+  "startedAt": "2026-11-19T09:46:03.973Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      720,
+      1068,
+      1.5
+    ],
+    "visibility": "hidden",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "temporaryRuntime": true,
+  "style": [
+    {
+      "variant": "plain",
+      "elapsed": 175.20000000298023
+    },
+    {
+      "variant": "plain",
+      "elapsed": 148.19999998807907
+    },
+    {
+      "variant": "plain",
+      "elapsed": 148.90000000596046
+    },
+    {
+      "variant": "plain",
+      "elapsed": 149
+    },
+    {
+      "variant": "contained-cards",
+      "elapsed": 122.30000001192093
+    },
+    {
+      "variant": "contained-cards",
+      "elapsed": 129.29999999701977
+    },
+    {
+      "variant": "contained-cards",
+      "elapsed": 130.5
+    },
+    {
+      "variant": "contained-cards",
+      "elapsed": 125.8999999910593
+    },
+    {
+      "variant": "no-global-has",
+      "elapsed": 143.70000000298023
+    },
+    {
+      "variant": "no-global-has",
+      "elapsed": 144.79999999701977
+    },
+    {
+      "variant": "no-global-has",
+      "elapsed": 131.5
+    },
+    {
+      "variant": "no-global-has",
+      "elapsed": 140
+    },
+    {
+      "variant": "no-adapter-body",
+      "elapsed": 19.899999991059303
+    },
+    {
+      "variant": "no-adapter-body",
+      "elapsed": 27.400000005960464
+    },
+    {
+      "variant": "no-adapter-body",
+      "elapsed": 24.599999994039536
+    },
+    {
+      "variant": "no-adapter-body",
+      "elapsed": 20.5
+    },
+    {
+      "variant": "plain",
+      "elapsed": 129
+    },
+    {
+      "variant": "plain",
+      "elapsed": 130.70000000298023
+    },
+    {
+      "variant": "plain",
+      "elapsed": 146
+    },
+    {
+      "variant": "plain",
+      "elapsed": 137.5
+    }
+  ],
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T09:46:07.787Z"
+}

@@ -1,0 +1,62 @@
+{
+    "Started":  "2026-11-20T13:01:12.9629269+08:00",
+    "Package":  "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Port":  60377,
+    "Outcome":  "wallpaper-ready",
+    "LoginAndChat":  "user-verification-required",
+    "ActivationPid":  58548,
+    "MainPid":  58548,
+    "MainCreated":  "2026-11-20T13:01:13.0123960+08:00",
+    "PortFlagObserved":  true,
+    "NativeProfile":  "matches-daily-path",
+    "TargetVerificationCount":  2,
+    "Probe":  {
+                  "state":  "verified",
+                  "method":  "Page.getFrameTree",
+                  "page":  "app://-/index.html",
+                  "origin":  "app://-"
+              },
+    "TargetVerified":  true,
+    "TargetAcknowledgedMs":  4927,
+    "TargetReverifiedMs":  6897,
+    "Wallpaper":  {
+                      "state":  "enabled",
+                      "backgroundLayers":  1,
+                      "controls":  13,
+                      "styles":  1,
+                      "activeKind":  "workshop",
+                      "activeId":  "3230938311",
+                      "libraryCount":  106,
+                      "libraryRevalidationFailed":  false,
+                      "importedCount":  0,
+                      "playerCount":  0,
+                      "visible":  true,
+                      "measuredFps":  0,
+                      "fpsCap":  30,
+                      "volume":  0,
+                      "hostReady":  true,
+                      "identity":  {
+                                       "runtimeHash":  "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+                                       "styleHash":  "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+                                   },
+                      "hostPid":  12372
+                  },
+    "HostReadyMs":  8879,
+    "HostReady":  true,
+    "RootObservations":  [
+                             {
+                                 "ElapsedMs":  459,
+                                 "State":  "single",
+                                 "Candidates":  [
+                                                    {
+                                                        "Pid":  58548,
+                                                        "ParentPid":  11196,
+                                                        "Created":  "2026-11-20T13:01:13.0123960+08:00",
+                                                        "ExpectedExecutable":  true,
+                                                        "CommandLineReadable":  true
+                                                    }
+                                                ]
+                             }
+                         ],
+    "RootObservationsTruncated":  false
+}

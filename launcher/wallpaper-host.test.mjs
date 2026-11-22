@@ -1,25 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import {
-  access,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  utimes,
-  writeFile,
-} from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
-import {
-  acquireHostLock,
-  attachWallpaperHost,
-  releaseHostLock,
-} from "./wallpaper-host.mjs";
+import { attachWallpaperHost } from "./wallpaper-host.mjs";
 
 async function listenOnUnusedPort(server) {
   for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -39,55 +27,6 @@ async function listenOnUnusedPort(server) {
   }
   throw new Error("Could not find an unlocked fixture port");
 }
-
-test("host reuses a live lock and recovers stale and recycled-PID locks", async () => {
-  const probe = createServer();
-  const port = await listenOnUnusedPort(probe);
-  await new Promise((resolve) => probe.close(resolve));
-  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
-
-  const live = await acquireHostLock(port);
-  assert.ok(live);
-  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
-  assert.equal(await acquireHostLock(port), null);
-  await releaseHostLock(live);
-
-  await writeFile(lockPath, String(process.pid));
-  const stale = new Date("2020-01-01T00:00:00.000Z");
-  await utimes(lockPath, stale, stale);
-  const recovered = await acquireHostLock(port);
-  assert.ok(recovered);
-  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
-  await releaseHostLock(recovered);
-});
-
-test("host recovers the lock after its original owner exits", async () => {
-  const probe = createServer();
-  const port = await listenOnUnusedPort(probe);
-  await new Promise((resolve) => probe.close(resolve));
-  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
-  const child = spawn(
-    process.execPath,
-    [
-      "--input-type=module",
-      "-e",
-      `import { acquireHostLock } from ${JSON.stringify(
-        new URL("./wallpaper-host.mjs", import.meta.url).href
-      )}; const lock = await acquireHostLock(${port}); console.log(lock ? "held" : "blocked"); setInterval(() => {}, 1000);`,
-    ],
-    { stdio: ["ignore", "pipe", "ignore"], windowsHide: true }
-  );
-  const [line] = await once(child.stdout, "data");
-  assert.equal(line.toString().trim(), "held");
-  assert.equal(await acquireHostLock(port), null);
-  child.kill();
-  await once(child, "exit");
-
-  const recovered = await acquireHostLock(port);
-  assert.ok(recovered);
-  assert.equal(Number(await readFile(lockPath, "utf8")), process.pid);
-  await releaseHostLock(recovered);
-});
 
 test("host fails closed and removes its lock without a reachable Codex port", async () => {
   const probe = createServer();
@@ -328,94 +267,3 @@ for (const staleResult of ["success", "failure"]) {
     ]);
   });
 }
-
-test("host stops a rejected File delivery without a newer same-id request", async (t) => {
-  const steamRoot = await mkdtemp(
-    join(tmpdir(), "codex-wallpaper-stale-file-")
-  );
-  const project = join(
-    steamRoot,
-    "steamapps",
-    "workshop",
-    "content",
-    "431960",
-    "stale-file-project"
-  );
-  const distribution = join(
-    steamRoot,
-    "steamapps",
-    "common",
-    "wallpaper_engine",
-    "distribution"
-  );
-  await mkdir(project, { recursive: true });
-  await mkdir(distribution, { recursive: true });
-  await writeFile(join(distribution, "version.json"), "{}");
-  await writeFile(
-    join(project, "project.json"),
-    JSON.stringify({
-      type: "image",
-      title: "Stale File project",
-      file: "image.png",
-    })
-  );
-  await writeFile(join(project, "image.png"), Buffer.from([1]));
-  const previousRoot = process.env.DSH_WE_STEAM_ROOT;
-  process.env.DSH_WE_STEAM_ROOT = steamRoot;
-  t.after(() => {
-    if (previousRoot === undefined) delete process.env.DSH_WE_STEAM_ROOT;
-    else process.env.DSH_WE_STEAM_ROOT = previousRoot;
-    return rm(steamRoot, { recursive: true, force: true });
-  });
-
-  const server = createServer();
-  const port = await listenOnUnusedPort(server);
-  await new Promise((resolve) => server.close(resolve));
-  let bindingHandler;
-  let fileAttempts = 0;
-  const firstAttempt = Promise.withResolvers();
-  const session = {
-    async send(method, params = {}) {
-      if (method !== "Runtime.evaluate") return { result: {} };
-      const expression = params.expression;
-      if (expression.startsWith("document.querySelector("))
-        return { result: { objectId: "file-input" } };
-      if (
-        expression.startsWith(
-          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
-        )
-      ) {
-        fileAttempts += 1;
-        firstAttempt.resolve();
-        await new Promise((resolve) => setImmediate(resolve));
-        return { result: { value: null } };
-      }
-      return {
-        result: { value: { state: "enabled", hostReady: true } },
-      };
-    },
-    on(method, handler) {
-      if (method === "Runtime.bindingCalled") bindingHandler = handler;
-    },
-    onClose() {},
-    close() {},
-  };
-  const host = await attachWallpaperHost({
-    port,
-    session,
-    source: "({ state: 'disabled' })",
-  });
-  assert.ok(host);
-  t.after(() => host.stop());
-  await bindingHandler({
-    name: "__codexWallpaperHostRequest",
-    payload: JSON.stringify({
-      type: "load-asset",
-      id: "stale-file-project",
-      request: "stale",
-    }),
-  });
-  await firstAttempt.promise;
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  assert.equal(fileAttempts, 1);
-});

@@ -1,0 +1,22 @@
+{
+  "ProbeExit": 0,
+  "ElapsedSeconds": 1.227,
+  "TotalReadDeltaMB": 75.798,
+  "ProcessDeltas": [
+    {
+      "Pid": 40352,
+      "ReadDeltaMB": 68.012,
+      "WorkingDeltaMB": -0.863
+    },
+    {
+      "Pid": 45208,
+      "ReadDeltaMB": 7.516,
+      "WorkingDeltaMB": 87.852
+    },
+    {
+      "Pid": 21676,
+      "ReadDeltaMB": 0.267,
+      "WorkingDeltaMB": 22.273
+    }
+  ]
+}

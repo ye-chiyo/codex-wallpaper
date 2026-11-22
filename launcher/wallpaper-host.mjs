@@ -1,9 +1,7 @@
-import { execFile } from "node:child_process";
-import { open, readFile, stat, unlink } from "node:fs/promises";
+import { open, readFile, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { promisify } from "node:util";
 import { openMainPageSession } from "./read-only-probe.mjs";
 import { runtimeSource } from "./client-runtime.mjs";
 import { payloadFor } from "./static-background.mjs";
@@ -17,22 +15,10 @@ import {
 
 const defaultPage = "app://-/index.html";
 const bindingName = "__codexWallpaperHostRequest";
-const execFileAsync = promisify(execFile);
-const powershell = join(
-  process.env.SystemRoot || "C:\\Windows",
-  "System32",
-  "WindowsPowerShell",
-  "v1.0",
-  "powershell.exe"
-);
 const engineUrl = new URL(
   "../node_modules/webwallgl/webwallgl.global.min.js",
   import.meta.url
 );
-
-function lockPathFor(port) {
-  return join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
-}
 
 async function createLock(lockPath) {
   const handle = await open(lockPath, "wx");
@@ -40,50 +26,23 @@ async function createLock(lockPath) {
   return { lockPath, handle };
 }
 
-async function lockOwnerIsLive(lockPath) {
-  let owner;
-  let lockTime;
-  try {
-    owner = Number((await readFile(lockPath, "utf8")).trim());
-    lockTime = (await stat(lockPath)).mtimeMs;
-  } catch (error) {
-    return error.code === "ENOENT" ? false : true;
-  }
-  if (!Number.isInteger(owner) || owner <= 0) return false;
-  try {
-    const { stdout } = await execFileAsync(
-      powershell,
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        `(Get-Process -Id ${owner} -ErrorAction Stop).StartTime.ToUniversalTime().ToString('o')`,
-      ],
-      { windowsHide: true, timeout: 5000 }
-    );
-    const startedAt = Date.parse(stdout.trim());
-    return Number.isFinite(startedAt) && startedAt <= lockTime;
-  } catch {
-    return false;
-  }
-}
-
-export async function acquireHostLock(port) {
-  const lockPath = lockPathFor(port);
+async function acquireLock(port) {
+  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
   try {
     return await createLock(lockPath);
   } catch (error) {
-    if (error.code !== "EEXIST" || (await lockOwnerIsLive(lockPath)))
+    if (error.code !== "EEXIST") throw error;
+    try {
+      process.kill(Number(await readFile(lockPath, "utf8")), 0);
       return null;
-    await unlink(lockPath).catch(() => {});
-    return createLock(lockPath).catch((retryError) => {
-      if (retryError.code === "EEXIST") return null;
-      throw retryError;
-    });
+    } catch {
+      await unlink(lockPath).catch(() => {});
+      return createLock(lockPath);
+    }
   }
 }
 
-export async function releaseHostLock(lock) {
+async function releaseLock(lock) {
   await lock.handle.close();
   await unlink(lock.lockPath).catch(() => {});
 }
@@ -282,7 +241,7 @@ export async function attachWallpaperHost({
   source = null,
   updateStartupPreview = null,
 }) {
-  const lock = await acquireHostLock(port);
+  const lock = await acquireLock(port);
   if (!lock) return null;
   const inFlight = new Map();
   let stopped = false;
@@ -291,7 +250,7 @@ export async function attachWallpaperHost({
   let startupMotionTransfer = null;
   function release() {
     stopped = true;
-    return (cleanup ??= releaseHostLock(lock));
+    return (cleanup ??= releaseLock(lock));
   }
   session.onClose(() => {
     void release().catch(() => {});
@@ -383,13 +342,15 @@ export async function attachWallpaperHost({
       while (!stopped) {
         attemptToken = flight.requestToken;
         const requestVersion = flight.requestVersion;
+        let delivered;
         try {
-          await handler.run(session, request.id, attemptToken);
+          delivered = await handler.run(session, request.id, attemptToken);
         } catch (error) {
           if (flight.requestVersion !== requestVersion && !stopped) continue;
           throw error;
         }
-        if (flight.requestVersion === requestVersion) return;
+        if (flight.requestVersion !== requestVersion && !stopped) continue;
+        if (delivered !== false) return;
       }
     };
     deliver()

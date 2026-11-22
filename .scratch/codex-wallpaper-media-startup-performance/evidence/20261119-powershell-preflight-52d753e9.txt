@@ -1,0 +1,16 @@
+
+Passed: public Startup switches safely enable, query, disable, and reject conflicts in a temporary folder.
+Passed: package query failure is recorded before any activation
+Passed: current package and daily profile reach activation boundary
+Passed: current package accepts the logical daily profile path
+Passed: unknown package remains on the original interface
+Passed: executable hash drift remains on the original interface
+Passed: missing app registration remains on the original interface
+Passed: missing daily profile remains on the original interface
+Passed: multiple main processes remain on the original interface
+Passed: ordinary running instance is rejected with a local receipt
+Passed: unrecorded debug instance is reported as a conflict
+Passed: recorded dedicated running instance is reused without injection
+Passed: a transient second candidate does not abort startup.
+Passed: sustained ambiguity still blocks the probe.
+Passed: reuse requires a matching successful-session marker and loopback ownership.

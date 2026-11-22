@@ -1,0 +1,67 @@
+{
+  "identity": {
+    "runtimeHash": "35e13dad6ee1d3419975505eb541780779b4a3fb3b60b4bc9ca12ccfb81cd4e0",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "beforeClick": {
+    "visibility": "hidden",
+    "focus": true,
+    "panel": true
+  },
+  "point": {
+    "x": 379.6666679382324,
+    "y": 502.0416669845581,
+    "width": 33.333335876464844,
+    "height": 23.33333396911621,
+    "hit": true,
+    "tag": "BUTTON"
+  },
+  "afterRealClick": {
+    "active": "3403349435",
+    "saved": {
+      "kind": "workshop",
+      "id": "3403349435"
+    },
+    "pending": [
+      "3403349435"
+    ],
+    "status": "正在加载：吊桥-义妹生活/绫濑沙季"
+  },
+  "active": 2,
+  "requested": 0,
+  "token": true,
+  "committedAfter": 499,
+  "after": {
+    "active": "3403349435",
+    "card": "video · 原生播放",
+    "status": "吊桥-义妹生活/绫濑沙季 · 视频",
+    "video": {
+      "readyState": 4,
+      "paused": true,
+      "currentTime": 0.001,
+      "width": 3840,
+      "height": 2716,
+      "src": "blob",
+      "error": null
+    },
+    "counts": {
+      "file": 1,
+      "base64": 0,
+      "pending": [
+        "3403349435"
+      ]
+    },
+    "staged": 0,
+    "visibility": "hidden",
+    "focus": true
+  },
+  "restored": {
+    "configExact": true,
+    "runtime": {
+      "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+      "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+    },
+    "active": "3354366708",
+    "host": true
+  }
+}

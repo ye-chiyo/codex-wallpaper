@@ -1,0 +1,3 @@
+2026-11-20T11:42:35.0847691+08:00 Waiting up to 0 minutes for the current Codex to exit
+2026-11-20T11:42:35.6760443+08:00 Stopped: Codex did not exit before the watchdog deadline.
+2026-11-20T11:42:35.7064241+08:00 Finished with result waiting-for-codex-timeout

@@ -1,0 +1,16 @@
+{
+  "wallMilliseconds": 3465.4741,
+  "exitCode": 0,
+  "receipt": {
+    "Started": "2026-11-19T15:30:55.8039799+08:00",
+    "Package": "OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0",
+    "Mode": "unattended-startup",
+    "Outcome": "dedicated-instance-reused",
+    "MainPid": 5152,
+    "MainCreated": "2026-11-19T15:21:28.186137+08:00",
+    "Port": 59704
+  },
+  "supervisorPids": [
+    29300
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "startedAt": "2026-11-20T05:14:17.608Z",
+  "port": 60377,
+  "originalConfigHash": "b150f2f3cdaa867b876783e691fac7682901f298b41ddcda5d013472919d66c2",
+  "reset": {
+    "completedAt": "2026-11-20T05:14:18.118Z",
+    "state": {
+      "state": {
+        "state": "disabled",
+        "backgroundLayers": 0,
+        "controls": 0,
+        "styles": 0,
+        "activeKind": "builtin",
+        "activeId": "aurora",
+        "libraryCount": 106,
+        "libraryRevalidationFailed": false,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "root": false,
+      "media": 0,
+      "staged": 0,
+      "fileInputs": 0
+    },
+    "importedCount": 0
+  },
+  "redelivery": {
+    "completedAt": "2026-11-20T05:14:18.263Z",
+    "state": {
+      "state": {
+        "state": "enabled",
+        "backgroundLayers": 1,
+        "controls": 13,
+        "styles": 1,
+        "activeKind": "workshop",
+        "activeId": "3230938311",
+        "libraryCount": 106,
+        "libraryRevalidationFailed": false,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "root": true,
+      "media": 1,
+      "staged": 0,
+      "fileInputs": 0
+    },
+    "hostLockOwner": 62716
+  },
+  "restored": {
+    "completedAt": "2026-11-20T05:14:18.268Z",
+    "state": {
+      "state": {
+        "state": "enabled",
+        "backgroundLayers": 1,
+        "controls": 13,
+        "styles": 1,
+        "activeKind": "workshop",
+        "activeId": "3230938311",
+        "libraryCount": 106,
+        "libraryRevalidationFailed": false,
+        "importedCount": 0,
+        "playerCount": 0,
+        "visible": true,
+        "measuredFps": 0,
+        "fpsCap": 30,
+        "volume": 0,
+        "hostReady": true
+      },
+      "root": true,
+      "media": 1,
+      "staged": 0,
+      "fileInputs": 0
+    },
+    "configExact": true,
+    "hostLockOwner": 62716
+  },
+  "identity": {
+    "runtimeHash": "4825681ea81f93e9b26bfa4097a3825d7e5c5c5f7640d2d0f825a7ebb8c12a92",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "before": {
+    "state": {
+      "state": "enabled",
+      "backgroundLayers": 1,
+      "controls": 343,
+      "styles": 1,
+      "activeKind": "workshop",
+      "activeId": "3230938311",
+      "libraryCount": 106,
+      "libraryRevalidationFailed": false,
+      "importedCount": 0,
+      "playerCount": 1,
+      "visible": true,
+      "measuredFps": 0,
+      "fpsCap": 30,
+      "volume": 0,
+      "hostReady": true
+    },
+    "root": true,
+    "media": 1,
+    "staged": 0,
+    "fileInputs": 0
+  },
+  "importedCount": 0,
+  "finishedAt": "2026-11-20T05:14:18.270Z"
+}

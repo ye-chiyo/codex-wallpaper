@@ -1,0 +1,97 @@
+ M .scratch/codex-wallpaper-performance-settings/baseline-smoke.mjs
+ M .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-integrated-candidate.md
+ M .scratch/codex-wallpaper-performance-settings/issues/02-evidence-driven-playback-and-lifecycle.md
+ M .scratch/codex-wallpaper-performance-settings/issues/03-settings-interaction-and-config-sync.md
+ M .scratch/codex-wallpaper-performance-settings/issues/04-wallpaper-library-and-panel-shell.md
+ M .scratch/codex-wallpaper-performance-settings/issues/05-playback-and-performance-controls.md
+ M .scratch/codex-wallpaper-performance-settings/issues/07-presets-migration-import-export-and-reset.md
+ M .scratch/codex-wallpaper-performance-settings/issues/08-integrated-candidate-functional-and-performance-acceptance.md
+ M .scratch/codex-wallpaper-visual-polish/issues/02-chat-tools-and-composer.md
+ M .scratch/codex-wallpaper-visual-polish/issues/03-files-and-changes-continuity.md
+ M .scratch/codex-wallpaper-visual-polish/issues/04-wallpaper-controls-and-recovery.md
+ M launcher/Start-CodexWallpaper.ps1
+ M launcher/client-runtime.mjs
+ M launcher/read-only-probe.mjs
+ M launcher/static-background.mjs
+ M launcher/static-background.test.mjs
+ M launcher/wallpaper-host.mjs
+ M launcher/wallpaper-library.mjs
+ M package.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-diff-check-52d753e9.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-implementation.md
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-pre-fix-results.md
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-switch-config-before-attempt1.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-switch-config-before.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-switch-probe-attempt1.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-switch-probe.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-live-switch-probe.mjs
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-node-tests-52d753e9.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-powershell-preflight-52d753e9.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/candidate.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/source-backup-20261119-52d753e9.zip
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/source-hashes.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/status.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/tracked-changes.patch
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot-52d753e9/untracked-files.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/candidate.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/source-backup-20261119-124430.zip
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/source-backup-20261119-125143.zip
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/source-hashes.json
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/status.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/tracked-changes.patch
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/20261119-worktree-snapshot/untracked-files.txt
+?? .scratch/codex-wallpaper-media-startup-performance/evidence/candidate.json
+?? .scratch/codex-wallpaper-media-startup-performance/issues/01-file-backed-media-and-startup-supervisor.md
+?? .scratch/codex-wallpaper-media-startup-performance/spec.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-candidate-conditions.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-performance-regression-followup.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-real-functional.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-regression-live-transfer.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-regression-slider-handler.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-slider-controls-37336-193047.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-slider-label-37336-193308.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-slider-paint-37336-193156.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-slider-segments-37336-192747.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-controls-matrix.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-current-video-recovery.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-event-latency.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-hidden-scene-matrix.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-interaction-metrics-attempt2.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-interaction-metrics.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-lifecycle-appearance.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-lifecycle-retry.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-live-results.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-native-changes-10-cycles.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-playback-lifecycle-final.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-playback-recovery.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-t08-scene-matrix.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-three-page-candidate.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-three-page-pointer-fixture.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261118-video-balanced-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-appearance-drag-ab.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-appearance-drag.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-feasibility-probes.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-feasibility-probes.md
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-feasibility-process-io.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-isolated-startup-probe.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/20261119-startup-cdp-probe.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/paired-video-37336-191143.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/paired-video-supplement-37336-192825.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794978726079-scene-balanced-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794978726079-video-balanced-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794979415945-disabled-visible-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794979415945-image-balanced-3x20.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794979684547-scene-balanced-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794979684547-scene-performance-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/evidence/t08-1794980058908-scene-hidden-3x60.json
+?? .scratch/codex-wallpaper-performance-settings/feasibility-probes.mjs
+?? .scratch/codex-wallpaper-performance-settings/isolated-startup-probe.mjs
+?? .scratch/codex-wallpaper-performance-settings/paired-video-probe.mjs
+?? .scratch/codex-wallpaper-performance-settings/real-functional-acceptance.mjs
+?? .scratch/codex-wallpaper-performance-settings/real-interaction-metrics.mjs
+?? .scratch/codex-wallpaper-performance-settings/real-performance-driver.mjs
+?? .scratch/codex-wallpaper-performance-settings/startup-cdp-probe.mjs
+?? .scratch/codex-wallpaper-performance-settings/video-regression-probe.mjs
+?? launcher/mp4-layout.mjs
+?? launcher/mp4-layout.test.mjs
+?? launcher/startup-supervisor.mjs

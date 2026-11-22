@@ -1,0 +1,22 @@
+{
+  "stages": {
+    "staged": 64.6,
+    "commit": 258.2
+  },
+  "after": {
+    "video": {
+      "readyState": 4,
+      "paused": false,
+      "width": 4680,
+      "height": 2160,
+      "error": null
+    },
+    "status": "《鸣潮》今昔 · 视频",
+    "card": "video · 原生播放",
+    "hostPid": 56188
+  },
+  "restored": {
+    "configExact": true,
+    "active": "3014214275"
+  }
+}

@@ -12,17 +12,16 @@ import { createStartupPreviewStore } from "./startup-preview.mjs";
 
 const port = Number(process.argv[2]);
 const page = "app://-/index.html";
-const expected = candidateIdentity();
-const mismatchedIdentity = `(identity) =>
-  identity?.runtimeHash !== ${JSON.stringify(expected.runtimeHash)} ||
-  identity?.styleHash !== ${JSON.stringify(expected.styleHash)}`;
 const cancelled = Symbol("cancelled");
 const execFileAsync = promisify(execFile);
 const previewCache = process.env.CODEX_WALLPAPER_STARTUP_CACHE;
-const updateStartupPreview = previewCache
-  ? createStartupPreviewStore(previewCache)
-  : null;
+const updateStartupPreview = previewCache ? createStartupPreviewStore(previewCache) : null;
 let awaitingPresentation = process.argv[3] === "--desktop-preview";
+const compatibilityProbe = process.argv.includes("--compatibility-probe");
+const compatibilityTimeout = Math.max(
+  100,
+  Number(process.env.CODEX_WALLPAPER_COMPATIBILITY_PROBE_MS) || 15_000
+);
 const presentationDeadline = awaitingPresentation
   ? delay(25_000, "timeout", { ref: false })
   : null;
@@ -92,23 +91,14 @@ async function reportPresentation(lost) {
   const result = await Promise.race([
     lost,
     presentationDeadline,
-    sessionEvaluate(
-      session,
-      "globalThis.__codexWallpaperApi?.waitForStartupPresentation()"
-    ).catch(() => cancelled),
+    sessionEvaluate(session, "globalThis.__codexWallpaperApi?.waitForStartupPresentation()").catch(() => cancelled),
   ]);
   if (result === cancelled) return;
   const { status, interfaceAt, frameAt } =
-    result === "timeout" ? { status: "timeout" } : (result ?? {});
+    result === "timeout" ? { status: "timeout" } : result ?? {};
   if (!["visible", "disabled", "timeout"].includes(status)) return;
   awaitingPresentation = false;
-  await reply({
-    state: "presentation",
-    status,
-    interfaceAt,
-    frameAt,
-    hostPid: process.pid,
-  }).catch(() => {});
+  await reply({ state: "presentation", status, interfaceAt, frameAt, hostPid: process.pid }).catch(() => {});
 }
 
 async function waitForSession(signal) {
@@ -119,14 +109,33 @@ async function waitForSession(signal) {
       });
       if (candidate) return candidate;
     } catch (error) {
-      if (
-        error?.code !== "ECONNREFUSED" &&
-        !["Ambiguous main page", "WebSocket failed"].includes(error?.message)
-      )
-        throw error;
+      if (!signal) throw error;
+      if (error?.code === "ECONNREFUSED") return null;
+      if (error?.message !== "WebSocket failed") throw error;
     }
     if (signal) await delay(150);
     else await Promise.race([delay(150), parentDone]);
+  }
+  return null;
+}
+
+async function waitForMainInterface(stop) {
+  const deadline = Date.now() + compatibilityTimeout;
+  while (Date.now() < deadline) {
+    const state = await Promise.race([
+      sessionEvaluate(
+        session,
+        "globalThis.__codexWallpaperApi?.state()"
+      ),
+      stop,
+    ]);
+    if (state === cancelled) return cancelled;
+    if (state?.mainInterfaceShown) return state;
+    const pause = await Promise.race([
+      delay(150).then(() => true),
+      stop,
+    ]);
+    if (pause === cancelled) return cancelled;
   }
   return null;
 }
@@ -206,23 +215,6 @@ try {
         if (command !== approval) continue;
       }
       if (targetLost || (!kept && parentClosed)) continue;
-      phase = "runtime-not-ready";
-      const mismatch = await Promise.race([
-        stop,
-        sessionEvaluate(
-          session,
-          `(() => {
-            if (window.top !== window || location.href !== ${JSON.stringify(page)}) return false;
-            const existing = globalThis.__codexWallpaperApi;
-            return !!existing && (${mismatchedIdentity})(existing.identity?.());
-          })()`
-        ),
-      ]);
-      if (mismatch === cancelled || signal?.aborted) continue;
-      if (mismatch === true) {
-        phase = "runtime-version-mismatch";
-        throw new Error(phase);
-      }
       const payload = await libraryPayload;
       const playbackClock = process.env.CODEX_WALLPAPER_PLAYBACK_CLOCK;
       if (awaitingPresentation && playbackClock) {
@@ -232,20 +224,9 @@ try {
           payload.startupVideo = { id: match[1], started: Number(match[2]) };
       }
       if (targetLost || signal?.aborted || (!kept && parentClosed)) continue;
-      const source = runtimeSource(
-        payload,
-        true,
-        true,
-        Boolean(updateStartupPreview)
-      );
+      const source = runtimeSource(payload, true, true, Boolean(updateStartupPreview));
       phase = "host-unavailable";
-      attaching = attachWallpaperHost({
-        port,
-        session,
-        page,
-        source,
-        updateStartupPreview,
-      });
+      attaching = attachWallpaperHost({ port, session, page, source, updateStartupPreview });
       const attached = await Promise.race([stop, attaching]);
       if (attached === cancelled) continue;
       host = attached;
@@ -259,24 +240,19 @@ try {
           session,
           `(async () => {
           if (window.top !== window || location.href !== ${JSON.stringify(page)}) return null;
+          globalThis.__codexWallpaperStartupPid = ${process.pid};
           const existing = globalThis.__codexWallpaperApi;
           if (existing) {
-            const identity = existing.identity?.();
-            if ((${mismatchedIdentity})(identity))
-              return { error: "runtime-version-mismatch" };
-            return { ...await existing.configureHost(), identity };
+            const state = await existing.configureHost();
+            return { ...state, identity: existing.identity() };
           }
-          globalThis.__codexWallpaperStartupPid = ${process.pid};
           const state = await ${source};
           return { ...state, identity: globalThis.__codexWallpaperApi.identity() };
         })()`
         ),
       ]);
       if (wallpaper === cancelled || signal?.aborted) continue;
-      if (wallpaper?.error === "runtime-version-mismatch") {
-        phase = wallpaper.error;
-        throw new Error(phase);
-      }
+      const expected = candidateIdentity();
       if (
         !wallpaper?.hostReady ||
         !["enabled", "disabled"].includes(wallpaper.state) ||
@@ -284,6 +260,12 @@ try {
         wallpaper.identity?.styleHash !== expected.styleHash
       )
         throw new Error(phase);
+      if (compatibilityProbe) {
+        phase = "compatibility-probe-failed";
+        const probed = await waitForMainInterface(stop);
+        if (probed === cancelled) continue;
+        if (!probed) throw new Error(phase);
+      }
       if (!kept) {
         await reply({
           state: "ready",

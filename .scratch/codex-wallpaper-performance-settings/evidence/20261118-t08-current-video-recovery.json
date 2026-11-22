@@ -1,0 +1,19 @@
+{
+  "pid": 31900,
+  "at": "2026-11-18T05:42:12.322Z",
+  "identity": {
+    "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+    "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+  },
+  "scroll": {
+    "reachable": true,
+    "afterWheel": 440
+  },
+  "disableMs": 115,
+  "enabledAfterKey": "enabled",
+  "videoTimeAdvanced": true,
+  "playbackRestoredMs": 3972,
+  "playbackRestored": true,
+  "configurationRestored": true,
+  "libraryCount": 106
+}

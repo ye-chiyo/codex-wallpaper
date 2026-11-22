@@ -1,0 +1,70 @@
+{
+  "stages": [
+    {
+      "type": "host-request",
+      "ms": 6.2,
+      "detail": "3272086010"
+    },
+    {
+      "type": "input-created",
+      "ms": 29.2,
+      "detail": "1795100748826-ea9858077cfba8"
+    },
+    {
+      "type": "staged-created",
+      "ms": 3151.8,
+      "detail": {
+        "readyState": 0
+      }
+    },
+    {
+      "type": "staged-loadedmetadata",
+      "ms": 3235.8,
+      "detail": {
+        "readyState": 1,
+        "width": 4680,
+        "height": 2160
+      }
+    },
+    {
+      "type": "staged-loadeddata",
+      "ms": 3318.9,
+      "detail": {
+        "readyState": 4,
+        "width": 4680,
+        "height": 2160
+      }
+    },
+    {
+      "type": "staged-playing",
+      "ms": 3319,
+      "detail": {
+        "readyState": 4,
+        "width": 4680,
+        "height": 2160
+      }
+    },
+    {
+      "type": "committed",
+      "ms": 3363.9,
+      "detail": null
+    }
+  ],
+  "after": {
+    "video": {
+      "readyState": 4,
+      "paused": false,
+      "width": 4680,
+      "height": 2160,
+      "currentTime": 0.154953,
+      "error": null
+    },
+    "status": "《鸣潮》今昔 · 视频",
+    "card": "video · 原生播放",
+    "staged": 0
+  },
+  "restored": {
+    "configExact": true,
+    "active": "3014214275"
+  }
+}

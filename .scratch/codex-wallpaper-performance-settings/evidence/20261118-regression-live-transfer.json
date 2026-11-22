@@ -1,0 +1,45 @@
+{
+  "mode": "transfer",
+  "startedAt": "2026-11-18T11:22:32.007Z",
+  "identity": {
+    "runtimeHash": "58a81a15effed517b4aa7c23f23254e60d4c5dee0508395e4572ee731a62ef85",
+    "styleHash": "2279f3528465d8db61ebf62d20165a08112142a10891f108a1a0e24ad1b7dab2"
+  },
+  "initialVisibility": "hidden",
+  "videoArrived": false,
+  "transfer": {
+    "events": [
+      {
+        "event": "requested",
+        "request": 1,
+        "at": 1280895.3000000007
+      },
+      {
+        "event": "beginAssetTransfer",
+        "at": 1281123.3000000007,
+        "chunks": 0
+      },
+      {
+        "event": "disable-enable",
+        "at": 1281312.5
+      },
+      {
+        "event": "requested",
+        "request": 2,
+        "at": 1281627.6999999993
+      },
+      {
+        "event": "finishAssetTransfer",
+        "at": 1288660.5999999978,
+        "chunks": 57
+      }
+    ],
+    "chunks": 57,
+    "visible": false,
+    "status": "[deepseek娘]深夜的大肥鱼 · video · 按需加载",
+    "players": 0,
+    "staged": 0
+  },
+  "restored": true,
+  "finishedAt": "2026-11-18T11:22:42.169Z"
+}

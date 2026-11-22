@@ -1,0 +1,54 @@
+# 05: 完成统一候选业务链路验收
+
+**What to build:** 对完成上述修复的同一候选版本执行完整业务闭环和交付审查：登录 Windows 后自动进入专用 Codex，打开已有聊天，选择素材并调整设置，在聊天与变更页之间切换，使用按钮和快捷键停用、恢复，退出重开后恢复上次状态，最后完成代码质量与视觉验收。
+
+**Blocked by:** 01 · 适配当前 Codex 更新并恢复壁纸；02 · 登录 Windows 后自动进入专用 Codex 并恢复壁纸；03 · 聊天与变更页保持同一壁纸；04 · 输入区底衬与界面组件视觉收口。
+
+**Status:** ready-for-human
+
+- [x] 自动测试覆盖当前版本启动、页面承载、素材切换、输入区层级、启停恢复和启动失败边界；每个保留测试都能对应本次已复现问题或必要协议边界。
+- [x] 完整 fixture 链路按“注入 → 选择已知素材 → 调整设置 → 打开真实结构 Changes 侧栏 → 返回 → 按钮停用 → 快捷键恢复”执行，验证已知画面、保存设置、单个背景根层、控制根层、样式根层和播放器资源计数。
+- [ ] 真实候选完成一次重启或注销重登、已有聊天、四类代表素材、明暗主题、输入与工具卡片、聊天与变更页连续切换以及停用恢复。
+- [ ] 交付前亲自完成截图或录屏视觉检查；源码、自动测试、候选部署和真实运行结果分别记录，不把测试通过等同于真实业务跑通。
+- [ ] 代码审查确认没有为两个页面复制播放器、素材协议或配置状态；共享能力优先复用现有运行时、页面注入、素材请求和配置读取。
+- [ ] 代码审查确认没有无限重试、平行守护进程、只为形式化增加的转发层或近期需求无法证明价值的抽象。
+- [x] 测试审查保留计算样式、命中测试、公开运行时状态和宿主协议断言；不按完整生产 CSS 文本、私有变量或内部调用次数判定用户结果。fixture 注入点和 Scene/媒体替身用于制造异步、可见性与失败状态，不作为真实宿主通过凭据。
+- [x] 检查变更集中没有受保护安装文件、P0 实验目录、聊天正文、账号凭据或不相关内容；P0 实验目录继续保持未跟踪且不提交。
+- [x] 完成完整 Node 测试、PowerShell 启动器检查、Prettier 和 `git diff --check`：Node 11/11、profile-preflight 11/11、startup-roots 3/3、startup-entry 通过、格式与 diff 检查通过。
+- [ ] 双轴代码审查由主集成流程执行；本工作树不预先宣称审查通过。
+- [x] 最终记录继续明确：原入口自动接入未完成，联网 Web 隔离未证明，8 小时基础验收和 7 天日常观察尚未完成。
+
+## Automated evidence
+
+| Suite                                                                            | Regression or protocol covered                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `read-only-probe.test.mjs`                                                       | Exact `app://-/index.html` selection, loopback endpoint ownership, query-routed/auxiliary rejection, `Page.getFrameTree`-only preflight and fail-closed origin checks (01).                                                                        |
+| `profile-preflight.test.ps1`, `startup-roots.test.ps1`, `startup-entry.test.ps1` | Expected package/version/daily profile, transient/ambiguous roots, receipt reuse identity, and idempotent ownership-safe per-user Startup entry (01–02).                                                                                           |
+| `wallpaper-library.test.mjs`                                                     | Four WE classifications, path privacy, preview/media budgets, scene asset preparation and offline Web isolation boundary.                                                                                                                          |
+| `wallpaper-host.test.mjs`                                                        | No reachable CDP and Runtime initialization failure both close sockets and release the host lock.                                                                                                                                                  |
+| `static-background.test.mjs`                                                     | Single-folder injection/uninstall, selected asset continuity, settings, real-anchor Changes visibility, composer/tool interaction and visibility, button/hotkey recovery, LoadImage/storage cleanup, and on-demand asset/preview/player lifecycle. |
+
+The browser fixture and the real after-login media-host bind are separate evidence layers. The CLI starts `wallpaper-host` for every explicit enable request, including a persisted-disabled start, so a later hotkey has the binding path for on-demand material; no production page override or detached URL allowlist was added. This host-start condition and the fixture visual/result remain automation evidence only. Real host binding, detached page identity, account/chat continuity and reboot behavior remain user gates.
+
+## Evidence boundary
+
+- Fixture evidence: current headless Edge path above; it cannot prove real Codex host binding or detached target identity.
+- Historic visual corroboration: sanitized review-sidebar and composer crops/recording retained outside the repository; they show the earlier regression but are not fresh candidate acceptance.
+- Candidate available locally: source, runtime and tests exist in this isolated worktree; no candidate was activated against the user's running Codex.
+- Unresolved 03 gate: packaged source and historic frames support the review-sidebar fixture, but no fresh live evidence identifies the Changes page as the broad browser `detached-window` target. Do not allowlist it or record that gate as passed.
+- Real user gates: existing chat/account, four material types, themes and interactions, 10 Changes switches, disable/hotkey recovery, persisted-disabled on-demand recovery, logout/reboot, receipt identity, original-entry bounds, 8 hours and 7 days remain unverified.
+
+## Comments
+
+- 2026-11-15 Standards disposition: Startup switches now run as public launcher processes against a temporary copy whose sole substitution is the pre-existing OS Startup-folder lookup; the real folder and registry are untouched. Set/status/remove share the same description-based ownership result, and failed enable preserves foreign shortcut bytes. The inline marker guard now requires an immediately captured zero Node exit code plus `Wallpaper.state` of `enabled` or `disabled`, and the unattended receipt retains `Mode`; the unused marker `Version` is removed. The public launcher/protocol fixtures cover the boundary without a test-only wrapper; writing the full success marker after a real wallpaper injection remains a live gate.
+- 2026-11-15 Standards disposition: the persisted-disabled static-background CLI path now runs against an exact-target mocked protocol while starting the real `wallpaper-host` dispatch, and the browser fixture re-enables a selected on-demand workshop asset, observes its load request, shows preview, and applies the delivered image. The footer rule preserves the proven transparency correction and excludes the installed-source `[data-pip-obstacle='thread-footer-leading']` branch with adjacent readability coverage. Issue 01 and 02 dated progress now sits under each ticket’s trailing `## Comments`; issue and README cleanup are included in this correction.
+- 2026-11-15 Spec disposition: the two P1 live gates remain pending exactly as reported: detached Changes page identity is not allowed by static or historic evidence, and real restart/login, account/chat, visual, hotkey, and receipt acceptance has not run. The P2 same-name shortcut ownership issue is corrected and covered through public Startup behavior. Persisted-disabled on-demand re-enable is covered in the existing browser fixture, while the real host bind and real workshop-material request remain part of the pending live gate. No real Codex launch/attach/restart, live Startup registration, or P0 path access was performed.
+- 2026-11-16，真实手动冷启动：20b9660，D:/AI/codex-wallpaper-hardening/launcher/Codex-Wallpaper.cmd，MSIX 26.1111.2228.0。新回执 read-only-probe-passed / enabled；单一官方主进程、日常 profile、调试标志、环回监听和专用会话标记相符。辅助 Node 进程从集成目录加载，主页面运行时函数与候选源一致。用户确认原账号和同一已有聊天可用。已观察到上次 Scene 的单 canvas、背景根、控制根和样式各一份。
+- 真实启停：在已核验页面通过键盘事件执行 Alt+Shift+W 关→开，再点击「停用壁纸」并用快捷键恢复。停用三种根均为 0，启用各 1；本项不代替物理键盘或 Windows 登录验收。
+- 真实设置素材样本：图片有实际画面，视频和另选的 Scene 在采样末仍显示静态图，未确认原生播放，原来的 Scene 可见单活动 canvas。离线 Web 样本创建沙箱 iframe，但实际截图为黑画面；不能记作播放通过。已恢复原壁纸选择，未改变用户主题。未完成导入图片/视频、真实亮主题及输入、卡片、滚动、代码和差异可读性检查。
+- 亲自查看本次脱敏截图，确认聊天底带、背景接缝和右侧「变更」深色区；「变更」实际打开主目标内的标签，尚未完成十轮录屏或闪动判断。修复仅限 issue 04 已定位的外侧底衬。真实复验仍待从同一入口加载修复提交。Windows 登录项查询为 disabled；登录、原入口自动接入、联网 Web 隔离及 8 小时、7 天均尚未验收。
+- 2026-11-16 真实临时样式复验：运行仍为 20b9660 的同一个 Codex 主窗口，临时替换现有样式为当前候选源码生成的完整 CSS，核对字节相等、标题栏恢复 fixed 并包含上次输入区修复。保留其他右侧标签的布局下，通过实际「变更」按钮处理器打开和关闭 10 轮，逐轮各发生一次打开和关闭；主页面始终可见，Scene 一直使用同一个 Canvas。录制 1,197 源帧，按时间顺序复看样本未再见反复亮闪或布局跳动。右侧深色实底仍存在；本修复不更改它。已移除临时样式并恢复开始时的壁纸停用状态，未重启或改动登录项。正式冷启动、从无侧栏的初始状态做鼠标实点复验，以及余下明暗主题、素材和长期验收仍待验证。
+- 2026-11-16 00:33（Asia/Shanghai），d8ca847 正式冷启动核对未通过：集成树源码为 d8ca847，但未发现新启动回执；唯一运行中的专用主进程创建于 11-15 23:57:00，仍匹配 11-15 23:57:05 的既有 read-only-probe-passed / enabled 回执。只读比较实际页面样式及 Git 对应样式：逐字节匹配 20b9660，与 d8ca847 不同；可见标题栏元素的计算定位仍为 relative。未重新注入或操作界面，未录制本次新版本切换，故标题栏、布局、闪动、右侧底色、输入区及素材等正式冷启动验收均保持待验。账号、聊天和本轮物理快捷键没有新的用户确认。下次先用无参数状态模式确认 Running: []，再运行同一集成入口；Windows 登录项仍为 disabled。
+- 2026-11-16 00:35（Asia/Shanghai），d8ca847 正式冷启动已核对：专用进程从 00:34:57 启动，00:35:03 新回执 read-only-probe-passed / enabled，官方包、会话标记、环回监听归属和素材宿主路径相符。主页面实际样式字节匹配 d8ca847，公开运行时函数比对匹配，标题栏为 fixed，未注入临时修复 CSS。新回执没有代替用户对账号及已有聊天的确认；本次无需快捷键开启壁纸。
+- 真实操作：首次从无右栏场景实点变更，共 11 轮有效录制，1,359 源帧，另 1 轮帧不足排除。变更标签各轮只打开和关闭一次，页面目标集合及 Scene Canvas 相同，复看时序未见原来的亮暗往返跳变。右栏深色实底独立记录；缺少真实 diff 可读性样本。深色主题下已确认输入框外侧不再有实色横带，输入框本体、变更入口卡片有实底且输入区可命中；未验证输入文本、亮主题和完整卡片操作。
+- 真实素材：经壁纸设置切换创意工坊图片、视频、Web 和 Scene。图片实际显示；视频采样到 readyState=4、播放时钟前进、一个视频与其输出 Canvas；Scene 先预览后渲染。Web 样本黑屏：脚本驱动的空 Canvas 不受离线 CSP 支持，且旧静态 Web 布局只显示默认 300×150 iframe。新版将含脚本 HTML 归为作者预览，纯静态 iframe 铺满背景，沙箱不变。两项回归先红后绿；使用正式实例的原样 CSS 临时加载新素材清单，亲自复看同一实际 Web 样本由黑底变为预览，随后恢复原清单和壁纸。Web 修复没有在正式冷启动实例中常驻，静态 Web 铺满目前是自动测试结果。Windows 登录项仍为 disabled。

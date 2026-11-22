@@ -1,0 +1,705 @@
+{
+  "startedAt": "2026-11-19T05:07:24.845Z",
+  "port": 64390,
+  "identity": {
+    "runtimeHash": "be6e4ce104e955104682c0fb03e9ba67f9844a3b708d37869d8227d2acf2f3b1",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "cd14709b95a6e4e34a889a8b420553dba7222381f8ecf31dfc278fb55f11657d",
+  "warm": {
+    "count": 0,
+    "items": []
+  },
+  "switches": {
+    "frontCold": {
+      "selectedId": "1791074903",
+      "selectedMilliseconds": 188,
+      "committedMilliseconds": 4.299999997019768,
+      "dynamicMilliseconds": null,
+      "dynamicValid": false,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 0,
+        "failed": 0
+      },
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      },
+      "settled": {
+        "targetId": "1791074903",
+        "wallMilliseconds": 640718.900000006,
+        "state": {
+          "activeId": "1791074903",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "click": {
+          "id": "1791074903",
+          "at": 639993.400000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 188,
+        "committedMilliseconds": 4.299999997019768,
+        "dynamic": null,
+        "native": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": 4856,
+          "height": 2732
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 639996.599999994,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "media-committed",
+            "at": 639997.799999997,
+            "detail": {
+              "tag": "img",
+              "readyState": null,
+              "paused": null,
+              "width": 4856,
+              "height": 2732
+            }
+          },
+          {
+            "type": "click",
+            "at": 640084.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "selected",
+            "at": 640181.400000006,
+            "detail": {
+              "id": "1791074903"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 640274.900000006,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 640458.299999997,
+            "detail": null
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.08801,
+          "visibility": "visible"
+        }
+      }
+    },
+    "frontWarm": {
+      "selectedId": "1791074903",
+      "selectedMilliseconds": 279.09999999403954,
+      "committedMilliseconds": 92.8999999910593,
+      "dynamicMilliseconds": null,
+      "dynamicValid": false,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 0,
+        "failed": 0
+      },
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "tailCold": {
+      "selectedId": "1986730797",
+      "selectedMilliseconds": 299,
+      "committedMilliseconds": 102.09999999403954,
+      "dynamicMilliseconds": null,
+      "dynamicValid": false,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      },
+      "settled": {
+        "targetId": "1986730797",
+        "wallMilliseconds": 643247.799999997,
+        "state": {
+          "activeId": "1986730797",
+          "state": "enabled",
+          "playerCount": 1
+        },
+        "selected": "true",
+        "click": {
+          "id": "1986730797",
+          "at": 642441.900000006,
+          "trusted": true
+        },
+        "selectedMilliseconds": 299,
+        "committedMilliseconds": 102.09999999403954,
+        "dynamic": null,
+        "native": {
+          "tag": "img",
+          "readyState": null,
+          "paused": null,
+          "width": 4856,
+          "height": 2732
+        },
+        "warm": null,
+        "transfer": {
+          "file": 1,
+          "base64": 0,
+          "finished": 1,
+          "failed": 0
+        },
+        "events": [
+          {
+            "type": "pointerdown",
+            "at": 642543.599999994,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "media-committed",
+            "at": 642544,
+            "detail": {
+              "tag": "img",
+              "readyState": null,
+              "paused": null,
+              "width": 4856,
+              "height": 2732
+            }
+          },
+          {
+            "type": "click",
+            "at": 642644.200000003,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "selected",
+            "at": 642740.900000006,
+            "detail": {
+              "id": "1986730797"
+            }
+          },
+          {
+            "type": "file-transfer-begin",
+            "at": 642885.299999997,
+            "detail": null
+          },
+          {
+            "type": "file-transfer-finish",
+            "at": 642978.5,
+            "detail": null
+          }
+        ],
+        "media": {
+          "tag": "video",
+          "readyState": 4,
+          "paused": false,
+          "width": 1920,
+          "height": 1080,
+          "currentTime": 0.094998,
+          "visibility": "visible"
+        }
+      }
+    },
+    "tailWarm": {
+      "selectedId": "1986730797",
+      "selectedMilliseconds": 267.20000000298023,
+      "committedMilliseconds": 73.79999999701977,
+      "dynamicMilliseconds": null,
+      "dynamicValid": false,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 0,
+        "failed": 0
+      },
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    }
+  },
+  "rapid": {
+    "abc": {
+      "targetId": "2817646508",
+      "wallMilliseconds": 1612.300000011921,
+      "state": {
+        "activeId": "2817646508",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "click": {
+        "id": "2817646508",
+        "at": 646341.400000006,
+        "trusted": true
+      },
+      "selectedMilliseconds": 97.3999999910593,
+      "committedMilliseconds": 97.3999999910593,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 2,
+        "base64": 0,
+        "finished": 2,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 644702.299999997,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 644706.099999994,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 644820.700000003,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 644820.700000003,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 645178.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 645180,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "click",
+          "at": 645292.299999997,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 645389.799999997,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 645493.200000003,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 645856.299999997,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 645857.400000006,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "click",
+          "at": 645953.200000003,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 646045.599999994,
+          "detail": {
+            "id": "1986730797"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 646150.099999994,
+          "detail": null
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 646238,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 646343.400000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 646344.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 646438.799999997,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 646438.799999997,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 646547.5,
+          "detail": null
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    },
+    "aba": {
+      "targetId": "2817646508",
+      "wallMilliseconds": 858.9000000059605,
+      "state": {
+        "activeId": "2817646508",
+        "state": "enabled",
+        "playerCount": 0
+      },
+      "selected": "true",
+      "click": {
+        "id": "2817646508",
+        "at": 647508.099999994,
+        "trusted": true
+      },
+      "selectedMilliseconds": 95.5,
+      "committedMilliseconds": 95.6000000089407,
+      "dynamic": null,
+      "native": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": 4856,
+        "height": 2732
+      },
+      "warm": null,
+      "transfer": {
+        "file": 1,
+        "base64": 0,
+        "finished": 1,
+        "failed": 0
+      },
+      "events": [
+        {
+          "type": "pointerdown",
+          "at": 646661.599999994,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 646662.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 646752.200000003,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 646752.200000003,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "pointerdown",
+          "at": 647044.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 647045.599999994,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "click",
+          "at": 647137.5,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 647237.299999997,
+          "detail": {
+            "id": "1791074903"
+          }
+        },
+        {
+          "type": "file-transfer-begin",
+          "at": 647333.099999994,
+          "detail": null
+        },
+        {
+          "type": "pointerdown",
+          "at": 647509.900000006,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "click",
+          "at": 647511.799999997,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "selected",
+          "at": 647603.700000003,
+          "detail": {
+            "id": "2817646508"
+          }
+        },
+        {
+          "type": "media-committed",
+          "at": 647603.700000003,
+          "detail": {
+            "tag": "img",
+            "readyState": null,
+            "paused": null,
+            "width": 4856,
+            "height": 2732
+          }
+        },
+        {
+          "type": "file-transfer-finish",
+          "at": 647699.099999994,
+          "detail": null
+        }
+      ],
+      "media": {
+        "tag": "img",
+        "readyState": null,
+        "paused": null,
+        "width": null,
+        "height": null,
+        "currentTime": null,
+        "visibility": "visible"
+      }
+    }
+  },
+  "disableDuringSwitch": {
+    "cleanupMilliseconds": 833.1999999880791,
+    "afterThirtySeconds": {
+      "state": "disabled",
+      "root": false,
+      "players": 0,
+      "warm": 0
+    }
+  },
+  "failureRetention": null,
+  "restored": null,
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark"
+  },
+  "error": "Target is not interactive: #codex-wallpaper-p1-controls .card[data-entry-id=\"2817646508\"] [data-entry-action=\"use\"]",
+  "finishedAt": "2026-11-19T05:08:06.490Z"
+}

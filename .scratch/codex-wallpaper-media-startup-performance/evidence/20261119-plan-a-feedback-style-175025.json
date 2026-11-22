@@ -1,0 +1,103 @@
+{
+  "startedAt": "2026-11-19T09:50:25.161Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "assets": {},
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 0
+  },
+  "temporaryRuntime": true,
+  "style": [
+    {
+      "variant": "plain",
+      "elapsed": 42.20000000298023,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 42.69999998807907,
+      "settingsMatch": null
+    },
+    {
+      "variant": {
+        "name": "workspace-left-panel",
+        "selector": "body [data-app-shell-feature-navigation=true]:has(> [data-app-shell-workspace-row] > [data-app-shell-workspace] > [data-app-shell-left-panel-appearance] [data-settings-nav-scroll-container])"
+      },
+      "elapsed": 46.5,
+      "settingsMatch": 0
+    },
+    {
+      "variant": {
+        "name": "workspace-left-panel",
+        "selector": "body [data-app-shell-feature-navigation=true]:has(> [data-app-shell-workspace-row] > [data-app-shell-workspace] > [data-app-shell-left-panel-appearance] [data-settings-nav-scroll-container])"
+      },
+      "elapsed": 45.79999999701977,
+      "settingsMatch": 0
+    },
+    {
+      "variant": {
+        "name": "nav-qualified",
+        "selector": "body [data-app-shell-feature-navigation=true]:has(nav.sidebar-navigation > div > [data-settings-nav-scroll-container])"
+      },
+      "elapsed": 50.29999999701977,
+      "settingsMatch": 0
+    },
+    {
+      "variant": {
+        "name": "nav-qualified",
+        "selector": "body [data-app-shell-feature-navigation=true]:has(nav.sidebar-navigation > div > [data-settings-nav-scroll-container])"
+      },
+      "elapsed": 43,
+      "settingsMatch": 0
+    },
+    {
+      "variant": [
+        103
+      ],
+      "elapsed": 12.299999997019768,
+      "settingsMatch": null
+    },
+    {
+      "variant": [
+        103
+      ],
+      "elapsed": 11,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 43,
+      "settingsMatch": null
+    },
+    {
+      "variant": "plain",
+      "elapsed": 41.5,
+      "settingsMatch": null
+    }
+  ],
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T09:50:26.099Z"
+}

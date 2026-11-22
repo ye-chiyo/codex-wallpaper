@@ -1,0 +1,10 @@
+✔ baseline snapshots keep the measurement identity without personal material data (2.178ms)
+✔ candidate identity comparison requires runtime and generated style matches (0.2555ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161.2435

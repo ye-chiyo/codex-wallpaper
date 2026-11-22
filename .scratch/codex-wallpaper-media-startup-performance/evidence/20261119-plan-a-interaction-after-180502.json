@@ -1,0 +1,114 @@
+{
+  "startedAt": "2026-11-19T10:05:02.192Z",
+  "port": 59704,
+  "identity": {
+    "runtimeHash": "fa6d27b121f10f64138aae7f83290af52de7bae282620078abb187cd759c3091",
+    "styleHash": "47a54154e3d0a79a656bf33186e93c63352ebb3fc9a2723937f9dbc0bc743d76"
+  },
+  "assets": {
+    "1791074903": {
+      "id": "1791074903",
+      "title": "[ 明 日 方 舟 ]",
+      "type": "video",
+      "size": 115500404,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "original",
+        "moovSize": 34070,
+        "offsetCount": 0,
+        "segments": 1
+      }
+    },
+    "1986730797": {
+      "id": "1986730797",
+      "title": "明日方舟 X 轻音少女",
+      "type": "video",
+      "size": 75689196,
+      "mime": "video/mp4",
+      "layout": {
+        "kind": "virtual",
+        "moovSize": 26660,
+        "offsetCount": 1802,
+        "segments": 3
+      }
+    },
+    "2817646508": {
+      "id": "2817646508",
+      "title": "轻音少女",
+      "type": "image",
+      "size": 8652933,
+      "mime": "image/png",
+      "layout": null
+    }
+  },
+  "configHash": "706e6babcd2d10b7a648676b0892561b15e455dbde1c3c7e38c233cc66c0e977",
+  "warm": null,
+  "switches": {},
+  "rapid": {},
+  "disableDuringSwitch": null,
+  "failureRetention": null,
+  "restored": {
+    "configExact": true,
+    "activeId": "3312633016"
+  },
+  "conditions": {
+    "viewport": [
+      1707,
+      1066,
+      1.5
+    ],
+    "visibility": "visible",
+    "theme": "dark",
+    "startupCardCount": 0,
+    "openedCardCount": 106,
+    "domElements": 6575
+  },
+  "temporaryRuntime": true,
+  "interactions": {
+    "input": [
+      39.89999999664724,
+      45.79999999143183,
+      40.89999999664724,
+      47.69999999366701,
+      40.69999999180436,
+      40.49999999627471,
+      45.09999999962747,
+      46.60000000335276,
+      50.10000000335276,
+      49.599999997764826,
+      80.199999993667,
+      45.29999999701977,
+      49.40000000037253,
+      44.09999999962747,
+      46.8999999910593,
+      48.10000000335276
+    ],
+    "wheel": [
+      25.199999997392297,
+      11.199999991804361,
+      11.699999999254942,
+      11.499999990686774,
+      11.400000002235174,
+      11.199999991804361,
+      11.499999990686774,
+      11.499999994412065,
+      11.199999993667006,
+      9.699999999254942,
+      11.299999997019768,
+      11.300000000745058,
+      10.99999999627471,
+      11.599999999627471,
+      11.999999994412065,
+      11.600000003352761
+    ],
+    "draftUnchanged": true,
+    "scrollMisses": 0,
+    "inputMode": "insertText",
+    "scrollArea": "conversation"
+  },
+  "restoredRuntime": {
+    "runtimeHash": "8cc9fb3667d5397573d61a930bc0fefc8fea6776ea3695bb30376fedeb8dad4c",
+    "styleHash": "a7adb923564a8cd66da635f73466e92bc8479e2d92fdca986983bbd3dd23a8d0"
+  },
+  "finishedAt": "2026-11-19T10:05:08.875Z"
+}

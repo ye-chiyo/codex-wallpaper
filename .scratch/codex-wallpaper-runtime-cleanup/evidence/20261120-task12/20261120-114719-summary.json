@@ -1,0 +1,25 @@
+{
+    "runId":  "20261120-114719",
+    "startedAt":  "2026-11-20T11:47:19.3809664+08:00",
+    "repositoryRoot":  "D:\\AI\\codex-wallpaper-hardening",
+    "startupReceipt":  "D:\\AI\\codex-wallpaper-hardening\\.scratch\\codex-wallpaper-runtime-cleanup\\evidence\\20261120-task12\\20261120-114719-startup-receipt.json",
+    "startup":  {
+                    "outcome":  "wallpaper-injection-failed",
+                    "mainPid":  55692,
+                    "mainCreated":  "2026-11-20T11:51:24.6513360+08:00",
+                    "port":  55136,
+                    "targetAcknowledgedMs":  4169,
+                    "targetReverifiedMs":  null,
+                    "hostReadyMs":  null,
+                    "wallpaperState":  null,
+                    "hostReady":  null,
+                    "runtimeHash":  null,
+                    "styleHash":  null
+                },
+    "steps":  [
+
+              ],
+    "result":  "failed",
+    "error":  "Dedicated startup failed: wallpaper-injection-failed",
+    "finishedAt":  "2026-11-20T11:51:30.6304939+08:00"
+}
