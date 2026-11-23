@@ -877,30 +877,44 @@ test(
   }
 );
 
-test("the desktop handoff waits for a presented wallpaper after verifying the host", { timeout: 8000 }, async (t) => {
-  const previewFolder = await mkdtemp(join(tmpdir(), "codex-wallpaper-presentation-"));
-  t.after(() => rm(previewFolder, { recursive: true, force: true }));
-  let sampled = 0;
-  const interfaceAt = Date.now();
-  const frameAt = interfaceAt + 100;
-  const cdp = await startExactCdpFixture(t, (expression) => {
-    if (expression === "globalThis.__codexWallpaperApi?.waitForStartupPresentation()") {
-      sampled += 1;
-      return { status: "visible", interfaceAt, frameAt };
-    }
-    return { state: "enabled", hostReady: true, identity: candidateIdentity() };
-  });
-  const receipt = await runStartupHandoff(t, cdp, {
-    previewFolder, env: { ...process.env, CODEX_WALLPAPER_DESKTOP_HANDSHAKE: "1" },
-  });
-  assert.equal(receipt.Outcome, "wallpaper-ready");
-  assert.equal(receipt.StartupPreview, "visible");
-  assert.ok(receipt.StartupPreviewHandoffMs >= receipt.HostReadyMs);
-  assert.equal(receipt.StartupPreviewInterfaceAt, interfaceAt);
-  assert.equal(receipt.StartupPreviewFirstFrameAt, frameAt);
-  assert.deepEqual(receipt.DesktopSignals, ["CodexWallpaper:presented"]);
-  assert.equal(sampled, 1);
-});
+test(
+  "the desktop handoff waits for a presented wallpaper after verifying the host",
+  { timeout: 8000 },
+  async (t) => {
+    const previewFolder = await mkdtemp(
+      join(tmpdir(), "codex-wallpaper-presentation-")
+    );
+    t.after(() => rm(previewFolder, { recursive: true, force: true }));
+    let sampled = 0;
+    const interfaceAt = Date.now();
+    const frameAt = interfaceAt + 100;
+    const cdp = await startExactCdpFixture(t, (expression) => {
+      if (
+        expression ===
+        "globalThis.__codexWallpaperApi?.waitForStartupPresentation()"
+      ) {
+        sampled += 1;
+        return { status: "visible", interfaceAt, frameAt };
+      }
+      return {
+        state: "enabled",
+        hostReady: true,
+        identity: candidateIdentity(),
+      };
+    });
+    const receipt = await runStartupHandoff(t, cdp, {
+      previewFolder,
+      env: { ...process.env, CODEX_WALLPAPER_DESKTOP_HANDSHAKE: "1" },
+    });
+    assert.equal(receipt.Outcome, "wallpaper-ready");
+    assert.equal(receipt.StartupPreview, "visible");
+    assert.ok(receipt.StartupPreviewHandoffMs >= receipt.HostReadyMs);
+    assert.equal(receipt.StartupPreviewInterfaceAt, interfaceAt);
+    assert.equal(receipt.StartupPreviewFirstFrameAt, frameAt);
+    assert.deepEqual(receipt.DesktopSignals, ["CodexWallpaper:presented"]);
+    assert.equal(sampled, 1);
+  }
+);
 
 async function startHtmlFixture(html) {
   const server = createServer((_request, response) => {
@@ -1220,6 +1234,75 @@ async function startRuntimeFixture(t, payload, fixture = null) {
   return { ...page, options };
 }
 
+async function startSameOriginRuntimePeer(
+  port,
+  options,
+  source,
+  { delayPrepareReset = 0, disabled = false } = {}
+) {
+  return evaluateInPage(
+    port,
+    `(async () => {
+      const frame = document.createElement("iframe");
+      frame.hidden = true;
+      frame.dataset.resetPeer = "";
+      const loaded = new Promise((resolve, reject) => {
+        frame.onload = resolve;
+        setTimeout(() => reject(new Error("peer fixture timed out")), 5000);
+      });
+      frame.src = location.href;
+      document.body.append(frame);
+      await loaded;
+      const peer = frame.contentWindow;
+      if (${delayPrepareReset}) {
+        const addEventListener = peer.BroadcastChannel.prototype.addEventListener;
+        peer.BroadcastChannel.prototype.addEventListener = function (
+          type,
+          listener,
+          options
+        ) {
+          if (type !== "message")
+            return addEventListener.call(this, type, listener, options);
+          return addEventListener.call(
+            this,
+            type,
+            function (event) {
+              if (event.data?.type === "prepare-reset")
+                setTimeout(() => listener.call(this, event), ${delayPrepareReset});
+              else listener.call(this, event);
+            },
+            options
+          );
+        };
+        const postMessage = peer.BroadcastChannel.prototype.postMessage;
+        peer.BroadcastChannel.prototype.postMessage = function (message, ...rest) {
+          if (message?.type === "reset-ready")
+            peer.__codexWallpaperResetAckAt = performance.now();
+          return postMessage.call(this, message, ...rest);
+        };
+      }
+      if (${disabled}) {
+        const getItem = peer.Storage.prototype.getItem;
+        peer.Storage.prototype.getItem = function (key) {
+          if (key === "codex-wallpaper-p1-config")
+            return JSON.stringify({
+              enabled: false,
+              active: { kind: "builtin", id: "aurora" },
+              favorites: [],
+              playlist: [],
+              settings: {},
+            });
+          return getItem.call(this, key);
+        };
+      }
+      await peer.eval(${JSON.stringify(source)});
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return peer.__codexWallpaperApi.state();
+    })()`,
+    options
+  );
+}
+
 async function startBrowserFixture(t, fixture = null) {
   fixture ??= await startFixture();
   const profile = await mkdtemp(join(tmpdir(), "codex-wallpaper-edge-"));
@@ -1403,9 +1486,7 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   const source = runtimeSource(
     {
-      library: [
-        { id: selected.id, title: "Saved image", type: "image" },
-      ],
+      library: [{ id: selected.id, title: "Saved image", type: "image" }],
     },
     true,
     true,
@@ -1416,7 +1497,9 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     document.querySelectorAll('#${controlRootId} [data-codex-wallpaper-panel]').length,
     globalThis.__codexWallpaperApi.state().styles
   ]`;
-  const afterPaint = (value) => `new Promise(resolve => requestAnimationFrame(() =>
+  const afterPaint = (
+    value
+  ) => `new Promise(resolve => requestAnimationFrame(() =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(${value})))))`;
   const saveEnabled = `localStorage.setItem('${key}', ${JSON.stringify(
     JSON.stringify({ enabled: true, active: selected })
@@ -1426,19 +1509,25 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
   assert.equal(startup.hostReady, true);
   assert.equal(startup.activeId, selected.id);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "waiting");
+  assert.equal(
+    await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"),
+    "waiting"
+  );
   assert.equal(await evaluate("assetRequests().length"), 1);
   assert.equal(await evaluate("assetRequests().at(-1).id"), selected.id);
 
   await evaluate(`document.querySelector('main').innerHTML =
     '<div data-composer-surface-variant>Message composer</div>'`);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(await evaluate(`(() => {
+  assert.equal(
+    await evaluate(`(() => {
     globalThis.cancelledFile = globalThis.__codexWallpaperApi.beginAssetFileTransfer(
       { id: ${JSON.stringify(selected.id)} }, null, assetRequests().at(-1).request
     );
     return document.querySelector('input[data-codex-wallpaper-file]')?.hidden;
-  })()`), true);
+  })()`),
+    true
+  );
 
   // A same-origin storage stop while startup waits must cancel the pending mount.
   await evaluate(`(() => {
@@ -1448,12 +1537,25 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     document.querySelector('[data-app-shell-active-page]').style.opacity = '1';
   })()`);
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(await evaluate("document.querySelectorAll('input[data-codex-wallpaper-file]').length"), 0);
-  assert.equal(await evaluate("globalThis.__codexWallpaperApi.finishAssetFileTransfer(cancelledFile)"), false);
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('input[data-codex-wallpaper-file]').length"
+    ),
+    0
+  );
+  assert.equal(
+    await evaluate(
+      "globalThis.__codexWallpaperApi.finishAssetFileTransfer(cancelledFile)"
+    ),
+    false
+  );
   await evaluate("globalThis.__codexWallpaperApi.discardStartup()");
   assert.equal((await evaluate(source)).state, "disabled");
   assert.deepEqual(await evaluate(afterPaint(layers)), [0, 0, 0]);
-  assert.equal(await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"), "disabled");
+  assert.equal(
+    await evaluate("globalThis.__codexWallpaperApi.startupPresentation()"),
+    "disabled"
+  );
   assert.equal(await evaluate("startupRequests.at(-1).enabled"), false);
 
   await evaluate(`(async () => {
@@ -1500,22 +1602,34 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     "wallpaper and settings panel were not mounted after the composer"
   );
   await waitForCondition(
-    () => evaluate(`document.querySelector('#${rootId} img')?.src.startsWith('blob:') &&
+    () =>
+      evaluate(`document.querySelector('#${rootId} img')?.src.startsWith('blob:') &&
       presentation?.status === 'visible'`),
     3000,
     "saved wallpaper did not restore"
   );
-  assert.deepEqual(await evaluate("[presentation.frameAt >= presentation.interfaceAt, assetRequests().length, libraryReads]"),
-    [true, 2, 0]);
+  assert.deepEqual(
+    await evaluate(
+      "[presentation.frameAt >= presentation.interfaceAt, assetRequests().length, libraryReads]"
+    ),
+    [true, 2, 0]
+  );
   await waitForCondition(
-    () => evaluate("startupRequests.at(-1).poster?.startsWith('data:image/jpeg;base64,')"),
+    () =>
+      evaluate(
+        "startupRequests.at(-1).poster?.startsWith('data:image/jpeg;base64,')"
+      ),
     3000,
     "wallpaper poster was not published after presentation"
   );
   await evaluate(source);
   assert.deepEqual(await evaluate(layers), [1, 1, 1]);
   await evaluate(toggleSettings);
-  await waitForCondition(() => evaluate("libraryReads === 1"), 3000, "opening the panel did not load local imports");
+  await waitForCondition(
+    () => evaluate("libraryReads === 1"),
+    3000,
+    "opening the panel did not load local imports"
+  );
 
   await evaluate(`(async () => {
     await globalThis.__codexWallpaperApi.discardStartup();
@@ -1536,12 +1650,30 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     localStorage.setItem('${key}', JSON.stringify({ enabled: true, active: {kind:'imported',id:'saved-import'} }));
   })()`);
   assert.equal((await evaluate(source)).activeId, "saved-import");
-  await waitForCondition(() => evaluate("importReads.length === 1"), 3000, "the selected import was not prepared");
+  await waitForCondition(
+    () => evaluate("importReads.length === 1"),
+    3000,
+    "the selected import was not prepared"
+  );
   assert.deepEqual(await evaluate(layers), [0, 0, 0]);
   assert.deepEqual(await evaluate("importReads"), ["saved-import"]);
-  await evaluate("document.querySelector('[data-app-shell-active-page]').inert = false");
-  await waitForCondition(() => evaluate("globalThis.__codexWallpaperApi.startupPresentation() === 'visible'"), 3000, "the selected import was not presented");
-  assert.deepEqual(await evaluate("[importReads.length, libraryReads, assetRequests().length]"), [1, 1, 2]);
+  await evaluate(
+    "document.querySelector('[data-app-shell-active-page]').inert = false"
+  );
+  await waitForCondition(
+    () =>
+      evaluate(
+        "globalThis.__codexWallpaperApi.startupPresentation() === 'visible'"
+      ),
+    3000,
+    "the selected import was not presented"
+  );
+  assert.deepEqual(
+    await evaluate(
+      "[importReads.length, libraryReads, assetRequests().length]"
+    ),
+    [1, 1, 2]
+  );
 });
 
 test("window chrome keeps wallpaper sharp and native titlebar interactive", async (t) => {
@@ -1570,7 +1702,7 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
   await applyStaticBackground(port, options);
   assert.deepEqual(await evaluateInPage(port, readBacking, options), {
     ...nativeBacking,
-    background: "rgba(0, 0, 0, 0)"
+    background: "rgba(0, 0, 0, 0)",
   });
   assert.deepEqual(
     await evaluateInPage(
@@ -1651,7 +1783,10 @@ test("window chrome keeps wallpaper sharp and native titlebar interactive", asyn
     options
   );
   await pressWallpaperShortcut(port, options, "W");
-  assert.deepEqual(await evaluateInPage(port, readBacking, options), nativeBacking);
+  assert.deepEqual(
+    await evaluateInPage(port, readBacking, options),
+    nativeBacking
+  );
 });
 
 test("changing selection cancels a pending File and accepts a new transfer when reselected", async (t) => {
@@ -2475,6 +2610,618 @@ test(
     await access(lock);
   }
 );
+
+test(
+  "reset waits for a slow same-origin peer before deleting IndexedDB",
+  { timeout: 20000 },
+  async (t) => {
+    const payload = { version: 1, library: [] };
+    const { port, options } = await startRuntimeFixture(t, payload);
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const request = indexedDB.open("codex-wallpaper-media", 1);
+        request.onupgradeneeded = () =>
+          request.result.createObjectStore("media", { keyPath: "id" });
+        const db = await new Promise((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        const transaction = db.transaction("media", "readwrite");
+        transaction.objectStore("media").put({
+          id: "seed-import",
+          title: "Seed Import",
+          type: "image",
+          blob: new Blob(["seed"], { type: "image/svg+xml" }),
+          createdAt: Date.now(),
+        });
+        await new Promise((resolve, reject) => {
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+        });
+        db.close();
+      })()`,
+      options
+    );
+    await applyStaticBackground(port, options);
+    await evaluateInPage(
+      port,
+      `globalThis.__codexWallpaperHostRequest = () => {}`,
+      options
+    );
+    assert.equal(
+      (
+        await startSameOriginRuntimePeer(
+          port,
+          options,
+          runtimeSource(payload, true),
+          { delayPrepareReset: 450 }
+        )
+      ).importedCount,
+      1
+    );
+
+    const result = await evaluateInPage(
+      port,
+      `(async () => {
+        const reset = document.querySelector("#${controlRootId} button.reset");
+        const started = performance.now();
+        reset.click();
+        reset.click();
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+          const state = globalThis.__codexWallpaperApi.state();
+          if (state.state === "disabled" && state.importedCount === 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const elapsed = performance.now() - started;
+        const databases = indexedDB.databases
+          ? (await indexedDB.databases()).map((database) => database.name)
+          : [];
+        const peer = document
+          .querySelector("iframe[data-reset-peer]")
+          .contentWindow;
+        const peerState = peer.__codexWallpaperApi.state();
+        const rootRemoved = !document.getElementById("${rootId}");
+        await globalThis.__codexWallpaperApi.enable(false);
+        const enabled = globalThis.__codexWallpaperApi.state();
+        return {
+          elapsed,
+          databaseDeleted: !databases.includes("codex-wallpaper-media"),
+          peerAcknowledged: peer.__codexWallpaperResetAckAt > 0,
+          peerState: peerState.state,
+          rootRemoved,
+          enabledState: enabled.state,
+          controls: enabled.controls,
+        };
+      })()`,
+      options
+    );
+
+    assert.equal(result.databaseDeleted, true);
+    assert.ok(result.elapsed >= 350, JSON.stringify(result));
+    assert.equal(result.peerAcknowledged, true);
+    assert.equal(result.peerState, "disabled");
+    assert.equal(result.rootRemoved, true);
+    assert.equal(result.enabledState, "enabled");
+    assert.ok(result.controls > 0);
+  }
+);
+
+test(
+  "reset timeout reports unresponsive peers and still deletes IndexedDB",
+  { timeout: 15000 },
+  async (t) => {
+    const payload = { version: 1, library: [] };
+    const { port, options } = await startRuntimeFixture(t, payload);
+    await evaluateInPage(
+      port,
+      `(async () => {
+        const request = indexedDB.open("codex-wallpaper-media", 1);
+        request.onupgradeneeded = () =>
+          request.result.createObjectStore("media", { keyPath: "id" });
+        await new Promise((resolve, reject) => {
+          request.onsuccess = resolve;
+          request.onerror = () => reject(request.error);
+        });
+        request.result.close();
+      })()`,
+      options
+    );
+    await applyStaticBackground(port, options);
+    await startSameOriginRuntimePeer(
+      port,
+      options,
+      runtimeSource(payload, true),
+      { delayPrepareReset: 2000, disabled: true }
+    );
+
+    const result = await evaluateInPage(
+      port,
+      `(async () => {
+        const reset = document.querySelector("#${controlRootId} button.reset");
+        const started = performance.now();
+        reset.click();
+        reset.click();
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+          const state = globalThis.__codexWallpaperApi.state();
+          if (state.state === "disabled" && state.importedCount === 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        const elapsed = performance.now() - started;
+        const databases = indexedDB.databases
+          ? (await indexedDB.databases()).map((database) => database.name)
+          : [];
+        return {
+          elapsed,
+          databaseDeleted: !databases.includes("codex-wallpaper-media"),
+          warning: globalThis.__codexWallpaperApi.resetStatus().warning,
+        };
+      })()`,
+      options
+    );
+
+    assert.equal(result.databaseDeleted, true);
+    assert.ok(result.elapsed >= 1300, JSON.stringify(result));
+    assert.match(result.warning, /1 个窗口未响应/);
+  }
+);
+
+test("reset clears runtime assets, failures, previews and pending requests", async (t) => {
+  const payload = {
+    version: 1,
+    library: [
+      {
+        id: "old-web",
+        title: "Old Web",
+        type: "web",
+        playable: true,
+        webHtml: "<style>body{--old-runtime-web:1}</style>",
+      },
+      {
+        id: "failed-image",
+        title: "Failed Image",
+        type: "image",
+        playable: false,
+        reason: "asset-not-loaded",
+      },
+      {
+        id: "preview-pending",
+        title: "Preview Pending",
+        type: "image",
+        playable: false,
+        reason: "asset-not-loaded",
+      },
+      {
+        id: "preview-failed",
+        title: "Preview Failed",
+        type: "image",
+        playable: false,
+        reason: "asset-not-loaded",
+      },
+    ],
+  };
+  const refreshed = structuredClone(payload);
+  refreshed.library[0].webHtml = null;
+  refreshed.library[0].playable = false;
+  refreshed.library[0].reason = "asset-not-loaded";
+  const { port, options } = await startRuntimeFixture(t, payload);
+  await applyStaticBackground(port, options);
+  await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      globalThis.__resetHostRequests = [];
+      globalThis.__codexWallpaperHostRequest = (message) =>
+        globalThis.__resetHostRequests.push(JSON.parse(message));
+      await api.configureHost();
+      ${toggleSettings};
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if (
+          globalThis.__resetHostRequests.some(
+            (request) =>
+              request.type === "load-preview" &&
+              request.id === "preview-pending"
+          )
+        )
+          break;
+        await wait(25);
+      }
+      await api.receiveAsset({
+        id: "old-web",
+        title: "Old Web",
+        type: "web",
+        playable: true,
+        webHtml: "<style>body{--old-runtime-web:1}</style>",
+      });
+      document
+        .querySelector(
+          '#${controlRootId} .card[data-entry-id="old-web"] [data-entry-action="use"]'
+        )
+        .click();
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if (document.querySelector("#${rootId} iframe")) break;
+        await wait(25);
+      }
+      api.receivePreviewError("preview-failed");
+      api.receiveAssetError("failed-image", "stale failure");
+      const reset = document.querySelector("#${controlRootId} button.reset");
+      reset.click();
+      reset.click();
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        if (!document.getElementById("${rootId}")) break;
+        await wait(25);
+      }
+    })()`,
+    options
+  );
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const resetConfig = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
+      resetConfig.enabled = true;
+      resetConfig.active = { kind: "workshop", id: "old-web" };
+      localStorage.setItem(
+        "codex-wallpaper-p1-config",
+        JSON.stringify(resetConfig)
+      );
+      globalThis.__resetHostRequests = [];
+      await api.refresh(${JSON.stringify(refreshed)});
+      ${toggleSettings};
+      for (const id of ["preview-pending", "preview-failed"]) {
+        document
+          .querySelector(
+            \`#${controlRootId} .card[data-entry-id="\${id}"]\`
+          )
+          ?.scrollIntoView({ block: "center" });
+        await wait(100);
+      }
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        const types = globalThis.__resetHostRequests.map(
+          (request) => request.type + ":" + request.id
+        );
+        if (
+          types.includes("load-preview:preview-pending") &&
+          types.includes("load-preview:preview-failed")
+        )
+          break;
+        await wait(25);
+      }
+      const requests = globalThis.__resetHostRequests.map(
+        (request) => request.type + ":" + request.id
+      );
+      const failedCard = document.querySelector(
+        '#${controlRootId} .card[data-entry-id="failed-image"] [data-card-status]'
+      );
+      return {
+        requests,
+        webIframes: document.querySelectorAll("#${rootId} iframe").length,
+        failedCard: failedCard?.textContent,
+      };
+    })()`,
+    options
+  );
+
+  assert.ok(
+    result.requests.includes("load-preview:preview-pending"),
+    result.requests
+  );
+  assert.ok(
+    result.requests.includes("load-preview:preview-failed"),
+    result.requests
+  );
+  assert.equal(result.webIframes, 0);
+  assert.notEqual(result.failedCard, "image · 加载失败");
+});
+
+test("import failure is visible and keeps the current wallpaper", async (t) => {
+  const payload = { version: 1, library: [] };
+  const { port, options } = await startRuntimeFixture(t, payload);
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      await api.configureHost();
+      const configBefore = localStorage.getItem("codex-wallpaper-p1-config");
+      const transaction = IDBDatabase.prototype.transaction;
+      IDBDatabase.prototype.transaction = function (store, mode, ...rest) {
+        if (store === "media" && mode === "readwrite")
+          throw new DOMException("fixture import failure", "UnknownError");
+        return transaction.call(this, store, mode, ...rest);
+      };
+      try {
+        const input = document.querySelector(
+          "#${controlRootId} .import-row input"
+        );
+        const transfer = new DataTransfer();
+        transfer.items.add(
+          new File(["import"], "broken.svg", { type: "image/svg+xml" })
+        );
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (
+            document
+              .querySelector("#${controlRootId} .runtime-status")
+              ?.textContent.includes("导入失败")
+          )
+            break;
+          await wait(25);
+        }
+      } finally {
+        IDBDatabase.prototype.transaction = transaction;
+      }
+      const state = api.state();
+      const config = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
+      return {
+        status:
+          document.querySelector("#${controlRootId} .runtime-status")
+            ?.textContent,
+        importedCount: state.importedCount,
+        activeKind: state.activeKind,
+        builtinVisible: Boolean(
+          document.querySelector("#${rootId} .media.builtin")
+        ),
+        hostReady: state.hostReady,
+        configActive: config.active.kind,
+        configUnchanged: localStorage.getItem("codex-wallpaper-p1-config") === configBefore,
+      };
+    })()`,
+    options
+  );
+
+  assert.match(result.status, /导入失败/);
+  assert.equal(result.importedCount, 0);
+  assert.equal(result.activeKind, "builtin");
+  assert.equal(result.builtinVisible, true);
+  assert.equal(result.hostReady, true);
+  assert.equal(result.configActive, "builtin");
+  assert.equal(result.configUnchanged, true);
+});
+
+test("remove failure is visible and keeps imported media and config", async (t) => {
+  const payload = { version: 1, library: [] };
+  const { port, options } = await startRuntimeFixture(t, payload);
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      await api.configureHost();
+      const input = document.querySelector(
+        "#${controlRootId} .import-row input"
+      );
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File(
+          ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+          "kept.svg",
+          { type: "image/svg+xml" }
+        )
+      );
+      input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if (api.state().importedCount === 1) break;
+        await wait(25);
+      }
+      const configBefore = localStorage.getItem("codex-wallpaper-p1-config");
+      const transaction = IDBDatabase.prototype.transaction;
+      IDBDatabase.prototype.transaction = function (store, mode, ...rest) {
+        if (store === "media" && mode === "readwrite")
+          throw new DOMException("fixture remove failure", "UnknownError");
+        return transaction.call(this, store, mode, ...rest);
+      };
+      try {
+        document
+          .querySelector("#${controlRootId} [data-remove-imported]")
+          .click();
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (
+            document
+              .querySelector("#${controlRootId} .runtime-status")
+              ?.textContent.includes("移除失败")
+          )
+            break;
+          await wait(25);
+        }
+      } finally {
+        IDBDatabase.prototype.transaction = transaction;
+      }
+      const state = api.state();
+      const config = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
+      return {
+        status:
+          document.querySelector("#${controlRootId} .runtime-status")
+            ?.textContent,
+        importedCount: state.importedCount,
+        activeKind: state.activeKind,
+        imageVisible: Boolean(
+          document.querySelector("#${rootId} .media:not(.staged) img")
+        ),
+        hostReady: state.hostReady,
+        configActive: config.active.kind,
+        configUnchanged: localStorage.getItem("codex-wallpaper-p1-config") === configBefore,
+      };
+    })()`,
+    options
+  );
+
+  assert.match(result.status, /移除失败/);
+  assert.equal(result.importedCount, 1);
+  assert.equal(result.activeKind, "imported");
+  assert.equal(result.imageVisible, true);
+  assert.equal(result.hostReady, true);
+  assert.equal(result.configActive, "imported");
+  assert.equal(result.configUnchanged, true);
+});
+
+test("delete failure is visible and keeps imported media and config", async (t) => {
+  const payload = { version: 1, library: [] };
+  const { port, options } = await startRuntimeFixture(t, payload);
+  await applyStaticBackground(port, options);
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      await api.configureHost();
+      const input = document.querySelector(
+        "#${controlRootId} .import-row input"
+      );
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File(
+          ["<svg xmlns='http://www.w3.org/2000/svg' width='16' height='9'/>"],
+          "delete-kept.svg",
+          { type: "image/svg+xml" }
+        )
+      );
+      input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if (api.state().importedCount === 1) break;
+        await wait(25);
+      }
+      const configBefore = localStorage.getItem("codex-wallpaper-p1-config");
+      const descriptor = Object.getOwnPropertyDescriptor(
+        IDBFactory.prototype,
+        "deleteDatabase"
+      );
+      Object.defineProperty(IDBFactory.prototype, "deleteDatabase", {
+        ...descriptor,
+        value() {
+          throw new DOMException("fixture delete failure", "UnknownError");
+        },
+      });
+      let deletePatchVerified = false;
+      try {
+        indexedDB.deleteDatabase("codex-wallpaper-delete-probe");
+      } catch {
+        deletePatchVerified = true;
+      }
+      try {
+        const reset = document.querySelector("#${controlRootId} button.reset");
+        reset.click();
+        reset.click();
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          if (
+            document
+              .querySelector("#${controlRootId} .runtime-status")
+              ?.textContent.includes("清除失败")
+          )
+            break;
+          await wait(25);
+        }
+      } finally {
+        Object.defineProperty(
+          IDBFactory.prototype,
+          "deleteDatabase",
+          descriptor
+        );
+      }
+      const state = api.state();
+      const config = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
+      return {
+        status:
+          document.querySelector("#${controlRootId} .runtime-status")
+            ?.textContent,
+        state: state.state,
+        importedCount: state.importedCount,
+        activeKind: state.activeKind,
+        imageVisible: Boolean(
+          document.querySelector("#${rootId} .media:not(.staged) img")
+        ),
+        hostReady: state.hostReady,
+        configActive: config.active.kind,
+        configUnchanged: localStorage.getItem("codex-wallpaper-p1-config") === configBefore,
+        deletePatchVerified,
+      };
+    })()`,
+    options
+  );
+
+  assert.match(result.status, /清除失败/, JSON.stringify(result));
+  assert.equal(result.deletePatchVerified, true);
+  assert.equal(result.state, "enabled");
+  assert.equal(result.importedCount, 1);
+  assert.equal(result.activeKind, "imported");
+  assert.equal(result.imageVisible, true);
+  assert.equal(result.hostReady, true);
+  assert.equal(result.configActive, "imported");
+  assert.equal(result.configUnchanged, true);
+});
+
+test("blocked reset is visible and keeps the current config", async (t) => {
+  const payload = { version: 1, library: [] };
+  const { port, options } = await startRuntimeFixture(t, payload);
+  await applyStaticBackground(port, options);
+  await evaluateInPage(
+    port,
+    `globalThis.__codexWallpaperApi.configureHost()`,
+    options
+  );
+  await startSameOriginRuntimePeer(
+    port,
+    options,
+    runtimeSource(payload, true),
+    { delayPrepareReset: 2000 }
+  );
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
+      const api = globalThis.__codexWallpaperApi;
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const configBefore = localStorage.getItem("codex-wallpaper-p1-config");
+      const reset = document.querySelector("#${controlRootId} button.reset");
+      reset.click();
+      reset.click();
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        if (
+          document
+            .querySelector("#${controlRootId} .runtime-status")
+            ?.textContent.includes("清除受阻")
+        )
+          break;
+        await wait(25);
+      }
+      const state = api.state();
+      const config = JSON.parse(
+        localStorage.getItem("codex-wallpaper-p1-config")
+      );
+      return {
+        status:
+          document.querySelector("#${controlRootId} .runtime-status")
+            ?.textContent,
+        state: state.state,
+        hostReady: state.hostReady,
+        configActive: config.active.kind,
+        configUnchanged: localStorage.getItem("codex-wallpaper-p1-config") === configBefore,
+      };
+    })()`,
+    options
+  );
+
+  assert.match(result.status, /清除受阻/);
+  assert.match(result.status, /1 个窗口未响应/);
+  assert.equal(result.state, "enabled");
+  assert.equal(result.hostReady, true);
+  assert.equal(result.configActive, "builtin");
+  assert.equal(result.configUnchanged, true);
+});
 
 test(
   "one supervisor retries discarded fallback and File transfers after PowerShell exits",
@@ -4811,11 +5558,20 @@ test("playback profiles and capability controls apply without replacing media", 
 });
 
 test("Codex form resets leave wallpaper settings controls visible and operable", async (t) => {
-  const { port, options } = await startRuntimeFixture(t, { version: 1, library: [] });
+  const { port, options } = await startRuntimeFixture(t, {
+    version: 1,
+    library: [],
+  });
   const evaluate = (expression) => evaluateInPage(port, expression, options);
   const click = async (selector) => {
-    await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`);
-    assert.equal(await clickAtElementCenter(port, options, selector), true, selector);
+    await evaluate(
+      `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({ block: "center", container: "nearest" })`
+    );
+    assert.equal(
+      await clickAtElementCenter(port, options, selector),
+      true,
+      selector
+    );
   };
   await evaluate(`(() => {
     const style = document.createElement("style");
@@ -4837,11 +5593,14 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
     "Wallpaper settings panel did not open"
   );
   assert.equal(
-    await evaluate('getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'),
+    await evaluate(
+      'getComputedStyle(document.querySelector("[data-playback-profile]")).appearance'
+    ),
     "auto"
   );
   await click("[data-panel-page=appearance]");
-  const preference = "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
+  const preference =
+    "JSON.parse(localStorage.getItem('codex-wallpaper-p1-config')).settings";
   const border = "[data-setting=interfaceBorders]";
   const scopes = ["chat", "left", "sidebar", "right"];
   const affordance = await evaluate(`(() => {
@@ -4850,46 +5609,93 @@ test("Codex form resets leave wallpaper settings controls visible and operable",
   })()`);
   assert.notEqual(affordance.appearance, "none", border);
   assert.ok(affordance.width >= 16 && affordance.height >= 16, border);
-  assert.equal(await evaluate(
-    'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
-  ), true);
-  assert.equal(await evaluate(
-    'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
-  ), true);
-  assert.equal(await evaluate(
-    'document.querySelector("[data-surface-override-value=settings]") === null'
-  ), true);
+  assert.equal(
+    await evaluate(
+      'document.querySelector("[data-panel-region=appearance] [data-setting=surfaceOpacity]") === null'
+    ),
+    true
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector("[data-panel-region=appearance] .surface-overrides").closest("details") === null'
+    ),
+    true
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector("[data-surface-override-value=settings]") === null'
+    ),
+    true
+  );
 
-  const initialBorders = await evaluate(`document.querySelector('${border}').checked`);
+  const initialBorders = await evaluate(
+    `document.querySelector('${border}').checked`
+  );
   await click(border);
-  assert.equal(await evaluate(`${preference}.interfaceBorders`), !initialBorders);
+  assert.equal(
+    await evaluate(`${preference}.interfaceBorders`),
+    !initialBorders
+  );
   await click(border);
-  assert.equal(await evaluate(`${preference}.interfaceBorders`), initialBorders);
+  assert.equal(
+    await evaluate(`${preference}.interfaceBorders`),
+    initialBorders
+  );
 
   for (const scope of scopes) {
     const slider = `[data-surface-override-value=${scope}]`;
     const restore = `[data-restore-surface=${scope}]`;
-    const state = () => evaluate(`[
+    const state = () =>
+      evaluate(`[
       document.querySelector('${slider}').disabled,
       document.querySelector('${restore}').disabled
     ]`);
     assert.deepEqual(await state(), [false, false]);
-    assert.equal(await evaluate(`document.querySelector('${restore}').textContent`), "恢复默认");
-    const inherited = await evaluate(`document.querySelector('${slider}').value`);
+    assert.equal(
+      await evaluate(`document.querySelector('${restore}').textContent`),
+      "恢复默认"
+    );
+    const inherited = await evaluate(
+      `document.querySelector('${slider}').value`
+    );
     await click(slider);
     for (const type of ["rawKeyDown", "keyUp"]) {
-      await callMainPage(port, "Input.dispatchKeyEvent",
-        { type, key: "End", code: "End", windowsVirtualKeyCode: 35 }, options.page, true);
+      await callMainPage(
+        port,
+        "Input.dispatchKeyEvent",
+        { type, key: "End", code: "End", windowsVirtualKeyCode: 35 },
+        options.page,
+        true
+      );
     }
-    assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), 100);
-    assert.equal(await evaluate(`document.querySelector('${slider}').nextElementSibling.textContent`), "100%");
+    assert.equal(
+      await evaluate(`${preference}.surfaceOverrides.${scope}`),
+      100
+    );
+    assert.equal(
+      await evaluate(
+        `document.querySelector('${slider}').nextElementSibling.textContent`
+      ),
+      "100%"
+    );
     assert.deepEqual(await state(), [false, false]);
     for (let repeat = 0; repeat < 2; repeat += 1) {
       await click(restore);
       assert.deepEqual(await state(), [false, false]);
-      assert.equal(await evaluate(`document.querySelector('${slider}').value`), inherited);
-      assert.equal(await evaluate(`${preference}.surfaceOverrides.${scope}`), null);
-      assert.equal(await evaluate(`document.activeElement === document.querySelector('${restore}')`), true);
+      assert.equal(
+        await evaluate(`document.querySelector('${slider}').value`),
+        inherited
+      );
+      assert.equal(
+        await evaluate(`${preference}.surfaceOverrides.${scope}`),
+        null
+      );
+      assert.equal(
+        await evaluate(
+          `document.activeElement === document.querySelector('${restore}')`
+        ),
+        true
+      );
     }
   }
 });
@@ -5333,7 +6139,10 @@ test("appearance controls update wallpaper and surface layers without reloading 
       main: 0,
       header: 0,
       rightInner: 0,
-      rightComponents: [[0, "transparent"], [0, "transparent"]],
+      rightComponents: [
+        [0, "transparent"],
+        [0, "transparent"],
+      ],
       panelFilter: "none",
     },
     oneAtATime: [
@@ -5359,7 +6168,13 @@ test("appearance controls update wallpaper and surface layers without reloading 
     railBlur: "blur(14px)",
     previewKeepsRootStyle: true,
     bordersOff: true,
-    seamlessTop: { headerTint: true, nativeCorner: true, chatCoversInset: true, sharedTint: true, fadesContent: true },
+    seamlessTop: {
+      headerTint: true,
+      nativeCorner: true,
+      chatCoversInset: true,
+      sharedTint: true,
+      fadesContent: true,
+    },
     flushChatEdge: true,
     top: { changes: true, restores: true },
     settingsSurface: {
@@ -5563,12 +6378,19 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
   const id = "123456";
   const { port, options } = await startRuntimeFixture(t, {
     version: 1,
-    library: [{
-      id, title: "Startup scene fixture", type: "scene", playable: true,
-      assetDataUrl: "data:application/octet-stream;base64,AA==",
-    }],
+    library: [
+      {
+        id,
+        title: "Startup scene fixture",
+        type: "scene",
+        playable: true,
+        assetDataUrl: "data:application/octet-stream;base64,AA==",
+      },
+    ],
   });
-  await evaluateInPage(port, `
+  await evaluateInPage(
+    port,
+    `
     localStorage.setItem("codex-wallpaper-p1-config", JSON.stringify({
       enabled: true, active: { kind: "workshop", id: "${id}" },
       settings: { dim: 18, opacity: 100, fitMode: "cover" },
@@ -5599,10 +6421,18 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
         return scene;
       },
     };
-  `, options);
-  await evaluateInPage(port, runtimeSource(options.payload, false, false, true), options);
+  `,
+    options
+  );
+  await evaluateInPage(
+    port,
+    runtimeSource(options.payload, false, false, true),
+    options
+  );
 
-  const result = await evaluateInPage(port, `(async () => {
+  const result = await evaluateInPage(
+    port,
+    `(async () => {
     const wait = async (check) => {
       for (let attempt = 0; attempt < 120; attempt++) {
         const result = check();
@@ -5643,7 +6473,9 @@ test("desktop startup publishes a scene frame at the fitted viewport ratio and c
     await new Promise(resolve => setTimeout(resolve, 25));
     return { first, resized, fitted, frameCount: sceneRequests().length,
       enabled: previewRequests.at(-1).enabled };
-  })()`, options);
+  })()`,
+    options
+  );
   assert.deepEqual(result, {
     first: [800, 500, "cover", 18, false],
     resized: [800, 450, "cover", 18, false],
@@ -6440,15 +7272,23 @@ test("the read-only profile account row retains its native opacity and cursor wh
         <div id="other" role="menuitem" aria-disabled="true" data-disabled>Unavailable action</div>
       </div>
     </div>`);
-  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
+  const { port, options } = await startRuntimeFixture(
+    t,
+    { library: [] },
+    fixture
+  );
   const read = (source) => evaluateInPage(port, source, options);
-  const rows = () => read(`[...document.querySelectorAll('#account, #other')].map(row => {
+  const rows = () =>
+    read(`[...document.querySelectorAll('#account, #other')].map(row => {
     const { opacity, cursor } = getComputedStyle(row);
     return { opacity, cursor, disabled: row.getAttribute('aria-disabled'), nativeDisabled: row.hasAttribute('data-disabled') };
   })`);
   const native = await rows();
   assert.equal(native[0].opacity, "0.9");
-  const enabled = [native[0], { ...native[1], opacity: "0.48", cursor: "not-allowed" }];
+  const enabled = [
+    native[0],
+    { ...native[1], opacity: "0.48", cursor: "not-allowed" },
+  ];
 
   await applyStaticBackground(port, options);
   assert.deepEqual(await rows(), enabled);
@@ -6492,7 +7332,11 @@ test("usage rows retain their hover tooltip and open native usage settings while
         settings.hidden = false;
       };
     </script>`);
-  const { port, options } = await startRuntimeFixture(t, { library: [] }, fixture);
+  const { port, options } = await startRuntimeFixture(
+    t,
+    { library: [] },
+    fixture
+  );
   const read = (source) => evaluateInPage(port, source, options);
   const settingsVisible = '!document.querySelector("#usage-settings").hidden';
   await applyStaticBackground(port, options);
@@ -6511,8 +7355,17 @@ test("usage rows retain their hover tooltip and open native usage settings while
     { type: "mouseMoved", buttons: 0, pointerType: "mouse", ...point },
     options.page
   );
-  assert.ok(await read('document.querySelector("#reset-time").getBoundingClientRect().width > 0'));
-  assert.notEqual(await read('getComputedStyle(document.querySelector("#weekly")).backgroundColor'), "rgba(0, 0, 0, 0)");
+  assert.ok(
+    await read(
+      'document.querySelector("#reset-time").getBoundingClientRect().width > 0'
+    )
+  );
+  assert.notEqual(
+    await read(
+      'getComputedStyle(document.querySelector("#weekly")).backgroundColor'
+    ),
+    "rgba(0, 0, 0, 0)"
+  );
 
   await read('document.querySelector("#weekly").focus()');
   for (const type of ["keyDown", "keyUp"]) {
@@ -6527,7 +7380,12 @@ test("usage rows retain their hover tooltip and open native usage settings while
 
   await clickAtElementCenter(port, options, "#usage");
   await read("globalThis.__codexWallpaperApi.disable(false)");
-  assert.equal(await read('document.querySelector("#weekly").getAttribute("aria-disabled")'), "true");
+  assert.equal(
+    await read(
+      'document.querySelector("#weekly").getAttribute("aria-disabled")'
+    ),
+    "true"
+  );
   await clickAtElementCenter(port, options, "#weekly");
   assert.equal(await read(settingsVisible), false);
   await clickAtElementCenter(port, options, "#manage");
@@ -6536,7 +7394,12 @@ test("usage rows retain their hover tooltip and open native usage settings while
   await clickAtElementCenter(port, options, "#usage");
   await clickAtElementCenter(port, options, "#weekly");
   assert.equal(await read(settingsVisible), true);
-  assert.equal(await read('document.querySelector("#profile-summary").getAttribute("aria-disabled")'), "true");
+  assert.equal(
+    await read(
+      'document.querySelector("#profile-summary").getAttribute("aria-disabled")'
+    ),
+    "true"
+  );
 });
 
 test("modern tab side panels use the wallpaper surface material", async (t) => {
@@ -6562,7 +7425,11 @@ test("modern tab side panels use the wallpaper surface material", async (t) => {
   );
   assert.notEqual(adapted.surface, native.surface);
   assert.notEqual(adapted.surface, "rgba(0, 0, 0, 0)");
-  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  await evaluateInPage(
+    port,
+    "globalThis.__codexWallpaperApi.disable()",
+    options
+  );
   assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
@@ -6682,7 +7549,11 @@ test("the native settings dialog shows the wallpaper without a background tint",
   assert.equal(light.backdrop, adapted.backdrop);
   assert.equal(alpha(light.backdrop), 0);
   assert.equal(light.blur, adapted.blur);
-  await evaluateInPage(port, "globalThis.__codexWallpaperApi.disable()", options);
+  await evaluateInPage(
+    port,
+    "globalThis.__codexWallpaperApi.disable()",
+    options
+  );
   assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
@@ -8119,10 +8990,14 @@ test("static background is single, removable and persists disabled", async (t) =
     options
   );
   assert.deepEqual(
-    await evaluateInPage(port, `[
+    await evaluateInPage(
+      port,
+      `[
       nativeShortcutEvents,
       document.querySelector("#${controlRootId} .panel.open") !== null
-    ]`, options),
+    ]`,
+      options
+    ),
     [1, false]
   );
   await pressWallpaperShortcut(port, options, "S");
@@ -8170,10 +9045,14 @@ test("static background is single, removable and persists disabled", async (t) =
   );
   await pressWallpaperShortcut(port, options, "S");
   assert.deepEqual(
-    await evaluateInPage(port, `[
+    await evaluateInPage(
+      port,
+      `[
       document.querySelector("#${controlRootId} .panel.open") !== null,
       document.activeElement.matches("[data-composer-surface-variant]")
-    ]`, options),
+    ]`,
+      options
+    ),
     [false, true]
   );
   await metrics.send("Emulation.setDeviceMetricsOverride", {
@@ -8260,7 +9139,10 @@ test("static background is single, removable and persists disabled", async (t) =
     { visible: true, clear: true, hitTestable: true }
   );
   await pressWallpaperShortcut(port, options, "S");
-  for (const [width, height] of [[1290, 900], [360, 700]]) {
+  for (const [width, height] of [
+    [1290, 900],
+    [360, 700],
+  ]) {
     await metrics.send("Emulation.setDeviceMetricsOverride", {
       width,
       height,
@@ -8285,7 +9167,9 @@ test("static background is single, removable and persists disabled", async (t) =
       options
     );
     assert.equal(layouts.length, 3);
-    assert.ok(layouts[0].fitsWindow && layouts[0].width > 0 && layouts[0].height > 0);
+    assert.ok(
+      layouts[0].fitsWindow && layouts[0].width > 0 && layouts[0].height > 0
+    );
     assert.deepEqual(layouts, [layouts[0], layouts[0], layouts[0]]);
     await evaluateInPage(
       port,

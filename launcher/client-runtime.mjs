@@ -9,14 +9,17 @@ function createRuntimeStyles(rootId, controlsId) {
   const canvas = surfaceColor("var(--codex-wallpaper-surface-base)", "chat");
   const top = surfaceColor(surface, "sidebar");
   const right = surfaceColor(surface, "right");
-  const menuFrame = "body [data-app-shell-frame][data-app-shell-application-menu-bar='true']";
+  const menuFrame =
+    "body [data-app-shell-frame][data-app-shell-application-menu-bar='true']";
   const topInset = "var(--codex-wallpaper-top-inset, 0px)";
   const topHeight = `calc(var(--app-shell-application-menu-height, 0px) + ${topInset})`;
   const scrollFade = "[aria-hidden='true'][class*='--app-shell-content-fade,']";
-  const workspace = "> [data-app-shell-workspace-row] > [data-app-shell-workspace]";
+  const workspace =
+    "> [data-app-shell-workspace-row] > [data-app-shell-workspace]";
   const workspaceFrame = `body [data-app-shell-frame]:has(${workspace} > [data-app-shell-surface-backing])`;
   const chatLayout = "[data-app-shell-main-content-layout]";
-  const rightFocus = "[data-app-shell-main-surface] [data-app-shell-focus-area='right-panel']";
+  const rightFocus =
+    "[data-app-shell-main-surface] [data-app-shell-focus-area='right-panel']";
   const paneViewport = "[data-app-shell-pane-content-viewport]";
   const rightViewport = `${rightFocus} ${paneViewport}`;
   const rightBody = `${rightFocus}:has(${paneViewport})`;
@@ -566,7 +569,12 @@ function createCodexWallpaperRuntime(
     interfaceBlur: { group: "appearance", type: "number", min: 0, max: 24 },
     chatBlur: { group: "appearance", type: "number", min: 0, max: 24 },
     rightBlur: { group: "appearance", type: "number", min: 0, max: 24 },
-    projectSidebarBlur: { group: "appearance", type: "number", min: 0, max: 24 },
+    projectSidebarBlur: {
+      group: "appearance",
+      type: "number",
+      min: 0,
+      max: 24,
+    },
     interfaceBorders: { group: "appearance", type: "boolean" },
     surfaceOverrides: { group: "appearance", type: "surfaceOverrides" },
     fps: { group: "playback", type: "number", min: 1, max: 30 },
@@ -586,7 +594,9 @@ function createCodexWallpaperRuntime(
     pauseWhenHidden: { group: "playback", type: "boolean" },
   };
   const settingKeys = new Set(Object.keys(settingDefinitions));
-  const surfaceScopes = new Set(Object.keys(defaults.settings.surfaceOverrides));
+  const surfaceScopes = new Set(
+    Object.keys(defaults.settings.surfaceOverrides)
+  );
 
   function cloneSettings(source = defaults.settings) {
     const next = structuredClone(defaults.settings);
@@ -751,6 +761,11 @@ function createCodexWallpaperRuntime(
   const assetTransfers = new Map();
   const assetFileTransfers = new Map();
   const channel = new BroadcastChannel("codex-wallpaper-p1");
+  const pageId = crypto.randomUUID();
+  const resetPeers = new Set();
+  const resetTimeoutMs = 1500;
+  let resetRequest = null;
+  let resetWarning = null;
   const runtimeEvents = new AbortController();
   const previewObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -969,7 +984,9 @@ function createCodexWallpaperRuntime(
   function setStatus(message) {
     if (!status) return;
     status.textContent = message;
-    const title = panel?.querySelector(".current-wallpaper strong")?.textContent;
+    const title = panel?.querySelector(
+      ".current-wallpaper strong"
+    )?.textContent;
     status.hidden = Boolean(
       title && (message === title || message.startsWith(`${title} · `))
     );
@@ -1049,17 +1066,27 @@ function createCodexWallpaperRuntime(
     syncCurrentWallpaper();
     if (desktopStartup) {
       committedSelection = JSON.stringify(config.active);
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (media !== next || !config.enabled ||
-            committedSelection !== JSON.stringify(config.active)) return;
-        presentedMedia = next;
-        startupFrameAt = Date.now();
-        settleStartupPresentation();
-        setTimeout(() => {
-          if (config.enabled && media === next && !runtimeEvents.signal.aborted)
-            publishStartupPreview();
-        }, 0);
-      }));
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (
+            media !== next ||
+            !config.enabled ||
+            committedSelection !== JSON.stringify(config.active)
+          )
+            return;
+          presentedMedia = next;
+          startupFrameAt = Date.now();
+          settleStartupPresentation();
+          setTimeout(() => {
+            if (
+              config.enabled &&
+              media === next &&
+              !runtimeEvents.signal.aborted
+            )
+              publishStartupPreview();
+          }, 0);
+        })
+      );
     }
   }
 
@@ -1080,14 +1107,29 @@ function createCodexWallpaperRuntime(
       }
       context.drawImage(picture, 0, 0, canvas.width, canvas.height);
     } else {
-      const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+      const gradient = context.createLinearGradient(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
       gradient.addColorStop(0, "#1b2ab5");
       gradient.addColorStop(0.48, "#5d32b8");
       gradient.addColorStop(1, "#d44c87");
       context.fillStyle = gradient;
       context.fillRect(0, 0, canvas.width, canvas.height);
-      for (const [x, y, radius, color] of [[0.18, 0.2, 0.36, "#57d7ff"], [0.82, 0.78, 0.38, "#ff9ac6"]]) {
-        const shine = context.createRadialGradient(x * canvas.width, y * canvas.height, 0, x * canvas.width, y * canvas.height, radius * canvas.width);
+      for (const [x, y, radius, color] of [
+        [0.18, 0.2, 0.36, "#57d7ff"],
+        [0.82, 0.78, 0.38, "#ff9ac6"],
+      ]) {
+        const shine = context.createRadialGradient(
+          x * canvas.width,
+          y * canvas.height,
+          0,
+          x * canvas.width,
+          y * canvas.height,
+          radius * canvas.width
+        );
         shine.addColorStop(0, color);
         shine.addColorStop(1, "transparent");
         context.fillStyle = shine;
@@ -1095,7 +1137,9 @@ function createCodexWallpaperRuntime(
       }
     }
     const poster = canvas.toDataURL("image/jpeg", 0.9);
-    return poster.length <= 1_700_000 ? poster : canvas.toDataURL("image/jpeg", 0.78);
+    return poster.length <= 1_700_000
+      ? poster
+      : canvas.toDataURL("image/jpeg", 0.78);
   }
 
   function startupScenePoster(scene, fit) {
@@ -1106,7 +1150,7 @@ function createCodexWallpaperRuntime(
       !canvas.clientHeight
     )
       return undefined;
-    const aspect = Math.round(100 * canvas.clientWidth / canvas.clientHeight);
+    const aspect = Math.round((100 * canvas.clientWidth) / canvas.clientHeight);
     if (
       scenePreview?.scene === scene &&
       scenePreview.fit === fit &&
@@ -1115,8 +1159,9 @@ function createCodexWallpaperRuntime(
       return scenePreview.poster;
     // WebWallGL 3.0.0 exposes its editor through this runtime link. Its capture
     // copies the frame before WebGL clears the buffer, without resizing the scene.
-    const editor = globalThis[Symbol.for("webwallgl.runtime-link")]
-      ?.get(scene)?.sceneCtl?.editor;
+    const editor =
+      globalThis[Symbol.for("webwallgl.runtime-link")]?.get(scene)?.sceneCtl
+        ?.editor;
     if (typeof editor?.captureFrame !== "function") return undefined;
 
     const capture = { scene, fit, aspect, poster: undefined };
@@ -1124,9 +1169,13 @@ function createCodexWallpaperRuntime(
     void (async () => {
       try {
         const frame = await editor.captureFrame();
-        if (scenePreview !== capture || playback?.scene !== scene || !config.enabled)
+        if (
+          scenePreview !== capture ||
+          playback?.scene !== scene ||
+          !config.enabled
+        )
           return;
-        if (Math.abs(100 * frame.width / frame.height - aspect) > 1) return;
+        if (Math.abs((100 * frame.width) / frame.height - aspect) > 1) return;
         capture.poster = makeStartupPoster(frame);
         publishStartupPreview();
       } catch {
@@ -1470,7 +1519,14 @@ function createCodexWallpaperRuntime(
   function applyVisualSettings(key) {
     if (
       !key ||
-      ["surfaceOpacity", "surfaceOverrides", "interfaceBlur", "chatBlur", "rightBlur", "projectSidebarBlur"].includes(key)
+      [
+        "surfaceOpacity",
+        "surfaceOverrides",
+        "interfaceBlur",
+        "chatBlur",
+        "rightBlur",
+        "projectSidebarBlur",
+      ].includes(key)
     )
       applyInterfaceAppearance();
     if (!key || key === "interfaceBorders") applyInterfaceBorders();
@@ -1555,7 +1611,9 @@ function createCodexWallpaperRuntime(
   }
 
   function syncSurfaceOverrideControls() {
-    for (const input of panel.querySelectorAll("[data-surface-override-value]")) {
+    for (const input of panel.querySelectorAll(
+      "[data-surface-override-value]"
+    )) {
       const scope = input.dataset.surfaceOverrideValue;
       const value = String(surfaceOpacityValue(scope));
       if (input.value !== value) input.value = value;
@@ -1733,7 +1791,9 @@ function createCodexWallpaperRuntime(
       panel.querySelector("[data-panel-region='library']").hidden
     )
       return;
-    const contentRect = panel.querySelector(".panel-content").getBoundingClientRect();
+    const contentRect = panel
+      .querySelector(".panel-content")
+      .getBoundingClientRect();
     for (const item of panel.querySelectorAll(".card:not([hidden])")) {
       const visual = item.querySelector(".thumb[data-preview-id]");
       if (!visual) continue;
@@ -1897,7 +1957,12 @@ function createCodexWallpaperRuntime(
     const drawFirstFrame = () => {
       if (pending.settled) return;
       if (!isCurrentStage(generation, pending)) return;
-      if (video.seeking || !video.videoWidth || !video.videoHeight || video.readyState < 2)
+      if (
+        video.seeking ||
+        !video.videoWidth ||
+        !video.videoHeight ||
+        video.readyState < 2
+      )
         return;
       pending.settled = true;
       finishPending(pending);
@@ -2121,15 +2186,20 @@ function createCodexWallpaperRuntime(
   }
 
   function requestWorkshopAsset(entry) {
-    if (assetRequestTokens.has(entry.id) ||
-        typeof globalThis.__codexWallpaperHostRequest !== "function") return;
+    if (
+      assetRequestTokens.has(entry.id) ||
+      typeof globalThis.__codexWallpaperHostRequest !== "function"
+    )
+      return;
     const requestToken = crypto.randomUUID();
     assetRequestTokens.set(entry.id, requestToken);
-    globalThis.__codexWallpaperHostRequest(JSON.stringify({
-      type: "load-asset",
-      id: entry.id,
-      request: requestToken,
-    }));
+    globalThis.__codexWallpaperHostRequest(
+      JSON.stringify({
+        type: "load-asset",
+        id: entry.id,
+        request: requestToken,
+      })
+    );
   }
 
   async function applyActive() {
@@ -2156,9 +2226,10 @@ function createCodexWallpaperRuntime(
     } else if (active.kind === "imported") {
       const prepared = startupImport;
       startupImport = null;
-      const item = prepared?.id === active.id
-        ? await prepared.result
-        : await readImported(active.id);
+      const item =
+        prepared?.id === active.id
+          ? await prepared.result
+          : await readImported(active.id);
       if (generation !== activeGeneration) return state();
       if (!item?.blob) {
         recoverFailedMedia("已跳过缺失的素材");
@@ -2244,14 +2315,22 @@ function createCodexWallpaperRuntime(
   function scheduleRotation() {
     stopRotation();
     const minutes = Number(config.settings.rotationMinutes);
-    if (config.enabled && minutes > 0 && !importedLibraryLoaded &&
-        config.playlist.some((entry) => entry.kind === "imported")) {
+    if (
+      config.enabled &&
+      minutes > 0 &&
+      !importedLibraryLoaded &&
+      config.playlist.some((entry) => entry.kind === "imported")
+    ) {
       if (!rotationImportsLoading) {
         rotationImportsLoading = true;
         void loadImported()
-          .then(() => { if (root && importedLibraryLoaded) scheduleRotation(); })
+          .then(() => {
+            if (root && importedLibraryLoaded) scheduleRotation();
+          })
           .catch(() => {})
-          .finally(() => { rotationImportsLoading = false; });
+          .finally(() => {
+            rotationImportsLoading = false;
+          });
       }
       return;
     }
@@ -2405,7 +2484,8 @@ function createCodexWallpaperRuntime(
       document.visibilityState === "visible" &&
       panel?.classList.contains("open") &&
       !panel.querySelector("[data-panel-region='library']").hidden &&
-      canvas && !canvas.hidden
+      canvas &&
+      !canvas.hidden
         ? playback?.video
         : null;
     if (video === wallpaperPreviewVideo) return;
@@ -2451,10 +2531,20 @@ function createCodexWallpaperRuntime(
       if (canvas.width !== targetWidth) canvas.width = targetWidth;
       if (canvas.height !== targetHeight) canvas.height = targetHeight;
       context.drawImage(
-        video, 0, cropTop, width, croppedHeight,
-        0, 0, targetWidth, targetHeight
+        video,
+        0,
+        cropTop,
+        width,
+        croppedHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight
       );
-      nextFrameAt = Math.max(nextFrameAt + frameInterval, now + frameInterval / 2);
+      nextFrameAt = Math.max(
+        nextFrameAt + frameInterval,
+        now + frameInterval / 2
+      );
     }
 
     function onVideoFrame() {
@@ -2470,9 +2560,12 @@ function createCodexWallpaperRuntime(
   function syncCurrentWallpaper(entry) {
     if (!panel?.classList.contains("open")) return;
     if (entry === undefined) entry = findEntry(config.active);
-    const title = entry?.title ||
+    const title =
+      entry?.title ||
       (config.active.kind === "builtin" ? "内置渐变" : "当前素材不可用");
-    for (const heading of panel.querySelectorAll("[data-current-wallpaper-title]")) {
+    for (const heading of panel.querySelectorAll(
+      "[data-current-wallpaper-title]"
+    )) {
       setControlText(heading, title);
       heading.title = title;
     }
@@ -2480,13 +2573,16 @@ function createCodexWallpaperRuntime(
     const canvas = banner.querySelector("canvas");
     const image = banner.querySelector("img");
     const matchingMedia = mediaSelection === entryKey(config.active);
-    const video = matchingMedia && playback?.video?.requestVideoFrameCallback
-      ? playback.video
-      : null;
-    const originalImage = matchingMedia && entry?.type === "image"
-      ? media?.querySelector("img")?.currentSrc
-      : null;
-    const cover = entry?.thumbnailKind === "video" ? null : entry?.previewDataUrl;
+    const video =
+      matchingMedia && playback?.video?.requestVideoFrameCallback
+        ? playback.video
+        : null;
+    const originalImage =
+      matchingMedia && entry?.type === "image"
+        ? media?.querySelector("img")?.currentSrc
+        : null;
+    const cover =
+      entry?.thumbnailKind === "video" ? null : entry?.previewDataUrl;
     const preview = originalImage || cover;
     banner.classList.toggle("has-preview", Boolean(video || originalImage));
     canvas.hidden = !video;
@@ -2496,15 +2592,23 @@ function createCodexWallpaperRuntime(
     }
     image.hidden = Boolean(video || !preview);
     image.toggleAttribute("data-cover", !originalImage);
-    if (!image.hidden && image.getAttribute("src") !== preview) image.src = preview;
+    if (!image.hidden && image.getAttribute("src") !== preview)
+      image.src = preview;
     if (image.hidden) image.removeAttribute("src");
     banner.querySelector("small").hidden = Boolean(
-      image.hidden || entry?.type !== "video" || !failedEntryKeys.has(entryKey(entry))
+      image.hidden ||
+      entry?.type !== "video" ||
+      !failedEntryKeys.has(entryKey(entry))
     );
     syncWallpaperPreviewPlayback();
     if (status?.textContent) setStatus(status.textContent);
-    if (entry && !video && !preview && entry.thumbnailKind !== "video" &&
-        !panel.querySelector("[data-panel-region='library']").hidden)
+    if (
+      entry &&
+      !video &&
+      !preview &&
+      entry.thumbnailKind !== "video" &&
+      !panel.querySelector("[data-panel-region='library']").hidden
+    )
       requestPreview(entry.id);
   }
 
@@ -2961,23 +3065,29 @@ function createCodexWallpaperRuntime(
   }
 
   async function removeImportedMedia() {
-    clearImportedPreviews();
-    const db = await openDatabase();
-    await requestResult(
-      db.transaction(dbStore, "readwrite").objectStore(dbStore).clear()
-    );
-    await loadImported();
-    config.favorites = config.favorites.filter(
-      (entry) => entry.kind !== "imported"
-    );
-    config.playlist = config.playlist.filter(
-      (entry) => entry.kind !== "imported"
-    );
-    if (config.active.kind === "imported") config.active = defaults.active;
-    saveConfig();
-    await applyActive();
-    renderPanel();
-    setSettingsStatus("已移除导入素材");
+    try {
+      const db = await openDatabase();
+      await requestResult(
+        db.transaction(dbStore, "readwrite").objectStore(dbStore).clear()
+      );
+      await loadImported();
+      clearImportedPreviews();
+      config.favorites = config.favorites.filter(
+        (entry) => entry.kind !== "imported"
+      );
+      config.playlist = config.playlist.filter(
+        (entry) => entry.kind !== "imported"
+      );
+      if (config.active.kind === "imported") config.active = defaults.active;
+      saveConfig();
+      await applyActive();
+      renderPanel();
+      setSettingsStatus("已移除导入素材");
+    } catch (error) {
+      setStatus(
+        `移除失败：${error?.message || "导入素材存储不可用"}，已保留当前画面`
+      );
+    }
   }
 
   function settingsGroup(title, ...controls) {
@@ -3101,73 +3211,136 @@ function createCodexWallpaperRuntime(
   }
 
   async function importFiles(files) {
-    const db = await openDatabase();
-    const transaction = db.transaction(dbStore, "readwrite");
-    const store = transaction.objectStore(dbStore);
-    let first = null;
-    for (const file of files) {
-      const type = mediaType(file);
-      if (!type) continue;
-      const id = `import-${Date.now()}-${crypto.randomUUID()}`;
-      first ??= id;
-      store.put({
-        id,
-        title: file.name,
-        type,
-        blob: file,
-        createdAt: Date.now(),
+    try {
+      const db = await openDatabase();
+      const transaction = db.transaction(dbStore, "readwrite");
+      const store = transaction.objectStore(dbStore);
+      let first = null;
+      for (const file of files) {
+        const type = mediaType(file);
+        if (!type) continue;
+        const id = `import-${Date.now()}-${crypto.randomUUID()}`;
+        first ??= id;
+        store.put({
+          id,
+          title: file.name,
+          type,
+          blob: file,
+          createdAt: Date.now(),
+        });
+      }
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
       });
+      await loadImported();
+      if (first) {
+        config.active = { kind: "imported", id: first };
+        saveConfig();
+        await applyActive();
+      }
+      renderPanel();
+    } catch (error) {
+      setStatus(
+        `导入失败：${error?.message || "导入素材存储不可用"}，已保留当前画面`
+      );
     }
-    await new Promise((resolve, reject) => {
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error);
-    });
-    await loadImported();
-    if (first) {
-      config.active = { kind: "imported", id: first };
-      saveConfig();
-      await applyActive();
-    }
-    renderPanel();
   }
 
   async function resetAll() {
-    cancelRuntimeWork();
-    channel.postMessage({ type: "prepare-reset" });
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    const requestId = crypto.randomUUID();
+    resetWarning = null;
+    const peers = await waitForResetPeers(requestId);
     if (database) database.close();
     database = null;
+    openingDatabase = null;
     let deleted = false;
-    await new Promise((resolve) => {
-      const request = indexedDB.deleteDatabase(dbName);
-      request.onsuccess = () => {
-        deleted = true;
-        resolve();
-      };
-      request.onerror = resolve;
-      request.onblocked = () => {
-        setStatus("其他窗口仍占用导入素材，请关闭其他窗口后重试");
-        resolve();
-      };
-    });
+    let blocked = false;
+    let deleteError = null;
+    try {
+      await new Promise((resolve) => {
+        const request = indexedDB.deleteDatabase(dbName);
+        request.onsuccess = () => {
+          deleted = true;
+          resolve();
+        };
+        request.onerror = () => {
+          deleteError = request.error;
+          resolve();
+        };
+        request.onblocked = () => {
+          blocked = true;
+          resolve();
+        };
+      });
+    } catch (error) {
+      deleteError = error;
+    }
     if (!deleted) {
-      if (!root) mount();
-      await applyActive();
+      channel.postMessage({ type: "reset-cancelled", requestId });
+      if (!root) {
+        mount();
+        await applyActive();
+      }
+      const unresponsive = peers.unresponsive
+        ? `；${peers.unresponsive} 个窗口未响应`
+        : "";
+      setStatus(
+        blocked
+          ? `清除受阻：其他窗口仍占用导入素材，请关闭其他窗口后重试${unresponsive}`
+          : `清除失败：${deleteError?.message || "无法删除导入素材"}${unresponsive}`
+      );
       return state();
     }
+    cancelRuntimeWork(true);
     removeMountedRuntime();
     imported = [];
     config = { ...structuredClone(defaults), enabled: false };
     saveConfig();
     installHotkey();
+    if (peers.unresponsive)
+      resetWarning = `项目数据已清除；${peers.unresponsive} 个窗口未响应，请关闭它们后复核导入库`;
     return state();
+  }
+
+  function waitForResetPeers(requestId) {
+    const expected = resetPeers.size;
+    return new Promise((resolve) => {
+      const acknowledged = new Set();
+      let settled = false;
+      const finish = (timedOut) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(deadline);
+        if (resetRequest?.requestId === requestId) resetRequest = null;
+        resolve({
+          unresponsive: expected - acknowledged.size,
+          timedOut,
+        });
+      };
+      const deadline = setTimeout(() => finish(true), resetTimeoutMs);
+      resetRequest = {
+        requestId,
+        acknowledge(id) {
+          acknowledged.add(id);
+          if (acknowledged.size >= expected) finish(false);
+        },
+      };
+      channel.postMessage({ type: "prepare-reset", requestId });
+      if (expected === 0) finish(false);
+    });
   }
 
   function bindUsageMenuInteraction() {
     const events = new AbortController();
     const marker = "data-codex-wallpaper-usage-action";
     const usageLabels = new Set([
-      "5-hour limit", "Weekly limit", "Credits", "5 小时用量上限", "每周限额", "额度",
+      "5-hour limit",
+      "Weekly limit",
+      "Credits",
+      "5 小时用量上限",
+      "每周限额",
+      "额度",
     ]);
     let currentMenu;
     let usageRows = [];
@@ -3182,26 +3355,39 @@ function createCodexWallpaperRuntime(
     }
 
     function useMenu(menu) {
-      const trigger = document.getElementById(menu.getAttribute("aria-labelledby"));
+      const trigger = document.getElementById(
+        menu.getAttribute("aria-labelledby")
+      );
       if (
         !trigger?.matches('button[aria-haspopup="menu"]') ||
         trigger.getAttribute("aria-controls") !== menu.id ||
         !/^(用量|Usage)$/.test(trigger.getAttribute("aria-label"))
-      ) return false;
+      )
+        return false;
 
-      const items = [...menu.querySelectorAll('[role="menuitem"][data-radix-collection-item]')];
-      const action = items.find((item) =>
-        !item.matches('[aria-disabled="true"], [data-disabled]') &&
-        /^(管理用量|Manage usage)$/i.test(item.textContent.trim())
+      const items = [
+        ...menu.querySelectorAll(
+          '[role="menuitem"][data-radix-collection-item]'
+        ),
+      ];
+      const action = items.find(
+        (item) =>
+          !item.matches('[aria-disabled="true"], [data-disabled]') &&
+          /^(管理用量|Manage usage)$/i.test(item.textContent.trim())
       );
       if (!action) return false;
 
       restoreRows();
       currentMenu = menu;
       manageUsage = action;
-      usageRows = items.filter((item) =>
-        item.matches('[aria-disabled="true"]:not([data-disabled])') &&
-        usageLabels.has(item.querySelector('[data-menu-row-content] > :first-child')?.textContent.trim())
+      usageRows = items.filter(
+        (item) =>
+          item.matches('[aria-disabled="true"]:not([data-disabled])') &&
+          usageLabels.has(
+            item
+              .querySelector("[data-menu-row-content] > :first-child")
+              ?.textContent.trim()
+          )
       );
       for (const row of usageRows) {
         // Keep the host's row and its reset-time tooltip in place.
@@ -3213,24 +3399,32 @@ function createCodexWallpaperRuntime(
 
     function handleMenuEvent(event) {
       if (!(event.target instanceof Element)) return;
-      const menu = event.target.closest('[role="menu"][data-radix-menu-content][data-state="open"]');
+      const menu = event.target.closest(
+        '[role="menu"][data-radix-menu-content][data-state="open"]'
+      );
       if (!menu || (menu !== currentMenu && !useMenu(menu))) return;
-      const activates = event.type === "click" ||
-        (event.type === "keydown" && !event.repeat &&
+      const activates =
+        event.type === "click" ||
+        (event.type === "keydown" &&
+          !event.repeat &&
           (event.key === "Enter" || event.key === " "));
       if (
         !activates ||
         !usageRows.includes(event.target.closest(`[${marker}]`)) ||
         !manageUsage.isConnected ||
         !menu.contains(manageUsage)
-      ) return;
+      )
+        return;
       event.preventDefault();
       event.stopPropagation();
       manageUsage.click();
     }
 
     for (const type of ["focusin", "pointerover", "click", "keydown"]) {
-      document.addEventListener(type, handleMenuEvent, { capture: true, signal: events.signal });
+      document.addEventListener(type, handleMenuEvent, {
+        capture: true,
+        signal: events.signal,
+      });
     }
     return () => {
       events.abort();
@@ -3247,9 +3441,15 @@ function createCodexWallpaperRuntime(
 
     function update() {
       frame = null;
-      const scroll = shadow.querySelector("[data-file-tree-virtualized-scroll]");
-      const currentList = scroll?.querySelector("[data-file-tree-virtualized-list]");
-      const currentPinned = scroll?.querySelector("[data-file-tree-sticky-overlay-content]");
+      const scroll = shadow.querySelector(
+        "[data-file-tree-virtualized-scroll]"
+      );
+      const currentList = scroll?.querySelector(
+        "[data-file-tree-virtualized-list]"
+      );
+      const currentPinned = scroll?.querySelector(
+        "[data-file-tree-sticky-overlay-content]"
+      );
       if (currentList !== list) {
         restoreClip?.();
         list = currentList;
@@ -3283,7 +3483,10 @@ function createCodexWallpaperRuntime(
     const resizeObserver = new ResizeObserver(schedule);
     const observer = new MutationObserver(schedule);
     observer.observe(shadow, { childList: true, subtree: true });
-    shadow.addEventListener("scroll", schedule, { capture: true, signal: events.signal });
+    shadow.addEventListener("scroll", schedule, {
+      capture: true,
+      signal: events.signal,
+    });
     update();
     return () => {
       events.abort();
@@ -3295,7 +3498,8 @@ function createCodexWallpaperRuntime(
   }
 
   function bindRightFileTreeClipping() {
-    const selector = "[data-app-shell-frame] [data-app-shell-main-surface] [data-app-shell-focus-area='right-panel'] [data-app-shell-pane-content-viewport] file-tree-container";
+    const selector =
+      "[data-app-shell-frame] [data-app-shell-main-surface] [data-app-shell-focus-area='right-panel'] [data-app-shell-pane-content-viewport] file-tree-container";
     const attached = new Map();
     function sync() {
       const trees = new Set(document.querySelectorAll(selector));
@@ -3313,11 +3517,17 @@ function createCodexWallpaperRuntime(
 
     const containsTree = (node) =>
       node.nodeType === Node.ELEMENT_NODE &&
-      (node.matches("file-tree-container") || node.querySelector("file-tree-container"));
+      (node.matches("file-tree-container") ||
+        node.querySelector("file-tree-container"));
     const observer = new MutationObserver((records) => {
-      if (records.some(({ addedNodes, removedNodes }) =>
-        Array.from(addedNodes).some(containsTree) || Array.from(removedNodes).some(containsTree)
-      )) sync();
+      if (
+        records.some(
+          ({ addedNodes, removedNodes }) =>
+            Array.from(addedNodes).some(containsTree) ||
+            Array.from(removedNodes).some(containsTree)
+        )
+      )
+        sync();
     });
     observer.observe(document.body, { childList: true, subtree: true });
     sync();
@@ -3343,7 +3553,7 @@ function createCodexWallpaperRuntime(
       node.remove();
   }
 
-  function cancelRuntimeWork() {
+  function cancelRuntimeWork(clearCachedAssets = false) {
     cancelStartupMotion();
     revokePlayback();
     activeGeneration += 1;
@@ -3358,6 +3568,11 @@ function createCodexWallpaperRuntime(
       cancelAssetFileTransfer(token);
     for (const asset of runtimeAssets.values()) {
       if (asset.assetUrl?.startsWith("blob:")) releaseObjectUrl(asset.assetUrl);
+    }
+    if (clearCachedAssets) {
+      runtimeAssets.clear();
+      failedEntryKeys.clear();
+      failedPreviewIds.clear();
     }
     previewObserver.disconnect();
     database?.close();
@@ -3378,6 +3593,14 @@ function createCodexWallpaperRuntime(
     mediaSelection = null;
     presentedMedia = null;
     committedSelection = null;
+    previewKey = null;
+    previewPicture = null;
+    previewImageData = null;
+    scenePreview = null;
+    wallpaperPreviewVideo = null;
+    wallpaperPreviewFrame = null;
+    clearTimeout(previewResizeTimer);
+    previewResizeTimer = null;
     dim = null;
     status = null;
   }
@@ -3411,7 +3634,11 @@ function createCodexWallpaperRuntime(
       previewObserver.unobserve(visual);
       renderThumb(previewEntry, visual);
     }
-    if (previewEntry && entry.id === config.active.id && previewEntry.kind === config.active.kind)
+    if (
+      previewEntry &&
+      entry.id === config.active.id &&
+      previewEntry.kind === config.active.kind
+    )
       syncCurrentWallpaper(previewEntry);
     if (isActiveWorkshop(entry.id) && item?.type === "web" && !item.webHtml)
       return applyActive();
@@ -3524,8 +3751,11 @@ function createCodexWallpaperRuntime(
   }
 
   function beginAssetFileTransfer(entry, layout = null, requestToken = null) {
-    if ((!root && !cancelMainInterfaceWait) ||
-        !isCurrentAssetRequest(entry.id, requestToken)) return null;
+    if (
+      (!root && !cancelMainInterfaceWait) ||
+      !isCurrentAssetRequest(entry.id, requestToken)
+    )
+      return null;
     const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const input = document.createElement("input");
     input.type = "file";
@@ -3598,7 +3828,10 @@ function createCodexWallpaperRuntime(
   }
 
   function restorePanelFocus() {
-    if (panel?.contains(document.activeElement) && panelReturnFocus?.isConnected)
+    if (
+      panel?.contains(document.activeElement) &&
+      panelReturnFocus?.isConnected
+    )
       panelReturnFocus.focus({ preventScroll: true });
     panelReturnFocus = null;
   }
@@ -3733,8 +3966,16 @@ function createCodexWallpaperRuntime(
     search.oninput = applyFilters;
     type.onchange = applyFilters;
     favorites.onchange = applyFilters;
-    content.addEventListener("scroll", requestVisiblePreviews, { passive: true });
-    libraryBody.append(currentWallpaper(), filters, status, librarySummary, list);
+    content.addEventListener("scroll", requestVisiblePreviews, {
+      passive: true,
+    });
+    libraryBody.append(
+      currentWallpaper(),
+      filters,
+      status,
+      librarySummary,
+      list
+    );
     library.append(libraryBody);
 
     const playback = document.createElement("section");
@@ -3767,8 +4008,7 @@ function createCodexWallpaperRuntime(
     recoveryTitle.textContent = "预设";
     const resetHelp = document.createElement("p");
     resetHelp.className = "playlist-summary";
-    resetHelp.textContent =
-      "保存画面与播放参数。导入导出仅包含设置。";
+    resetHelp.textContent = "保存画面与播放参数。导入导出仅包含设置。";
     const presetEditor = document.createElement("div");
     presetEditor.className = "preset-editor";
     const presetName = document.createElement("input");
@@ -3864,7 +4104,12 @@ function createCodexWallpaperRuntime(
         }, 4000);
         return;
       }
-      await resetAll();
+      try {
+        await resetAll();
+      } finally {
+        resetArmed = false;
+        reset.textContent = "停用并清除本项目数据";
+      }
     };
     recovery.append(
       recoveryTitle,
@@ -4063,11 +4308,20 @@ function createCodexWallpaperRuntime(
           releaseObjectUrl(asset.assetUrl);
       }
       if (active.kind === "imported" && !startupImport) {
-        startupImport = { id: active.id, result: readImported(active.id).catch(() => null) };
+        startupImport = {
+          id: active.id,
+          result: readImported(active.id).catch(() => null),
+        };
       } else if (active.kind === "workshop" && hostReady) {
         const entry = findEntry(active);
-        if (entry && entry.type !== "web" && !entry.assetUrl &&
-            !entry.assetDataUrl && !entry.webHtml && !startupAssetError)
+        if (
+          entry &&
+          entry.type !== "web" &&
+          !entry.assetUrl &&
+          !entry.assetDataUrl &&
+          !entry.webHtml &&
+          !startupAssetError
+        )
           requestWorkshopAsset(entry);
       }
       return state();
@@ -4080,7 +4334,9 @@ function createCodexWallpaperRuntime(
 
   function startupPresentation() {
     if (!config.enabled) return "disabled";
-    return mainInterfaceShown && presentedMedia && media === presentedMedia &&
+    return mainInterfaceShown &&
+      presentedMedia &&
+      media === presentedMedia &&
       committedSelection === JSON.stringify(config.active) &&
       document.visibilityState === "visible"
       ? "visible"
@@ -4172,9 +4428,14 @@ function createCodexWallpaperRuntime(
     if (globalThis.__codexWallpaperHotkey) return;
     globalThis.__codexWallpaperHotkey = (event) => {
       if (
-        !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey ||
-        event.isComposing || event.defaultPrevented
-      ) return;
+        !event.altKey ||
+        !event.shiftKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.isComposing ||
+        event.defaultPrevented
+      )
+        return;
       const settings = event.code === "KeyS" && panel?.isConnected;
       if (!settings && event.code !== "KeyW") return;
       event.preventDefault();
@@ -4235,14 +4496,45 @@ function createCodexWallpaperRuntime(
     "message",
     (event) => {
       if (event.data?.type === "prepare-reset") {
-        disable();
+        const requestId = event.data.requestId;
+        if (!requestId) return;
+        void disable(false).finally(() => {
+          channel.postMessage({
+            type: "reset-ready",
+            requestId,
+            pageId,
+          });
+        });
+      } else if (event.data?.type === "reset-ready") {
+        if (
+          resetRequest?.requestId === event.data.requestId &&
+          event.data.pageId
+        )
+          resetRequest.acknowledge(event.data.pageId);
+      } else if (event.data?.type === "reset-cancelled") {
+        if (!config.enabled) void enable(false);
+      } else if (
+        event.data?.type === "runtime-hello" &&
+        event.data.pageId !== pageId
+      ) {
+        resetPeers.add(event.data.pageId);
+        if (!event.data.reply)
+          channel.postMessage({
+            type: "runtime-hello",
+            pageId,
+            reply: true,
+          });
+      } else if (event.data?.type === "runtime-bye") {
+        resetPeers.delete(event.data.pageId);
       }
     },
     { signal: runtimeEvents.signal }
   );
+  channel.postMessage({ type: "runtime-hello", pageId });
   addEventListener(
     "pagehide",
     () => {
+      channel.postMessage({ type: "runtime-bye", pageId });
       clearTimeout(previewResizeTimer);
       flushConfigSave();
       cancelStartupMotion();
@@ -4267,6 +4559,7 @@ function createCodexWallpaperRuntime(
   }
   globalThis.__codexWallpaperApi = {
     identity: () => structuredClone(identity),
+    resetStatus: () => ({ warning: resetWarning }),
     refresh,
     enable,
     disable,
@@ -4279,12 +4572,16 @@ function createCodexWallpaperRuntime(
       if (status !== "waiting") return startupPresentationTiming(status);
       const { promise, resolve } = Promise.withResolvers();
       resolveStartupPresentation = resolve;
-      const timer = setTimeout(() => resolve(startupPresentationTiming("timeout")), 25_000);
+      const timer = setTimeout(
+        () => resolve(startupPresentationTiming("timeout")),
+        25_000
+      );
       try {
         return await promise;
       } finally {
         clearTimeout(timer);
-        if (resolveStartupPresentation === resolve) resolveStartupPresentation = null;
+        if (resolveStartupPresentation === resolve)
+          resolveStartupPresentation = null;
       }
     },
     configureHost,
