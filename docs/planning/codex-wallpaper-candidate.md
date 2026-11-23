@@ -7,8 +7,10 @@
 - 新增 `pnpm.cmd test:full`，由 [`launcher/Test-All.ps1`](../../launcher/Test-All.ps1) 串行运行 `pnpm test`、`desktop-entry`、`profile-preflight`、`startup-entry` 和 `startup-roots`。每个套件输出名称、耗时和退出码；失败时列出套件名并以非零退出。`pnpm.cmd test` 保留为 Node-only 入口。
 - 聚合入口显式检查固定 Edge 路径、PATH 中的 `ffmpeg.exe` 和 `WScript.Shell` COM。依赖缺失时对应套件标记为 `BLOCKED` 且整体非零，不会运行不完整覆盖或输出 `PASS`。
 - 本地完整运行一次，总耗时 **223.395 秒**：Node **74/74**、0 失败、0 跳过，耗时 81.047 秒；`desktop-entry` 8.858 秒、`profile-preflight` 127.002 秒、`startup-entry` 4.766 秒、`startup-roots` 0.750 秒，退出码均为 0。
-- 本次检测结果为 Edge `158.0.4370.33`、PATH 中 ffmpeg `9.0.2`、`WScript.Shell` COM 可用；没有跳过项。当前工作树测试输入清单 SHA-256（含未提交的 `Test-All.ps1`）为 `9214ba41b7c47795149e677b4f2e39e7460d741ad5b0616a86d5bf91e61cb374`。
-- Windows workflow 已删除内联的 Node/PowerShell 双顺序，改为安装 ffmpeg 后只调用 `pnpm.cmd test:full`。该聚合入口尚未在 GitHub 托管 runner 上实跑，推送后的运行结果仍待记录。
+- 本次本机检测结果为 Edge `158.0.4370.33`、PATH 中 ffmpeg `9.0.2`、`WScript.Shell` COM 可用；没有跳过项。当前测试输入清单 SHA-256 为 `01c714adfd74b339bc75cf988279af58262f925aade0e90947e5a2f1599ebc67`。
+- Windows workflow 已删除内联的 Node/PowerShell 双顺序，改为安装 ffmpeg 后只调用 `pnpm.cmd test:full`。2026-11-23 在提交 `91e3a569bf54675b57cce0fd369c0da3c881e21b` 上完成托管 runner 实跑：[运行 45138366902](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/45138366902) 成功，作业耗时 5 分钟。
+- 托管结果为 Edge `157.0.4341.60`、Chocolatey ffmpeg `9.1.0`、`WScript.Shell` COM 可用；Node **74/74**、0 失败、0 跳过，耗时 103.885 秒，`desktop-entry` 7.887 秒、`profile-preflight` 126.960 秒、`startup-entry` 3.837 秒、`startup-roots` 0.659 秒，整体 `PASS`。
+- 首次托管运行 [45137078795](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/45137078795) 失败：library 滤镜用例在异步卡片渲染前调用了 `scrollIntoView`，`desktop-entry` 在 ffmpeg 视频夹具后删除临时目录时遇到瞬时文件锁。提交 `91e3a56` 增加确定性等待，并只对清理加入有限退避；产品断言未改变，第二轮托管运行通过。
 
 最近一次浏览器夹具抖动记录：2026-11-21 的运行 [44913439451](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44913439451) 在提交 `ef9e4e9` 上失败：
 
@@ -48,8 +50,8 @@
 ### 08 · Windows CI
 
 - [`.github/workflows/windows-tests.yml`](../../.github/workflows/windows-tests.yml) 在 `windows-latest` 使用 pnpm `11.25.0`、Node `24.16.0` 和锁定依赖，安装 `ffmpeg` 后只调用 `pnpm.cmd test:full`；测试顺序和依赖阻塞判定由同一脚本维护，不再在 workflow 中复制。
-- 2026-11-23 本地聚合入口结果为 Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过，总耗时 223.395 秒；Edge、ffmpeg 和 PowerShell COM 检测均可用。
-- 历史托管 Windows runner 运行 [44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099) 在提交 `c9e2864fd077fc2c41a0e2c6867f36b03f1103b7` 上通过，但使用的是此前内联的 Node/PowerShell 双入口。新聚合入口和 CI 安装 ffmpeg 的改动尚未推送，托管 runner 实跑待补。
+- 2026-11-23 本地聚合入口总耗时 223.395 秒；托管 runner 在提交 `91e3a56` 上运行 [45138366902](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/45138366902)，作业耗时 5 分钟，Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过，整体 `PASS`。
+- 首次托管运行 [45137078795](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/45137078795) 暴露一个异步卡片时序和一个临时目录清理竞态；提交 `91e3a56` 修复后由第二轮运行确认，未使用测试自动重试。
 
 ### 10 · 媒体热切
 
