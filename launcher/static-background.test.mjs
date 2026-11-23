@@ -917,13 +917,16 @@ test(
 );
 
 async function startHtmlFixture(html) {
-  const server = createServer((_request, response) => {
+  const requests = [];
+  const server = createServer((request, response) => {
+    requests.push(request.url);
     response.setHeader("Content-Type", "text/html; charset=utf-8");
     response.end(html);
   });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   return {
+    requests,
     server,
     url: `http://127.0.0.1:${server.address().port}/`,
   };
@@ -2161,6 +2164,127 @@ test("video card waits for an actual click before requesting the asset", async (
     }
   );
 });
+
+test(
+  "committed video degrades on a real late media error and releases its Blob URL",
+  { timeout: 20000 },
+  async (t) => {
+    const preview =
+      "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
+    const { fixture, port, options } = await startRuntimeFixture(t, {
+      version: 1,
+      library: [
+        {
+          id: "late-error-video",
+          title: "Late Error Video",
+          type: "video",
+          playable: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+        },
+      ],
+    });
+    await applyStaticBackground(port, options);
+    const result = await evaluateInPage(
+      port,
+      `(async () => {
+        const api = globalThis.__codexWallpaperApi;
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const waitFor = async (predicate, attempts = 80) => {
+          for (let attempt = 0; attempt < attempts; attempt += 1) {
+            if (predicate()) return true;
+            await wait(25);
+          }
+          return false;
+        };
+        const originalRevoke = URL.revokeObjectURL;
+        const revoked = [];
+        URL.revokeObjectURL = (url) => {
+          revoked.push(url);
+          return originalRevoke.call(URL, url);
+        };
+        const url = URL.createObjectURL(
+          new Blob(
+            [Uint8Array.from(atob(${JSON.stringify(tinyMp4)}), (char) => char.charCodeAt(0))],
+            { type: "video/mp4" }
+          )
+        );
+        api.receiveAsset({
+          id: "late-error-video",
+          title: "Late Error Video",
+          type: "video",
+          playable: true,
+          previewDataUrl: ${JSON.stringify(preview)},
+          assetDataUrl: null,
+          assetUrl: url,
+        });
+        ${toggleSettings};
+        controls
+          .querySelector(
+            '.card[data-entry-id="late-error-video"] [data-entry-action="use"]'
+          )
+          .click();
+        const committed = await waitFor(() => {
+          const video = root.querySelector(".media:not(.staged) video");
+          return video?.readyState >= 2 && video.videoWidth > 0;
+        });
+        const video = root.querySelector(".media:not(.staged) video");
+        const beforeError = {
+          committed,
+          playerCount: api.state().playerCount,
+          videoCount: root.querySelectorAll("video").length,
+          status: controls.querySelector(".runtime-status")?.textContent,
+        };
+        video.src = "data:video/mp4;base64,AAAA";
+        video.load();
+        const degraded = await waitFor(() => {
+          const image = root.querySelector(".media:not(.staged) img");
+          return (
+            controls
+              .querySelector(".runtime-status")
+              ?.textContent.includes("视频播放失败") &&
+            image?.complete &&
+            image.naturalWidth > 0
+          );
+        });
+        const image = root.querySelector(".media:not(.staged) img");
+        const status = controls.querySelector(".runtime-status");
+        const afterError = {
+          degraded,
+          status: status?.textContent,
+          statusVisible: status?.hidden === false,
+          previewVisible:
+            image?.src.startsWith("data:image/svg+xml") &&
+            image.naturalWidth > 0,
+          playerCount: api.state().playerCount,
+          videoCount: root.querySelectorAll("video").length,
+          staged: root.querySelectorAll(".media.staged").length,
+          blobRevoked: revoked.includes(url),
+        };
+        URL.revokeObjectURL = originalRevoke;
+        return { beforeError, afterError };
+      })()`,
+      options
+    );
+
+    assert.deepEqual(result.beforeError, {
+      committed: true,
+      playerCount: 1,
+      videoCount: 1,
+      status: "Late Error Video · 视频",
+    });
+    assert.equal(result.afterError.degraded, true, JSON.stringify(result));
+    assert.match(result.afterError.status, /视频播放失败.*预览/);
+    assert.equal(result.afterError.statusVisible, true);
+    assert.equal(result.afterError.previewVisible, true);
+    assert.equal(result.afterError.playerCount, 0);
+    assert.equal(result.afterError.videoCount, 0);
+    assert.equal(result.afterError.staged, 0);
+    assert.equal(result.afterError.blobRevoked, true);
+  }
+);
 
 test("real CDP file input delivers a video without a Base64 page transfer", async (t) => {
   const { fixture, port, options } = await startRuntimeFixture(t, {
@@ -7557,6 +7681,196 @@ test("the native settings dialog shows the wallpaper without a background tint",
   assert.deepEqual(await evaluateInPage(port, appearance, options), native);
 });
 
+test(
+  "offline Web blocks execution and external requests, then times out to fallback",
+  { timeout: 20000 },
+  async (t) => {
+    const fixture = await startFixture();
+    const fixtureOrigin = new URL(fixture.url).origin;
+    const image =
+      "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+    const preview =
+      "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
+    const leakUrl = `${fixtureOrigin}/web-leak`;
+    const isolationHtml = `<!doctype html><style>body{margin:0;background:linear-gradient(45deg,#123,#abc)}</style><script>parent.postMessage("script-ran","*");fetch(${JSON.stringify(`${leakUrl}?fetch`)}).catch(()=>{})</script><body onload="parent.postMessage('inline-load','*')"><img src="${leakUrl}?image"></body>`;
+    const timeoutHtml =
+      "<!doctype html><!--web-timeout--><style>body{margin:0;background:#246}</style>";
+    const { port, options } = await startRuntimeFixture(
+      t,
+      {
+        version: 1,
+        library: [
+          {
+            id: "web-old-image",
+            title: "Web Old Image",
+            type: "image",
+            playable: true,
+            previewDataUrl: image,
+            assetDataUrl: image,
+          },
+          {
+            id: "web-isolation",
+            title: "Web Isolation",
+            type: "web",
+            playable: false,
+            previewDataUrl: preview,
+            assetDataUrl: null,
+            webHtml: isolationHtml,
+            reason: "web-offline",
+          },
+          {
+            id: "web-timeout",
+            title: "Web Timeout",
+            type: "web",
+            playable: false,
+            previewDataUrl: preview,
+            assetDataUrl: null,
+            webHtml: timeoutHtml,
+            reason: "web-offline",
+          },
+        ],
+      },
+      fixture
+    );
+    await applyStaticBackground(port, options);
+    const result = await evaluateInPage(
+      port,
+      `(async () => {
+        const api = globalThis.__codexWallpaperApi;
+        const root = document.getElementById("${rootId}");
+        const controls = document.getElementById("${controlRootId}");
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const waitFor = async (predicate, attempts = 160) => {
+          for (let attempt = 0; attempt < attempts; attempt += 1) {
+            if (predicate()) return true;
+            await wait(25);
+          }
+          return false;
+        };
+        const select = (id) =>
+          controls
+            .querySelector(
+              \`.card[data-entry-id="\${id}"] [data-entry-action="use"]\`
+            )
+            .click();
+        const messages = [];
+        addEventListener("message", (event) => {
+          messages.push({ data: event.data, origin: event.origin });
+        });
+
+        ${toggleSettings};
+        select("web-old-image");
+        await waitFor(() => {
+          const image = root.querySelector(".media:not(.staged) img");
+          return image?.src === ${JSON.stringify(image)};
+        });
+        select("web-isolation");
+        const isolationCommitted = await waitFor(() => {
+          const frame = root.querySelector(".media:not(.staged) iframe");
+          return frame && !frame.closest(".staged");
+        });
+        await wait(250);
+        const isolationFrame = root.querySelector(
+          ".media:not(.staged) iframe"
+        );
+        const isolation = {
+          committed: isolationCommitted,
+          iframeCount: root.querySelectorAll("iframe").length,
+          staged: root.querySelectorAll(".media.staged").length,
+          sandbox: isolationFrame?.getAttribute("sandbox"),
+          status: controls.querySelector(".runtime-status")?.textContent,
+          messages: messages.slice(),
+        };
+
+        select("web-old-image");
+        await waitFor(() => {
+          const image = root.querySelector(".media:not(.staged) img");
+          return image?.src === ${JSON.stringify(image)};
+        });
+        const retainedImage = root.querySelector(".media:not(.staged) img");
+        const ownOnload = Object.getOwnPropertyDescriptor(
+          HTMLIFrameElement.prototype,
+          "onload"
+        );
+        Object.defineProperty(HTMLIFrameElement.prototype, "onload", {
+          configurable: true,
+          get: () => null,
+          set: () => {},
+        });
+        select("web-timeout");
+        await waitFor(
+          () => root.querySelectorAll(".media.staged iframe").length === 1
+        );
+        const whileLoading = {
+          iframeCount: root.querySelectorAll("iframe").length,
+          oldImageRetained:
+            root.querySelector(".media:not(.staged) img") === retainedImage,
+          status: controls.querySelector(".runtime-status")?.textContent,
+        };
+        const timeoutSettled = await waitFor(() =>
+          controls
+            .querySelector(".runtime-status")
+            ?.textContent.includes("Web 加载超时")
+        );
+        await wait(100);
+        if (ownOnload)
+          Object.defineProperty(
+            HTMLIFrameElement.prototype,
+            "onload",
+            ownOnload
+          );
+        else delete HTMLIFrameElement.prototype.onload;
+        const status = controls.querySelector(".runtime-status");
+        const afterTimeout = {
+          settled: timeoutSettled,
+          iframeCount: root.querySelectorAll("iframe").length,
+          staged: root.querySelectorAll(".media.staged").length,
+          playerCount: api.state().playerCount,
+          oldImageRetained:
+            root.querySelector(".media:not(.staged) img") === retainedImage,
+          status: status?.textContent,
+          statusVisible: status?.hidden === false,
+          loadingStatus:
+            status?.textContent ===
+            "正在加载：Web Timeout",
+        };
+        return { isolation, whileLoading, afterTimeout };
+      })()`,
+      options
+    );
+    assert.deepEqual(result.isolation, {
+      committed: true,
+      iframeCount: 1,
+      staged: 0,
+      sandbox: "",
+      status: "Web Isolation · Web 离线沙箱",
+      messages: [],
+    });
+    assert.equal(
+      fixture.requests.some((request) => request.startsWith("/web-leak")),
+      false,
+      JSON.stringify(fixture.requests)
+    );
+    assert.deepEqual(result.whileLoading, {
+      iframeCount: 1,
+      oldImageRetained: true,
+      status: "正在加载：Web Timeout",
+    });
+    assert.equal(
+      result.afterTimeout.settled,
+      true,
+      JSON.stringify({ result, requests: fixture.requests })
+    );
+    assert.equal(result.afterTimeout.iframeCount, 0);
+    assert.equal(result.afterTimeout.staged, 0);
+    assert.equal(result.afterTimeout.playerCount, 0);
+    assert.equal(result.afterTimeout.oldImageRetained, true);
+    assert.match(result.afterTimeout.status, /Web 加载超时.*保留当前画面/);
+    assert.equal(result.afterTimeout.statusVisible, true);
+    assert.equal(result.afterTimeout.loadingStatus, false);
+  }
+);
+
 test("static background is single, removable and persists disabled", async (t) => {
   const { fixture, port, options } = await startRuntimeFixture(t, {
     version: 1,
@@ -8452,7 +8766,7 @@ test("static background is single, removable and persists disabled", async (t) =
     ),
     {
       fillsWallpaperLayer: true,
-      sandbox: "allow-scripts",
+      sandbox: "",
       offlineDocument: true,
       networkBlocked: true,
     }

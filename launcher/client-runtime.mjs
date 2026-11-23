@@ -1920,6 +1920,7 @@ function createCodexWallpaperRuntime(
 
   function showVideo(url, message, objectUrl = null, previewUrl = null) {
     const generation = activeGeneration;
+    const selection = entryKey(config.active);
     const next = stageMedia();
     const video = document.createElement("video");
     video.src = url;
@@ -1954,6 +1955,21 @@ function createCodexWallpaperRuntime(
       pending.cancel();
       recoverFailedMedia("视频加载失败", previewUrl);
     };
+    const lateError = () => {
+      video.onerror = null;
+      if (!config.enabled) return;
+      if (!isCurrentStage(generation, pending)) return;
+      if (
+        media !== next ||
+        mediaSelection !== selection ||
+        entryKey(config.active) !== selection
+      )
+        return;
+      revokePlayback();
+      media = null;
+      mediaSelection = null;
+      recoverFailedMedia("视频播放失败", previewUrl);
+    };
     const drawFirstFrame = () => {
       if (pending.settled) return;
       if (!isCurrentStage(generation, pending)) return;
@@ -1969,6 +1985,7 @@ function createCodexWallpaperRuntime(
       if (frameRequest) video.cancelVideoFrameCallback?.(frameRequest);
       video.onloadedmetadata = null;
       commitMedia(next, current, objectUrl);
+      video.onerror = lateError;
       if (shouldPauseHidden()) video.pause();
       if (message) setStatus(message);
     };
@@ -2151,25 +2168,41 @@ function createCodexWallpaperRuntime(
     const generation = activeGeneration;
     const next = stageMedia();
     const frame = document.createElement("iframe");
-    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("sandbox", "");
     frame.setAttribute("referrerpolicy", "no-referrer");
+    let timeout = 0;
     const pending = trackPending(() => {
+      clearTimeout(timeout);
       frame.onload = null;
+      frame.onerror = null;
       next.remove();
     });
+    const fail = (message) => {
+      if (pending.settled) return;
+      pending.settled = true;
+      finishPending(pending);
+      if (!isCurrentStage(generation, pending)) return;
+      pending.cancel();
+      recoverFailedMedia(message, entry.previewDataUrl);
+    };
     frame.onload = () => {
+      frame.onload = null;
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           if (pending.settled) return;
           if (!isCurrentStage(generation, pending)) return;
           pending.settled = true;
           finishPending(pending);
+          clearTimeout(timeout);
+          frame.onerror = null;
           commitMedia(next);
           setStatus(`${entry.title} · Web 离线沙箱`);
         })
       );
     };
+    frame.onerror = () => fail("Web 加载失败");
     next.append(frame);
+    timeout = setTimeout(() => fail("Web 加载超时"), 2000);
     frame.srcdoc = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; script-src 'none'">${entry.webHtml}`;
   }
 
