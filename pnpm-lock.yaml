@@ -11,6 +11,9 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
     devDependencies:
+      "@webwallgl/editor":
+        specifier: 3.0.0
+        version: 3.0.0(webwallgl@3.0.0)
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -33,6 +36,14 @@ packages:
       {
         integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==,
       }
+
+  "@webwallgl/editor@3.0.0":
+    resolution:
+      {
+        integrity: sha512-MSatDtjaCZS4n5bs4lTAXErSYGhTWnVILfrLXswHluYGYEfH2+KfRNYAVpd4ooyo0V8qYtgXXh/MhfHaWRcfaw==,
+      }
+    peerDependencies:
+      webwallgl: 3.0.0
 
   husky@9.1.7:
     resolution:
@@ -105,6 +116,10 @@ snapshots:
       "@types/dom-webcodecs": 0.1.13
 
   "@types/dom-webcodecs@0.1.13": {}
+
+  "@webwallgl/editor@3.0.0(webwallgl@3.0.0)":
+    dependencies:
+      webwallgl: 3.0.0
 
   husky@9.1.7: {}
 

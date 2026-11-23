@@ -10283,3 +10283,586 @@ test("static background is single, removable and persists disabled", async (t) =
     }
   );
 });
+
+test(
+  "real WebWallGL renders the generated scene fixture with playback controls",
+  { timeout: 30000 },
+  async (t) => {
+    const fixturePath = new URL(
+      "./fixtures/minimal-scene/scene.pkg",
+      import.meta.url
+    );
+    const pkg = await readFile(fixturePath);
+    assert.equal(pkg.length, 2994);
+    assert.equal(
+      createHash("sha256").update(pkg).digest("hex"),
+      "be12f6570fdf7f8291fe9777494e16329ed4750155970ddeac08c635b84d018a"
+    );
+    const engineSource = await readFile(
+      new URL(
+        "../node_modules/webwallgl/webwallgl.global.min.js",
+        import.meta.url
+      ),
+      "utf8"
+    );
+    const { port, options } = await startRuntimeFixture(t, {
+      version: 1,
+      library: [],
+    });
+    let session = null;
+    for (let attempt = 0; attempt < 40 && !session; attempt += 1) {
+      try {
+        session = await openMainPageSession(port, options.page, true);
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    }
+    assert.ok(session, "Could not open the real-engine fixture session");
+    t.after(() => session.close());
+    const evaluate = async (source) => {
+      const result = await session.send("Runtime.evaluate", {
+        expression: source,
+        returnByValue: true,
+        awaitPromise: true,
+      });
+      if (result?.exceptionDetails)
+        throw new Error(
+          result.exceptionDetails.exception?.description ||
+            result.exceptionDetails.text ||
+            "Runtime evaluation failed"
+        );
+      return result?.result?.value;
+    };
+    await evaluate(engineSource);
+    const result = await evaluate(
+      `(async () => {
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const bytes = Uint8Array.from(
+          atob(${JSON.stringify(pkg.toString("base64"))}),
+          (value) => value.charCodeAt(0)
+        );
+        const gains = [];
+        const revokes = [];
+        const createGain = AudioContext.prototype.createGain;
+        AudioContext.prototype.createGain = function () {
+          const gain = createGain.call(this);
+          gains.push(gain);
+          return gain;
+        };
+        const revokeObjectURL = URL.revokeObjectURL;
+        URL.revokeObjectURL = function (url) {
+          revokes.push(url);
+          return revokeObjectURL.call(URL, url);
+        };
+        const host = document.createElement("div");
+        host.style.cssText = "width:480px;height:360px";
+        document.body.append(host);
+        const source = WebWallGL.bytesSource(
+          bytes,
+          { type: "scene", file: "scene.pkg" },
+          "minimal-scene"
+        );
+        const scene = await WebWallGL.mount(host, {
+          source,
+          fps: 12,
+          volume: 0.4,
+          fit: "contain",
+          autoplay: true,
+          mountTimeoutMs: 10000,
+        });
+        const hashCanvas = () => {
+          const gl = scene.canvas.getContext("webgl2");
+          const pixels = new Uint8Array(
+            scene.canvas.width * scene.canvas.height * 4
+          );
+          gl.readPixels(
+            0,
+            0,
+            scene.canvas.width,
+            scene.canvas.height,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            pixels
+          );
+          let hash = 2166136261;
+          for (let index = 0; index < pixels.length; index += 97) {
+            hash ^= pixels[index];
+            hash = Math.imul(hash, 16777619);
+          }
+          return hash >>> 0;
+        };
+        await wait(1200);
+        const firstFrame = {
+          info: scene.info,
+          canvas: {
+            width: scene.canvas.width,
+            height: scene.canvas.height,
+            clientWidth: scene.canvas.clientWidth,
+            clientHeight: scene.canvas.clientHeight,
+            webgl2: scene.canvas.getAttribute("data-webwallgl-gl"),
+          },
+          stats: { ...scene.stats },
+          gains: gains.map((gain) => gain.gain.value),
+        };
+        const gl = scene.canvas.getContext("webgl2");
+        const center = new Uint8Array(4);
+        gl.readPixels(
+          Math.floor(scene.canvas.width / 2),
+          Math.floor(scene.canvas.height / 2),
+          1,
+          1,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          center
+        );
+        const containHash = hashCanvas();
+        scene.setFit("cover");
+        await wait(400);
+        const coverHash = hashCanvas();
+        scene.setFps(6);
+        await wait(2000);
+        const fpsLimited = { ...scene.stats };
+        scene.setVolume(0.25);
+        await wait(100);
+        const volumeGain = gains.at(-1)?.gain.value ?? null;
+        scene.pause();
+        await wait(250);
+        const paused = { paused: scene.paused, stats: { ...scene.stats } };
+        scene.resume();
+        await wait(700);
+        const resumed = { paused: scene.paused, stats: { ...scene.stats } };
+        const canvas = scene.canvas;
+        const context = canvas.getContext("webgl2");
+        scene.destroy({ releasePkgCache: true });
+        await wait(100);
+        return {
+          engine: typeof WebWallGL,
+          firstFrame,
+          center: Array.from(center),
+          containHash,
+          coverHash,
+          fpsLimited,
+          volumeGain,
+          paused,
+          resumed,
+          contextLost: context?.isContextLost() ?? false,
+          revoked: revokes.length,
+        };
+      })()`
+    );
+    assert.equal(result.engine, "object");
+    assert.deepEqual(result.firstFrame.info, {
+      width: 640,
+      height: 360,
+      layerCount: 2,
+      hasModels: false,
+      hasParticles: false,
+      hasText: true,
+    });
+    assert.equal(result.firstFrame.canvas.webgl2, "1");
+    assert.ok(result.firstFrame.canvas.width > 0);
+    assert.ok(result.firstFrame.canvas.height > 0);
+    assert.equal(
+      result.firstFrame.canvas.width,
+      result.firstFrame.canvas.clientWidth
+    );
+    assert.equal(
+      result.firstFrame.canvas.height,
+      result.firstFrame.canvas.clientHeight
+    );
+    assert.ok(result.firstFrame.stats.running);
+    assert.ok(result.firstFrame.stats.fps > 0);
+    assert.ok(result.firstFrame.gains.some((value) => value > 0));
+    assert.ok(result.center.some((value) => value > 0));
+    assert.notEqual(result.containHash, result.coverHash);
+    assert.ok(result.fpsLimited.running);
+    assert.ok(result.fpsLimited.fps > 0);
+    assert.ok(result.fpsLimited.fps <= 8);
+    assert.equal(result.volumeGain, 0.25);
+    assert.deepEqual(result.paused, {
+      paused: true,
+      stats: {
+        fps: 0,
+        running: false,
+        idle: false,
+        occluded: false,
+        throttled: false,
+      },
+    });
+    assert.equal(result.resumed.paused, false);
+    assert.equal(result.resumed.stats.running, true);
+    assert.equal(result.contextLost, true);
+    assert.ok(result.revoked >= 1);
+  }
+);
+
+test(
+  "real WebWallGL scene releases on switch, cancel, failure, disable and reset",
+  { timeout: 40000 },
+  async (t) => {
+    const pkg = await readFile(
+      new URL("./fixtures/minimal-scene/scene.pkg", import.meta.url)
+    );
+    const engineSource = await readFile(
+      new URL(
+        "../node_modules/webwallgl/webwallgl.global.min.js",
+        import.meta.url
+      ),
+      "utf8"
+    );
+    const preview =
+      "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23f97316'/%3E%3C/svg%3E";
+    const image =
+      "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%235d32b8'/%3E%3C/svg%3E";
+    const { port, options } = await startRuntimeFixture(t, {
+      version: 1,
+      library: [
+        {
+          id: "real-scene",
+          title: "Real Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: "on-demand",
+        },
+        {
+          id: "broken-scene",
+          title: "Broken Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: "on-demand",
+        },
+        {
+          id: "cancel-scene",
+          title: "Cancelled Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: preview,
+          assetDataUrl: null,
+          reason: "on-demand",
+        },
+        {
+          id: "fixture-image",
+          title: "Fixture Image",
+          type: "image",
+          playable: true,
+          fallback: true,
+          previewDataUrl: image,
+          assetDataUrl: image,
+          reason: null,
+        },
+      ],
+    });
+    let session = null;
+    for (let attempt = 0; attempt < 40 && !session; attempt += 1) {
+      try {
+        session = await openMainPageSession(port, options.page, true);
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    }
+    assert.ok(session, "Could not open the real-scene lifecycle session");
+    t.after(() => session.close());
+    const evaluate = async (source) => {
+      const result = await session.send("Runtime.evaluate", {
+        expression: source,
+        returnByValue: true,
+        awaitPromise: true,
+      });
+      if (result?.exceptionDetails)
+        throw new Error(
+          result.exceptionDetails.exception?.description ||
+            result.exceptionDetails.text ||
+            "Runtime evaluation failed"
+        );
+      return result?.result?.value;
+    };
+    await evaluate(engineSource);
+    await evaluate(
+      `localStorage.setItem(
+        "codex-wallpaper-p1-config",
+        JSON.stringify({
+          enabled: true,
+          active: { kind: "workshop", id: "fixture-image" },
+          favorites: [],
+          playlist: [],
+          settings: { fps: 12, volume: 40, fitMode: "cover", pauseWhenHidden: true }
+        })
+      )`
+    );
+    await applyStaticBackground(port, options);
+    const result = await evaluate(
+      `(async () => {
+        const api = globalThis.__codexWallpaperApi;
+        let root = document.getElementById("${rootId}");
+        let controls = document.getElementById("${controlRootId}");
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const waitFor = async (read, attempts = 160) => {
+          for (let attempt = 0; attempt < attempts; attempt += 1) {
+            const value = read();
+            if (value) return value;
+            await wait(25);
+          }
+          return null;
+        };
+        const gains = [];
+        const revokes = [];
+        const createGain = AudioContext.prototype.createGain;
+        AudioContext.prototype.createGain = function () {
+          const gain = createGain.call(this);
+          gains.push(gain);
+          return gain;
+        };
+        const revokeObjectURL = URL.revokeObjectURL;
+        URL.revokeObjectURL = function (url) {
+          revokes.push(url);
+          return revokeObjectURL.call(URL, url);
+        };
+        const packageBytes = Uint8Array.from(
+          atob(${JSON.stringify(pkg.toString("base64"))}),
+          (value) => value.charCodeAt(0)
+        );
+        const select = async (id) => {
+          if (api.state().activeId === id) return;
+          const action = await waitFor(() =>
+            controls.querySelector(
+              \`.card[data-entry-id="\${id}"] [data-entry-action="use"]\`
+            )
+          );
+          if (!action)
+            throw new Error(
+              "Missing wallpaper card: " +
+                id +
+                " " +
+                JSON.stringify(api.state()) +
+                " " +
+                JSON.stringify(
+                  [...controls.querySelectorAll(".card")].map((card) => ({
+                    id: card.dataset.entryId,
+                    kind: card.dataset.entryKind,
+                    actions: [...card.querySelectorAll("[data-entry-action]")].map(
+                      (button) => button.dataset.entryAction
+                    ),
+                  }))
+                )
+            );
+          action.click();
+          await waitFor(() => api.state().activeId === id);
+        };
+        const deliver = async (id, bytes = packageBytes) => {
+          const url = URL.createObjectURL(
+            new Blob([bytes], { type: "application/octet-stream" })
+          );
+          await api.receiveAsset({
+            id,
+            title: id === "real-scene" ? "Real Scene" : "Broken Scene",
+            type: "scene",
+            playable: true,
+            fallback: true,
+            previewDataUrl: ${JSON.stringify(preview)},
+            assetDataUrl: null,
+            assetUrl: url,
+            reason: "scene-native",
+          });
+          return url;
+        };
+        const readyCanvas = () =>
+          root.querySelector(
+            ".media:not(.staged) .scene-host.ready canvas[data-webwallgl-gl='1']"
+          );
+
+        ${toggleSettings};
+        await select("real-scene");
+        const committedUrl = await deliver("real-scene");
+        const canvas = await waitFor(readyCanvas);
+        await wait(120);
+        const gl = canvas.getContext("webgl2");
+        const pixel = new Uint8Array(4);
+        gl.readPixels(
+          Math.floor(canvas.width / 2),
+          Math.floor(canvas.height / 2),
+          1,
+          1,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          pixel
+        );
+        const firstFrame = {
+          status: controls.querySelector(".runtime-status")?.textContent,
+          canvas: {
+            width: canvas.width,
+            height: canvas.height,
+            clientWidth: canvas.clientWidth,
+            clientHeight: canvas.clientHeight,
+            webgl2: canvas.getAttribute("data-webwallgl-gl"),
+          },
+          pixel: Array.from(pixel),
+          playerCount: api.state().playerCount,
+          gains: gains.map((gain) => gain.gain.value),
+        };
+
+        await select("fixture-image");
+        await waitFor(() => root.querySelector(".media:not(.staged) img"));
+        await wait(50);
+        const afterSwitch = {
+          contextLost: gl.isContextLost(),
+          urlRevoked: revokes.includes(committedUrl),
+          playerCount: api.state().playerCount,
+          staged: root.querySelectorAll(".media.staged").length,
+          sceneActive: Boolean(root.querySelector(".media:not(.staged) .scene-host")),
+        };
+
+        await select("cancel-scene");
+        const cancelledUrl = URL.createObjectURL(
+          new Blob([packageBytes], { type: "application/octet-stream" })
+        );
+        await api.receiveAsset({
+          id: "cancel-scene",
+          title: "Cancelled Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: ${JSON.stringify(preview)},
+          assetDataUrl: null,
+          assetUrl: cancelledUrl,
+          reason: "scene-native",
+        });
+        await select("fixture-image");
+        await waitFor(() => root.querySelector(".media:not(.staged) img"));
+        await wait(150);
+        const afterCancel = {
+          urlRevoked: revokes.includes(cancelledUrl),
+          playerCount: api.state().playerCount,
+          staged: root.querySelectorAll(".media.staged").length,
+          sceneActive: Boolean(root.querySelector(".media:not(.staged) .scene-host")),
+        };
+
+        await select("broken-scene");
+        const brokenUrl = URL.createObjectURL(
+          new Blob([Uint8Array.from([80, 75, 71, 86, 0, 1, 2, 3])], {
+            type: "application/octet-stream",
+          })
+        );
+        await api.receiveAsset({
+          id: "broken-scene",
+          title: "Broken Scene",
+          type: "scene",
+          playable: true,
+          fallback: true,
+          previewDataUrl: ${JSON.stringify(preview)},
+          assetDataUrl: null,
+          assetUrl: brokenUrl,
+          reason: "scene-native",
+        });
+        const failedStatus = await waitFor(() => {
+          const status = controls.querySelector(".runtime-status")?.textContent;
+          return status?.includes("Scene 加载失败") ? status : null;
+        });
+        const afterFailure = {
+          urlRevoked: revokes.includes(brokenUrl),
+          playerCount: api.state().playerCount,
+          staged: root.querySelectorAll(".media.staged").length,
+          previewRetained: Boolean(root.querySelector(".media:not(.staged) img")),
+          status: failedStatus,
+        };
+
+        await select("real-scene");
+        const disabledUrl = await deliver("real-scene");
+        const disabledCanvas = await waitFor(readyCanvas);
+        const disabledGl = disabledCanvas.getContext("webgl2");
+        await api.disable();
+        await wait(50);
+        const afterDisable = {
+          contextLost: disabledGl.isContextLost(),
+          urlRevoked: revokes.includes(disabledUrl),
+          rootRemoved: !document.getElementById("${rootId}"),
+          playerCount: api.state().playerCount,
+        };
+
+        await api.enable();
+        root = document.getElementById("${rootId}");
+        controls = document.getElementById("${controlRootId}");
+        const resetUrl = await deliver("real-scene");
+        const resetCanvas = await waitFor(readyCanvas);
+        const resetGl = resetCanvas.getContext("webgl2");
+        ${toggleSettings};
+        const reset = controls.querySelector("button.reset");
+        reset.click();
+        reset.click();
+        await waitFor(() => !document.getElementById("${rootId}"), 240);
+        const afterReset = {
+          contextLost: resetGl.isContextLost(),
+          urlRevoked: revokes.includes(resetUrl),
+          rootRemoved: !document.getElementById("${rootId}"),
+          enabled: api.state().state,
+          playerCount: api.state().playerCount,
+        };
+
+        URL.revokeObjectURL = revokeObjectURL;
+        AudioContext.prototype.createGain = createGain;
+        return {
+          firstFrame,
+          afterSwitch,
+          afterCancel,
+          afterFailure,
+          afterDisable,
+          afterReset,
+        };
+      })()`
+    );
+    assert.equal(result.firstFrame.canvas.webgl2, "1");
+    assert.ok(result.firstFrame.canvas.width > 0);
+    assert.ok(result.firstFrame.canvas.height > 0);
+    assert.equal(
+      result.firstFrame.canvas.width,
+      result.firstFrame.canvas.clientWidth
+    );
+    assert.equal(
+      result.firstFrame.canvas.height,
+      result.firstFrame.canvas.clientHeight
+    );
+    assert.equal(result.firstFrame.status, "Real Scene · Scene");
+    assert.ok(result.firstFrame.pixel.some((value) => value > 0));
+    assert.equal(result.firstFrame.playerCount, 1);
+    assert.ok(
+      result.firstFrame.gains.some((value) => Math.abs(value - 0.4) < 0.01)
+    );
+    assert.deepEqual(result.afterSwitch, {
+      contextLost: true,
+      urlRevoked: true,
+      playerCount: 0,
+      staged: 0,
+      sceneActive: false,
+    });
+    assert.deepEqual(result.afterCancel, {
+      urlRevoked: true,
+      playerCount: 0,
+      staged: 0,
+      sceneActive: false,
+    });
+    assert.equal(result.afterFailure.urlRevoked, true);
+    assert.equal(result.afterFailure.playerCount, 0);
+    assert.equal(result.afterFailure.staged, 0);
+    assert.equal(result.afterFailure.previewRetained, true);
+    assert.match(result.afterFailure.status, /Scene 加载失败/);
+    assert.deepEqual(result.afterDisable, {
+      contextLost: true,
+      urlRevoked: true,
+      rootRemoved: true,
+      playerCount: 0,
+    });
+    assert.deepEqual(result.afterReset, {
+      contextLost: true,
+      urlRevoked: true,
+      rootRemoved: true,
+      enabled: "disabled",
+      playerCount: 0,
+    });
+  }
+);

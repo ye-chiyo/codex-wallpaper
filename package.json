@@ -4,6 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@11.25.0",
   "devDependencies": {
+    "@webwallgl/editor": "3.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10"
