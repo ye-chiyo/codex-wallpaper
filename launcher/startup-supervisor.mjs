@@ -109,6 +109,8 @@ async function waitForSession(signal) {
       });
       if (candidate) return candidate;
     } catch (error) {
+      if (error?.code === "ambiguous-main-page")
+        phase = "ambiguous-main-page";
       if (!signal) throw error;
       if (error?.code === "ECONNREFUSED") return null;
       if (error?.message !== "WebSocket failed") throw error;

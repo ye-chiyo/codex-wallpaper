@@ -2,8 +2,8 @@
 $ErrorActionPreference = 'Stop'
 Import-Module Microsoft.PowerShell.Utility
 $family = 'OpenAI.Codex_2p2nqsd0c76g0'
-$package = 'OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0'
-$hash = 'CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6'
+$package = 'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0'
+$hash = '21C2EAC7703B43611392234738F669A8AF23907585B231EBDE54CA3CB104CC82'
 $appId = "$family!App"
 $sourceLauncher = Join-Path $PSScriptRoot 'Start-CodexWallpaper.ps1'
 $logical = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
@@ -66,27 +66,19 @@ $cases = @(
     @{
         Name = 'current package and daily profile reach activation boundary'
         Package = $package; Hash = $hash; StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
-        ExpectedReceipt = 'launch-or-check-error'
+        ExpectedReceipt = 'launch-or-check-error'; ExpectedCompatibilityMode = 'known'
     },
     @{
-        Name = 'updated Codex package and its executable reach activation boundary'
-        Package = 'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0'
-        Hash = '21C2EAC7703B43611392234738F669A8AF23907585B231EBDE54CA3CB104CC82'
-        StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
-        ExpectedReceipt = 'launch-or-check-error'
-    },
-    @{
-        Name = 'trusted known package no longer requires the older executable hash'
-        Package = 'OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0'
-        Hash = $hash; StartApp = $appId; Directories = @($cache)
-        ReachesBoundary = $true
-        ExpectedReceipt = 'launch-or-check-error'
+        Name = 'registered package with executable hash drift stays on the original interface'
+        Package = $package; Hash = ('0' * 64); StartApp = $appId; Directories = @($cache)
+        ReachesBoundary = $false; Expected = 'Original executable or app registration did not match'
+        ExpectedReceipt = 'executable-or-app-registration-mismatch'
     },
     @{
         Name = 'trusted unlisted Codex package reaches activation boundary'
         Package = 'OpenAI.Codex_26.1118.4957.0_x64__2p2nqsd0c76g0'
         Hash = ('1' * 64); StartApp = $appId; Directories = @($cache); ReachesBoundary = $true
-        ExpectedReceipt = 'launch-or-check-error'
+        ExpectedReceipt = 'launch-or-check-error'; ExpectedCompatibilityMode = 'probe'
     },
     @{
         Name = 'unlisted Codex package with an untrusted signature stays on the original interface'
@@ -107,12 +99,6 @@ $cases = @(
         PackageFamilyName = 'OpenAI.Codex_other'; StartApp = $appId
         Directories = @($cache); ReachesBoundary = $false; Expected = 'Unsupported or untrusted Codex package'
         ExpectedReceipt = 'unsupported-package'
-    },
-    @{
-        Name = 'trusted executable hash drift enters compatibility probe'
-        Package = $package; Hash = ('0' * 64); StartApp = $appId; Directories = @($cache)
-        ReachesBoundary = $true
-        ExpectedReceipt = 'launch-or-check-error'
     },
     @{
         Name = 'missing app registration remains on the original interface'
@@ -229,6 +215,9 @@ foreach ($case in $cases) {
     }
     if ($receipt.Mode -ne 'unattended-startup') {
         throw "Failed: $($case.Name) lost unattended mode in the receipt."
+    }
+    if ($case.ExpectedCompatibilityMode -and $receipt.CompatibilityMode -ne $case.ExpectedCompatibilityMode) {
+        throw "Failed: $($case.Name) compatibility mode was $($receipt.CompatibilityMode)."
     }
     Write-Host "Passed: $($case.Name)"
 }

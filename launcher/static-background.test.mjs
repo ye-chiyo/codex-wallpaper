@@ -99,6 +99,7 @@ async function startCdpFixture(
     suspend = null,
     objectId = "file-input",
     switching = false,
+    duplicateMain = false,
   } = {}
 ) {
   const oldId = "0123456789abcdef0123456789abcdef";
@@ -148,18 +149,19 @@ async function startCdpFixture(
             ? newId
             : null
         : oldId);
+    const targetIds = targetId
+      ? duplicateMain
+        ? [targetId, targetId === oldId ? newId : oldId]
+        : [targetId]
+      : [];
     response.end(
       JSON.stringify(
-        targetId
-          ? [
-              {
-                id: targetId,
-                type: "page",
-                url: "app://-/index.html",
-                webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${targetId}`,
-              },
-            ]
-          : []
+        targetIds.map((id) => ({
+          id,
+          type: "page",
+          url: "app://-/index.html",
+          webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${id}`,
+        }))
       )
     );
   });
@@ -341,6 +343,38 @@ test(
     const methods = cdp.requests.map(({ method }) => method);
     assert.equal(methods.length, 5);
     assert.ok(methods.every((method) => method === "Page.getFrameTree"));
+  }
+);
+
+test(
+  "supervisor fails closed with an ambiguous main-page diagnostic",
+  { timeout: 8000 },
+  async (t) => {
+    const cdp = await startExactCdpFixture(t, null, { duplicateMain: true });
+    const lock = join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`);
+    const child = spawn(
+      process.execPath,
+      [
+        "--no-use-env-proxy",
+        "launcher/startup-supervisor.mjs",
+        String(cdp.port),
+      ],
+      {
+        stdio: ["pipe", "pipe", "ignore"],
+        windowsHide: true,
+      }
+    );
+    t.after(() => child.kill());
+    let output = "";
+    child.stdout.setEncoding("utf8").on("data", (line) => {
+      output += line;
+    });
+    const [code] = await once(child, "close");
+    assert.equal(code, 1);
+    assert.equal(JSON.parse(output).error, "ambiguous-main-page");
+    assert.equal(cdp.sessions, 0);
+    assert.equal(cdp.hostConnections, 0);
+    await assert.rejects(access(lock), { code: "ENOENT" });
   }
 );
 
@@ -1406,7 +1440,7 @@ test("dedicated startup reveals wallpaper and controls after the active Codex in
     return document.querySelector('input[data-codex-wallpaper-file]')?.hidden;
   })()`), true);
 
-  // A cross-window stop while startup waits must cancel the pending mount.
+  // A same-origin storage stop while startup waits must cancel the pending mount.
   await evaluate(`(() => {
     const config = JSON.parse(localStorage.getItem('${key}'));
     localStorage.setItem('${key}', JSON.stringify({ ...config, enabled: false }));
@@ -3411,7 +3445,7 @@ test("continuous slider input previews immediately and persists the settled valu
   );
 });
 
-test("cross-window settings update in place without rebuilding cards or media", async (t) => {
+test("same-origin storage event updates settings without rebuilding cards or media", async (t) => {
   const { fixture, port, options } = await startRuntimeFixture(t, {
     version: 1,
     library: [
@@ -3620,7 +3654,7 @@ test("cross-window settings update in place without rebuilding cards or media", 
   );
 });
 
-test("cross-window asset identity change still reloads the wallpaper", async (t) => {
+test("same-origin storage event with asset identity change reloads the wallpaper", async (t) => {
   const { fixture, port, options } = await startRuntimeFixture(t, {
     version: 1,
     library: [

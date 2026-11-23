@@ -50,7 +50,7 @@ flowchart LR
 | [`launcher/read-only-probe.mjs`](../launcher/read-only-probe.mjs)           | 只读 CDP 发现与主界面核验                        |
 | [`launcher/startup-supervisor.mjs`](../launcher/startup-supervisor.mjs)     | 目标监督、25 秒恢复、宿主握手                    |
 | [`launcher/wallpaper-host.mjs`](../launcher/wallpaper-host.mjs)             | 单宿主锁、页面绑定、素材交付                     |
-| [`launcher/client-runtime.mjs`](../launcher/client-runtime.mjs)             | 壁纸库、设置、快捷键、页面适配与跨窗口同步       |
+| [`launcher/client-runtime.mjs`](../launcher/client-runtime.mjs)             | 壁纸库、设置、快捷键与同源页面设置同步           |
 | [`launcher/wallpaper-library.mjs`](../launcher/wallpaper-library.mjs)       | Steam / Wallpaper Engine 发现和素材准备          |
 | [`launcher/mp4-layout.mjs`](../launcher/mp4-layout.mjs)                     | 大视频 File 播放与尾置 `moov` 布局               |
 | [`launcher/startup-preview.mjs`](../launcher/startup-preview.mjs)           | 可选桌面启动画面缓存                             |
@@ -59,6 +59,7 @@ flowchart LR
 ## 保护边界
 
 - 包版本、原 EXE 摘要、应用登记、主进程创建时间、端口归属或主界面任一不匹配时，不注入并保留原界面。
+- 当前发布候选只接入一个精确 `app://-/index.html` 主页面。查询路由辅助页被忽略；两个精确主页面返回 `ambiguous-main-page`，不建立页面会话、宿主锁或第二份壁纸层。同源 `storage` 只同步已注入页面的设置，不代表真实第二窗口自动获得壁纸。
 - PowerShell 与 Node 对宿主锁使用同一判定：进程仍存在且创建时间不晚于锁写入时间，才视为有效宿主。
 - 单个调试端口只允许一个宿主锁；重复启动复用已核验实例，不增加第二个运行时或壁纸层。
 - 退出、重启和清理只用于可丢弃的验收实例；日常 Codex profile 保持原位。

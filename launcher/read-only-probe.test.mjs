@@ -16,12 +16,26 @@ const target = (port, url = page) => ({
 
 async function startCdpFixture(
   t,
-  { targetUrl = page, frameUrl = page, origin = "app://-" } = {}
+  {
+    targetUrl = page,
+    frameUrl = page,
+    origin = "app://-",
+    extraMain = false,
+  } = {}
 ) {
   const requests = [];
   const server = createServer((request, response) => {
     requests.push([request.method, request.url]);
-    response.end(JSON.stringify([target(server.address().port, targetUrl)]));
+    const targets = [target(server.address().port, targetUrl)];
+    if (extraMain) {
+      const secondaryId = "fedcba9876543210fedcba9876543210";
+      targets.push({
+        ...target(server.address().port),
+        id: secondaryId,
+        webSocketDebuggerUrl: `ws://127.0.0.1:${server.address().port}/devtools/page/${secondaryId}`,
+      });
+    }
+    response.end(JSON.stringify(targets));
   });
   const sockets = new Set();
   t.after(() => {
@@ -122,6 +136,15 @@ test("sends only Page.getFrameTree and emits no transient URL data", async (t) =
     ["GET", `/devtools/page/${id}`],
     { id: 1, method: "Page.getFrameTree", params: {} },
   ]);
+});
+
+test("preflight fails closed before protocol access for two exact main pages", async (t) => {
+  const fixture = await startCdpFixture(t, { extraMain: true });
+  await assert.rejects(
+    readMainFrame(fixture.port),
+    (error) => error.code === "ambiguous-main-page"
+  );
+  assert.deepEqual(fixture.requests, [["GET", "/json/list"]]);
 });
 
 test("preflight rejects a query-routed target before protocol access", async (t) => {

@@ -523,7 +523,16 @@ if (-not $packageName -or $null -eq $package) {
 $exe = Join-Path $package.InstallLocation 'app\ChatGPT.exe'
 $compatibilityMode = 'known'
 $knownHash = $supportedExeHashes[$packageName]
-if (-not $knownHash -or (Get-FileSha256 $exe) -ine $knownHash) {
+if ($knownHash -and (Get-FileSha256 $exe) -ine $knownHash) {
+    if ($receipt) {
+        $receipt.Outcome = 'executable-or-app-registration-mismatch'
+        Save-Receipt $receipt $stateFolder
+    }
+    Write-DesktopError (Get-LaunchFailureMessage 'executable-or-app-registration-mismatch')
+    Write-Host 'Original executable or app registration did not match. No activation attempted.'
+    exit 2
+}
+if (-not $knownHash) {
     $packageTrust = Test-TrackedCodexPackage $package
     if (-not $packageTrust.Trusted) {
         if ($receipt) {
