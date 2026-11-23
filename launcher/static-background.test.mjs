@@ -4259,9 +4259,18 @@ test("wallpaper library shell combines filters without reloading the current med
       await new Promise((resolve) => setTimeout(resolve, 80));
       search.value = "lazy";
       search.dispatchEvent(new Event("input", { bubbles: true }));
-      panel
-        .querySelector(".card[data-entry-id='fixture-lazy']")
-        .scrollIntoView({ block: "center" });
+      let lazyCard = null;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        lazyCard = panel.querySelector(
+          ".card[data-entry-id='fixture-lazy']"
+        );
+        if (lazyCard) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (!lazyCard) {
+        throw new Error("lazy wallpaper card did not render in time");
+      }
+      lazyCard.scrollIntoView({ block: "center" });
       let lazyPreviewRequested = false;
       for (let attempt = 0; attempt < 20; attempt += 1) {
         lazyPreviewRequested = hostRequests.some(
@@ -4335,10 +4344,18 @@ test("wallpaper library shell combines filters without reloading the current med
           (card) => card.querySelector("strong")?.textContent ===
             "Imported Sunset.svg"
         );
-      const importedCard = [...panel.querySelectorAll(".card")].find(
-        (card) =>
-          card.querySelector("strong")?.textContent === "Imported Sunset.svg"
-      );
+      let importedCard = null;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        importedCard = [...panel.querySelectorAll(".card")].find(
+          (card) =>
+            card.querySelector("strong")?.textContent === "Imported Sunset.svg"
+        );
+        if (importedCard) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (!importedCard) {
+        throw new Error("imported image card did not render in time");
+      }
       importedCard.scrollIntoView({ block: "center" });
       let importedPreviewLoaded = false;
       for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -4350,10 +4367,18 @@ test("wallpaper library shell combines filters without reloading the current med
       }
       search.value = "motion";
       search.dispatchEvent(new Event("input", { bubbles: true }));
-      const importedVideoCard = [...panel.querySelectorAll(".card")].find(
-        (card) =>
-          card.querySelector("strong")?.textContent === "Imported Motion.mp4"
-      );
+      let importedVideoCard = null;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        importedVideoCard = [...panel.querySelectorAll(".card")].find(
+          (card) =>
+            card.querySelector("strong")?.textContent === "Imported Motion.mp4"
+        );
+        if (importedVideoCard) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (!importedVideoCard) {
+        throw new Error("imported video card did not render in time");
+      }
       importedVideoCard.scrollIntoView({ block: "center" });
       let importedVideoPreviewLoaded = false;
       for (let attempt = 0; attempt < 40; attempt += 1) {

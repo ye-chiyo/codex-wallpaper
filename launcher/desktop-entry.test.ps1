@@ -2,6 +2,18 @@ $ErrorActionPreference = 'Stop'
 $root = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-desktop-' + [guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($root)
 
+function Remove-TestDirectory($Path) {
+    for ($attempt = 1; $attempt -le 10; $attempt += 1) {
+        try {
+            [IO.Directory]::Delete($Path, $true)
+            return
+        } catch [IO.IOException], [UnauthorizedAccessException] {
+            if ($attempt -eq 10) { throw }
+            Start-Sleep -Milliseconds 200
+        }
+    }
+}
+
 try {
     $compiler = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
     $source = Join-Path $PSScriptRoot 'CodexWallpaperDesktop.cs'
@@ -317,5 +329,5 @@ exit 0
     }
 } finally {
     Remove-Item Env:\CODEX_WALLPAPER_EXPECT_PREVIEW -ErrorAction SilentlyContinue
-    [IO.Directory]::Delete($root, $true)
+    Remove-TestDirectory $root
 }
