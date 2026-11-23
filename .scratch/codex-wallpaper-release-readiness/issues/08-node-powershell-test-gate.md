@@ -28,4 +28,5 @@
 - 2026-11-23 条件依赖语义：Edge 缺失时输出 `BLOCKED` 并 exit 2，不运行任何套件；`ffmpeg` 缺失时输出 `SKIP` 并继续，原生启动预览回退静态帧；PowerShell COM 不可用时输出 `SKIP` 并继续，由启动器套件报告自身结果。本机三项均可用，因此 `BLOCKED`/`SKIP` 分支只做了代码级检查，未实际触发。
 - 2026-11-23 入口文档：`README.md`、`README.en.md`、`README.ja.md` 第 102 行均改为 `pnpm.cmd test:full`，并注明 `pnpm.cmd test` 只覆盖 Node 套件。`.github/workflows/windows-tests.yml` 将原来的 Node 与 PowerShell 两个步骤合并为单个 `pnpm.cmd test:full` 步骤，CI 与本地使用同一入口。
 - 2026-11-23 Prettier：`launcher/client-runtime.mjs` 与 `launcher/static-background.test.mjs` 已在 T03 提交时由 pre-commit 的 Prettier 统一格式化；当前两文件、`launcher/run-full-tests.mjs`、`package.json`、三份 README 和 workflow 均通过 `prettier --check`。格式化集中在本次变更文件，没有批量改写无关历史文件。
+- 2026-11-23 行尾兼容：本机 `core.autocrlf=true` 会把检出文件写成 CRLF，而 Prettier 默认只接受 LF，导致同一提交在不同检出下结论不同。`.prettierrc` 增加 `endOfLine: "auto"` 后，Windows 的 CRLF 检出和 CI 的 LF 检出使用同一检查，不再依赖本地行尾状态。
 - 2026-11-23 未验证：workflow 尚未推送，GitHub `windows-latest` 上的新聚合入口没有运行记录；条件依赖缺失分支未在本机实际触发；最终集成 SHA 上的门禁结果见提交后的复跑记录。
