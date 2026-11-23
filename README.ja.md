@@ -99,7 +99,7 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 
 対応パッケージで `"Running": []` が表示されれば、Codex のメインプロセスは検出されていません。公式の入口から起動した通常のインスタンスでは `DebugFlag: false` と `ListeningPorts: []` が表示されます。
 
-開発時は `pnpm.cmd install --frozen-lockfile` で開発用依存関係をインストールしてから、`pnpm.cmd test` を実行してください。フィクスチャと実機での結果は[候補の検証記録](docs/planning/codex-wallpaper-candidate.md)に記載しています。
+開発時は `pnpm.cmd install --frozen-lockfile` で開発用依存関係をインストールしてから、`pnpm.cmd test:full`（Node 全スイートと PowerShell 起動スイート 4 本）を実行してください。`pnpm.cmd test` だけでは Node スイートのみです。フィクスチャと実機での結果は[候補の検証記録](docs/planning/codex-wallpaper-candidate.md)に記載しています。
 
 ## 日常的な使い方
 

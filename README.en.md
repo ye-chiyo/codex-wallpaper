@@ -99,7 +99,7 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 
 For a compatible package, `"Running": []` means the launcher found no Codex main process. An ordinary instance launched from the official entry is expected to show `DebugFlag: false` and `ListeningPorts: []`.
 
-For development, run `pnpm.cmd install --frozen-lockfile` to install the development dependencies before running `pnpm.cmd test`. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated fixture and desktop results separately.
+For development, run `pnpm.cmd install --frozen-lockfile` to install the development dependencies before running `pnpm.cmd test:full`, which covers all Node suites plus the four PowerShell launcher suites. Running `pnpm.cmd test` alone only covers the Node suites. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated fixture and desktop results separately.
 
 ## Everyday Use
 
