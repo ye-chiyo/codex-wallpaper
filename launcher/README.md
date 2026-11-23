@@ -88,6 +88,17 @@ Get-ChildItem "$env:LOCALAPPDATA\CodexWallpaper\P0b" -Filter *.json |
 
 排查时记录包版本、控制台提示、素材类型及出现问题的时间。有回执时可查 `Outcome` 和 `NativeProfile`。回执可能含进程 PID、创建时间和本机路径，分享前请脱敏。将 Codex 日常 profile、账号信息和聊天内容保留在本机。
 
+## 自动测试
+
+在仓库根目录安装锁定依赖后，使用与 Windows CI 相同的聚合入口：
+
+```powershell
+pnpm.cmd install --frozen-lockfile
+pnpm.cmd test:full
+```
+
+该入口串行运行 `pnpm test` 和 `desktop-entry`、`profile-preflight`、`startup-entry`、`startup-roots` 四个 PowerShell 夹具，并输出每个套件的名称、耗时和退出码。它显式检查固定 Edge 路径、PATH 中的 `ffmpeg.exe` 和 `WScript.Shell` COM；缺少依赖时对应套件标记为 `BLOCKED`，整体以非零退出，不会把未运行的覆盖记为通过。只调试 Node 测试时可继续使用 `pnpm.cmd test`。
+
 ## 手动验收
 
 [发布验收记录](../docs/planning/codex-wallpaper-candidate.md) 区分自动化、历史实机、本次只读核对和用户视觉验收。选择一段可以完全退出 Codex 的空闲时间，建议预留 **20–30 分钟**。关闭窗口或最小化不等于完全退出。

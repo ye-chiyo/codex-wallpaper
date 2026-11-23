@@ -104,7 +104,7 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 
 兼容包下，`"Running": []` 表示未发现 Codex 主进程。官方入口启动的普通实例预期显示 `DebugFlag: false` 和 `ListeningPorts: []`。
 
-开发时可以用 `pnpm.cmd test` 运行 Node 测试。自动夹具和实机结果分别记录在[候选验收记录](docs/planning/codex-wallpaper-candidate.md)。
+发布检查使用 `pnpm.cmd test:full`，串行运行 Node 测试和四个 Windows PowerShell 夹具；输出每个套件的耗时与退出码，缺少 Edge、ffmpeg 或 PowerShell COM 时标记 `BLOCKED`。只调试 Node 测试时可继续使用 `pnpm.cmd test`。自动夹具和实机结果分别记录在[候选验收记录](docs/planning/codex-wallpaper-candidate.md)。
 
 ## 日常使用
 

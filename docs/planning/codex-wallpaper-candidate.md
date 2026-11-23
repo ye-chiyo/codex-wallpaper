@@ -2,6 +2,23 @@
 
 本页记录 Windows 开发候选的验收情况。日常安装和清理见 [README](../../README.md)，可选入口与详细诊断见[启动器说明](../../launcher/README.md)。
 
+## 2026-11-23 Windows 全量测试聚合入口
+
+- 新增 `pnpm.cmd test:full`，由 [`launcher/Test-All.ps1`](../../launcher/Test-All.ps1) 串行运行 `pnpm test`、`desktop-entry`、`profile-preflight`、`startup-entry` 和 `startup-roots`。每个套件输出名称、耗时和退出码；失败时列出套件名并以非零退出。`pnpm.cmd test` 保留为 Node-only 入口。
+- 聚合入口显式检查固定 Edge 路径、PATH 中的 `ffmpeg.exe` 和 `WScript.Shell` COM。依赖缺失时对应套件标记为 `BLOCKED` 且整体非零，不会运行不完整覆盖或输出 `PASS`。
+- 本地完整运行一次，总耗时 **223.395 秒**：Node **74/74**、0 失败、0 跳过，耗时 81.047 秒；`desktop-entry` 8.858 秒、`profile-preflight` 127.002 秒、`startup-entry` 4.766 秒、`startup-roots` 0.750 秒，退出码均为 0。
+- 本次检测结果为 Edge `158.0.4370.33`、PATH 中 ffmpeg `9.0.2`、`WScript.Shell` COM 可用；没有跳过项。当前工作树测试输入清单 SHA-256（含未提交的 `Test-All.ps1`）为 `9214ba41b7c47795149e677b4f2e39e7460d741ad5b0616a86d5bf91e61cb374`。
+- Windows workflow 已删除内联的 Node/PowerShell 双顺序，改为安装 ffmpeg 后只调用 `pnpm.cmd test:full`。该聚合入口尚未在 GitHub 托管 runner 上实跑，推送后的运行结果仍待记录。
+
+最近一次浏览器夹具抖动记录：2026-11-21 的运行 [44913439451](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44913439451) 在提交 `ef9e4e9` 上失败：
+
+- `Codex form resets leave wallpaper settings controls visible and operable`：`AssertionError: appearance settings page did not become visible`。
+- `static background is single, removable and persists disabled`：`AssertionError: wallpaper settings panel layout did not settle`。
+
+没有自动重试。后续提交 `c9e2864` 把面板夹具改为页面内直接热键初始化，运行 [44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099) 的 Node 74/74 和四个 PowerShell 入口全部通过；2026-11-23 本次本地全量重跑也通过这两项。按现有证据更像 headless Edge 的焦点和面板就绪时序问题，而非浏览器 profile 或套件间状态泄漏；未见自动重试掩盖失败。
+
+更近的 [45031664587](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/45031664587)（提交 `026c60a`）仍有两个面板用例报 `Wallpaper settings panel did not open`，同一提交的另一轮运行也失败；后续提交 `3660b50` 才通过。因此这组较新的失败没有被归为环境抖动或自动重试成功，保留为夹具/产品时序问题的失败记录。
+
 ## 2026-11-21 P1 工作快照验收
 
 - **快照。** 在干净的临时 Windows 检出中应用 P1 本地改动并执行测试。检出的基线提交是 `69368a46d8099437085a8f9d5985f9ddb3c53d9d`，文件树与本轮审查的 GitHub `main` 提交 `22b1e9b005ef273eb8a9a0edca7aa985dcd04955` 一致。P1 验证时改动尚未提交，随后并入当前候选分支。
@@ -30,9 +47,9 @@
 
 ### 08 · Windows CI
 
-- 新增 [`.github/workflows/windows-tests.yml`](../../.github/workflows/windows-tests.yml)，在 `windows-latest` 使用 pnpm `11.25.0`、Node `24.16.0` 和锁定依赖；显式检查 Edge 路径，再运行 `pnpm test` 与 `desktop-entry`、`profile-preflight`、`startup-entry`、`startup-roots` 四个 PowerShell 入口。失败步骤会写出入口名和退出码。
-- 本地与工作流相同入口的回归结果为 Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过。
-- GitHub 托管 Windows runner 已在提交 `c9e2864fd077fc2c41a0e2c6867f36b03f1103b7` 上通过：[运行 44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099)。依赖安装、Edge 检查、Node 测试和四个 PowerShell 脚本均成功；期间修正了 headless runner 的面板渲染与快捷键准备时序。
+- [`.github/workflows/windows-tests.yml`](../../.github/workflows/windows-tests.yml) 在 `windows-latest` 使用 pnpm `11.25.0`、Node `24.16.0` 和锁定依赖，安装 `ffmpeg` 后只调用 `pnpm.cmd test:full`；测试顺序和依赖阻塞判定由同一脚本维护，不再在 workflow 中复制。
+- 2026-11-23 本地聚合入口结果为 Node **74/74**、0 失败、0 跳过，四个 PowerShell 脚本全部通过，总耗时 223.395 秒；Edge、ffmpeg 和 PowerShell COM 检测均可用。
+- 历史托管 Windows runner 运行 [44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099) 在提交 `c9e2864fd077fc2c41a0e2c6867f36b03f1103b7` 上通过，但使用的是此前内联的 Node/PowerShell 双入口。新聚合入口和 CI 安装 ffmpeg 的改动尚未推送，托管 runner 实跑待补。
 
 ### 10 · 媒体热切
 
@@ -86,15 +103,11 @@ Scene、离线 Web、冷启动 T0–T7、30–60 分钟资源对照、8 小时�
 在干净的 Windows 检出中，以 Node.js `24.16.0`、pnpm `11.25.0` 运行。检出路径含中文和空格。浏览器用例使用独立的 Edge 测试页面，启动器用例使用测试进程、临时目录和模拟 Codex 包身份。
 
 ```powershell
-pnpm install --frozen-lockfile
-pnpm test
-powershell.exe -NoProfile -File .\launcher\desktop-entry.test.ps1
-powershell.exe -NoProfile -File .\launcher\profile-preflight.test.ps1
-powershell.exe -NoProfile -File .\launcher\startup-entry.test.ps1
-powershell.exe -NoProfile -File .\launcher\startup-roots.test.ps1
+pnpm.cmd install --frozen-lockfile
+pnpm.cmd test:full
 ```
 
-结果为 Node **71/71**（无跳过）及 **4/4** 个 PowerShell 测试脚本通过。覆盖版本和主界面核验、重复启动、目标恢复、旧配置、导入切换、失败保留和停用清理。
+聚合入口串行运行 Node 测试和四个 PowerShell 测试脚本；只调试 Node 测试时可使用 `pnpm.cmd test`。覆盖版本和主界面核验、重复启动、目标恢复、旧配置、导入切换、失败保留和停用清理。
 
 另外检查了 launcher 下各 `.mjs` 的 `node --check`、各 `.ps1` 的 PowerShell 语法树、改动文件格式和基线差异。两个 CMD 入口使用含中文及空格的临时脚本验证参数转发和退出码。清理脚本以 `-WhatIf` 确认目标仅限项目自有目录。
 

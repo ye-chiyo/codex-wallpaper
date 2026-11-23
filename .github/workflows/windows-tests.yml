@@ -34,53 +34,28 @@ jobs:
             throw "Dependency installation failed with exit code $LASTEXITCODE."
           }
 
-      - name: Verify Edge test dependency
+      - name: Install ffmpeg test dependency
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $edge = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-          if (-not (Test-Path -LiteralPath $edge -PathType Leaf)) {
-            throw "Edge is unavailable at the path required by the browser fixtures: $edge"
-          }
-          $version = (Get-Item -LiteralPath $edge).VersionInfo.ProductVersion
-          Write-Host "Edge test dependency: $version at $edge"
-          Write-Host "Node: $(& node.exe --version)"
-          Write-Host "pnpm: $(& pnpm.cmd --version)"
-
-      - name: Run Node tests
-        shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          & pnpm.cmd test
-          if ($LASTEXITCODE -ne 0) {
-            throw "Node tests failed with exit code $LASTEXITCODE."
-          }
-          Write-Host 'Node tests passed.'
-
-      - name: Run PowerShell launcher tests
-        shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $tests = @(
-            'desktop-entry.test.ps1',
-            'profile-preflight.test.ps1',
-            'startup-entry.test.ps1',
-            'startup-roots.test.ps1'
-          )
-          $failed = @()
-          foreach ($name in $tests) {
-            Write-Host "::group::PowerShell fixture $name"
-            & powershell.exe -NoProfile -File (Join-Path 'launcher' $name)
-            $code = $LASTEXITCODE
-            Write-Host "::endgroup::"
-            if ($code -ne 0) {
-              Write-Host "PowerShell fixture $name failed with exit code $code." -ForegroundColor Red
-              $failed += "$name ($code)"
-            } else {
-              Write-Host "PowerShell fixture $name passed."
+          if (-not (Get-Command ffmpeg.exe -CommandType Application -ErrorAction SilentlyContinue)) {
+            & choco install ffmpeg --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) {
+              throw "ffmpeg installation failed with exit code $LASTEXITCODE."
             }
           }
-          if ($failed.Count) {
-            throw "PowerShell launcher tests failed: $($failed -join ', ')"
+          $ffmpeg = Get-Command ffmpeg.exe -CommandType Application -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+          if (-not $ffmpeg) {
+            throw 'ffmpeg.exe is still unavailable after installation.'
           }
-          Write-Host 'PowerShell launcher tests passed.'
+          Write-Host "ffmpeg test dependency: $($ffmpeg.Source)"
+
+      - name: Run full Windows test suite
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & pnpm.cmd test:full
+          if ($LASTEXITCODE -ne 0) {
+            throw "Full Windows test suite failed with exit code $LASTEXITCODE."
+          }

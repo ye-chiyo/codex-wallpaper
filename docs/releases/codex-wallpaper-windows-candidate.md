@@ -8,7 +8,7 @@
 - 基线提交：`69368a46d8099437085a8f9d5985f9ddb3c53d9d`
 - 本轮实现、工作流、文档和脱敏截图随当前候选提交更新。最终发布必须为该分支固定 SHA 或标签，并核验 GitHub 默认分支与已验快照一致。
 - 启动器测试输入清单：`launcher/` 非 Markdown 文件、`package.json`、`pnpm-lock.yaml`，按路径排序，内容统一为 LF 后计算。
-- 当前清单 SHA-256：`1bb7541ca1db9c6030e78633b94f670513f87e7d3ecfde9781399a6cbacdf763`
+- 当前工作树清单 SHA-256（含未提交的 `launcher/Test-All.ps1`）：`9214ba41b7c47795149e677b4f2e39e7460d741ad5b0616a86d5bf91e61cb374`
 - 发布前以最终标签重新计算以上值，并核验 GitHub 默认分支与已验快照一致。
 
 源码入口、启动链路和文件职责见[架构说明](../architecture.md)。逐项证据和未覆盖项见[候选验收记录](../planning/codex-wallpaper-candidate.md)。
@@ -22,9 +22,21 @@
 | 启动方式   | 官方 Codex AUMID 冷启动 + 本次环回 CDP 参数；原入口保持普通启动                                    |
 | 验证工具   | Node.js `24.16.0`、pnpm `11.25.0`、Windows PowerShell `5.1`                                        |
 | 浏览器夹具 | Edge `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`                                |
+| 视频夹具   | `ffmpeg.exe`，供 `desktop-entry` 生成原生视频测试样本                                              |
 | 可选素材   | 本机 Steam / Wallpaper Engine；手动图片和视频无需 Wallpaper Engine                                 |
 
 不在范围内：其他 Codex 包名或版本、32 位/ARM64、系统级安装器、替换原快捷方式、联网 Web 壁纸。
+
+## 发布检查
+
+在仓库根目录安装锁定依赖并运行唯一聚合入口：
+
+```powershell
+pnpm.cmd install --frozen-lockfile
+pnpm.cmd test:full
+```
+
+该入口串行执行 Node 测试和四个 Windows PowerShell 夹具，输出名称、耗时和退出码；Edge、ffmpeg 或 PowerShell COM 缺失时标记 `BLOCKED` 并以非零退出。只调试 Node 测试时使用 `pnpm.cmd test`。
 
 ## 安装与启动
 
@@ -65,14 +77,14 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1 -Enable
 
 ## 本轮验收摘要
 
-| 范围            | 结果                                                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 07 宿主锁       | Node 7/7、启动根 PowerShell 夹具 4/4；真实持锁、原宿主退出、PID 复用、过期锁恢复通过                                                                                     |
-| 08 Windows CI   | 工作流已在 GitHub `windows-latest` 通过，Node 与四个 PowerShell 入口均在 [运行 44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099) 中成功 |
-| 09 真实宿主兼容 | 独立测试环境尚未就绪；目标替换、多窗口、主题/DPI、登录启动和 GUI 交接待实机                                                                                              |
-| 10 媒体性能     | P1 运行时真实页面热切：前置 `moov` 20/20、p95 294.9 ms、最大 298.9 ms；尾置 `moov` 20/20、p95 293.4 ms、最大 325.2 ms；均低于 300/500 ms 门槛                            |
-| 10 长期资源     | Scene/离线 Web、冷启动 T0–T7、30–60 分钟对照、8 小时和 7 天观察仍待验                                                                                                    |
-| 11 发布材料     | 架构图、脱敏截图和本说明已就绪；最终提交 SHA、GitHub 默认分支和发布授权仍待处理                                                                                          |
+| 范围            | 结果                                                                                                                                                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 07 宿主锁       | Node 7/7、启动根 PowerShell 夹具 4/4；真实持锁、原宿主退出、PID 复用、过期锁恢复通过                                                                                                                                                             |
+| 08 Windows CI   | 工作流已收敛为单一 `pnpm.cmd test:full` 入口；本地 Node 74/74、四个 PowerShell 夹具通过。新入口在 GitHub 托管 runner 的实跑待推送；[运行 44914154099](https://github.com/ye-chiyo/codex-wallpaper/actions/runs/44914154099) 只代表此前内联双入口 |
+| 09 真实宿主兼容 | 独立测试环境尚未就绪；目标替换、多窗口、主题/DPI、登录启动和 GUI 交接待实机                                                                                                                                                                      |
+| 10 媒体性能     | P1 运行时真实页面热切：前置 `moov` 20/20、p95 294.9 ms、最大 298.9 ms；尾置 `moov` 20/20、p95 293.4 ms、最大 325.2 ms；均低于 300/500 ms 门槛                                                                                                    |
+| 10 长期资源     | Scene/离线 Web、冷启动 T0–T7、30–60 分钟对照、8 小时和 7 天观察仍待验                                                                                                                                                                            |
+| 11 发布材料     | 架构图、脱敏截图和本说明已就绪；最终提交 SHA、GitHub 默认分支和发布授权仍待处理                                                                                                                                                                  |
 
 ## 已知限制
 

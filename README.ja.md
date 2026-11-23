@@ -104,7 +104,7 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 
 対応パッケージで `"Running": []` が表示されれば、Codex のメインプロセスは検出されていません。公式の入口から起動した通常のインスタンスでは `DebugFlag: false` と `ListeningPorts: []` が表示されます。
 
-Node.js のテストは `pnpm.cmd test` で実行できます。フィクスチャと実機での結果は[候補の検証記録](docs/planning/codex-wallpaper-candidate.md)に記載しています。
+リリースチェックでは `pnpm.cmd test:full` を実行します。Node.js テストと 4 つの Windows PowerShell フィクスチャを順番に実行し、各スイートの所要時間と終了コードを表示します。Edge、ffmpeg、PowerShell COM がない場合は `BLOCKED` と記録します。Node.js テストだけを試す場合は `pnpm.cmd test` を使用できます。フィクスチャと実機での結果は[候補の検証記録](docs/planning/codex-wallpaper-candidate.md)に記載しています。
 
 ## 日常的な使い方
 
