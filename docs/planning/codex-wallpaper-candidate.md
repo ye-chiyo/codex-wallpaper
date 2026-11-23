@@ -35,6 +35,7 @@
 - PowerShell：4957 精确哈希、可信未登记探测、已登记摘要漂移、未知/错误签名、应用登记缺失、日常目录缺失和多主进程的 fail-closed 回归。
 - 本机只读扫描：106 个 WE 条目，其中 18 个在默认 384 KiB 预览预算内；初始运行层载荷约 26.9 MiB。扫描未启动或连接 Codex。
 - 单主窗口：只读目标选择覆盖重复精确主页、查询路由辅助页、错误 origin 和错误 WebSocket；监督器双精确 target 夹具输出 `ambiguous-main-page`，不建立页面会话、不创建宿主锁。
+- 宿主锁：`launcher/host-lock.mjs` 以 `{ version, pid, createdAt, port }` 统一 Node 与 PowerShell 判定；PID 复用、原宿主退出、过期锁、无锁、正常持锁、端口非 CDP 和损坏锁回归通过。
 
 版本契约通过不等于真实 Codex E2E 通过。4957 的本机状态查询只证明启动器把它识别为 known，不证明当前 Codex 进程加载了本工作树运行时。
 

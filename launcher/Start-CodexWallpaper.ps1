@@ -19,6 +19,7 @@ $codexPackageFamilyName = 'OpenAI.Codex_2p2nqsd0c76g0'
 $codexPublisherId = '2p2nqsd0c76g0'
 $codexSignerSubject = 'CN="OpenAI OpCo, LLC"'
 $nativeProfile = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
+$hostLockScript = Join-Path $PSScriptRoot 'host-lock.mjs'
 $stateFolder = if ($ReceiptRoot) { $ReceiptRoot } else {
     Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'CodexWallpaper\P0b'
 }
@@ -259,18 +260,13 @@ function Get-LaunchFailureMessage($Outcome) {
 }
 
 function Test-WallpaperHost($Port, $LockFolder = [IO.Path]::GetTempPath()) {
-    $process = $null
-    $file = Join-Path $LockFolder ('codex-wallpaper-host-{0}.lock' -f $Port)
     try {
-        $owner = [int]([IO.File]::ReadAllText($file).Trim())
-        $process = [Diagnostics.Process]::GetProcessById($owner)
-        return -not $process.HasExited
-    } catch [IO.IOException] {
-        return Test-Path -LiteralPath $file -PathType Leaf
+        $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
+        $raw = & $node --no-use-env-proxy $hostLockScript check --port ([string]$Port) --lock-folder $LockFolder 2>$null
+        if ($LASTEXITCODE -ne 0) { return $false }
+        return [bool](($raw | Out-String).Trim() | ConvertFrom-Json).valid
     } catch {
         return $false
-    } finally {
-        if ($process) { $process.Dispose() }
     }
 }
 

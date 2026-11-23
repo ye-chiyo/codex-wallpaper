@@ -164,6 +164,7 @@ $launcher = Join-Path $receiptBase 'Start-CodexWallpaper.ps1'
 $fixtureMutex = 'Local\' + (Split-Path -Leaf $receiptBase)
 $source = [IO.File]::ReadAllText($sourceLauncher).Replace('Local\CodexWallpaper.P0b', $fixtureMutex)
 [IO.File]::WriteAllText($launcher, $source, [Text.UTF8Encoding]::new($true))
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'host-lock.mjs') -Destination (Join-Path $receiptBase 'host-lock.mjs')
 foreach ($case in $cases) {
     $hits = [Collections.Generic.List[string]]::new()
     $mockPackage = $case.Package
@@ -196,7 +197,9 @@ foreach ($case in $cases) {
     Remove-Item -LiteralPath $hostLock -Force -ErrorAction SilentlyContinue
     try {
         if ($case.HostReady) {
-            [IO.File]::WriteAllText($hostLock, [string]$PID, [Text.UTF8Encoding]::new($false))
+            $createdAt = (Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
+            $record = [ordered]@{ version = 1; pid = [int]$PID; createdAt = $createdAt; port = [int]$port }
+            [IO.File]::WriteAllText($hostLock, ($record | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
         }
         $output = (& $launcher -Launch -Unattended -ReceiptRoot $caseReceipt 6>&1 | Out-String).Trim()
     } finally {

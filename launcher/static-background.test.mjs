@@ -533,7 +533,7 @@ test(
     assert.equal(cdp.hostConnections, 2);
     const lock = join(tmpdir(), `codex-wallpaper-host-${cdp.port}.lock`);
     assert.equal(
-      Number(await readFile(lock, "utf8")),
+      JSON.parse(await readFile(lock, "utf8")).pid,
       receipt.Wallpaper.hostPid
     );
 

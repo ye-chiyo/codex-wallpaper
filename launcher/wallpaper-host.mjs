@@ -1,8 +1,7 @@
 import { open, readFile, unlink } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { openMainPageSession } from "./read-only-probe.mjs";
+import { acquireHostLock, releaseHostLock } from "./host-lock.mjs";
 import { runtimeSource } from "./client-runtime.mjs";
 import { payloadFor } from "./static-background.mjs";
 import { prepareMp4VirtualLayout } from "./mp4-layout.mjs";
@@ -19,33 +18,6 @@ const engineUrl = new URL(
   "../node_modules/webwallgl/webwallgl.global.min.js",
   import.meta.url
 );
-
-async function createLock(lockPath) {
-  const handle = await open(lockPath, "wx");
-  await handle.writeFile(String(process.pid));
-  return { lockPath, handle };
-}
-
-async function acquireLock(port) {
-  const lockPath = join(tmpdir(), `codex-wallpaper-host-${port}.lock`);
-  try {
-    return await createLock(lockPath);
-  } catch (error) {
-    if (error.code !== "EEXIST") throw error;
-    try {
-      process.kill(Number(await readFile(lockPath, "utf8")), 0);
-      return null;
-    } catch {
-      await unlink(lockPath).catch(() => {});
-      return createLock(lockPath);
-    }
-  }
-}
-
-async function releaseLock(lock) {
-  await lock.handle.close();
-  await unlink(lock.lockPath).catch(() => {});
-}
 
 async function evaluateSession(session, expression, returnByValue) {
   const result = await session.send("Runtime.evaluate", {
@@ -241,8 +213,9 @@ export async function attachWallpaperHost({
   source = null,
   updateStartupPreview = null,
 }) {
-  const lock = await acquireLock(port);
-  if (!lock) return null;
+  const acquired = await acquireHostLock(port);
+  if (!acquired.acquired) return null;
+  const lock = acquired.lock;
   const inFlight = new Map();
   let stopped = false;
   let stopRequested = false;
@@ -250,7 +223,7 @@ export async function attachWallpaperHost({
   let startupMotionTransfer = null;
   function release() {
     stopped = true;
-    return (cleanup ??= releaseLock(lock));
+    return (cleanup ??= releaseHostLock(lock));
   }
   session.onClose(() => {
     void release().catch(() => {});
@@ -406,8 +379,19 @@ if (
     const host = await attachWallpaperHost({ port, session });
     if (!host) session.close();
     else console.log(JSON.stringify({ ready: true, pid: process.pid }));
-  } catch {
+  } catch (error) {
     process.exitCode = 1;
     session?.close();
+    const reason =
+      error?.code === "ambiguous-main-page"
+        ? "ambiguous-main-page"
+        : error?.code === "ECONNREFUSED"
+          ? "port-unreachable"
+          : /discovery status|discovery response|unexpected websocket|invalid target|main page/i.test(
+                error?.message || ""
+              )
+            ? "port-not-codex-main-page"
+            : "host-start-failed";
+    console.error(JSON.stringify({ state: "error", reason }));
   }
 }

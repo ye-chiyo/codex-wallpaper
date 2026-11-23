@@ -10,6 +10,8 @@
 
 专用入口使用一个隐藏的 Node 监督进程，在核验过的主界面会话里挂载运行时并处理按需素材请求。当前发布候选只接入一个精确匹配 `app://-/index.html` 的主页面；查询路由辅助页会被忽略，两个精确主页面会出现 `ambiguous-main-page` 并失败关闭。PowerShell 收到宿主就绪回执后退出。主界面连接断开时，监督进程在有限时间内重新发现主界面，复核原进程和环回监听归属后恢复上次壁纸或停用状态。Codex 退出后监督进程也退出。同源 `storage` 只同步已注入页面的设置，不承诺第二个真实主窗口自动获得壁纸。
 
+宿主锁由 `launcher/host-lock.mjs` 统一判定，内容为 `{ version, pid, createdAt, port }`。PowerShell 和 Node 都要求锁内 PID 仍存在，且当前进程创建时间与 `createdAt` 一致；纯 PID、损坏内容、已退出进程或 PID 复用会得到可诊断的失效状态并允许清理旧锁。`createdAt` 是宿主进程创建时间，不是锁文件写入时间。
+
 启动器对以下已核对组合使用精确哈希快速路径：
 
 | `PackageFullName`                                | 原 EXE SHA-256                                                     |

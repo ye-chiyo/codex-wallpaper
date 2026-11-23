@@ -26,6 +26,27 @@ function Assert-Outcome($Actual, $Expected) {
     if ($Actual -ne $Expected) { throw "Expected $Expected; observed $Actual" }
 }
 
+$node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
+$hostLockScript = Join-Path $PSScriptRoot 'host-lock.mjs'
+function Write-HostLockRecord($File, $OwnerPid, $CreatedAt, $LockPort) {
+    $record = [ordered]@{ version = 1; pid = [int]$OwnerPid; createdAt = [string]$CreatedAt; port = [int]$LockPort }
+    [IO.File]::WriteAllText($File, ($record | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+}
+function Get-HostLockCheck($Port, $Folder) {
+    $raw = & $node --no-use-env-proxy $hostLockScript check --port ([string]$Port) --lock-folder $Folder 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "host-lock check failed: $raw" }
+    return (($raw | Out-String).Trim() | ConvertFrom-Json)
+}
+function Assert-HostLockAgreement($Port, $Folder, $ExpectedValid, $ExpectedState) {
+    $check = Get-HostLockCheck $Port $Folder
+    $powershellValid = Test-WallpaperHost $Port $Folder
+    if ($powershellValid -ne $ExpectedValid) {
+        throw "PowerShell lock result $powershellValid did not match $ExpectedValid. CLI: $($check | ConvertTo-Json -Compress)"
+    }
+    Assert-Outcome $check.valid $ExpectedValid
+    Assert-Outcome $check.state $ExpectedState
+}
+
 $state = @{ Timeline = [Collections.Generic.List[object]]::new() }
 Assert-Outcome (Get-StartupRootState @($main, $renderer) $state 0).Outcome 'single'
 Assert-Outcome (Get-StartupRootState @($main, $other, $renderer) $state 300).Outcome 'ambiguous'
@@ -51,20 +72,35 @@ $marker = [pscustomobject]@{ MainPid = 26324; MainCreated = $created.ToString('o
 $hostFolder = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-roots-' + [guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($hostFolder)
 $hostLock = Join-Path $hostFolder ('codex-wallpaper-host-{0}.lock' -f $port)
+$currentCreatedAt = (Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
 try {
-    [IO.File]::WriteAllText($hostLock, [string]$PID)
+    Write-HostLockRecord $hostLock $PID $currentCreatedAt $port
+    Assert-HostLockAgreement $port $hostFolder $true 'held'
+
     $dedicated = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder
     Assert-Outcome $dedicated.State 'dedicated'
     Assert-Outcome $dedicated.Port $port
     Assert-Outcome $dedicated.Root.ProcessId 26324
 
+    Write-HostLockRecord $hostLock $PID '2000-01-01T00:00:00.0000000Z' $port
+    Assert-HostLockAgreement $port $hostFolder $false 'stale'
+
     Remove-Item -LiteralPath $hostLock
+    Assert-HostLockAgreement $port $hostFolder $false 'missing'
     $missingHost = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder
     Assert-Outcome $missingHost.State 'unknown'
 
-    [IO.File]::WriteAllText($hostLock, '999999')
+    $exited = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList '/c','exit','0' -PassThru -WindowStyle Hidden
+    $exitedPid = $exited.Id
+    $exited.WaitForExit()
+    $exited.Dispose()
+    Write-HostLockRecord $hostLock $exitedPid '2000-01-01T00:00:00.0000000Z' $port
+    Assert-HostLockAgreement $port $hostFolder $false 'stale'
     $staleHost = Get-DedicatedRootState @($main) @($main, $crashpad) $exe $marker $hostFolder
     Assert-Outcome $staleHost.State 'unknown'
+
+    [IO.File]::WriteAllText($hostLock, '{not-json', [Text.UTF8Encoding]::new($false))
+    Assert-HostLockAgreement $port $hostFolder $false 'corrupt'
 } finally {
     Remove-Item -LiteralPath $hostFolder -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -124,7 +160,7 @@ try {
     } | ConvertTo-Json | Set-Content -LiteralPath $failedReceipt -Encoding utf8
     $liveHostLock = Join-Path ([IO.Path]::GetTempPath()) ('codex-wallpaper-host-{0}.lock' -f $port)
     try {
-        [IO.File]::WriteAllText($liveHostLock, [string]$PID)
+        Write-HostLockRecord $liveHostLock $PID $currentCreatedAt $port
         $liveHost = Get-RecoverableRootState @($main) @($main, $crashpad) $exe $receiptFolder
         Assert-Outcome $liveHost.State 'unknown'
         $held = [IO.File]::Open($liveHostLock, 'Open', 'ReadWrite', 'None')
