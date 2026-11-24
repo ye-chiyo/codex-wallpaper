@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | [English](README.en.md) | [日本語](README.ja.md)
 
-> **Project status: Windows development candidate.** Automated fixtures cover launch checks, media import, disable, and cleanup. An earlier release snapshot on x64 Codex `26.1117.3838.0` reached a dedicated cold start, restored settings, and returned to the official entry after cleanup. This update still needs desktop retesting. Login startup and long-running stability remain pending. The current candidate supports only one verified Codex main window. [Candidate acceptance record](docs/planning/codex-wallpaper-candidate.md)
+> **Project status: Windows development candidate.** Automated fixtures cover launch checks, media import, disable, and cleanup. An earlier release snapshot on x64 Codex `26.1117.3838.0` reached a dedicated cold start, restored settings, and returned to the official entry after cleanup. This update passed the user's manual desktop acceptance on 2026-11-25. Login startup and long-running stability remain pending. The current candidate supports only one verified Codex main window. [Candidate acceptance record](docs/planning/codex-wallpaper-candidate.md)
 >
 > **Unofficial tool:** This is not an official OpenAI feature and does not imply OpenAI endorsement of compatibility or safety. A dedicated launcher verifies the local Codex installation, then adds local wallpaper and UI adaptation to the main window.
 >
