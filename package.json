@@ -4,13 +4,15 @@
   "type": "module",
   "packageManager": "pnpm@11.25.0",
   "devDependencies": {
+    "@webwallgl/editor": "3.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10"
   },
   "scripts": {
     "prepare": "husky",
-    "test": "node --test --test-concurrency=1 launcher/read-only-probe.test.mjs launcher/static-background.test.mjs launcher/wallpaper-library.test.mjs launcher/wallpaper-host.test.mjs launcher/mp4-layout.test.mjs launcher/startup-preview.test.mjs",
+    "test": "node --test --test-concurrency=1 launcher/read-only-probe.test.mjs launcher/static-background.test.mjs launcher/wallpaper-library.test.mjs launcher/host-lock.test.mjs launcher/wallpaper-host.test.mjs launcher/mp4-layout.test.mjs launcher/startup-preview.test.mjs",
+    "test:full": "node launcher/run-full-tests.mjs",
     "reset": "powershell.exe -NoProfile -STA -File ./launcher/Reset-CodexWallpaper.ps1"
   },
   "dependencies": {

@@ -47,40 +47,12 @@ jobs:
           Write-Host "Node: $(& node.exe --version)"
           Write-Host "pnpm: $(& pnpm.cmd --version)"
 
-      - name: Run Node tests
+      - name: Run full test gate
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          & pnpm.cmd test
+          & pnpm.cmd test:full
           if ($LASTEXITCODE -ne 0) {
-            throw "Node tests failed with exit code $LASTEXITCODE."
+            throw "Full test gate failed with exit code $LASTEXITCODE."
           }
-          Write-Host 'Node tests passed.'
-
-      - name: Run PowerShell launcher tests
-        shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $tests = @(
-            'desktop-entry.test.ps1',
-            'profile-preflight.test.ps1',
-            'startup-entry.test.ps1',
-            'startup-roots.test.ps1'
-          )
-          $failed = @()
-          foreach ($name in $tests) {
-            Write-Host "::group::PowerShell fixture $name"
-            & powershell.exe -NoProfile -File (Join-Path 'launcher' $name)
-            $code = $LASTEXITCODE
-            Write-Host "::endgroup::"
-            if ($code -ne 0) {
-              Write-Host "PowerShell fixture $name failed with exit code $code." -ForegroundColor Red
-              $failed += "$name ($code)"
-            } else {
-              Write-Host "PowerShell fixture $name passed."
-            }
-          }
-          if ($failed.Count) {
-            throw "PowerShell launcher tests failed: $($failed -join ', ')"
-          }
-          Write-Host 'PowerShell launcher tests passed.'
+          Write-Host 'Full test gate passed.'

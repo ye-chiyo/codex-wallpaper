@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -267,3 +274,118 @@ for (const staleResult of ["success", "failure"]) {
     ]);
   });
 }
+
+test("host loads the installed WebWallGL runtime before delivering a real scene package", async (t) => {
+  const steamRoot = await mkdtemp(
+    join(tmpdir(), "codex-wallpaper-real-scene-host-")
+  );
+  const id = "real-scene-host";
+  const distribution = join(
+    steamRoot,
+    "steamapps",
+    "common",
+    "wallpaper_engine",
+    "distribution"
+  );
+  const project = join(
+    steamRoot,
+    "steamapps",
+    "workshop",
+    "content",
+    "431960",
+    id
+  );
+  const fixture = await readFile(
+    new URL("./fixtures/minimal-scene/scene.pkg", import.meta.url)
+  );
+  const engine = await readFile(
+    new URL(
+      "../node_modules/webwallgl/webwallgl.global.min.js",
+      import.meta.url
+    ),
+    "utf8"
+  );
+  const previousRoot = process.env.DSH_WE_STEAM_ROOT;
+  process.env.DSH_WE_STEAM_ROOT = steamRoot;
+  t.after(() => {
+    if (previousRoot === undefined) delete process.env.DSH_WE_STEAM_ROOT;
+    else process.env.DSH_WE_STEAM_ROOT = previousRoot;
+    return rm(steamRoot, { recursive: true, force: true });
+  });
+  await mkdir(distribution, { recursive: true });
+  await mkdir(project, { recursive: true });
+  await writeFile(join(distribution, "version.json"), "{}");
+  await writeFile(
+    join(project, "project.json"),
+    JSON.stringify({ type: "scene", title: "Real scene", file: "scene.pkg" })
+  );
+  await writeFile(join(project, "scene.pkg"), fixture);
+
+  const probe = createServer();
+  const port = await listenOnUnusedPort(probe);
+  await new Promise((resolve) => probe.close(resolve));
+  const finished = Promise.withResolvers();
+  let bindingHandler;
+  let evaluatedEngine = null;
+  let deliveredFiles = null;
+  const session = {
+    async send(method, params = {}) {
+      if (method === "DOM.setFileInputFiles") {
+        deliveredFiles = params.files;
+        return { result: {} };
+      }
+      if (method !== "Runtime.evaluate") return { result: {} };
+      const expression = params.expression;
+      if (expression === "typeof globalThis.WebWallGL === 'object'")
+        return { result: { value: false } };
+      if (expression === engine) {
+        evaluatedEngine = expression;
+        return { result: { value: undefined } };
+      }
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.beginAssetFileTransfer("
+        )
+      )
+        return { result: { value: "file-1" } };
+      if (expression.startsWith("document.querySelector("))
+        return { result: { objectId: "file-input" } };
+      if (
+        expression.startsWith(
+          "globalThis.__codexWallpaperApi.finishAssetFileTransfer("
+        )
+      ) {
+        finished.resolve();
+        return { result: { value: true } };
+      }
+      return { result: { value: { state: "enabled", hostReady: true } } };
+    },
+    on(method, handler) {
+      if (method === "Runtime.bindingCalled") bindingHandler = handler;
+    },
+    onClose() {},
+    close() {},
+  };
+  const host = await attachWallpaperHost({
+    port,
+    session,
+    source: "({ state: 'enabled', hostReady: true })",
+  });
+  assert.ok(host);
+  t.after(() => host.stop());
+  bindingHandler({
+    name: "__codexWallpaperHostRequest",
+    payload: JSON.stringify({ type: "load-asset", id }),
+  });
+  let deadline;
+  const delivered = await Promise.race([
+    finished.promise.then(() => true),
+    new Promise((resolve) => {
+      deadline = setTimeout(() => resolve(false), 5000);
+    }),
+  ]);
+  clearTimeout(deadline);
+  assert.ok(delivered, "Host did not finish the real scene transfer");
+  assert.equal(evaluatedEngine, engine);
+  assert.deepEqual(deliveredFiles, [join(project, "scene.pkg")]);
+});

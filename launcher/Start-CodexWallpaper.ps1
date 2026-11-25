@@ -19,6 +19,7 @@ $codexPackageFamilyName = 'OpenAI.Codex_2p2nqsd0c76g0'
 $codexPublisherId = '2p2nqsd0c76g0'
 $codexSignerSubject = 'CN="OpenAI OpCo, LLC"'
 $nativeProfile = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'
+$hostLockScript = Join-Path $PSScriptRoot 'host-lock.mjs'
 $stateFolder = if ($ReceiptRoot) { $ReceiptRoot } else {
     Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'CodexWallpaper\P0b'
 }
@@ -259,18 +260,13 @@ function Get-LaunchFailureMessage($Outcome) {
 }
 
 function Test-WallpaperHost($Port, $LockFolder = [IO.Path]::GetTempPath()) {
-    $process = $null
-    $file = Join-Path $LockFolder ('codex-wallpaper-host-{0}.lock' -f $Port)
     try {
-        $owner = [int]([IO.File]::ReadAllText($file).Trim())
-        $process = [Diagnostics.Process]::GetProcessById($owner)
-        return -not $process.HasExited
-    } catch [IO.IOException] {
-        return Test-Path -LiteralPath $file -PathType Leaf
+        $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
+        $raw = & $node --no-use-env-proxy $hostLockScript check --port ([string]$Port) --lock-folder $LockFolder 2>$null
+        if ($LASTEXITCODE -ne 0) { return $false }
+        return [bool](($raw | Out-String).Trim() | ConvertFrom-Json).valid
     } catch {
         return $false
-    } finally {
-        if ($process) { $process.Dispose() }
     }
 }
 
@@ -523,7 +519,16 @@ if (-not $packageName -or $null -eq $package) {
 $exe = Join-Path $package.InstallLocation 'app\ChatGPT.exe'
 $compatibilityMode = 'known'
 $knownHash = $supportedExeHashes[$packageName]
-if (-not $knownHash -or (Get-FileSha256 $exe) -ine $knownHash) {
+if ($knownHash -and (Get-FileSha256 $exe) -ine $knownHash) {
+    if ($receipt) {
+        $receipt.Outcome = 'executable-or-app-registration-mismatch'
+        Save-Receipt $receipt $stateFolder
+    }
+    Write-DesktopError (Get-LaunchFailureMessage 'executable-or-app-registration-mismatch')
+    Write-Host 'Original executable or app registration did not match. No activation attempted.'
+    exit 2
+}
+if (-not $knownHash) {
     $packageTrust = Test-TrackedCodexPackage $package
     if (-not $packageTrust.Trusted) {
         if ($receipt) {

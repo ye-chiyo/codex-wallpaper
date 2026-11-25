@@ -25,7 +25,11 @@ export function selectEndpoint(
         : isMainPage(target.url, expectedPage))
   );
   if (matches.length === 0) return null;
-  if (matches.length !== 1) throw new Error("Ambiguous main page");
+  if (matches.length !== 1) {
+    const error = new Error("Ambiguous main page");
+    error.code = "ambiguous-main-page";
+    throw error;
+  }
   const target = matches[0];
   if (typeof target.id !== "string" || !/^[a-f0-9]{32}$/i.test(target.id)) {
     throw new Error("Invalid target ID");

@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | [English](README.en.md) | [日本語](README.ja.md)
 
-> **Project status: Windows development candidate.** Automated fixtures cover launch checks, media import, disable, and cleanup. An earlier release snapshot on x64 Codex `26.1117.3838.0` reached a dedicated cold start, restored settings, and returned to the official entry after cleanup. This update still needs desktop retesting. Login startup, multiple main windows, and long-running stability remain pending. [Candidate acceptance record](docs/planning/codex-wallpaper-candidate.md)
+> **Project status: Windows development candidate.** Automated fixtures cover launch checks, media import, disable, and cleanup. An earlier release snapshot on x64 Codex `26.1117.3838.0` reached a dedicated cold start, restored settings, and returned to the official entry after cleanup. This update passed the user's manual desktop acceptance on 2026-11-25. Login startup and long-running stability remain pending. The current candidate supports only one verified Codex main window. [Candidate acceptance record](docs/planning/codex-wallpaper-candidate.md)
 >
 > **Unofficial tool:** This is not an official OpenAI feature and does not imply OpenAI endorsement of compatibility or safety. A dedicated launcher verifies the local Codex installation, then adds local wallpaper and UI adaptation to the main window.
 >
@@ -20,17 +20,17 @@ Project source is public for reading. See [Upstream Sources and Licensing](#upst
 
 The table describes the implementation, the recorded evidence, and the checks still needed in the Codex desktop app.
 
-| Capability                         | Implementation                                                                                                                                          | Evidence and limits                                                                                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Built-in background                | Displays the built-in gradient without imported media                                                                                                   | Automated fixtures cover startup and restore                                                                                                                |
-| Local image and video imports      | Select files in the wallpaper library and display them after saving to IndexedDB. Video loops muted by default                                          | Fixtures cover imports, switching, preservation on failure, and cleanup. Import and reopen in the real Codex app remain pending                             |
-| Wallpaper Engine images and videos | Scans locally downloaded projects and reads the selected asset on demand through a hidden host                                                          | Video main assets up to 1 GiB. Other assets and transfer fallbacks up to 512 MiB. A front-`moov` video has live switching measurements                      |
-| Wallpaper Engine scenes            | Renders through WebWallGL and tries the author preview if rendering fails or the input is unsupported                                                   | Fixture coverage is available. Workshop compatibility and long-running stability remain pending                                                             |
-| Wallpaper Engine offline Web       | Displays local HTML in a `srcdoc` sandbox. External resources are blocked, so pages that depend on them may display incompletely                        | Tries the author preview for unreadable HTML, HTML larger than 512 KiB, or HTML with `<script>`. Online Web is unsupported                                  |
-| Interface and settings             | Adapts chat, tool cards, code/diffs, sidebars, settings, composer, and overlays. Includes Library, Playback and Performance, and Appearance and Presets | Desktop evidence covers persistence, disable, and restore. Full interaction, theme, and DPI coverage is pending                                             |
-| Same-origin settings sync          | Synchronizes settings between same-origin pages. Each page checks visibility independently                                                              | Browser fixture passed. Behavior and resource use across multiple real Codex main windows are pending. Startup still requires one verifiable main interface |
-| Shortcuts                          | `Alt+Shift+S` opens or closes settings and `Alt+Shift+W` disables or restores the wallpaper                                                             | Browser fixtures and earlier desktop checks cover restore. Shortcuts require window focus                                                                   |
-| Windows login startup (optional)   | Can create, inspect, and remove one per-user Startup shortcut                                                                                           | A temporary-directory fixture passed. Real sign-in, sign-out, restart, and repeated triggers remain pending                                                 |
+| Capability                         | Implementation                                                                                                                                          | Evidence and limits                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Built-in background                | Displays the built-in gradient without imported media                                                                                                   | Automated fixtures cover startup and restore                                                                                           |
+| Local image and video imports      | Select files in the wallpaper library and display them after saving to IndexedDB. Video loops muted by default                                          | Fixtures cover imports, switching, preservation on failure, and cleanup. Import and reopen in the real Codex app remain pending        |
+| Wallpaper Engine images and videos | Scans locally downloaded projects and reads the selected asset on demand through a hidden host                                                          | Video main assets up to 1 GiB. Other assets and transfer fallbacks up to 512 MiB. A front-`moov` video has live switching measurements |
+| Wallpaper Engine scenes            | Renders through WebWallGL and tries the author preview if rendering fails or the input is unsupported                                                   | Fixture coverage is available. Workshop compatibility and long-running stability remain pending                                        |
+| Wallpaper Engine offline Web       | Displays local HTML in a `srcdoc` sandbox. External resources are blocked, so pages that depend on them may display incompletely                        | Tries the author preview for unreadable HTML, HTML larger than 512 KiB, or HTML with `<script>`. Online Web is unsupported             |
+| Interface and settings             | Adapts chat, tool cards, code/diffs, sidebars, settings, composer, and overlays. Includes Library, Playback and Performance, and Appearance and Presets | Desktop evidence covers persistence, disable, and restore. Full interaction, theme, and DPI coverage is pending                        |
+| Same-origin settings sync          | Synchronizes settings events between injected same-origin pages. Each page checks visibility independently                                              | Browser fixture passed; a hidden iframe verifies only storage events. The current candidate attaches only one verified main window     |
+| Shortcuts                          | `Alt+Shift+S` opens or closes settings and `Alt+Shift+W` disables or restores the wallpaper                                                             | Browser fixtures and earlier desktop checks cover restore. Shortcuts require window focus                                              |
+| Windows login startup (optional)   | Can create, inspect, and remove one per-user Startup shortcut                                                                                           | A temporary-directory fixture passed. Real sign-in, sign-out, restart, and repeated triggers remain pending                            |
 
 ## Requirements
 
@@ -43,12 +43,13 @@ The table describes the implementation, the recorded evidence, and the checks st
 
 ### Codex compatibility
 
-| `PackageFullName`                                | Testing in the Codex desktop app                                                                                       |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0` | A previous release snapshot reached `wallpaper-ready`. This update is pending desktop retesting                        |
-| `OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0` | An earlier candidate reached `wallpaper-ready`. This release candidate has preflight fixture coverage for this version |
+| `PackageFullName`                                | Original EXE SHA-256                                               | Testing in the Codex desktop app                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `OpenAI.Codex_26.1117.4957.0_x64__2p2nqsd0c76g0` | `21C2EAC7703B43611392234738F669A8AF23907585B231EBDE54CA3CB104CC82` | Local read-only status reports `CompatibilityMode: known`; desktop E2E is pending       |
+| `OpenAI.Codex_26.1117.3838.0_x64__2p2nqsd0c76g0` | `AF4D57201946260D2754172BC660EFF80B5398EA146EF466126886CCD0CF2514` | A previous release snapshot reached `wallpaper-ready`. This update is pending retesting |
+| `OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0` | `CF2EE1CE895DF9EE158EE61830D9D0F805C77D9B212AD0E159AE605AE04260C6` | An earlier candidate reached `wallpaper-ready`. This candidate has preflight coverage   |
 
-The launcher checks the full package name, app registration `OpenAI.Codex_2p2nqsd0c76g0!App`, and SHA-256 of the original EXE in the install directory. It also verifies a single Codex main process and the main interface during startup. See the [launcher source](launcher/Start-CodexWallpaper.ps1) for exact hashes and the [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) for desktop and fixture results.
+The launcher checks the full package name, app registration `OpenAI.Codex_2p2nqsd0c76g0!App`, SHA-256 of the original EXE, daily profile, single main process, and main interface. A registered package with the exact hash uses the fast path. A trusted but unlisted version enters a main-interface compatibility probe. Unknown or untrusted packages, hash drift for a registered package, and multiple main processes fail closed before attachment and leave the original UI in place. See the [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) for desktop and fixture results.
 
 ## Quick Start
 
@@ -98,7 +99,7 @@ powershell.exe -NoProfile -STA -File .\launcher\Start-CodexWallpaper.ps1
 
 For a compatible package, `"Running": []` means the launcher found no Codex main process. An ordinary instance launched from the official entry is expected to show `DebugFlag: false` and `ListeningPorts: []`.
 
-For development, run `pnpm.cmd install --frozen-lockfile` to install the development dependencies before running `pnpm.cmd test`. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated fixture and desktop results separately.
+For development, run `pnpm.cmd install --frozen-lockfile` to install the development dependencies before running `pnpm.cmd test:full`, which covers all Node suites plus the four PowerShell launcher suites. Running `pnpm.cmd test` alone only covers the Node suites. The [candidate acceptance record](docs/planning/codex-wallpaper-candidate.md) lists automated fixture and desktop results separately.
 
 ## Everyday Use
 
@@ -125,7 +126,7 @@ Basic workflow:
 1. Press `Alt+Shift+S`, open `壁纸设置`, then choose the built-in background, imported media, or a locally installed Wallpaper Engine project in `壁纸库`.
 2. Click `使用` to switch to the selected wallpaper. If an asset is missing or unreadable, the page skips it or keeps the current image.
 3. Use the star button for favorites and `加入轮播` / `移除轮播` for the rotation playlist. Rotation needs at least two items and is disabled at 0 minutes.
-4. Use `播放与性能` for performance profile, Scene cap, mute, volume, and rotation. Use `外观与预设` for wallpaper visuals, interface readability, section overrides, presets, and settings import/export. Settings synchronize between same-origin pages. Wallpaper behavior across multiple real Codex main windows still needs verification.
+4. Use `播放与性能` for performance profile, Scene cap, mute, volume, and rotation. Use `外观与预设` for wallpaper visuals, interface readability, section overrides, presets, and settings import/export. Injected same-origin pages synchronize settings. The current candidate does not attach a second real Codex main window.
 5. Press `Alt+Shift+W` to remove the background and settings panel; press it again to restore the last enabled wallpaper and settings.
 
 Appearance settings:
@@ -171,7 +172,7 @@ Keep the Codex daily profile, account data, and chats. Page cleanup and local re
 
 ### No wallpaper appears after launch
 
-Confirm that Codex was completely quit, then run `launcher\Codex-Wallpaper.cmd` again. The launcher can reuse a verified dedicated instance. An ordinary running instance keeps its original interface. Check for a supported package, `26.1111.2228.0` or `26.1117.3838.0`, and read `Outcome` in the console. The status command is read-only and does not inject anything.
+Confirm that Codex was completely quit, then run `launcher\Codex-Wallpaper.cmd` again. The launcher can reuse a verified dedicated instance. An ordinary running instance keeps its original interface. Check for a registered package, `26.1117.4957.0`, `26.1117.3838.0`, or `26.1111.2228.0`, and read `Outcome` in the console. A trusted unlisted version may enter the compatibility probe. The status command is read-only and does not inject anything.
 
 ### `Alt+Shift+S` or `Alt+Shift+W` does nothing
 
@@ -230,11 +231,12 @@ The Chinese [launcher guide](launcher/README.md) documents launcher options and 
 
 - This is a development candidate, not a release that has completed all acceptance gates.
 - It supports Windows only; there is no macOS, Linux, or mobile implementation.
-- Only the recorded identities of Codex `26.1111.2228.0` and `26.1117.3838.0` are supported. A future Codex update requires a compatibility update; package, registration, hash, and main-interface checks must not be bypassed.
+- Exact fast-path identities are Codex `26.1117.4957.0`, `26.1117.3838.0`, and `26.1111.2228.0`; a trusted unlisted version may attach only after the main-interface probe. Hash drift for a registered package, unknown identities, and multiple main processes fail closed. Package, registration, hash, and main-interface checks must not be bypassed.
+- The current candidate supports only one verified Codex main window. Two exact main pages fail closed. Same-origin `storage` synchronizes settings only among injected pages and does not promise wallpaper in a second real window.
 - The original Codex entry cannot attach the wallpaper automatically. The dedicated launcher must be used.
 - The UI text is Simplified Chinese only. Translated READMEs do not constitute a multilingual UI.
 - Online Web wallpapers are unsupported. Offline Web cannot execute scripts or load external resources.
-- Not every Wallpaper Engine asset is guaranteed to play. Video is limited to 1 GiB, while other assets and compatible fallback routes are limited to 512 MiB. Scene coverage, cross-DPI behavior, theme combinations, multi-window resource cost, and failure recovery still need item-by-item testing.
+- Not every Wallpaper Engine asset is guaranteed to play. Video is limited to 1 GiB, while other assets and compatible fallback routes are limited to 512 MiB. Scene coverage, cross-DPI behavior, theme combinations, and failure recovery still need item-by-item testing. Automatic wallpaper in a second real main window is outside this release.
 - Real login/restart Startup acceptance, the complete live host interaction matrix, the 30–60 minute resource comparison, the 8-hour baseline, and the 7-day observation have not been completed.
 - Automated and headless fixtures prove only the rules they cover, not every window, panel, and edge case in the real Codex app.
 
