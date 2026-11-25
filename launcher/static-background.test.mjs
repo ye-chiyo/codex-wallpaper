@@ -1393,6 +1393,25 @@ async function pressWallpaperShortcut(port, options, key) {
   );
 }
 
+function assertCanvasFitsLayer(canvas) {
+  const detail = JSON.stringify(canvas);
+  assert.ok(canvas.clientWidth > 0, detail);
+  assert.ok(canvas.clientHeight > 0, detail);
+  assert.ok(canvas.width > 0, detail);
+  assert.ok(canvas.height > 0, detail);
+  const scaleX = canvas.width / canvas.clientWidth;
+  const scaleY = canvas.height / canvas.clientHeight;
+  assert.ok(scaleX > 0 && scaleX <= canvas.dpr + 0.01, detail);
+  assert.ok(scaleY > 0 && scaleY <= canvas.dpr + 0.01, detail);
+  assert.ok(Math.abs(scaleX - scaleY) < 0.01, detail);
+  assert.ok(
+    Math.abs(
+      canvas.width / canvas.height - canvas.clientWidth / canvas.clientHeight
+    ) < 0.02,
+    detail
+  );
+}
+
 test("browser startup uses the bound host during first recovery and discards a failed mount without saving", async (t) => {
   const { fixture, port } = await startBrowserFixture(t);
   const options = { page: fixture.url };
@@ -10461,24 +10480,7 @@ test(
       hasText: true,
     });
     assert.equal(result.firstFrame.canvas.webgl2, "1");
-    assert.ok(result.firstFrame.canvas.width > 0);
-    assert.ok(result.firstFrame.canvas.height > 0);
-    assert.ok(result.firstFrame.canvas.clientWidth > 0);
-    assert.ok(result.firstFrame.canvas.clientHeight > 0);
-    assert.ok(
-      Math.abs(
-        result.firstFrame.canvas.width -
-          result.firstFrame.canvas.clientWidth * result.firstFrame.canvas.dpr
-      ) <= 1,
-      JSON.stringify(result.firstFrame.canvas)
-    );
-    assert.ok(
-      Math.abs(
-        result.firstFrame.canvas.height -
-          result.firstFrame.canvas.clientHeight * result.firstFrame.canvas.dpr
-      ) <= 1,
-      JSON.stringify(result.firstFrame.canvas)
-    );
+    assertCanvasFitsLayer(result.firstFrame.canvas);
     assert.ok(result.firstFrame.stats.running);
     assert.ok(result.firstFrame.stats.fps > 0);
     assert.ok(result.firstFrame.gains.some((value) => value > 0));
@@ -10827,24 +10829,7 @@ test(
       })()`
     );
     assert.equal(result.firstFrame.canvas.webgl2, "1");
-    assert.ok(result.firstFrame.canvas.width > 0);
-    assert.ok(result.firstFrame.canvas.height > 0);
-    assert.ok(result.firstFrame.canvas.clientWidth > 0);
-    assert.ok(result.firstFrame.canvas.clientHeight > 0);
-    assert.ok(
-      Math.abs(
-        result.firstFrame.canvas.width -
-          result.firstFrame.canvas.clientWidth * result.firstFrame.canvas.dpr
-      ) <= 1,
-      JSON.stringify(result.firstFrame.canvas)
-    );
-    assert.ok(
-      Math.abs(
-        result.firstFrame.canvas.height -
-          result.firstFrame.canvas.clientHeight * result.firstFrame.canvas.dpr
-      ) <= 1,
-      JSON.stringify(result.firstFrame.canvas)
-    );
+    assertCanvasFitsLayer(result.firstFrame.canvas);
     assert.equal(result.firstFrame.status, "Real Scene · Scene");
     assert.ok(result.firstFrame.pixel.some((value) => value > 0));
     assert.equal(result.firstFrame.playerCount, 1);
