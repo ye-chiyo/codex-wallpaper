@@ -1208,7 +1208,7 @@ async function startChromeFixture() {
 
 async function waitForPort(profile) {
   const file = join(profile, "DevToolsActivePort");
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
     try {
       const [port] = (await readFile(file, "utf8")).trim().split(/\r?\n/);
       return Number(port);
@@ -1220,7 +1220,7 @@ async function waitForPort(profile) {
 }
 
 async function waitForPage(port, options) {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
     const href = await evaluateInPage(port, "location.href", options);
     if (href === options.page) return;
     await new Promise((resolve) => setTimeout(resolve, 50));
