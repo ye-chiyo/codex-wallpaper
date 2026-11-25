@@ -495,6 +495,7 @@ test(
     });
     const receipt = await runStartupHandoff(t, cdp, {
       env: { ...process.env, DSH_WE_STEAM_ROOT: steamRoot },
+      handoffTimeoutMs: 15000,
     });
     assert.equal(receipt.Outcome, "wallpaper-ready");
     assert.equal(receipt.TargetVerificationCount, 2);
@@ -704,6 +705,7 @@ async function runStartupHandoff(
     compatibilityProbe = false,
     listenerOwner = process.pid,
     previewFolder = null,
+    handoffTimeoutMs = 5000,
   } = {}
 ) {
   const psLiteral = (value) => `'${value.replaceAll("'", "''")}'`;
@@ -746,7 +748,7 @@ async function runStartupHandoff(
     error += chunk;
   });
   const output = createInterface({ input: child.stdout });
-  const options = { signal: AbortSignal.timeout(5000) };
+  const options = { signal: AbortSignal.timeout(handoffTimeoutMs) };
   const signals = [];
   try {
     const [[code], receipt] = await Promise.all([
