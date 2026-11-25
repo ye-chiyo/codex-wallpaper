@@ -10399,6 +10399,7 @@ test(
             height: scene.canvas.height,
             clientWidth: scene.canvas.clientWidth,
             clientHeight: scene.canvas.clientHeight,
+            dpr: devicePixelRatio,
             webgl2: scene.canvas.getAttribute("data-webwallgl-gl"),
           },
           stats: { ...scene.stats },
@@ -10462,13 +10463,21 @@ test(
     assert.equal(result.firstFrame.canvas.webgl2, "1");
     assert.ok(result.firstFrame.canvas.width > 0);
     assert.ok(result.firstFrame.canvas.height > 0);
-    assert.equal(
-      result.firstFrame.canvas.width,
-      result.firstFrame.canvas.clientWidth
+    assert.ok(result.firstFrame.canvas.clientWidth > 0);
+    assert.ok(result.firstFrame.canvas.clientHeight > 0);
+    assert.ok(
+      Math.abs(
+        result.firstFrame.canvas.width -
+          result.firstFrame.canvas.clientWidth * result.firstFrame.canvas.dpr
+      ) <= 1,
+      JSON.stringify(result.firstFrame.canvas)
     );
-    assert.equal(
-      result.firstFrame.canvas.height,
-      result.firstFrame.canvas.clientHeight
+    assert.ok(
+      Math.abs(
+        result.firstFrame.canvas.height -
+          result.firstFrame.canvas.clientHeight * result.firstFrame.canvas.dpr
+      ) <= 1,
+      JSON.stringify(result.firstFrame.canvas)
     );
     assert.ok(result.firstFrame.stats.running);
     assert.ok(result.firstFrame.stats.fps > 0);
@@ -10700,6 +10709,7 @@ test(
             height: canvas.height,
             clientWidth: canvas.clientWidth,
             clientHeight: canvas.clientHeight,
+            dpr: devicePixelRatio,
             webgl2: canvas.getAttribute("data-webwallgl-gl"),
           },
           pixel: Array.from(pixel),
@@ -10819,13 +10829,21 @@ test(
     assert.equal(result.firstFrame.canvas.webgl2, "1");
     assert.ok(result.firstFrame.canvas.width > 0);
     assert.ok(result.firstFrame.canvas.height > 0);
-    assert.equal(
-      result.firstFrame.canvas.width,
-      result.firstFrame.canvas.clientWidth
+    assert.ok(result.firstFrame.canvas.clientWidth > 0);
+    assert.ok(result.firstFrame.canvas.clientHeight > 0);
+    assert.ok(
+      Math.abs(
+        result.firstFrame.canvas.width -
+          result.firstFrame.canvas.clientWidth * result.firstFrame.canvas.dpr
+      ) <= 1,
+      JSON.stringify(result.firstFrame.canvas)
     );
-    assert.equal(
-      result.firstFrame.canvas.height,
-      result.firstFrame.canvas.clientHeight
+    assert.ok(
+      Math.abs(
+        result.firstFrame.canvas.height -
+          result.firstFrame.canvas.clientHeight * result.firstFrame.canvas.dpr
+      ) <= 1,
+      JSON.stringify(result.firstFrame.canvas)
     );
     assert.equal(result.firstFrame.status, "Real Scene · Scene");
     assert.ok(result.firstFrame.pixel.some((value) => value > 0));
